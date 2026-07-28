@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, ChevronDown, ChevronRight, Plus, Trash2, GripVertical, CheckCircle2, MapPin, User, Users } from 'lucide-react';
 import type { Course, FilterState } from '../types/schedule';
 import { normalizeString } from '../utils/scheduleUtils';
@@ -31,32 +31,35 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set(['CS5352', 'CC1103', 'CS2023']));
   const [allExpanded, setAllExpanded] = useState<boolean>(false);
 
-  // Filter courses with accent and case insensitive normalization
-  const filteredCourses = courses.filter(course => {
-    if (filterState.searchQuery) {
-      const q = normalizeString(filterState.searchQuery);
-      const normCode = normalizeString(course.code);
-      const normName = normalizeString(course.name);
+  // Memoized course filtering with accent and case insensitive search
+  const filteredCourses = useMemo(() => {
+    const q = filterState.searchQuery ? normalizeString(filterState.searchQuery) : '';
 
-      const matchesCode = normCode.includes(q);
-      const matchesName = normName.includes(q);
-      const matchesProf = course.sections.some(sec =>
-        sec.professors.some(prof => normalizeString(prof).includes(q))
-      );
+    return courses.filter(course => {
+      if (q) {
+        const normCode = normalizeString(course.code);
+        const normName = normalizeString(course.name);
 
-      if (!matchesCode && !matchesName && !matchesProf) return false;
-    }
+        const matchesCode = normCode.includes(q);
+        const matchesName = normName.includes(q);
+        const matchesProf = course.sections.some(sec =>
+          sec.professors.some(prof => normalizeString(prof).includes(q))
+        );
 
-    if (filterState.onlyEligible && !course.isEligible) {
-      return false;
-    }
+        if (!matchesCode && !matchesName && !matchesProf) return false;
+      }
 
-    if (filterState.typeFilter !== 'ALL' && course.courseType !== filterState.typeFilter) {
-      return false;
-    }
+      if (filterState.onlyEligible && !course.isEligible) {
+        return false;
+      }
 
-    return true;
-  });
+      if (filterState.typeFilter !== 'ALL' && course.courseType !== filterState.typeFilter) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [courses, filterState.searchQuery, filterState.onlyEligible, filterState.typeFilter]);
 
   const toggleCourseExpand = (code: string) => {
     setExpandedCourses(prev => {
@@ -103,7 +106,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
           </button>
         </div>
 
-        {/* Search Input (Case and Accent Insensitive) */}
+        {/* Search Input */}
         <div className="search-bar">
           <Search size={16} color="var(--text-muted)" />
           <input
@@ -169,11 +172,12 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                       <span className="course-code" style={{ color: course.color }}>{course.code}</span>
                       {course.isEligible && <span className="eligible-badge">Habilitado</span>}
                       {course.courseType && (
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                           • {course.courseType}
                         </span>
                       )}
                     </div>
+                    {/* Full Untruncated Course Name */}
                     <div className="course-name">{course.name}</div>
                   </div>
 
@@ -190,7 +194,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
                 {/* Sections List */}
                 {isExpanded && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px', background: 'rgba(0, 0, 0, 0.25)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px', background: 'rgba(0, 0, 0, 0.25)' }}>
                     {course.sections.map(section => {
                       const isSecSelected = activeSectionNum === section.sectionNumber;
 
@@ -217,7 +221,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                             onDragEndSection();
                           }}
                           style={{
-                            borderRadius: '8px',
+                            borderRadius: '10px',
                             border: '1px solid rgba(255, 255, 255, 0.08)',
                             cursor: 'grab'
                           }}
@@ -262,30 +266,37 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                                   <span><strong>{sess.day}</strong> {sess.startTime}-{sess.endTime}</span>
                                 </div>
                                 {sess.location && (
-                                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                                    <MapPin size={10} /> {sess.location}
+                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                    <MapPin size={11} /> {sess.location}
                                   </span>
                                 )}
                               </div>
                             ))}
                           </div>
 
-                          {/* Professor & Vacancies Metadata Footer */}
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px', borderTop: '1px dashed rgba(255,255,255,0.06)', paddingTop: '6px' }}>
-                            {section.professors.length > 0 ? (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', maxWidth: '70%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                <User size={12} color="var(--accent-primary)" />
-                                <span style={{ color: 'var(--text-secondary)' }}>{section.professors.join(', ')}</span>
+                          {/* Full Untruncated Professors List Box */}
+                          {section.professors.length > 0 && (
+                            <div className="section-professors-box">
+                              <div className="prof-header-label">
+                                <User size={12} />
+                                <span>Docente{section.professors.length > 1 ? 's' : ''}:</span>
                               </div>
-                            ) : <div></div>}
+                              {section.professors.map((prof, pIdx) => (
+                                <div key={pIdx} className="prof-item">
+                                  <span style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>•</span>
+                                  <span>{prof}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
 
-                            {section.vacancies > 0 && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-emerald)', fontWeight: 600 }}>
-                                <Users size={12} />
-                                <span>{section.vacancies} vacantes</span>
-                              </div>
-                            )}
-                          </div>
+                          {/* Vacancies Footer Badge */}
+                          {section.vacancies > 0 && (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', color: 'var(--accent-emerald)', fontWeight: 600, fontSize: '0.75rem', marginTop: '2px' }}>
+                              <Users size={12} />
+                              <span>{section.vacancies} vacantes disponibles</span>
+                            </div>
+                          )}
                         </div>
                       );
                     })}

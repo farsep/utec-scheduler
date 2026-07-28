@@ -53,6 +53,44 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
   const blockRegex = /([A-Z]{2,4}\d{4})\s+(.+?)(?=(?:[A-Z]{2,4}\d{4}|\Z))/gs;
   let blockMatch;
 
+  // Pass 1: Extract official course names per code
+  const codeNameMap = new Map<string, string>();
+
+  while ((blockMatch = blockRegex.exec(fullText)) !== null) {
+    const code = blockMatch[1];
+    const content = blockMatch[2].replace(/\s+/g, ' ').trim();
+
+    const timeMatch = content.match(/(Lun|Mar|Mie|Jue|Vie|Sab|Dom)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/i);
+    if (!timeMatch) continue;
+
+    // Enhanced metaMatch that catches plan codes like AND-2024- 1 or CD-2021- 1 even with line breaks
+    const metaMatch = content.match(/(?:[A-Z]{2,4}-\d{4}-?\s*\d*|Obligatorio|Electivo|Presencial|Sincronico|Virtual|\b\d+\s+(?:Teoría|Laboratorio|Práctica|Taller))/i);
+    if (metaMatch) {
+      let prefix = content.substring(0, metaMatch.index).trim();
+
+      // Clean any trailing plan code residue (e.g. AND-2024- 1)
+      prefix = prefix.replace(/\s*(?:AND|CD|MALLA)-\d{4}-?\s*\d*$/i, '').trim();
+
+      let cName = prefix;
+      if (prefix.includes(',')) {
+        const beforeComma = prefix.split(',')[0].trim().split(/\s+/);
+        if (beforeComma.length > 2) {
+          cName = beforeComma.slice(0, -2).join(' ');
+        }
+      }
+
+      // Sanitize any plan codes inside cName
+      cName = cName.replace(/\s*(?:AND|CD|MALLA)-\d{4}-?\s*\d*/gi, '').trim();
+
+      if (cName && (!codeNameMap.has(code) || cName.length > codeNameMap.get(code)!.length)) {
+        codeNameMap.set(code, cName);
+      }
+    }
+  }
+
+  // Reset regex index for Pass 2
+  blockRegex.lastIndex = 0;
+
   while ((blockMatch = blockRegex.exec(fullText)) !== null) {
     const code = blockMatch[1];
     const content = blockMatch[2].replace(/\s+/g, ' ').trim();
@@ -79,22 +117,41 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
     if (content.toLowerCase().includes('electivo')) courseType = 'Electivo';
 
     let plan = undefined;
-    const planMatch = content.match(/(CD-\d{4}-\d)/);
+    const planMatch = content.match(/(CD-\d{4}-\d|AND-\d{4}-\d)/);
     if (planMatch) plan = planMatch[1];
 
     eligibleCoursesMap.set(code, { type: courseType, plan });
 
-    const nameMatch = content.match(/^(.+?)(?=\s+(?:[A-Z][a-z]+|\bCD-\d|\bObligatorio|\bElectivo))/);
-    const name = nameMatch ? nameMatch[1].trim() : `Curso ${code}`;
+    const name = codeNameMap.get(code) || `Curso ${code}`;
 
-    const groupMatch = content.match(/(\d+)\s+((?:Teoría|Laboratorio|Práctica|Taller)\s+\d+)/i);
-    const sectionNum = groupMatch ? groupMatch[1] : '1';
-    const sessionGroup = groupMatch ? groupMatch[2] : 'TEORÍA 1';
+    // Robust groupMatch that handles modifiers like "Virtual", "Remoto", "Presencial"
+    const groupMatch = content.match(/(\d+)\s+((?:Teoría|Laboratorio|Práctica|Taller|Seminario|Clase|Sesión)[^\d]*\d+)/i);
+    let sectionNum = '1';
+    let sessionGroup = 'TEORÍA 1';
+
+    if (groupMatch) {
+      sectionNum = groupMatch[1];
+      sessionGroup = groupMatch[2];
+    } else {
+      // Fail-safe secondary regex: extract section number after modality/plan keywords
+      const secMatch = content.match(/(?:Presencial|Sincronico|Virtual|CD-\d{4}-\d|AND-\d{4}-\d)\s+(\d+)/i);
+      const gMatch = content.match(/((?:Teoría|Laboratorio|Práctica|Taller|Seminario|Clase|Sesión)[^\d]*\d+)/i);
+      if (secMatch) sectionNum = secMatch[1];
+      if (gMatch) sessionGroup = gMatch[1];
+    }
 
     let professor = 'Por asignar';
-    const profMatch = content.match(/([A-Z][a-záéíóúñ]+(?:\s+[A-Z][a-záéíóúñ]+){1,3},\s+[A-Z][a-záéíóúñ]+(?:\s+[A-Z][a-záéíóúñ]+)*)/);
+    const profMatch = content.match(/([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){1,3},\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*)/);
     if (profMatch) {
-      professor = profMatch[1].trim();
+      const rawProf = profMatch[1].trim();
+      const parts = rawProf.split(',');
+      if (parts.length === 2) {
+        const lastNameWords = parts[0].trim().split(/\s+/);
+        const cleanLastNames = lastNameWords.slice(-3).join(' ');
+        professor = `${cleanLastNames}, ${parts[1].trim()}`;
+      } else {
+        professor = rawProf;
+      }
     }
 
     let modality = 'Presencial';
@@ -142,28 +199,28 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
     const finalSections: Section[] = [];
 
     sectionGroups.forEach((sRows, mainSecNum) => {
-      const isSubgroup = (groupName: string) => {
-        const numMatch = groupName.match(/\d+/);
-        if (!numMatch) return false;
-        const num = parseInt(numMatch[0], 10);
-        return num >= 10 && !groupName.endsWith(` ${mainSecNum}`);
-      };
-
-      const subgroupRows = sRows.filter(r => isSubgroup(r.sessionGroup));
-      const baseRows = sRows.filter(r => !isSubgroup(r.sessionGroup));
-
-      // Extract DISTINCT subgroup names
-      const distinctSubgroups: string[] = [];
-      subgroupRows.forEach(r => {
-        if (!distinctSubgroups.includes(r.sessionGroup)) {
-          distinctSubgroups.push(r.sessionGroup);
+      const allGroupNames: string[] = [];
+      sRows.forEach(r => {
+        if (!allGroupNames.includes(r.sessionGroup)) {
+          allGroupNames.push(r.sessionGroup);
         }
       });
 
-      // Split into variants ONLY if there are 2 or more DISTINCT subgroup names
-      if (distinctSubgroups.length > 1) {
-        distinctSubgroups.forEach((sgName) => {
-          const matchingSubRows = subgroupRows.filter(r => r.sessionGroup === sgName);
+      const baseGroupNames = allGroupNames.filter(g => {
+        const lower = g.toLowerCase();
+        const nums = g.match(/\d+/g);
+        if (!nums) return true;
+        const lastNum = parseInt(nums[nums.length - 1], 10);
+        return lower.startsWith('teoría') && lastNum === parseInt(mainSecNum, 10);
+      });
+
+      const subGroupNames = allGroupNames.filter(g => !baseGroupNames.includes(g));
+
+      if (subGroupNames.length > 1) {
+        const baseRows = sRows.filter(r => baseGroupNames.includes(r.sessionGroup));
+
+        subGroupNames.forEach((sgName) => {
+          const matchingSubRows = sRows.filter(r => r.sessionGroup === sgName);
           const variantSecNum = `${mainSecNum} (${sgName})`;
           const combinedSessions: Session[] = [];
           const professors: string[] = [];
@@ -223,7 +280,6 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
           });
         });
       } else {
-        // Single section (e.g. CS6006): keep all base + subgroup sessions together in 1 section!
         const combinedSessions: Session[] = sRows.map((r, idx) => ({
           id: `${code}-${mainSecNum}-${r.sessionGroup}-${r.day}-${r.startTime}-${idx}`,
           sessionGroup: r.sessionGroup,
@@ -266,8 +322,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
       color: getCourseColor(code),
       isEligible: true,
       courseType,
-      plan,
-      credits: 3
+      plan
     });
   });
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DAYS, DAY_NAMES, getCourseGradient } from '../utils/scheduleUtils';
 import type { Course, DayOfWeek, Conflict, Session } from '../types/schedule';
-import { Trash2, AlertTriangle, Sparkles } from 'lucide-react';
+import { Trash2, AlertTriangle, Sparkles, MapPin, User } from 'lucide-react';
 
 interface TimetableGridProps {
   courses: Course[];
@@ -98,7 +98,6 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
       const dSection = dCourse.sections.find(s => s.sectionNumber === draggedSection.sectionNumber);
       if (dSection) {
         dSection.sessions.forEach(sess => {
-          // Check if ghost session conflicts with any existing scheduled block on the grid
           const hasGhostConflict = scheduledBlocks.some(sb =>
             sb.course.code !== dCourse.code &&
             sb.day === sess.day &&
@@ -183,7 +182,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                 {/* Active Scheduled Blocks */}
                 {dayBlocks.map((block, idx) => {
                   const topPercent = ((block.startMinutes - START_HOUR * 60) / TOTAL_MINUTES) * 100;
-                  const heightPercent = Math.max(((block.endMinutes - block.startMinutes) / TOTAL_MINUTES) * 100, 3.5);
+                  const heightPercent = Math.max(((block.endMinutes - block.startMinutes) / TOTAL_MINUTES) * 100, 3.8);
                   const gradient = getCourseGradient(block.course.code);
 
                   return (
@@ -195,7 +194,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                         height: `${heightPercent}%`,
                         background: gradient,
                       }}
-                      title={`${block.course.code} ${block.course.name}\nSec ${block.sectionNumber} - ${block.sessionGroup}\n${block.startTime} - ${block.endTime}\nAula: ${block.location}`}
+                      title={`${block.course.code} ${block.course.name}\nSec ${block.sectionNumber} - ${block.sessionGroup}\n${block.startTime} - ${block.endTime}\nAula: ${block.location}\nDocente: ${block.professor}`}
                     >
                       <div className="block-course-code">
                         <span>{block.course.code} (Sec {block.sectionNumber})</span>
@@ -210,11 +209,16 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                         </button>
                       </div>
 
-                      <div className="block-course-name">{block.course.name}</div>
+                      {/* Continuous Film Ticker Marquee Effect on Hover */}
+                      <div className="marquee-film-container">
+                        <div className="marquee-film-text">
+                          {block.course.name}
+                        </div>
+                      </div>
 
                       <div className="block-footer">
                         <span style={{ fontWeight: 700 }}>{block.sessionGroup}</span>
-                        <span>{block.startTime}-{block.endTime}</span>
+                        <span style={{ fontSize: '0.65rem' }}>{block.location || `${block.startTime}-${block.endTime}`}</span>
                       </div>
                     </div>
                   );
@@ -223,7 +227,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                 {/* GHOST SHADOW PREVIEW BLOCKS FOR DRAGGED SECTION */}
                 {dayGhostBlocks.map((ghost, gIdx) => {
                   const topPercent = ((ghost.startMinutes - START_HOUR * 60) / TOTAL_MINUTES) * 100;
-                  const heightPercent = Math.max(((ghost.endMinutes - ghost.startMinutes) / TOTAL_MINUTES) * 100, 3.5);
+                  const heightPercent = Math.max(((ghost.endMinutes - ghost.startMinutes) / TOTAL_MINUTES) * 100, 3.8);
 
                   return (
                     <div
@@ -246,8 +250,10 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                         )}
                       </div>
 
-                      <div className="block-course-name" style={{ fontStyle: 'italic', opacity: 0.9 }}>
-                        {ghost.courseName}
+                      <div className="marquee-film-container">
+                        <div className="marquee-film-text">
+                          {ghost.courseName}
+                        </div>
                       </div>
 
                       <div className="block-footer">

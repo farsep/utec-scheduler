@@ -183,25 +183,25 @@ body::after {
   font-weight: 600;
 }
 
-/* Main Workspace Split */
+/* Main Workspace Split (Spacious 460px Sidebar) */
 .workspace-layout {
   display: grid;
-  grid-template-columns: 380px 1fr;
+  grid-template-columns: 460px 1fr;
   gap: 20px;
   padding: 20px;
   flex: 1;
-  max-width: 1800px;
+  max-width: 1920px;
   margin: 0 auto;
   width: 100%;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
   .workspace-layout {
-    grid-template-columns: 340px 1fr;
+    grid-template-columns: 430px 1fr;
   }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1100px) {
   .workspace-layout {
     grid-template-columns: 1fr;
   }
@@ -299,7 +299,7 @@ body::after {
   padding: 4px 14px 16px 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   min-height: 0;
 }
 
@@ -339,15 +339,15 @@ body::after {
 }
 
 .course-card-header {
-  padding: 12px 14px;
+  padding: 14px 16px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   cursor: pointer;
   user-select: none;
   background: rgba(255, 255, 255, 0.02);
   flex-shrink: 0;
-  min-height: 48px;
+  min-height: 52px;
 }
 
 .course-card-header:hover {
@@ -357,9 +357,10 @@ body::after {
 .course-info {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   flex: 1;
-  padding-right: 8px;
+  padding-right: 12px;
+  overflow: hidden;
 }
 
 .course-code-row {
@@ -372,7 +373,7 @@ body::after {
 .course-code {
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 1.05rem;
   letter-spacing: 0.03em;
 }
 
@@ -387,20 +388,23 @@ body::after {
   text-transform: uppercase;
 }
 
+/* Full Course Name with Marquee Film Scroll on Hover */
 .course-name {
-  font-size: 0.86rem;
-  font-weight: 500;
+  font-size: 0.94rem;
+  font-weight: 600;
   color: var(--text-primary);
-  line-height: 1.3;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* Section Item inside course card */
 .section-item {
-  padding: 12px;
+  padding: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   background: rgba(12, 17, 28, 0.7);
   transition: var(--transition-fast);
   cursor: grab;
@@ -430,7 +434,7 @@ body::after {
 }
 
 .section-badge {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-primary);
   display: flex;
@@ -442,9 +446,9 @@ body::after {
   background: var(--accent-primary);
   color: white;
   border: none;
-  padding: 4px 12px;
+  padding: 5px 14px;
   border-radius: var(--radius-sm);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
   transition: var(--transition-fast);
@@ -475,7 +479,7 @@ body::after {
 .session-tag-list {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -483,11 +487,11 @@ body::after {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 10px;
   border-radius: 6px;
   flex-shrink: 0;
 }
@@ -495,6 +499,40 @@ body::after {
 .session-tag-type {
   font-weight: 700;
   color: var(--accent-purple);
+}
+
+/* Full Untruncated Professors Box */
+.section-professors-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  margin-top: 2px;
+}
+
+.prof-header-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-primary);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.prof-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.79rem;
+  color: var(--text-primary);
+  line-height: 1.35;
+  word-break: break-word;
+  white-space: normal;
 }
 
 /* Timetable Canvas Main Right */
@@ -672,7 +710,7 @@ body::after {
 .timetable-body {
   display: grid;
   grid-template-columns: 60px 1fr;
-  height: 680px;
+  height: 720px;
   overflow-y: auto;
   position: relative;
 }
@@ -683,7 +721,7 @@ body::after {
 }
 
 .time-label-slot {
-  height: 50px;
+  height: 52px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -707,7 +745,7 @@ body::after {
   border-left: 1px solid var(--border-color);
   height: 100%;
   background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 100% 50px;
+  background-size: 100% 52px;
   transition: var(--transition-fast);
 }
 
@@ -719,15 +757,15 @@ body::after {
 /* Schedule Event Block positioned in grid */
 .schedule-block {
   position: absolute;
-  left: 4px;
-  right: 4px;
+  left: 3px;
+  right: 3px;
   border-radius: var(--radius-sm);
   padding: 6px 8px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   color: white;
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.25);
   cursor: pointer;
@@ -738,8 +776,8 @@ body::after {
 
 .schedule-block:hover {
   transform: scale(1.02);
-  z-index: 10;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  z-index: 15;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 .schedule-block.has-conflict {
@@ -757,19 +795,54 @@ body::after {
 .block-course-code {
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   line-height: 1.1;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 2px;
 }
 
-.block-course-name {
-  font-size: 0.7rem;
-  opacity: 0.95;
-  white-space: nowrap;
+/* MARQUEE CONTINUOUS FILM TICKER SCROLL EFFECT */
+.marquee-film-container {
   overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap;
+  position: relative;
+  width: 100%;
+  display: block;
+}
+
+.marquee-film-text {
+  display: inline-block;
+  white-space: nowrap;
+  transition: transform 0.3s ease;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+/* On hover trigger film ticker animation */
+.schedule-block:hover .marquee-film-text,
+.course-card:hover .marquee-film-text {
+  animation: filmMarqueeScroll 6s linear infinite;
+}
+
+@keyframes filmMarqueeScroll {
+  0% {
+    transform: translateX(0%);
+  }
+  15% {
+    transform: translateX(0%);
+  }
+  75% {
+    transform: translateX(calc(-100% + 120px));
+  }
+  85% {
+    transform: translateX(calc(-100% + 120px));
+  }
+  100% {
+    transform: translateX(0%);
+  }
 }
 
 .block-footer {

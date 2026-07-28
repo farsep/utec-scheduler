@@ -4,16 +4,16 @@ export type SessionType = 'Teoría' | 'Laboratorio' | 'Práctica' | 'Taller' | '
 
 export interface Session {
   id: string;
-  sessionGroup: string; // e.g. "TEORÍA 1", "LABORATORIO 11"
+  sessionGroup: string; // e.g., "TEORÍA 1", "LABORATORIO 11"
   sessionType: SessionType;
-  modality: string; // "Presencial", "Sincronico", "Hibrido"
+  modality: 'Presencial' | 'Sincronico' | string;
   day: DayOfWeek;
-  startTime: string; // "15:00"
-  endTime: string; // "17:00"
-  startMinutes: number; // 900
-  endMinutes: number; // 1020
+  startTime: string; // "10:00"
+  endTime: string; // "12:00"
+  startMinutes: number; // 600
+  endMinutes: number; // 720
   frequency: string; // "Semana General"
-  location: string; // "UTEC-BA A1003"
+  location: string; // "UTEC-BA M802"
   vacancies: number;
   enrolled: number;
   professor: string;
@@ -21,7 +21,7 @@ export interface Session {
 }
 
 export interface Section {
-  sectionNumber: string; // "1", "2", "101"
+  sectionNumber: string; // "1", "2" or "1 (LABORATORIO 11)"
   sessions: Session[];
   vacancies: number;
   enrolled: number;
@@ -29,21 +29,21 @@ export interface Section {
 }
 
 export interface Course {
-  code: string; // "CS5352"
-  name: string; // "3D Graphics Programming"
+  code: string; // e.g. "CC1103"
+  name: string; // e.g. "Álgebra Lineal"
   sections: Section[];
-  isEligible?: boolean; // From PDF student eligibility check
-  courseType?: 'Obligatorio' | 'Electivo' | string; // From PDF
-  plan?: string; // "CD-2021-1"
-  credits?: number; // Calculated or default (3-4)
-  color: string; // CSS color string or gradient index
+  color: string;
+  isEligible?: boolean; // True if listed in student's PDF
+  courseType?: 'Obligatorio' | 'Electivo' | string;
+  plan?: string; // e.g. "CD-2021-1"
 }
 
-export interface SelectedSection {
-  courseCode: string;
-  courseName: string;
-  sectionNumber: string;
-  color: string;
+export interface MetadataInfo {
+  studentName?: string;
+  program?: string;
+  major?: string;
+  semester?: string;
+  registrationTime?: string;
 }
 
 export interface ScheduleOption {
@@ -67,18 +67,10 @@ export interface Conflict {
   endTime: string;
 }
 
-export interface MetadataInfo {
-  studentName?: string;
-  program?: string;
-  major?: string;
-  semester?: string;
-  registrationTime?: string;
-}
-
 export interface FilterState {
   searchQuery: string;
   onlyEligible: boolean;
-  modalityFilter: string; // 'ALL' | 'Presencial' | 'Sincronico'
-  dayFilter: string; // 'ALL' | DayOfWeek
-  typeFilter: string; // 'ALL' | 'Obligatorio' | 'Electivo'
+  modalityFilter: 'ALL' | 'Presencial' | 'Sincronico';
+  dayFilter: 'ALL' | DayOfWeek;
+  typeFilter: 'ALL' | 'Obligatorio' | 'Electivo';
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import { Navbar } from './Navbar';
 import { CourseSidebar } from './CourseSidebar';
@@ -7,11 +7,11 @@ import { ConflictBanner } from './ConflictBanner';
 import { MultiScheduleTabs } from './MultiScheduleTabs';
 import { FileUploadModal } from './FileUploadModal';
 import { ExportModal } from './ExportModal';
-import type { Course, MetadataInfo, ScheduleOption, Conflict } from '../types/schedule';
+import type { Course, MetadataInfo, ScheduleOption } from '../types/schedule';
 import { loadDefaultSampleData } from '../utils/sampleData';
 import type { PDFParseResult } from '../utils/pdfParser';
-import { detectConflicts, calculateTotalCredits, calculateTotalHours } from '../utils/scheduleUtils';
-import { Download, RefreshCw, CheckCircle, FileSpreadsheet, FileText, Sparkles, Upload } from 'lucide-react';
+import { detectConflicts, calculateTotalHours } from '../utils/scheduleUtils';
+import { Download, RefreshCw, CheckCircle, Upload, Sparkles } from 'lucide-react';
 
 export const ScheduleApp: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -35,11 +35,10 @@ export const ScheduleApp: React.FC = () => {
   const activeOption = options.find(o => o.id === activeOptionId) || options[0];
   const selectedSections = activeOption ? activeOption.selectedSections : {};
 
-  // Conflict calculation
-  const conflicts: Conflict[] = detectConflicts(courses, selectedSections);
-  const totalCredits = calculateTotalCredits(courses, selectedSections);
-  const totalHours = calculateTotalHours(courses, selectedSections);
-  const eligibleCount = courses.filter(c => c.isEligible).length;
+  // Memoized Conflict & Stats calculation for maximum UI performance
+  const conflicts = useMemo(() => detectConflicts(courses, selectedSections), [courses, selectedSections]);
+  const totalHours = useMemo(() => calculateTotalHours(courses, selectedSections), [courses, selectedSections]);
+  const eligibleCount = useMemo(() => courses.filter(c => c.isEligible).length, [courses]);
 
   // Section selection logic
   const handleSelectSection = (courseCode: string, sectionNumber: string) => {
@@ -48,7 +47,6 @@ export const ScheduleApp: React.FC = () => {
       prevOptions.map(opt => {
         if (opt.id === activeOptionId) {
           const nextSecs = { ...opt.selectedSections, [courseCode]: sectionNumber };
-          // Check if zero conflicts and celebration threshold
           const newConflicts = detectConflicts(courses, nextSecs);
           if (newConflicts.length === 0 && Object.keys(nextSecs).length >= 3) {
             confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
@@ -170,7 +168,6 @@ export const ScheduleApp: React.FC = () => {
       setCourses(data.courses);
       setMetadata(data.metadata);
       setHasExcelLoaded(true);
-      setHasPdfLoaded(true);
 
       const initialSelections: Record<string, string> = {};
       const targetCodes = ['CS5352', 'CC1103', 'CS2023', 'HH5101'];
@@ -293,10 +290,6 @@ export const ScheduleApp: React.FC = () => {
                 <div className="stat-item">
                   <span style={{ color: 'var(--text-muted)' }}>Cursos Elegidos:</span>
                   <span className="stat-value">{Object.keys(selectedSections).length}</span>
-                </div>
-                <div className="stat-item">
-                  <span style={{ color: 'var(--text-muted)' }}>Total Créditos:</span>
-                  <span className="stat-value" style={{ color: 'var(--accent-emerald)' }}>{totalCredits}</span>
                 </div>
                 <div className="stat-item">
                   <span style={{ color: 'var(--text-muted)' }}>Horas Semanales:</span>

@@ -174,14 +174,3 @@ export function calculateTotalHours(courses: Course[], selectedSections: Record<
   });
   return Math.round((totalMinutes / 60) * 10) / 10;
 }
-
-export function calculateTotalCredits(courses: Course[], selectedSections: Record<string, string>): number {
-  let totalCredits = 0;
-  Object.keys(selectedSections).forEach(courseCode => {
-    const course = courses.find(c => c.code === courseCode);
-    if (course) {
-      totalCredits += (course.credits || 3);
-    }
-  });
-  return totalCredits;
-}
