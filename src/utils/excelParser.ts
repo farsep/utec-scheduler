@@ -14,9 +14,9 @@ export function parseExcelFile(arrayBuffer: ArrayBuffer): ExcelParseResult {
   const rows: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
   const metadata: MetadataInfo = {};
-  const coursesMap = new Map<string, Course>();
+  const coursesMap = new Map<string, { code: string; name: string; rawSessions: any[] }>();
 
-  // Extract Metadata from top rows if present
+  // Extract Metadata from top rows
   for (let i = 0; i < Math.min(rows.length, 10); i++) {
     const row = rows[i];
     if (!row || row.length < 2) continue;
@@ -30,7 +30,7 @@ export function parseExcelFile(arrayBuffer: ArrayBuffer): ExcelParseResult {
     else if (label.includes('turno')) metadata.registrationTime = val;
   }
 
-  // Find header row (contains "Código" or "Curso")
+  // Header row detection
   let headerRowIndex = -1;
   for (let i = 0; i < Math.min(rows.length, 25); i++) {
     const rowStr = (rows[i] || []).join(' ').toLowerCase();
@@ -40,17 +40,14 @@ export function parseExcelFile(arrayBuffer: ArrayBuffer): ExcelParseResult {
     }
   }
 
-  if (headerRowIndex === -1) {
-    headerRowIndex = 7; // Default row index 8 (0-indexed 7)
-  }
+  if (headerRowIndex === -1) headerRowIndex = 7;
 
   const headers = (rows[headerRowIndex] || []).map((h: any) => String(h || '').trim().toLowerCase());
-  
-  // Column Index mapping
+
   const colMap = {
     code: headers.findIndex(h => h.includes('código') || h.includes('codigo')),
     name: headers.findIndex(h => h === 'curso' || h.includes('nombre')),
-    section: headers.findIndex(h => h.includes('sección') || h.includes('seccion') || h.includes('grupo')),
+    section: headers.findIndex(h => h.includes('sección') || h.includes('seccion')),
     sessionGroup: headers.findIndex(h => h.includes('sesión') || h.includes('sesion')),
     modality: headers.findIndex(h => h.includes('modalidad')),
     schedule: headers.findIndex(h => h.includes('horario')),
@@ -62,7 +59,6 @@ export function parseExcelFile(arrayBuffer: ArrayBuffer): ExcelParseResult {
     email: headers.findIndex(h => h.includes('correo'))
   };
 
-  // Fallbacks if header mapping fails
   if (colMap.code === -1) colMap.code = 0;
   if (colMap.name === -1) colMap.name = 1;
   if (colMap.section === -1) colMap.section = 2;
@@ -76,7 +72,6 @@ export function parseExcelFile(arrayBuffer: ArrayBuffer): ExcelParseResult {
   if (colMap.professor === -1) colMap.professor = 10;
   if (colMap.email === -1) colMap.email = 11;
 
-  // Process data rows
   for (let i = headerRowIndex + 1; i < rows.length; i++) {
     const row = rows[i];
     if (!row || row.length === 0) continue;
@@ -97,65 +92,160 @@ export function parseExcelFile(arrayBuffer: ArrayBuffer): ExcelParseResult {
     const email = String(row[colMap.email] || '').trim();
 
     const parsedTime = parseHorarioString(scheduleStr);
-    if (!parsedTime) continue; // Skip rows without valid time format
+    if (!parsedTime) continue;
 
-    // Create or get course
     if (!coursesMap.has(code)) {
-      coursesMap.set(code, {
-        code,
-        name,
-        sections: [],
-        color: getCourseColor(code),
-        credits: deriveCredits(code, name)
-      });
-    }
-    const course = coursesMap.get(code)!;
-
-    // Create or get section
-    let section = course.sections.find(s => s.sectionNumber === sectionNum);
-    if (!section) {
-      section = {
-        sectionNumber: sectionNum,
-        sessions: [],
-        vacancies,
-        enrolled,
-        professors: []
-      };
-      course.sections.push(section);
+      coursesMap.set(code, { code, name, rawSessions: [] });
     }
 
-    if (professor && !section.professors.includes(professor)) {
-      section.professors.push(professor);
-    }
-
-    const session: Session = {
-      id: `${code}-${sectionNum}-${sessionGroup}-${parsedTime.day}-${parsedTime.startTime}`,
+    coursesMap.get(code)!.rawSessions.push({
+      sectionNum,
       sessionGroup,
-      sessionType: parseSessionType(sessionGroup),
       modality,
-      day: parsedTime.day,
-      startTime: parsedTime.startTime,
-      endTime: parsedTime.endTime,
-      startMinutes: parsedTime.startMinutes,
-      endMinutes: parsedTime.endMinutes,
+      parsedTime,
       frequency,
       location,
       vacancies,
       enrolled,
       professor,
       email
-    };
-
-    section.sessions.push(session);
+    });
   }
 
-  // Sort sections by number
-  coursesMap.forEach(course => {
-    course.sections.sort((a, b) => parseInt(a.sectionNumber) - parseInt(b.sectionNumber));
+  const finalCourses: Course[] = [];
+
+  coursesMap.forEach(({ code, name, rawSessions }) => {
+    const sectionGroups = new Map<string, any[]>();
+    rawSessions.forEach(rs => {
+      if (!sectionGroups.has(rs.sectionNum)) sectionGroups.set(rs.sectionNum, []);
+      sectionGroups.get(rs.sectionNum)!.push(rs);
+    });
+
+    const finalSections: Section[] = [];
+
+    sectionGroups.forEach((sRows, mainSecNum) => {
+      const isSubgroup = (groupName: string) => {
+        const numMatch = groupName.match(/\d+/);
+        if (!numMatch) return false;
+        const num = parseInt(numMatch[0], 10);
+        return num >= 10 && !groupName.endsWith(` ${mainSecNum}`);
+      };
+
+      const subgroupRows = sRows.filter(r => isSubgroup(r.sessionGroup));
+      const baseRows = sRows.filter(r => !isSubgroup(r.sessionGroup));
+
+      // Extract DISTINCT subgroup names
+      const distinctSubgroups: string[] = [];
+      subgroupRows.forEach(r => {
+        if (!distinctSubgroups.includes(r.sessionGroup)) {
+          distinctSubgroups.push(r.sessionGroup);
+        }
+      });
+
+      // Split into variants ONLY if there are 2 or more DISTINCT subgroup names (e.g. CC1103: Lab 11, Lab 12...)
+      if (distinctSubgroups.length > 1) {
+        distinctSubgroups.forEach((sgName) => {
+          const matchingSubRows = subgroupRows.filter(r => r.sessionGroup === sgName);
+          const variantSecNum = `${mainSecNum} (${sgName})`;
+          const combinedSessions: Session[] = [];
+          const professors: string[] = [];
+
+          baseRows.forEach(bRow => {
+            combinedSessions.push({
+              id: `${code}-${variantSecNum}-${bRow.sessionGroup}-${bRow.parsedTime.day}-${bRow.parsedTime.startTime}`,
+              sessionGroup: bRow.sessionGroup,
+              sessionType: parseSessionType(bRow.sessionGroup),
+              modality: bRow.modality,
+              day: bRow.parsedTime.day,
+              startTime: bRow.parsedTime.startTime,
+              endTime: bRow.parsedTime.endTime,
+              startMinutes: bRow.parsedTime.startMinutes,
+              endMinutes: bRow.parsedTime.endMinutes,
+              frequency: bRow.frequency,
+              location: bRow.location,
+              vacancies: matchingSubRows[0]?.vacancies || bRow.vacancies,
+              enrolled: matchingSubRows[0]?.enrolled || bRow.enrolled,
+              professor: bRow.professor,
+              email: bRow.email
+            });
+            if (bRow.professor && !professors.includes(bRow.professor)) professors.push(bRow.professor);
+          });
+
+          matchingSubRows.forEach((subRow, subIdx) => {
+            combinedSessions.push({
+              id: `${code}-${variantSecNum}-${subRow.sessionGroup}-${subRow.parsedTime.day}-${subRow.parsedTime.startTime}-${subIdx}`,
+              sessionGroup: subRow.sessionGroup,
+              sessionType: parseSessionType(subRow.sessionGroup),
+              modality: subRow.modality,
+              day: subRow.parsedTime.day,
+              startTime: subRow.parsedTime.startTime,
+              endTime: subRow.parsedTime.endTime,
+              startMinutes: subRow.parsedTime.startMinutes,
+              endMinutes: subRow.parsedTime.endMinutes,
+              frequency: subRow.frequency,
+              location: subRow.location,
+              vacancies: subRow.vacancies,
+              enrolled: subRow.enrolled,
+              professor: subRow.professor,
+              email: subRow.email
+            });
+            if (subRow.professor && !professors.includes(subRow.professor)) professors.push(subRow.professor);
+          });
+
+          finalSections.push({
+            sectionNumber: variantSecNum,
+            sessions: combinedSessions,
+            vacancies: matchingSubRows[0]?.vacancies || sRows[0]?.vacancies || 0,
+            enrolled: matchingSubRows[0]?.enrolled || sRows[0]?.enrolled || 0,
+            professors
+          });
+        });
+      } else {
+        // Single section (e.g. CS6006): keep all base + subgroup sessions together in 1 section!
+        const combinedSessions: Session[] = sRows.map((r, idx) => ({
+          id: `${code}-${mainSecNum}-${r.sessionGroup}-${r.parsedTime.day}-${r.parsedTime.startTime}-${idx}`,
+          sessionGroup: r.sessionGroup,
+          sessionType: parseSessionType(r.sessionGroup),
+          modality: r.modality,
+          day: r.parsedTime.day,
+          startTime: r.parsedTime.startTime,
+          endTime: r.parsedTime.endTime,
+          startMinutes: r.parsedTime.startMinutes,
+          endMinutes: r.parsedTime.endMinutes,
+          frequency: r.frequency,
+          location: r.location,
+          vacancies: r.vacancies,
+          enrolled: r.enrolled,
+          professor: r.professor,
+          email: r.email
+        }));
+
+        const professors: string[] = [];
+        sRows.forEach(r => {
+          if (r.professor && !professors.includes(r.professor)) professors.push(r.professor);
+        });
+
+        finalSections.push({
+          sectionNumber: mainSecNum,
+          sessions: combinedSessions,
+          vacancies: sRows[0]?.vacancies || 0,
+          enrolled: sRows[0]?.enrolled || 0,
+          professors
+        });
+      }
+    });
+
+    finalCourses.push({
+      code,
+      name,
+      sections: finalSections,
+      color: getCourseColor(code),
+      credits: deriveCredits(code, name)
+    });
   });
 
   return {
-    courses: Array.from(coursesMap.values()),
+    courses: finalCourses,
     metadata
   };
 }
