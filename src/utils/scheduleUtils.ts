@@ -27,6 +27,18 @@ export const COLOR_PALETTES = [
 ];
 
 /**
+ * Normalizes string removing accents, diacritics, and converting to lower case for search
+ */
+export function normalizeString(str: string): string {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+/**
  * Returns a consistent distinct color configuration for a given string (e.g. course code).
  */
 export function getCourseColor(courseCode: string): string {
@@ -53,14 +65,12 @@ export function getCourseGradient(courseCode: string): string {
 export function parseHorarioString(horarioStr: string): { day: DayOfWeek; startTime: string; endTime: string; startMinutes: number; endMinutes: number } | null {
   if (!horarioStr) return null;
   
-  // Format regex: (Lun|Mar|Mie|Jue|Vie|Sab|Dom)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})
-  const match = horarioStr.trim().match(/^(Lun|Mar|Mie|Jue|Vie|Sab|Dom)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/i);
+  const match = horarioStr.trim().match(/(Lun|Mar|Mie|Jue|Vie|Sab|Dom)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/i);
   if (!match) return null;
 
   let rawDay = match[1].substring(0, 3);
   rawDay = rawDay.charAt(0).toUpperCase() + rawDay.slice(1).toLowerCase();
   
-  // Map Day names
   let day: DayOfWeek = 'Lun';
   if (rawDay.startsWith('Mar')) day = 'Mar';
   else if (rawDay.startsWith('Mie')) day = 'Mie';
@@ -105,7 +115,6 @@ export function detectConflicts(courses: Course[], selectedSections: Record<stri
   const conflicts: Conflict[] = [];
   const activeSessions: { course: Course; sectionNumber: string; session: Session }[] = [];
 
-  // Gather all active sessions
   Object.entries(selectedSections).forEach(([courseCode, secNum]) => {
     const course = courses.find(c => c.code === courseCode);
     if (!course) return;
@@ -117,16 +126,13 @@ export function detectConflicts(courses: Course[], selectedSections: Record<stri
     });
   });
 
-  // Compare every pair for overlaps
   for (let i = 0; i < activeSessions.length; i++) {
     for (let j = i + 1; j < activeSessions.length; j++) {
       const item1 = activeSessions[i];
       const item2 = activeSessions[j];
 
-      // Different courses (or different sessions of different courses)
       if (item1.course.code !== item2.course.code) {
         if (item1.session.day === item2.session.day) {
-          // Check minute range overlap: max(start1, start2) < min(end1, end2)
           const overlapStart = Math.max(item1.session.startMinutes, item2.session.startMinutes);
           const overlapEnd = Math.min(item1.session.endMinutes, item2.session.endMinutes);
 
