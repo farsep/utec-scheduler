@@ -15,9 +15,8 @@ pages:
       - .pnpm-store
   before_script:
     - corepack enable
-    - corepack prepare pnpm@latest --activate
+    - corepack prepare pnpm@9 --activate
     - pnpm config set store-dir .pnpm-store
-    - pnpm config set minimum-release-age 0
   script:
     - pnpm install
     - pnpm run build
