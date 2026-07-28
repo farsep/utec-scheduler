@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, ChevronRight, Plus, Trash2, GripVertical, CheckCircle2, MapPin, User, Users } from 'lucide-react';
 import type { Course, FilterState } from '../types/schedule';
+import { normalizeString } from '../utils/scheduleUtils';
 
 interface CourseSidebarProps {
   courses: Course[];
@@ -30,22 +31,26 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set(['CS5352', 'CC1103', 'CS2023']));
   const [allExpanded, setAllExpanded] = useState<boolean>(false);
 
-  // Filter courses
+  // Filter courses with accent and case insensitive normalization
   const filteredCourses = courses.filter(course => {
-    // Search query
     if (filterState.searchQuery) {
-      const q = filterState.searchQuery.toLowerCase();
-      const matchesCode = course.code.toLowerCase().includes(q);
-      const matchesName = course.name.toLowerCase().includes(q);
-      if (!matchesCode && !matchesName) return false;
+      const q = normalizeString(filterState.searchQuery);
+      const normCode = normalizeString(course.code);
+      const normName = normalizeString(course.name);
+
+      const matchesCode = normCode.includes(q);
+      const matchesName = normName.includes(q);
+      const matchesProf = course.sections.some(sec =>
+        sec.professors.some(prof => normalizeString(prof).includes(q))
+      );
+
+      if (!matchesCode && !matchesName && !matchesProf) return false;
     }
 
-    // Only eligible
     if (filterState.onlyEligible && !course.isEligible) {
       return false;
     }
 
-    // Type filter
     if (filterState.typeFilter !== 'ALL' && course.courseType !== filterState.typeFilter) {
       return false;
     }
@@ -98,13 +103,13 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
           </button>
         </div>
 
-        {/* Search Input */}
+        {/* Search Input (Case and Accent Insensitive) */}
         <div className="search-bar">
           <Search size={16} color="var(--text-muted)" />
           <input
             type="text"
             className="search-input"
-            placeholder="Buscar por código (ej. CC1103) o curso..."
+            placeholder="Buscar curso, código o docente (sin tildes)..."
             value={filterState.searchQuery}
             onChange={e => setFilterState({ ...filterState, searchQuery: e.target.value })}
           />
@@ -144,7 +149,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
       <div className="course-list-scroll">
         {filteredCourses.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            No hay cursos que coincidan con el filtro.
+            No hay cursos que coincidan con la búsqueda.
           </div>
         ) : (
           filteredCourses.map(course => {
@@ -206,7 +211,6 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                             onDragEndSection();
                           }}
                           onMouseEnter={() => {
-                            // Instant hover shadow preview option
                             onDragStartSection({ courseCode: course.code, sectionNumber: section.sectionNumber });
                           }}
                           onMouseLeave={() => {

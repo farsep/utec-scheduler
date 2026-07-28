@@ -88,7 +88,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         </div>
 
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-          Puedes subir <strong>solo un PDF</strong>, <strong>solo un Excel</strong>, o <strong>ambos archivos</strong>. Con cualquier archivo es suficiente para armar tu horario.
+          Sube tu archivo PDF de <strong>Cursos Habilitados</strong> y/o tu archivo Excel de <strong>Oferta Académica</strong>. Todo PDF debe ser subido directamente por el alumno.
         </p>
 
         {errorMsg && (
@@ -104,7 +104,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             <FileSpreadsheet size={32} color="var(--accent-emerald)" />
             <div>
               <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Oferta Excel (.xlsx)</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Catalogó de Cursos</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Catálogo General</div>
             </div>
             {hasExcelData ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -135,7 +135,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             <FileText size={32} color="var(--accent-rose)" />
             <div>
               <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Cursos PDF (.pdf)</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Cursos Habilitados</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Subida del Alumno</div>
             </div>
             {hasPDFData ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -162,15 +162,12 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           </div>
         </div>
 
-        {/* Download Sample Files Box */}
+        {/* Download Sample File Box (Excel Only) */}
         <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-color)', padding: '14px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Archivos de muestra de prueba:</div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <a href="/samples/Consulta_Horario.xlsx" download className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '4px 10px', textDecoration: 'none' }}>
-              <Download size={14} /> Consulta_Horario.xlsx
-            </a>
-            <a href="/samples/cursos_habilitados.pdf" download className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '4px 10px', textDecoration: 'none' }}>
-              <Download size={14} /> cursos_habilitados.pdf
+          <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Archivo de muestra pública para prueba:</div>
+          <div>
+            <a href="/samples/Consulta_Horario.xlsx" download className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '6px 12px', textDecoration: 'none', display: 'inline-flex' }}>
+              <Download size={14} /> Descargar Consulta_Horario.xlsx
             </a>
           </div>
         </div>
