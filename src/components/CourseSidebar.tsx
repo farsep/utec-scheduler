@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ChevronDown, ChevronRight, Plus, Trash2, GripVertical, CheckCircle2 } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight, Plus, Trash2, GripVertical, CheckCircle2, MapPin, User, Users } from 'lucide-react';
 import type { Course, FilterState } from '../types/schedule';
 
 interface CourseSidebarProps {
@@ -7,13 +7,17 @@ interface CourseSidebarProps {
   selectedSections: Record<string, string>; // courseCode -> sectionNumber
   onSelectSection: (courseCode: string, sectionNumber: string) => void;
   onRemoveSection: (courseCode: string) => void;
+  onDragStartSection: (dragInfo: { courseCode: string; sectionNumber: string }) => void;
+  onDragEndSection: () => void;
 }
 
 export const CourseSidebar: React.FC<CourseSidebarProps> = ({
   courses,
   selectedSections,
   onSelectSection,
-  onRemoveSection
+  onRemoveSection,
+  onDragStartSection,
+  onDragEndSection
 }) => {
   const [filterState, setFilterState] = useState<FilterState>({
     searchQuery: '',
@@ -23,7 +27,6 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
     typeFilter: 'ALL'
   });
 
-  // Track manually expanded courses. Default to first 5 or empty.
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set(['CS5352', 'CC1103', 'CS2023']));
   const [allExpanded, setAllExpanded] = useState<boolean>(false);
 
@@ -101,7 +104,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
           <input
             type="text"
             className="search-input"
-            placeholder="Buscar por código (ej. CS2023) o curso..."
+            placeholder="Buscar por código (ej. CC1103) o curso..."
             value={filterState.searchQuery}
             onChange={e => setFilterState({ ...filterState, searchQuery: e.target.value })}
           />
@@ -133,7 +136,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
         <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <GripVertical size={14} color="var(--accent-primary)" />
-          <span>Arrastra secciones a la grilla o haz clic en <strong>+ Agregar</strong></span>
+          <span>Arrastra secciones para ver su <strong>sombra previa en el horario</strong></span>
         </div>
       </div>
 
@@ -182,7 +185,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
                 {/* Sections List */}
                 {isExpanded && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px', background: 'rgba(0, 0, 0, 0.2)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px', background: 'rgba(0, 0, 0, 0.25)' }}>
                     {course.sections.map(section => {
                       const isSecSelected = activeSectionNum === section.sectionNumber;
 
@@ -197,6 +200,17 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                               courseCode: course.code,
                               sectionNumber: section.sectionNumber
                             }));
+                            onDragStartSection({ courseCode: course.code, sectionNumber: section.sectionNumber });
+                          }}
+                          onDragEnd={() => {
+                            onDragEndSection();
+                          }}
+                          onMouseEnter={() => {
+                            // Instant hover shadow preview option
+                            onDragStartSection({ courseCode: course.code, sectionNumber: section.sectionNumber });
+                          }}
+                          onMouseLeave={() => {
+                            onDragEndSection();
                           }}
                           style={{
                             borderRadius: '8px',
@@ -235,21 +249,39 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                             )}
                           </div>
 
+                          {/* Session Breakdown List */}
                           <div className="session-tag-list">
                             {section.sessions.map((sess, idx) => (
                               <div key={idx} className="session-tag">
-                                <span className="session-tag-type">{sess.sessionGroup}</span>
-                                <span><strong>{sess.day}</strong> {sess.startTime} - {sess.endTime}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span className="session-tag-type">{sess.sessionGroup}</span>
+                                  <span><strong>{sess.day}</strong> {sess.startTime}-{sess.endTime}</span>
+                                </div>
+                                {sess.location && (
+                                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                    <MapPin size={10} /> {sess.location}
+                                  </span>
+                                )}
                               </div>
                             ))}
                           </div>
 
-                          {section.professors.length > 0 && (
-                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: '4px', marginTop: '2px' }}>
-                              <span>Docente:</span>
-                              <span style={{ color: 'var(--text-secondary)' }}>{section.professors.join(', ')}</span>
-                            </div>
-                          )}
+                          {/* Professor & Vacancies Metadata Footer */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px', borderTop: '1px dashed rgba(255,255,255,0.06)', paddingTop: '6px' }}>
+                            {section.professors.length > 0 ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', maxWidth: '70%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <User size={12} color="var(--accent-primary)" />
+                                <span style={{ color: 'var(--text-secondary)' }}>{section.professors.join(', ')}</span>
+                              </div>
+                            ) : <div></div>}
+
+                            {section.vacancies > 0 && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-emerald)', fontWeight: 600 }}>
+                                <Users size={12} />
+                                <span>{section.vacancies} vacantes</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
                     })}

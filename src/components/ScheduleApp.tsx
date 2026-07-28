@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 import { Navbar } from './Navbar';
 import { CourseSidebar } from './CourseSidebar';
@@ -9,16 +9,18 @@ import { FileUploadModal } from './FileUploadModal';
 import { ExportModal } from './ExportModal';
 import type { Course, MetadataInfo, ScheduleOption, Conflict } from '../types/schedule';
 import { loadDefaultSampleData } from '../utils/sampleData';
+import type { PDFParseResult } from '../utils/pdfParser';
 import { detectConflicts, calculateTotalCredits, calculateTotalHours } from '../utils/scheduleUtils';
-import { Download, Sparkles, RefreshCw, CheckCircle } from 'lucide-react';
-
-const STORAGE_KEY = 'utec_schedule_builder_state_v1';
+import { Download, RefreshCw, CheckCircle, FileSpreadsheet, FileText, Sparkles, Upload } from 'lucide-react';
 
 export const ScheduleApp: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [metadata, setMetadata] = useState<MetadataInfo>({});
-  const [isSampleLoaded, setIsSampleLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [hasPdfLoaded, setHasPdfLoaded] = useState<boolean>(false);
+  const [hasExcelLoaded, setHasExcelLoaded] = useState<boolean>(false);
+
+  // Active section drag / hover preview shadow state
+  const [draggedSection, setDraggedSection] = useState<{ courseCode: string; sectionNumber: string } | null>(null);
 
   const [options, setOptions] = useState<ScheduleOption[]>([
     { id: 'opt_1', name: 'Opción A', selectedSections: {} },
@@ -28,36 +30,6 @@ export const ScheduleApp: React.FC = () => {
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
-
-  // Load sample dataset on mount
-  useEffect(() => {
-    async function initData() {
-      setIsLoading(true);
-      const data = await loadDefaultSampleData();
-      if (data.courses.length > 0) {
-        setCourses(data.courses);
-        setMetadata(data.metadata);
-        setIsSampleLoaded(true);
-
-        // Pre-select a clean initial demo schedule on Opción A
-        const initialSelections: Record<string, string> = {};
-        const targetCodes = ['CS5352', 'CC1103', 'CS2023', 'HH5101'];
-        targetCodes.forEach(code => {
-          const course = data.courses.find(c => c.code === code);
-          if (course && course.sections.length > 0) {
-            initialSelections[code] = course.sections[0].sectionNumber;
-          }
-        });
-
-        setOptions([
-          { id: 'opt_1', name: 'Opción A (Mañana)', selectedSections: initialSelections },
-          { id: 'opt_2', name: 'Opción B (Tarde)', selectedSections: {} }
-        ]);
-      }
-      setIsLoading(false);
-    }
-    initData();
-  }, []);
 
   // Current active option
   const activeOption = options.find(o => o.id === activeOptionId) || options[0];
@@ -69,8 +41,9 @@ export const ScheduleApp: React.FC = () => {
   const totalHours = calculateTotalHours(courses, selectedSections);
   const eligibleCount = courses.filter(c => c.isEligible).length;
 
-  // Handle Section Toggle
+  // Section selection logic
   const handleSelectSection = (courseCode: string, sectionNumber: string) => {
+    setDraggedSection(null);
     setOptions(prevOptions =>
       prevOptions.map(opt => {
         if (opt.id === activeOptionId) {
@@ -88,6 +61,7 @@ export const ScheduleApp: React.FC = () => {
   };
 
   const handleRemoveSection = (courseCode: string) => {
+    setDraggedSection(null);
     setOptions(prevOptions =>
       prevOptions.map(opt => {
         if (opt.id === activeOptionId) {
@@ -121,31 +95,97 @@ export const ScheduleApp: React.FC = () => {
     }
   };
 
+  // Handlers for File Parsing (Excel, PDF, or Both)
   const handleExcelParsed = (newCourses: Course[], newMeta: MetadataInfo) => {
-    setCourses(newCourses);
-    setMetadata(newMeta);
-    setIsSampleLoaded(false);
-  };
-
-  const handlePDFParsed = (eligibleCodes: Set<string>, map: Map<string, { type: string; plan?: string }>) => {
-    setCourses(prev =>
-      prev.map(c => {
-        if (eligibleCodes.has(c.code)) {
-          const extra = map.get(c.code);
-          return { ...c, isEligible: true, courseType: extra?.type, plan: extra?.plan };
+    setHasExcelLoaded(true);
+    if (hasPdfLoaded) {
+      const merged = newCourses.map(c => {
+        const pdfCourse = courses.find(pc => pc.code === c.code);
+        if (pdfCourse) {
+          return { ...c, isEligible: true, courseType: pdfCourse.courseType, plan: pdfCourse.plan };
         }
-        return { ...c, isEligible: false };
-      })
-    );
+        return c;
+      });
+      setCourses(merged);
+    } else {
+      setCourses(newCourses);
+    }
+    setMetadata(prev => ({ ...prev, ...newMeta }));
   };
 
-  const handleReloadSample = async () => {
-    setIsLoading(true);
+  const handlePDFParsed = (pdfResult: PDFParseResult) => {
+    setHasPdfLoaded(true);
+    const { courses: pdfCourses, eligibleCourseCodes, eligibleCoursesMap, metadata: pdfMeta } = pdfResult;
+
+    if (!hasExcelLoaded || courses.length === 0) {
+      setCourses(pdfCourses);
+      if (pdfMeta.studentName) {
+        setMetadata(prev => ({ ...prev, studentName: pdfMeta.studentName }));
+      }
+    } else {
+      setCourses(prev =>
+        prev.map(c => {
+          if (eligibleCourseCodes.has(c.code)) {
+            const extra = eligibleCoursesMap.get(c.code);
+            return { ...c, isEligible: true, courseType: extra?.type, plan: extra?.plan };
+          }
+          return { ...c, isEligible: false };
+        })
+      );
+    }
+  };
+
+  const handleClearExcelData = () => {
+    setHasExcelLoaded(false);
+    if (!hasPdfLoaded) {
+      setCourses([]);
+      setMetadata({});
+    }
+  };
+
+  const handleClearPDFData = () => {
+    setHasPdfLoaded(false);
+    if (!hasExcelLoaded) {
+      setCourses([]);
+      setMetadata({});
+    } else {
+      setCourses(prev => prev.map(c => ({ ...c, isEligible: undefined, courseType: undefined, plan: undefined })));
+    }
+  };
+
+  const handleClearAllData = () => {
+    setHasExcelLoaded(false);
+    setHasPdfLoaded(false);
+    setCourses([]);
+    setMetadata({});
+    setOptions([
+      { id: 'opt_1', name: 'Opción A', selectedSections: {} },
+      { id: 'opt_2', name: 'Opción B', selectedSections: {} }
+    ]);
+  };
+
+  const handleLoadSampleData = async () => {
     const data = await loadDefaultSampleData();
-    setCourses(data.courses);
-    setMetadata(data.metadata);
-    setIsSampleLoaded(true);
-    setIsLoading(false);
+    if (data.courses.length > 0) {
+      setCourses(data.courses);
+      setMetadata(data.metadata);
+      setHasExcelLoaded(true);
+      setHasPdfLoaded(true);
+
+      const initialSelections: Record<string, string> = {};
+      const targetCodes = ['CS5352', 'CC1103', 'CS2023', 'HH5101'];
+      targetCodes.forEach(code => {
+        const course = data.courses.find(c => c.code === code);
+        if (course && course.sections.length > 0) {
+          initialSelections[code] = course.sections[0].sectionNumber;
+        }
+      });
+
+      setOptions([
+        { id: 'opt_1', name: 'Opción A (Mañana)', selectedSections: initialSelections },
+        { id: 'opt_2', name: 'Opción B (Tarde)', selectedSections: {} }
+      ]);
+    }
   };
 
   return (
@@ -153,96 +193,138 @@ export const ScheduleApp: React.FC = () => {
       <Navbar
         metadata={metadata}
         onOpenUpload={() => setIsUploadOpen(true)}
-        onLoadSample={handleReloadSample}
-        isSampleLoaded={isSampleLoaded}
+        onLoadSample={handleLoadSampleData}
+        onClearAllData={handleClearAllData}
         coursesCount={courses.length}
         eligibleCount={eligibleCount}
       />
 
-      <main className="workspace-layout">
-        {/* Left Sidebar: Course Catalog */}
-        <CourseSidebar
-          courses={courses}
-          selectedSections={selectedSections}
-          onSelectSection={handleSelectSection}
-          onRemoveSection={handleRemoveSection}
-        />
+      {courses.length === 0 ? (
+        /* Empty State Hero Banner when no file is loaded */
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
+          <div className="glass-panel" style={{ maxWidth: '640px', width: '100%', padding: '40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'var(--accent-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 0 30px rgba(59, 130, 246, 0.4)' }}>
+              <Upload size={32} />
+            </div>
 
-        {/* Right Timetable Area */}
-        <section className="timetable-panel">
-          {/* Top Control Bar */}
-          <div className="timetable-bar">
-            <MultiScheduleTabs
-              options={options}
-              activeOptionId={activeOptionId}
-              onSelectOption={setActiveOptionId}
-              onAddOption={handleAddOption}
-              onDuplicateOption={() => {}}
-              onDeleteOption={handleDeleteOption}
-            />
+            <div>
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.75rem', fontWeight: 800, marginBottom: '8px' }}>
+                Arma tu Horario de Matrícula
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+                Sube <strong>un archivo PDF de Cursos Habilitados</strong>, <strong>un archivo Excel</strong>, o <strong>ambos</strong> para comenzar a armar tu horario con drag & drop.
+              </p>
+            </div>
 
-            <div className="timetable-actions">
-              <button
-                className="btn btn-secondary"
-                onClick={() => {
-                  setOptions(options.map(o => o.id === activeOptionId ? { ...o, selectedSections: {} } : o));
-                }}
-                title="Limpiar este horario"
-              >
-                <RefreshCw size={14} /> Limpiar
+            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button className="btn btn-primary" onClick={() => setIsUploadOpen(true)} style={{ padding: '12px 24px', fontSize: '0.95rem' }}>
+                <Upload size={18} /> Subir PDF o Excel
               </button>
 
-              <button className="btn btn-primary" onClick={() => setIsExportOpen(true)}>
-                <Download size={16} /> Exportar Horario
+              <button className="btn btn-secondary" onClick={handleLoadSampleData} style={{ padding: '12px 20px', fontSize: '0.95rem' }}>
+                <Sparkles size={18} color="var(--accent-amber)" /> Datos Muestra UTEC
               </button>
             </div>
+
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'rgba(255, 255, 255, 0.03)', padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              Soporta: Solo PDF • Solo Excel • Ambos archivos combinados
+            </div>
           </div>
-
-          {/* Conflict Banner if clashes exist */}
-          <ConflictBanner conflicts={conflicts} />
-
-          {/* Timetable Drag & Drop Canvas */}
-          <TimetableGrid
+        </div>
+      ) : (
+        /* Workspace split view when courses are loaded */
+        <main className="workspace-layout">
+          {/* Left Sidebar: Course Catalog */}
+          <CourseSidebar
             courses={courses}
             selectedSections={selectedSections}
-            conflicts={conflicts}
             onSelectSection={handleSelectSection}
             onRemoveSection={handleRemoveSection}
+            onDragStartSection={info => setDraggedSection(info)}
+            onDragEndSection={() => setDraggedSection(null)}
           />
 
-          {/* Footer Stats Bar */}
-          <div className="stats-footer">
-            <div className="stats-group">
-              <div className="stat-item">
-                <span style={{ color: 'var(--text-muted)' }}>Cursos Elegidos:</span>
-                <span className="stat-value">{Object.keys(selectedSections).length}</span>
-              </div>
-              <div className="stat-item">
-                <span style={{ color: 'var(--text-muted)' }}>Total Créditos:</span>
-                <span className="stat-value" style={{ color: 'var(--accent-emerald)' }}>{totalCredits}</span>
-              </div>
-              <div className="stat-item">
-                <span style={{ color: 'var(--text-muted)' }}>Horas Semanales:</span>
-                <span className="stat-value" style={{ color: 'var(--accent-purple)' }}>{totalHours} hrs</span>
+          {/* Right Timetable Area */}
+          <section className="timetable-panel">
+            {/* Top Control Bar */}
+            <div className="timetable-bar">
+              <MultiScheduleTabs
+                options={options}
+                activeOptionId={activeOptionId}
+                onSelectOption={setActiveOptionId}
+                onAddOption={handleAddOption}
+                onDuplicateOption={() => {}}
+                onDeleteOption={handleDeleteOption}
+              />
+
+              <div className="timetable-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setOptions(options.map(o => o.id === activeOptionId ? { ...o, selectedSections: {} } : o));
+                  }}
+                  title="Limpiar selecciones en esta opción"
+                >
+                  <RefreshCw size={14} /> Limpiar
+                </button>
+
+                <button className="btn btn-primary" onClick={() => setIsExportOpen(true)}>
+                  <Download size={16} /> Exportar Horario
+                </button>
               </div>
             </div>
 
-            {conflicts.length === 0 && Object.keys(selectedSections).length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-emerald)', fontWeight: 700, fontSize: '0.88rem' }}>
-                <CheckCircle size={18} />
-                <span>¡Horario Válido y Sin Cruces!</span>
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
+            {/* Conflict Banner if clashes exist */}
+            <ConflictBanner conflicts={conflicts} />
 
-      {/* Upload Modal */}
+            {/* Timetable Drag & Drop Canvas */}
+            <TimetableGrid
+              courses={courses}
+              selectedSections={selectedSections}
+              conflicts={conflicts}
+              draggedSection={draggedSection}
+              onSelectSection={handleSelectSection}
+              onRemoveSection={handleRemoveSection}
+            />
+
+            {/* Footer Stats Bar */}
+            <div className="stats-footer">
+              <div className="stats-group">
+                <div className="stat-item">
+                  <span style={{ color: 'var(--text-muted)' }}>Cursos Elegidos:</span>
+                  <span className="stat-value">{Object.keys(selectedSections).length}</span>
+                </div>
+                <div className="stat-item">
+                  <span style={{ color: 'var(--text-muted)' }}>Total Créditos:</span>
+                  <span className="stat-value" style={{ color: 'var(--accent-emerald)' }}>{totalCredits}</span>
+                </div>
+                <div className="stat-item">
+                  <span style={{ color: 'var(--text-muted)' }}>Horas Semanales:</span>
+                  <span className="stat-value" style={{ color: 'var(--accent-purple)' }}>{totalHours} hrs</span>
+                </div>
+              </div>
+
+              {conflicts.length === 0 && Object.keys(selectedSections).length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-emerald)', fontWeight: 700, fontSize: '0.88rem' }}>
+                  <CheckCircle size={18} />
+                  <span>¡Horario Válido y Sin Cruces!</span>
+                </div>
+              )}
+            </div>
+          </section>
+        </main>
+      )}
+
+      {/* Upload & Data Management Modal */}
       <FileUploadModal
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
         onDataParsed={handleExcelParsed}
         onPDFParsed={handlePDFParsed}
+        onClearExcel={handleClearExcelData}
+        onClearPDF={handleClearPDFData}
+        hasExcelData={hasExcelLoaded}
+        hasPDFData={hasPdfLoaded}
       />
 
       {/* Export Modal */}

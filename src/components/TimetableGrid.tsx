@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { DAYS, DAY_NAMES, getCourseGradient } from '../utils/scheduleUtils';
-import type { Course, DayOfWeek, Conflict } from '../types/schedule';
-import { Trash2, Plus, Sparkles } from 'lucide-react';
+import type { Course, DayOfWeek, Conflict, Session } from '../types/schedule';
+import { Trash2, AlertTriangle, Sparkles } from 'lucide-react';
 
 interface TimetableGridProps {
   courses: Course[];
   selectedSections: Record<string, string>;
   conflicts: Conflict[];
+  draggedSection: { courseCode: string; sectionNumber: string } | null;
   onSelectSection: (courseCode: string, sectionNumber: string) => void;
   onRemoveSection: (courseCode: string) => void;
 }
@@ -19,6 +20,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
   courses,
   selectedSections,
   conflicts,
+  draggedSection,
   onSelectSection,
   onRemoveSection
 }) => {
@@ -30,7 +32,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
     hours.push(`${h.toString().padStart(2, '0')}:00`);
   }
 
-  // Find all active sessions to place on canvas
+  // Find all active scheduled sessions
   const scheduledBlocks: {
     course: Course;
     sectionNumber: string;
@@ -53,7 +55,6 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
     if (!section) return;
 
     section.sessions.forEach(sess => {
-      // Check if this session is involved in a conflict
       const hasConflict = conflicts.some(c =>
         (c.course1Code === course.code && c.section1Number === secNum && c.day === sess.day) ||
         (c.course2Code === course.code && c.section2Number === secNum && c.day === sess.day)
@@ -75,6 +76,52 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
       });
     });
   });
+
+  // Calculate Ghost Shadow Preview blocks if draggedSection is active
+  const ghostBlocks: {
+    courseCode: string;
+    courseName: string;
+    sectionNumber: string;
+    sessionGroup: string;
+    day: DayOfWeek;
+    startTime: string;
+    endTime: string;
+    startMinutes: number;
+    endMinutes: number;
+    location: string;
+    hasGhostConflict: boolean;
+  }[] = [];
+
+  if (draggedSection) {
+    const dCourse = courses.find(c => c.code === draggedSection.courseCode);
+    if (dCourse) {
+      const dSection = dCourse.sections.find(s => s.sectionNumber === draggedSection.sectionNumber);
+      if (dSection) {
+        dSection.sessions.forEach(sess => {
+          // Check if ghost session conflicts with any existing scheduled block on the grid
+          const hasGhostConflict = scheduledBlocks.some(sb =>
+            sb.course.code !== dCourse.code &&
+            sb.day === sess.day &&
+            Math.max(sb.startMinutes, sess.startMinutes) < Math.min(sb.endMinutes, sess.endMinutes)
+          );
+
+          ghostBlocks.push({
+            courseCode: dCourse.code,
+            courseName: dCourse.name,
+            sectionNumber: draggedSection.sectionNumber,
+            sessionGroup: sess.sessionGroup,
+            day: sess.day,
+            startTime: sess.startTime,
+            endTime: sess.endTime,
+            startMinutes: sess.startMinutes,
+            endMinutes: sess.endMinutes,
+            location: sess.location,
+            hasGhostConflict
+          });
+        });
+      }
+    }
+  }
 
   const handleDragOver = (e: React.DragEvent, day: DayOfWeek) => {
     e.preventDefault();
@@ -123,6 +170,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
         <div className="days-canvas-grid">
           {DAYS.map(day => {
             const dayBlocks = scheduledBlocks.filter(b => b.day === day);
+            const dayGhostBlocks = ghostBlocks.filter(g => g.day === day);
 
             return (
               <div
@@ -132,29 +180,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                 onDragLeave={() => setDragOverDay(null)}
                 onDrop={e => handleDrop(e, day)}
               >
-                {/* Drag-over overlay feedback */}
-                {dragOverDay === day && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      background: 'rgba(59, 130, 246, 0.15)',
-                      border: '2px dashed var(--accent-primary)',
-                      borderRadius: '8px',
-                      zIndex: 30,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--accent-primary)',
-                      fontWeight: 700,
-                      fontSize: '0.85rem',
-                      pointerEvents: 'none'
-                    }}
-                  >
-                    + Soltar para agregar
-                  </div>
-                )}
-
+                {/* Active Scheduled Blocks */}
                 {dayBlocks.map((block, idx) => {
                   const topPercent = ((block.startMinutes - START_HOUR * 60) / TOTAL_MINUTES) * 100;
                   const heightPercent = Math.max(((block.endMinutes - block.startMinutes) / TOTAL_MINUTES) * 100, 3.5);
@@ -189,6 +215,44 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                       <div className="block-footer">
                         <span style={{ fontWeight: 700 }}>{block.sessionGroup}</span>
                         <span>{block.startTime}-{block.endTime}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* GHOST SHADOW PREVIEW BLOCKS FOR DRAGGED SECTION */}
+                {dayGhostBlocks.map((ghost, gIdx) => {
+                  const topPercent = ((ghost.startMinutes - START_HOUR * 60) / TOTAL_MINUTES) * 100;
+                  const heightPercent = Math.max(((ghost.endMinutes - ghost.startMinutes) / TOTAL_MINUTES) * 100, 3.5);
+
+                  return (
+                    <div
+                      key={`ghost-${gIdx}`}
+                      className={`schedule-ghost-block ${ghost.hasGhostConflict ? 'ghost-conflict' : ''}`}
+                      style={{
+                        top: `${topPercent}%`,
+                        height: `${heightPercent}%`,
+                      }}
+                    >
+                      <div className="block-course-code">
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Sparkles size={12} />
+                          PREVIA: {ghost.courseCode}
+                        </span>
+                        {ghost.hasGhostConflict && (
+                          <span style={{ color: '#ef4444', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                            <AlertTriangle size={12} /> CRUCE
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="block-course-name" style={{ fontStyle: 'italic', opacity: 0.9 }}>
+                        {ghost.courseName}
+                      </div>
+
+                      <div className="block-footer">
+                        <span style={{ fontWeight: 700 }}>{ghost.sessionGroup}</span>
+                        <span>{ghost.startTime}-{ghost.endTime}</span>
                       </div>
                     </div>
                   );
