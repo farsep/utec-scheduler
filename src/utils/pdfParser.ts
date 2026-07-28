@@ -14,6 +14,13 @@ export interface PDFParseResult {
   metadata: MetadataInfo;
 }
 
+interface PDFTextItem {
+  str: string;
+  x: number;
+  y: number;
+  page: number;
+}
+
 export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseResult> {
   let pdfDoc;
   try {
@@ -25,167 +32,188 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
     pdfDoc = await loadingTask.promise;
   }
 
-  let fullText = '';
-  const eligibleCourseCodes = new Set<string>();
-  const eligibleCoursesMap = new Map<string, { type: string; plan?: string }>();
-  const rawCoursesMap = new Map<string, { code: string; name: string; courseType: string; plan?: string; rawSessions: any[] }>();
+  const allItems: PDFTextItem[] = [];
   const metadata: MetadataInfo = {};
+  let fullText = '';
 
   for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
     const page = await pdfDoc.getPage(pageNum);
     const textContent = await page.getTextContent();
+    
     const pageText = textContent.items
       .map((item: any) => item.str)
       .join(' ');
-    
     fullText += pageText + '\n';
+
+    textContent.items.forEach((item: any) => {
+      const str = (item.str || '').trim();
+      if (!str) return;
+      const transform = item.transform || [1, 0, 0, 1, 0, 0];
+      const x = transform[4];
+      const y = transform[5];
+      allItems.push({ str, x, y, page: pageNum });
+    });
   }
 
   const studentMatch = fullText.match(/Alumno:\s*([^\n\r]+)/i);
   if (studentMatch) metadata.studentName = studentMatch[1].trim();
 
-  const courseCodeRegex = /\b([A-Z]{2,4}\d{4})\b/g;
-  let match;
-  while ((match = courseCodeRegex.exec(fullText)) !== null) {
-    eligibleCourseCodes.add(match[1]);
-  }
+  // Group text items into row blocks based on PDF Y-coordinates
+  const sortedItems = [...allItems].sort((a, b) => b.page !== a.page ? a.page - b.page : b.y - a.y);
+  
+  // Identify course code block bounds
+  const rawBlocks: { code: string; items: PDFTextItem[] }[] = [];
+  let currentBlock: { code: string; items: PDFTextItem[] } | null = null;
 
-  const blockRegex = /([A-Z]{2,4}\d{4})\s+(.+?)(?=(?:[A-Z]{2,4}\d{4}|\Z))/gs;
-  let blockMatch;
+  sortedItems.forEach(item => {
+    // Check if item is a 6-char Course Code at Column 1 (X < 90)
+    if (item.x < 90 && /^[A-Z]{2,4}\d{4}$/.test(item.str)) {
+      if (currentBlock) rawBlocks.push(currentBlock);
+      currentBlock = { code: item.str, items: [item] };
+    } else if (currentBlock) {
+      currentBlock.items.push(item);
+    }
+  });
+  if (currentBlock) rawBlocks.push(currentBlock);
 
-  // Pass 1: Extract official course names per code
+  // Pass 1: Extract 100% accurate official course names bound strictly to Column 2 (90 <= X < 172)
   const codeNameMap = new Map<string, string>();
 
-  while ((blockMatch = blockRegex.exec(fullText)) !== null) {
-    const code = blockMatch[1];
-    const content = blockMatch[2].replace(/\s+/g, ' ').trim();
+  rawBlocks.forEach(({ code, items }) => {
+    const nameWords = items
+      .filter(i => i.x >= 90 && i.x < 172)
+      .map(i => i.str)
+      .filter(s => s && !/^(?:AND|CD|MALLA)-\d{4}/i.test(s));
 
-    const timeMatch = content.match(/(Lun|Mar|Mie|Jue|Vie|Sab|Dom)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/i);
-    if (!timeMatch) continue;
+    // Deduplicate consecutive repeated words from multi-session block vertical overlaps
+    const uniqueNameWords: string[] = [];
+    nameWords.forEach(w => {
+      if (!uniqueNameWords.includes(w)) {
+        uniqueNameWords.push(w);
+      }
+    });
 
-    // Enhanced metaMatch that catches plan codes like AND-2024- 1 or CD-2021- 1 even with line breaks
-    const metaMatch = content.match(/(?:[A-Z]{2,4}-\d{4}-?\s*\d*|Obligatorio|Electivo|Presencial|Sincronico|Virtual|\b\d+\s+(?:Teoría|Laboratorio|Práctica|Taller))/i);
-    if (metaMatch) {
-      let prefix = content.substring(0, metaMatch.index).trim();
+    const cName = uniqueNameWords.join(' ').trim();
+    if (cName && (!codeNameMap.has(code) || cName.length > codeNameMap.get(code)!.length)) {
+      codeNameMap.set(code, cName);
+    }
+  });
 
-      // Clean any trailing plan code residue (e.g. AND-2024- 1)
-      prefix = prefix.replace(/\s*(?:AND|CD|MALLA)-\d{4}-?\s*\d*$/i, '').trim();
+  const eligibleCourseCodes = new Set<string>();
+  const eligibleCoursesMap = new Map<string, { type: string; plan?: string }>();
+  const rawCoursesMap = new Map<string, { code: string; name: string; courseType: string; plan?: string; rawSessions: any[] }>();
 
-      let cName = prefix;
-      if (prefix.includes(',')) {
-        const beforeComma = prefix.split(',')[0].trim().split(/\s+/);
-        if (beforeComma.length > 2) {
-          cName = beforeComma.slice(0, -2).join(' ');
+  // Pass 2: Extract section sessions and professors strictly from their respective PDF columns
+  rawBlocks.forEach(({ code, items }) => {
+    eligibleCourseCodes.add(code);
+
+    // Group items in block into horizontal row sessions by Y coordinate
+    const rowGroups: PDFTextItem[][] = [];
+    let currRow: PDFTextItem[] = [];
+    let currY: number | null = null;
+
+    items.forEach(item => {
+      if (currY === null || Math.abs(item.y - currY) <= 4.5) {
+        currRow.push(item);
+        if (currY === null) currY = item.y;
+      } else {
+        if (currRow.length > 0) rowGroups.push(currRow);
+        currRow = [item];
+        currY = item.y;
+      }
+    });
+    if (currRow.length > 0) rowGroups.push(currRow);
+
+    rowGroups.forEach(rowItems => {
+      const scheduleText = rowItems.filter(i => i.x >= 490 && i.x < 575).map(i => i.str).join(' ');
+      const timeMatch = scheduleText.match(/(Lun|Mar|Mie|Jue|Vie|Sab|Dom)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/i);
+      if (!timeMatch) return;
+
+      let rawDay = timeMatch[1].substring(0, 3);
+      rawDay = rawDay.charAt(0).toUpperCase() + rawDay.slice(1).toLowerCase();
+      let day: DayOfWeek = 'Lun';
+      if (rawDay.startsWith('Mar')) day = 'Mar';
+      else if (rawDay.startsWith('Mie')) day = 'Mie';
+      else if (rawDay.startsWith('Jue')) day = 'Jue';
+      else if (rawDay.startsWith('Vie')) day = 'Vie';
+      else if (rawDay.startsWith('Sab')) day = 'Sab';
+      else day = 'Lun';
+
+      const startTime = timeMatch[2].padStart(5, '0');
+      const endTime = timeMatch[3].padStart(5, '0');
+      const startMinutes = timeToMinutes(startTime);
+      const endMinutes = timeToMinutes(endTime);
+
+      // Column 3 (172 <= X < 242): Professor Name Cell
+      const profItems = rowItems.filter(i => i.x >= 172 && i.x < 242).map(i => i.str);
+      let professor = 'Por asignar';
+      if (profItems.length > 0) {
+        const rawProf = profItems.join(' ').replace(/,$/, '').trim();
+        if (rawProf && !/^(?:AND|CD|MALLA)-\d{4}/i.test(rawProf)) {
+          professor = rawProf;
         }
       }
 
-      // Sanitize any plan codes inside cName
-      cName = cName.replace(/\s*(?:AND|CD|MALLA)-\d{4}-?\s*\d*/gi, '').trim();
+      // Column 4 (242 <= X < 290): Malla / Plan Code Cell
+      const mallaText = rowItems.filter(i => i.x >= 242 && i.x < 290).map(i => i.str).join(' ');
+      let plan = undefined;
+      const planMatch = mallaText.match(/([A-Z]{2,4}-\d{4}-\d)/);
+      if (planMatch) plan = planMatch[1];
 
-      if (cName && (!codeNameMap.has(code) || cName.length > codeNameMap.get(code)!.length)) {
-        codeNameMap.set(code, cName);
+      // Column 5 (290 <= X < 340): Course Type Cell
+      const typeText = rowItems.filter(i => i.x >= 290 && i.x < 340).map(i => i.str).join(' ');
+      let courseType = 'Obligatorio';
+      if (typeText.toLowerCase().includes('electivo')) courseType = 'Electivo';
+
+      eligibleCoursesMap.set(code, { type: courseType, plan });
+
+      // Column 6 (400 <= X < 435): Section Number Cell
+      const secText = rowItems.filter(i => i.x >= 400 && i.x < 435).map(i => i.str).join(' ');
+      const secMatch = secText.match(/\d+/);
+      const sectionNum = secMatch ? secMatch[0] : '1';
+
+      // Column 7 (435 <= X < 490): Session Group Cell
+      const groupText = rowItems.filter(i => i.x >= 435 && i.x < 490).map(i => i.str).join(' ');
+      const groupMatch = groupText.match(/(?:Teoría|Laboratorio|Práctica|Taller|Seminario|Clase|Sesión)[^\d]*\d+/i);
+      const sessionGroup = groupMatch ? groupMatch[0] : `TEORÍA ${sectionNum}`;
+
+      // Column 8 (340 <= X < 400): Modality Cell
+      const modalityText = rowItems.filter(i => i.x >= 340 && i.x < 400).map(i => i.str).join(' ');
+      let modality = 'Presencial';
+      if (modalityText.toLowerCase().includes('sincronico') || modalityText.toLowerCase().includes('virtual')) {
+        modality = 'Sincronico';
       }
-    }
-  }
 
-  // Reset regex index for Pass 2
-  blockRegex.lastIndex = 0;
+      // Column 9 (640 <= X < 710): Location Cell
+      const locText = rowItems.filter(i => i.x >= 640 && i.x < 710).map(i => i.str).join(' ');
+      const locMatch = locText.match(/(UTEC-BA\s+[A-Z0-9]+|UTEC-BA\s+Virtual|Virtual|[A-Z]\d{3,4})/i);
+      const location = locMatch ? locMatch[0] : (modality === 'Sincronico' ? 'UTEC-BA Virtual' : 'UTEC-BA');
 
-  while ((blockMatch = blockRegex.exec(fullText)) !== null) {
-    const code = blockMatch[1];
-    const content = blockMatch[2].replace(/\s+/g, ' ').trim();
+      // Column 10 (710 <= X < 760): Vacancies Cell
+      const vacText = rowItems.filter(i => i.x >= 710 && i.x < 760).map(i => i.str).join(' ');
+      const vacancies = parseInt(vacText, 10) || 30;
 
-    const timeMatch = content.match(/(Lun|Mar|Mie|Jue|Vie|Sab|Dom)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/i);
-    if (!timeMatch) continue;
+      const name = codeNameMap.get(code) || `Curso ${code}`;
 
-    let rawDay = timeMatch[1].substring(0, 3);
-    rawDay = rawDay.charAt(0).toUpperCase() + rawDay.slice(1).toLowerCase();
-    let day: DayOfWeek = 'Lun';
-    if (rawDay.startsWith('Mar')) day = 'Mar';
-    else if (rawDay.startsWith('Mie')) day = 'Mie';
-    else if (rawDay.startsWith('Jue')) day = 'Jue';
-    else if (rawDay.startsWith('Vie')) day = 'Vie';
-    else if (rawDay.startsWith('Sab')) day = 'Sab';
-    else day = 'Lun';
-
-    const startTime = timeMatch[2].padStart(5, '0');
-    const endTime = timeMatch[3].padStart(5, '0');
-    const startMinutes = timeToMinutes(startTime);
-    const endMinutes = timeToMinutes(endTime);
-
-    let courseType = 'Obligatorio';
-    if (content.toLowerCase().includes('electivo')) courseType = 'Electivo';
-
-    let plan = undefined;
-    const planMatch = content.match(/(CD-\d{4}-\d|AND-\d{4}-\d)/);
-    if (planMatch) plan = planMatch[1];
-
-    eligibleCoursesMap.set(code, { type: courseType, plan });
-
-    const name = codeNameMap.get(code) || `Curso ${code}`;
-
-    // Robust groupMatch that handles modifiers like "Virtual", "Remoto", "Presencial"
-    const groupMatch = content.match(/(\d+)\s+((?:Teoría|Laboratorio|Práctica|Taller|Seminario|Clase|Sesión)[^\d]*\d+)/i);
-    let sectionNum = '1';
-    let sessionGroup = 'TEORÍA 1';
-
-    if (groupMatch) {
-      sectionNum = groupMatch[1];
-      sessionGroup = groupMatch[2];
-    } else {
-      // Fail-safe secondary regex: extract section number after modality/plan keywords
-      const secMatch = content.match(/(?:Presencial|Sincronico|Virtual|CD-\d{4}-\d|AND-\d{4}-\d)\s+(\d+)/i);
-      const gMatch = content.match(/((?:Teoría|Laboratorio|Práctica|Taller|Seminario|Clase|Sesión)[^\d]*\d+)/i);
-      if (secMatch) sectionNum = secMatch[1];
-      if (gMatch) sessionGroup = gMatch[1];
-    }
-
-    let professor = 'Por asignar';
-    const profMatch = content.match(/([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){1,3},\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*)/);
-    if (profMatch) {
-      const rawProf = profMatch[1].trim();
-      const parts = rawProf.split(',');
-      if (parts.length === 2) {
-        const lastNameWords = parts[0].trim().split(/\s+/);
-        const cleanLastNames = lastNameWords.slice(-3).join(' ');
-        professor = `${cleanLastNames}, ${parts[1].trim()}`;
-      } else {
-        professor = rawProf;
+      if (!rawCoursesMap.has(code)) {
+        rawCoursesMap.set(code, { code, name, courseType, plan, rawSessions: [] });
       }
-    }
 
-    let modality = 'Presencial';
-    if (content.toLowerCase().includes('sincronico') || content.toLowerCase().includes('virtual')) {
-      modality = 'Sincronico';
-    }
-
-    const locMatch = content.match(/(UTEC-BA\s+[A-Z0-9]+|UTEC-BA\s+Virtual|Virtual)/i);
-    const location = locMatch ? locMatch[1] : (modality === 'Sincronico' ? 'UTEC-BA Virtual' : 'UTEC-BA');
-
-    let vacancies = 30;
-    const vacMatch = content.match(/(\d+)\s+(\d+)\s*$/);
-    if (vacMatch) {
-      vacancies = parseInt(vacMatch[1], 10) || 30;
-    }
-
-    if (!rawCoursesMap.has(code)) {
-      rawCoursesMap.set(code, { code, name, courseType, plan, rawSessions: [] });
-    }
-
-    rawCoursesMap.get(code)!.rawSessions.push({
-      sectionNum,
-      sessionGroup,
-      modality,
-      day,
-      startTime,
-      endTime,
-      startMinutes,
-      endMinutes,
-      location,
-      vacancies,
-      professor
+      rawCoursesMap.get(code)!.rawSessions.push({
+        sectionNum,
+        sessionGroup,
+        modality,
+        day,
+        startTime,
+        endTime,
+        startMinutes,
+        endMinutes,
+        location,
+        vacancies,
+        professor
+      });
     });
-  }
+  });
 
   const finalCourses: Course[] = [];
 
