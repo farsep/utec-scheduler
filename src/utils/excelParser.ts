@@ -124,28 +124,21 @@ export function parseExcelFile(arrayBuffer: ArrayBuffer): ExcelParseResult {
     const finalSections: Section[] = [];
 
     sectionGroups.forEach((sRows, mainSecNum) => {
-      const isSubgroup = (groupName: string) => {
-        const numMatch = groupName.match(/\d+/);
-        if (!numMatch) return false;
-        const num = parseInt(numMatch[0], 10);
-        return num >= 10 && !groupName.endsWith(` ${mainSecNum}`);
-      };
-
-      const subgroupRows = sRows.filter(r => isSubgroup(r.sessionGroup));
-      const baseRows = sRows.filter(r => !isSubgroup(r.sessionGroup));
-
-      // Extract DISTINCT subgroup names
-      const distinctSubgroups: string[] = [];
-      subgroupRows.forEach(r => {
-        if (!distinctSubgroups.includes(r.sessionGroup)) {
-          distinctSubgroups.push(r.sessionGroup);
+      const allGroupNames: string[] = [];
+      sRows.forEach(r => {
+        if (!allGroupNames.includes(r.sessionGroup)) {
+          allGroupNames.push(r.sessionGroup);
         }
       });
 
-      // Split into variants ONLY if there are 2 or more DISTINCT subgroup names (e.g. CC1103: Lab 11, Lab 12...)
-      if (distinctSubgroups.length > 1) {
-        distinctSubgroups.forEach((sgName) => {
-          const matchingSubRows = subgroupRows.filter(r => r.sessionGroup === sgName);
+      const baseGroupNames = allGroupNames.filter(g => g.endsWith(` ${mainSecNum}`));
+      const subGroupNames = allGroupNames.filter(g => !g.endsWith(` ${mainSecNum}`));
+
+      if (subGroupNames.length > 1) {
+        const baseRows = sRows.filter(r => baseGroupNames.includes(r.sessionGroup));
+
+        subGroupNames.forEach((sgName) => {
+          const matchingSubRows = sRows.filter(r => r.sessionGroup === sgName);
           const variantSecNum = `${mainSecNum} (${sgName})`;
           const combinedSessions: Session[] = [];
           const professors: string[] = [];
@@ -201,7 +194,6 @@ export function parseExcelFile(arrayBuffer: ArrayBuffer): ExcelParseResult {
           });
         });
       } else {
-        // Single section (e.g. CS6006): keep all base + subgroup sessions together in 1 section!
         const combinedSessions: Session[] = sRows.map((r, idx) => ({
           id: `${code}-${mainSecNum}-${r.sessionGroup}-${r.parsedTime.day}-${r.parsedTime.startTime}-${idx}`,
           sessionGroup: r.sessionGroup,
@@ -239,8 +231,7 @@ export function parseExcelFile(arrayBuffer: ArrayBuffer): ExcelParseResult {
       code,
       name,
       sections: finalSections,
-      color: getCourseColor(code),
-      credits: deriveCredits(code, name)
+      color: getCourseColor(code)
     });
   });
 
@@ -248,10 +239,4 @@ export function parseExcelFile(arrayBuffer: ArrayBuffer): ExcelParseResult {
     courses: finalCourses,
     metadata
   };
-}
-
-function deriveCredits(code: string, name: string): number {
-  if (code.startsWith('CC') || code.startsWith('CS') || code.startsWith('MA')) return 4;
-  if (code.startsWith('HH') || code.startsWith('AD') || code.startsWith('PI')) return 3;
-  return 3;
 }
