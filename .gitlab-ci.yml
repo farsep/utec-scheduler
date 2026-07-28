@@ -17,6 +17,7 @@ pages:
     - corepack enable
     - corepack prepare pnpm@latest --activate
     - pnpm config set store-dir .pnpm-store
+    - pnpm config set minimum-release-age 0
   script:
     - pnpm install
     - pnpm run build
