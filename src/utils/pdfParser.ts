@@ -66,7 +66,6 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
   let currentBlock: { code: string; items: PDFTextItem[] } | null = null;
 
   sortedItems.forEach(item => {
-    // Check if item is a 6-char Course Code at Column 1 (X < 90)
     if (item.x < 90 && /^[A-Z]{2,4}\d{4}$/.test(item.str)) {
       if (currentBlock) rawBlocks.push(currentBlock);
       currentBlock = { code: item.str, items: [item] };
@@ -85,7 +84,6 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
       .map(i => i.str)
       .filter(s => s && !/^(?:AND|CD|MALLA)-\d{4}/i.test(s));
 
-    // Deduplicate consecutive repeated words from multi-session block vertical overlaps
     const uniqueNameWords: string[] = [];
     nameWords.forEach(w => {
       if (!uniqueNameWords.includes(w)) {
@@ -103,28 +101,23 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
   const eligibleCoursesMap = new Map<string, { type: string; plan?: string }>();
   const rawCoursesMap = new Map<string, { code: string; name: string; courseType: string; plan?: string; rawSessions: any[] }>();
 
-  // Pass 2: Extract section sessions and professors strictly from their respective PDF columns
+  // Pass 2: Extract section sessions and full multi-line cells strictly from PDF column bounds
   rawBlocks.forEach(({ code, items }) => {
     eligibleCourseCodes.add(code);
 
-    // Group items in block into horizontal row sessions by Y coordinate
-    const rowGroups: PDFTextItem[][] = [];
-    let currRow: PDFTextItem[] = [];
-    let currY: number | null = null;
+    // Find all schedule time items in block (Col 9: 490 <= X < 575) to anchor session rows
+    const scheduleItems = items.filter(i => i.x >= 490 && i.x < 575 && /(Lun|Mar|Mie|Jue|Vie|Sab|Dom)\.?\s*\d{1,2}:\d{2}/i.test(i.str));
+    
+    // Sort schedule items descending by Y
+    scheduleItems.sort((a, b) => b.y - a.y);
 
-    items.forEach(item => {
-      if (currY === null || Math.abs(item.y - currY) <= 4.5) {
-        currRow.push(item);
-        if (currY === null) currY = item.y;
-      } else {
-        if (currRow.length > 0) rowGroups.push(currRow);
-        currRow = [item];
-        currY = item.y;
-      }
-    });
-    if (currRow.length > 0) rowGroups.push(currRow);
+    scheduleItems.forEach((schItem, sIdx) => {
+      const topY = schItem.y + 6.0;
+      const bottomY = sIdx + 1 < scheduleItems.length ? scheduleItems[sIdx + 1].y + 6.0 : topY - 32.0;
 
-    rowGroups.forEach(rowItems => {
+      // Collect all items belonging to this session row height span across ALL columns
+      const rowItems = items.filter(i => i.y > bottomY && i.y <= topY);
+
       const scheduleText = rowItems.filter(i => i.x >= 490 && i.x < 575).map(i => i.str).join(' ');
       const timeMatch = scheduleText.match(/(Lun|Mar|Mie|Jue|Vie|Sab|Dom)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/i);
       if (!timeMatch) return;
@@ -144,7 +137,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
       const startMinutes = timeToMinutes(startTime);
       const endMinutes = timeToMinutes(endTime);
 
-      // Column 3 (172 <= X < 242): Professor Name Cell
+      // Column 3 (172 <= X < 242): Full Multi-Line Professor Name Cell
       const profItems = rowItems.filter(i => i.x >= 172 && i.x < 242).map(i => i.str);
       let professor = 'Por asignar';
       if (profItems.length > 0) {
@@ -154,11 +147,11 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
         }
       }
 
-      // Column 4 (242 <= X < 290): Malla / Plan Code Cell
+      // Column 4 (242 <= X < 290): Full Multi-Line Malla / Plan Code Cell
       const mallaText = rowItems.filter(i => i.x >= 242 && i.x < 290).map(i => i.str).join(' ');
       let plan = undefined;
-      const planMatch = mallaText.match(/([A-Z]{2,4}-\d{4}-\d)/);
-      if (planMatch) plan = planMatch[1];
+      const planMatch = mallaText.match(/([A-Z]{2,4}-\d{4}-?\s*\d*)/);
+      if (planMatch) plan = planMatch[1].replace(/\s+/g, '');
 
       // Column 5 (290 <= X < 340): Course Type Cell
       const typeText = rowItems.filter(i => i.x >= 290 && i.x < 340).map(i => i.str).join(' ');
@@ -172,7 +165,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
       const secMatch = secText.match(/\d+/);
       const sectionNum = secMatch ? secMatch[0] : '1';
 
-      // Column 7 (435 <= X < 490): Session Group Cell
+      // Column 7 (435 <= X < 490): Full Multi-Line Session Group Cell
       const groupText = rowItems.filter(i => i.x >= 435 && i.x < 490).map(i => i.str).join(' ');
       const groupMatch = groupText.match(/(?:Teoría|Laboratorio|Práctica|Taller|Seminario|Clase|Sesión)[^\d]*\d+/i);
       const sessionGroup = groupMatch ? groupMatch[0] : `TEORÍA ${sectionNum}`;
@@ -184,10 +177,10 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
         modality = 'Sincronico';
       }
 
-      // Column 9 (640 <= X < 710): Location Cell
+      // Column 9 (640 <= X < 710): Full Multi-Line Location Room Cell
       const locText = rowItems.filter(i => i.x >= 640 && i.x < 710).map(i => i.str).join(' ');
       const locMatch = locText.match(/(UTEC-BA\s+[A-Z0-9]+|UTEC-BA\s+Virtual|Virtual|[A-Z]\d{3,4})/i);
-      const location = locMatch ? locMatch[0] : (modality === 'Sincronico' ? 'UTEC-BA Virtual' : 'UTEC-BA');
+      const location = locMatch ? locMatch[0] : (locText.replace(/\s+/g, ' ').trim() || (modality === 'Sincronico' ? 'UTEC-BA Virtual' : 'UTEC-BA'));
 
       // Column 10 (710 <= X < 760): Vacancies Cell
       const vacText = rowItems.filter(i => i.x >= 710 && i.x < 760).map(i => i.str).join(' ');
@@ -320,7 +313,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
           endMinutes: r.endMinutes,
           frequency: 'Semana General',
           location: r.location,
-          vacancies: r.vacancies,
+          vacancies: sRows[0]?.vacancies || 30,
           enrolled: 0,
           professor: r.professor,
           email: ''
