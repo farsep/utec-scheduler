@@ -98,7 +98,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div className="upload-grid">
           {/* Excel Uploader / Status */}
           <div className={`dropzone-container ${hasExcelData ? 'active' : ''}`}>
             <FileSpreadsheet size={32} color="var(--accent-emerald)" />

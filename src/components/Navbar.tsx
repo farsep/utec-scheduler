@@ -20,7 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   eligibleCount
 }) => {
   return (
-    <header className="app-header">
+    <header className={`app-header ${coursesCount === 0 ? 'app-header--empty' : ''}`}>
       <div className="brand-title">
         <div className="brand-logo">
           <Calendar size={20} />
@@ -58,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="navbar-actions">
         {coursesCount > 0 && (
           <button
             className="btn btn-secondary"

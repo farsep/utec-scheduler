@@ -277,14 +277,16 @@ export const ScheduleApp: React.FC = () => {
             <ConflictBanner conflicts={conflicts} />
 
             {/* Timetable Drag & Drop Canvas */}
-            <TimetableGrid
-              courses={courses}
-              selectedSections={selectedSections}
-              conflicts={conflicts}
-              draggedSection={draggedSection}
-              onSelectSection={handleSelectSection}
-              onRemoveSection={handleRemoveSection}
-            />
+            <div className="timetable-scroll-container">
+              <TimetableGrid
+                courses={courses}
+                selectedSections={selectedSections}
+                conflicts={conflicts}
+                draggedSection={draggedSection}
+                onSelectSection={handleSelectSection}
+                onRemoveSection={handleRemoveSection}
+              />
+            </div>
 
             {/* Footer Stats Bar */}
             <div className="stats-footer">
