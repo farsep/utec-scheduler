@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Calendar, Image, FileSpreadsheet, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { generateICS, downloadFile } from '../utils/icsExporter';
+import { formatLocation } from '../utils/scheduleUtils';
 import type { Course } from '../types/schedule';
 
 interface ExportModalProps {
@@ -10,6 +11,12 @@ interface ExportModalProps {
   courses: Course[];
   selectedSections: Record<string, string>;
   optionName: string;
+}
+
+function escapeCSVCell(val: string | number | undefined | null): string {
+  if (val === null || val === undefined) return '""';
+  const str = String(val);
+  return `"${str.replace(/"/g, '""')}"`;
 }
 
 export const ExportModal: React.FC<ExportModalProps> = ({
@@ -32,7 +39,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     try {
       const canvas = await html2canvas(gridElem, {
         scale: 2,
-        backgroundColor: '#0a0d14'
+        backgroundColor: '#080b11'
       });
       const dataUrl = canvas.toDataURL('image/png');
       const a = document.createElement('a');
@@ -45,15 +52,67 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   };
 
   const handleExportCSV = () => {
-    const rows = [['Codigo', 'Curso', 'Seccion', 'Creditos']];
-    Object.entries(selectedSections).forEach(([code, sec]) => {
+    const headers = [
+      'Codigo',
+      'Curso',
+      'Seccion Principal',
+      'Subseccion / Grupo',
+      'Docente(s)',
+      'Horarios y Sesiones',
+      'Tipo',
+      'Creditos'
+    ];
+
+    const rows: string[][] = [headers];
+
+    Object.entries(selectedSections).forEach(([code, secNum]) => {
       const course = courses.find(c => c.code === code);
-      if (course) {
-        rows.push([code, `"${course.name}"`, sec, String(course.credits || 3)]);
+      if (!course) return;
+      const section = course.sections.find(s => s.sectionNumber === secNum);
+      if (!section) return;
+
+      const mainSecNum = secNum.split(' (')[0];
+      let subGroupLabel = '-';
+      const matchParen = secNum.match(/\((.*?)\)/);
+      if (matchParen && matchParen[1]) {
+        subGroupLabel = matchParen[1];
       }
+
+      // Unique professors
+      const profsSet = new Set<string>();
+      if (section.professors) {
+        section.professors.forEach(p => {
+          if (p && p !== 'Por asignar') profsSet.add(p);
+        });
+      }
+      section.sessions.forEach(sess => {
+        if (sess.professor && sess.professor !== 'Por asignar') profsSet.add(sess.professor);
+      });
+      const professorsStr = Array.from(profsSet).join('; ') || 'Por asignar';
+
+      // Sessions breakdown string
+      const sessionsStr = section.sessions.map(sess => {
+        const mod = sess.modality ? ` (${sess.modality})` : '';
+        const cleanLoc = formatLocation(sess.location);
+        const loc = cleanLoc ? ` @ ${cleanLoc}` : '';
+        return `${sess.sessionGroup}: ${sess.day} ${sess.startTime}-${sess.endTime}${mod}${loc}`;
+      }).join(' | ');
+
+      rows.push([
+        code,
+        course.name,
+        mainSecNum,
+        subGroupLabel,
+        professorsStr,
+        sessionsStr,
+        course.courseType || 'Obligatorio',
+        String((course as any).credits || 3)
+      ]);
     });
-    const csvContent = rows.map(e => e.join(',')).join('\n');
-    downloadFile(csvContent, `Cursos_Seleccionados_${optionName.replace(/\s+/g, '_')}.csv`, 'text/csv;charset=utf-8');
+
+    // Prepend UTF-8 BOM (\uFEFF) to ensure full Unicode support (accents, ñ, foreign languages) in Excel and all apps
+    const csvContent = '\uFEFF' + rows.map(row => row.map(escapeCSVCell).join(',')).join('\r\n');
+    downloadFile(csvContent, `Cursos_Seleccionados_${optionName.replace(/\s+/g, '_')}.csv`, 'text/csv;charset=utf-8;');
   };
 
   return (
@@ -121,8 +180,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 <FileSpreadsheet size={22} />
               </div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Lista en CSV / Excel</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Resumen de cursos y secciones elegidas</div>
+                <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Lista en CSV / Excel (UTF-8)</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Resumen completo con subsecciones, docentes y horarios</div>
               </div>
             </div>
             <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>Descargar</button>

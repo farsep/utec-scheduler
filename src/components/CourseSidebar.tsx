@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Search, ChevronDown, ChevronRight, Plus, Trash2, GripVertical, CheckCircle2, MapPin, User, Users, Check } from 'lucide-react';
 import type { Course, Section, Session, FilterState } from '../types/schedule';
-import { normalizeString } from '../utils/scheduleUtils';
+import { normalizeString, formatLocation } from '../utils/scheduleUtils';
 
 interface CourseSidebarProps {
   courses: Course[];
@@ -416,7 +416,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                                   </div>
                                   {sess.location && (
                                     <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                      <MapPin size={11} /> {sess.location}
+                                      <MapPin size={11} /> {formatLocation(sess.location)}
                                     </span>
                                   )}
                                 </div>

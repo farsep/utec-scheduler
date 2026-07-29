@@ -1,6 +1,6 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import type { Course, Section, Session, MetadataInfo, DayOfWeek } from '../types/schedule';
-import { parseSessionType, getCourseColor, timeToMinutes } from './scheduleUtils';
+import { parseSessionType, getCourseColor, timeToMinutes, formatLocation } from './scheduleUtils';
 
 if (typeof window !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || '4.0.379'}/build/pdf.worker.min.mjs`;
@@ -220,7 +220,8 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
       // Column 9 (640 <= X < 710): Full Multi-Line Location Room Cell
       const locText = rowItems.filter(i => i.x >= 640 && i.x < 710).map(i => i.str).join(' ');
       const locMatch = locText.match(/(UTEC-BA\s+[A-Z0-9]+|UTEC-BA\s+Virtual|Virtual|[A-Z]\d{3,4})/i);
-      const location = locMatch ? locMatch[0] : (locText.replace(/\s+/g, ' ').trim() || (modality === 'Sincronico' ? 'UTEC-BA Virtual' : 'UTEC-BA'));
+      const rawLoc = locMatch ? locMatch[0] : (locText.replace(/\s+/g, ' ').trim() || (modality === 'Sincronico' ? 'Virtual' : ''));
+      const location = formatLocation(rawLoc);
 
       // Column 10 (710 <= X < 760): Vacancies Cell
       const vacText = rowItems.filter(i => i.x >= 710 && i.x < 760).map(i => i.str).join(' ');

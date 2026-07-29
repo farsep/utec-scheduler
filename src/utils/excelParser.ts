@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import type { Course, Section, Session, MetadataInfo } from '../types/schedule';
-import { parseHorarioString, parseSessionType, getCourseColor } from './scheduleUtils';
+import { parseHorarioString, parseSessionType, getCourseColor, formatLocation } from './scheduleUtils';
 
 export interface ExcelParseResult {
   courses: Course[];
@@ -85,7 +85,8 @@ export function parseExcelFile(arrayBuffer: ArrayBuffer): ExcelParseResult {
     const modality = String(row[colMap.modality] || 'Presencial').trim();
     const scheduleStr = String(row[colMap.schedule] || '').trim();
     const frequency = String(row[colMap.frequency] || 'Semana General').trim();
-    const location = String(row[colMap.location] || '').trim();
+    const rawLoc = String(row[colMap.location] || '').trim();
+    const location = formatLocation(rawLoc);
     const vacancies = parseInt(String(row[colMap.vacancies] || '0'), 10) || 0;
     const enrolled = parseInt(String(row[colMap.enrolled] || '0'), 10) || 0;
     const professor = String(row[colMap.professor] || '').trim();

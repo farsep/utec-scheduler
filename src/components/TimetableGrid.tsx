@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DAYS, DAY_NAMES, getCourseGradient } from '../utils/scheduleUtils';
+import { DAYS, DAY_NAMES, getCourseGradient, formatLocation } from '../utils/scheduleUtils';
 import type { Course, DayOfWeek, Conflict, Session } from '../types/schedule';
 import { Trash2, AlertTriangle, Sparkles, MapPin, User } from 'lucide-react';
 
@@ -194,7 +194,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                         height: `${heightPercent}%`,
                         background: gradient,
                       }}
-                      title={`${block.course.code} ${block.course.name}\nSec ${block.sectionNumber} - ${block.sessionGroup}\n${block.startTime} - ${block.endTime}\nAula: ${block.location}\nDocente: ${block.professor}`}
+                      title={`${block.course.code} ${block.course.name}\nSec ${block.sectionNumber} - ${block.sessionGroup}\n${block.startTime} - ${block.endTime}\nAula: ${formatLocation(block.location)}\nDocente: ${block.professor}`}
                     >
                       <div className="block-course-code">
                         <span>{block.course.code} (Sec {block.sectionNumber})</span>
@@ -218,7 +218,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
 
                       <div className="block-footer">
                         <span style={{ fontWeight: 700 }}>{block.sessionGroup}</span>
-                        <span style={{ fontSize: '0.65rem' }}>{block.location || `${block.startTime}-${block.endTime}`}</span>
+                        <span style={{ fontSize: '0.65rem' }}>{formatLocation(block.location) || `${block.startTime}-${block.endTime}`}</span>
                       </div>
                     </div>
                   );
