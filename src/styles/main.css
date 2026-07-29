@@ -1041,3 +1041,680 @@ body::after {
   border-color: var(--accent-primary);
   background: rgba(59, 130, 246, 0.1);
 }
+
+/* ========================================
+   NEW BASE CLASSES (for responsive hooks)
+   ======================================== */
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.timetable-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+.timetable-scroll-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.timetable-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+}
+
+.timetable-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ========================================
+   RESPONSIVE: TABLET  (≤ 1024px)
+   ======================================== */
+@media (max-width: 1024px) {
+  /* Header — tighter spacing */
+  .app-header {
+    height: auto;
+    min-height: 60px;
+    padding: 10px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .brand-title {
+    font-size: 1.15rem;
+    gap: 8px;
+  }
+
+  .brand-logo {
+    width: 30px;
+    height: 30px;
+  }
+
+  .meta-info-strip {
+    gap: 8px;
+    font-size: 0.8rem;
+  }
+
+  .meta-chip {
+    padding: 4px 8px;
+    font-size: 0.78rem;
+  }
+
+  .navbar-actions {
+    gap: 6px;
+  }
+
+  .navbar-actions .btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  /* Student Banner — tighter */
+  .student-metadata-banner {
+    margin: 0 10px 8px 10px;
+    padding: 8px 14px;
+    gap: 10px;
+  }
+
+  .student-meta-item {
+    font-size: 0.78rem;
+    padding: 3px 8px;
+  }
+
+  /* Workspace layout */
+  .workspace-layout {
+    padding: 12px;
+    gap: 14px;
+  }
+
+  /* Sidebar un-sticky on tablet */
+  .sidebar-panel {
+    position: static;
+    height: auto;
+    max-height: 55vh;
+  }
+
+  /* Timetable bar — tighter */
+  .timetable-bar {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .option-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .option-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-btn {
+    white-space: nowrap;
+    padding: 5px 12px;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .timetable-actions .btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  /* Stats footer tighter */
+  .stats-footer {
+    padding: 10px 14px;
+    font-size: 0.82rem;
+  }
+
+  .stats-group {
+    gap: 14px;
+  }
+}
+
+/* ========================================
+   RESPONSIVE: SMALL TABLET  (≤ 768px)
+   ======================================== */
+@media (max-width: 768px) {
+  /* Header — stack layout */
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .app-header > .brand-title {
+    justify-content: center;
+  }
+
+  .meta-info-strip {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .navbar-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Student Banner — wrap items */
+  .student-metadata-banner {
+    margin: 0 8px 8px 8px;
+    padding: 8px 10px;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .student-meta-item {
+    font-size: 0.75rem;
+  }
+
+  /* Workspace */
+  .workspace-layout {
+    padding: 8px;
+    gap: 10px;
+  }
+
+  /* Sidebar — shorter on small tablet */
+  .sidebar-panel {
+    max-height: 45vh;
+  }
+
+  .sidebar-header {
+    padding: 12px 12px 8px 12px;
+    gap: 8px;
+  }
+
+  .course-list-scroll {
+    padding: 4px 10px 12px 10px;
+    gap: 10px;
+  }
+
+  /* Timetable toolbar — stack vertically */
+  .timetable-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .option-tabs {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .timetable-actions {
+    justify-content: center;
+  }
+
+  /* Timetable grid — scrollable on narrow screens */
+  .timetable-grid-wrapper {
+    min-width: 700px;
+  }
+
+  .timetable-body {
+    height: 600px;
+  }
+
+  /* Stats footer — stack */
+  .stats-footer {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+    padding: 10px 12px;
+  }
+
+  .stats-group {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Modals — wider */
+  .modal-card {
+    max-width: 95vw;
+    padding: 20px;
+  }
+
+  /* Upload grid — single column */
+  .upload-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Conflict banner */
+  .conflict-banner {
+    padding: 10px 12px;
+    gap: 8px;
+    font-size: 0.8rem;
+  }
+}
+
+/* ========================================
+   RESPONSIVE: MOBILE  (≤ 640px)
+   ======================================== */
+@media (max-width: 640px) {
+  /* Background glows — shrink to avoid overflow */
+  body::before {
+    width: 300px;
+    height: 300px;
+    left: 5%;
+  }
+
+  body::after {
+    width: 250px;
+    height: 250px;
+  }
+
+  /* Header — compact mobile */
+  .app-header {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .brand-title {
+    font-size: 1.05rem;
+    gap: 6px;
+  }
+
+  .brand-logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .brand-badge {
+    display: none;
+  }
+
+  /* Hide meta strips on mobile — too noisy */
+  .meta-info-strip {
+    display: none;
+  }
+
+  .navbar-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Icon-only buttons on mobile */
+  .navbar-actions .btn span {
+    display: none;
+  }
+
+  .navbar-actions .btn {
+    padding: 8px;
+    min-width: 40px;
+    min-height: 40px;
+    justify-content: center;
+  }
+
+  /* Student Banner — minimal */
+  .student-metadata-banner {
+    margin: 0 6px 6px 6px;
+    padding: 6px 8px;
+    gap: 4px;
+    flex-direction: column;
+  }
+
+  .student-meta-item {
+    font-size: 0.72rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .student-meta-label {
+    font-size: 0.68rem;
+  }
+
+  /* Workspace — no padding / gap */
+  .workspace-layout {
+    padding: 6px;
+    gap: 8px;
+  }
+
+  /* Sidebar — more compact */
+  .sidebar-panel {
+    max-height: 40vh;
+    border-radius: var(--radius-md);
+  }
+
+  .sidebar-header {
+    padding: 10px 10px 8px 10px;
+    gap: 6px;
+  }
+
+  .sidebar-header h3 {
+    font-size: 0.95rem;
+  }
+
+  .search-bar {
+    padding: 6px 10px;
+  }
+
+  .search-input {
+    font-size: 0.82rem;
+  }
+
+  .filter-pills {
+    gap: 4px;
+  }
+
+  .filter-pill-btn {
+    padding: 3px 8px;
+    font-size: 0.72rem;
+  }
+
+  .course-list-scroll {
+    padding: 4px 8px 10px 8px;
+    gap: 8px;
+  }
+
+  /* Course cards — compact */
+  .course-card-header {
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+
+  .course-code {
+    font-size: 0.92rem;
+  }
+
+  .course-name {
+    font-size: 0.85rem;
+  }
+
+  .section-item {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .section-badge {
+    font-size: 0.82rem;
+  }
+
+  .select-btn {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    min-height: 34px;
+  }
+
+  .session-tag {
+    font-size: 0.75rem;
+    padding: 5px 8px;
+  }
+
+  .section-professors-box {
+    padding: 6px 10px;
+  }
+
+  .prof-item {
+    font-size: 0.74rem;
+  }
+
+  /* Timetable toolbar — very compact */
+  .timetable-bar {
+    padding: 8px 10px;
+    border-radius: var(--radius-md);
+  }
+
+  .tab-btn {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+
+  .add-tab-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .timetable-actions .btn {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    min-height: 36px;
+  }
+
+  /* Timetable grid — enforce scrollable minimum width */
+  .timetable-grid-wrapper {
+    min-width: 650px;
+    border-radius: var(--radius-md);
+  }
+
+  .timetable-header {
+    grid-template-columns: 45px repeat(6, 1fr);
+  }
+
+  .time-col-header {
+    padding: 8px 4px;
+    font-size: 0.68rem;
+  }
+
+  .day-col-header {
+    padding: 8px 4px;
+    font-size: 0.82rem;
+  }
+
+  .timetable-body {
+    grid-template-columns: 45px 1fr;
+    height: 520px;
+  }
+
+  .time-label-slot {
+    font-size: 0.65rem;
+    height: 45px;
+  }
+
+  .days-canvas-grid {
+    background-size: 100% 45px;
+  }
+
+  /* Schedule blocks — smaller text */
+  .schedule-block {
+    padding: 4px 6px;
+    font-size: 0.7rem;
+  }
+
+  .block-course-code {
+    font-size: 0.74rem;
+  }
+
+  .marquee-film-text {
+    font-size: 0.68rem;
+  }
+
+  .block-footer {
+    font-size: 0.62rem;
+  }
+
+  /* Ghost blocks */
+  .schedule-ghost-block {
+    padding: 4px 6px;
+    font-size: 0.7rem;
+  }
+
+  /* Stats footer — compact */
+  .stats-footer {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    border-radius: var(--radius-md);
+  }
+
+  .stat-value {
+    font-size: 0.95rem;
+  }
+
+  /* Modals — full width minus tiny margin */
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal-card {
+    max-width: 100%;
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    gap: 14px;
+  }
+
+  .modal-title {
+    font-size: 1.05rem;
+  }
+
+  .dropzone-container {
+    padding: 16px;
+  }
+
+  /* Conflict banner — tighter */
+  .conflict-banner {
+    padding: 8px 10px;
+    gap: 6px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+/* ========================================
+   RESPONSIVE: VERY SMALL  (≤ 400px)
+   ======================================== */
+@media (max-width: 400px) {
+  .app-header {
+    padding: 6px 8px;
+  }
+
+  .brand-title {
+    font-size: 0.95rem;
+  }
+
+  .workspace-layout {
+    padding: 4px;
+    gap: 6px;
+  }
+
+  .sidebar-panel {
+    max-height: 35vh;
+  }
+
+  .timetable-grid-wrapper {
+    min-width: 600px;
+  }
+
+  .timetable-body {
+    height: 450px;
+  }
+
+  .modal-card {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .modal-title {
+    font-size: 0.95rem;
+  }
+
+  .navbar-actions .btn {
+    padding: 6px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+}
+
+/* ========================================
+   TOUCH TARGET ACCESSIBILITY
+   ======================================== */
+@media (pointer: coarse) {
+  .select-btn,
+  .filter-pill-btn,
+  .tab-btn,
+  .btn,
+  .close-btn,
+  .add-tab-btn {
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  .course-card-header {
+    min-height: 48px;
+  }
+
+  .session-tag {
+    min-height: 36px;
+  }
+}
+
+/* ========================================
+   EMPTY STATE: BRAND HERO MODE (mobile only)
+   When no data is loaded on mobile, make the
+   brand the protagonist and hide redundant buttons.
+   ======================================== */
+
+/* Mobile empty state — brand is the hero, buttons hidden */
+@media (max-width: 768px) {
+  .app-header--empty {
+    flex-direction: row;
+    justify-content: center;
+    padding: 16px 12px;
+  }
+
+  .app-header--empty .brand-title {
+    font-size: 1.45rem;
+    gap: 12px;
+  }
+
+  .app-header--empty .brand-logo {
+    width: 40px;
+    height: 40px;
+    box-shadow: 0 0 24px rgba(59, 130, 246, 0.5), 0 0 48px rgba(139, 92, 246, 0.2);
+  }
+
+  .app-header--empty .brand-badge {
+    display: inline-block;
+  }
+
+  .app-header--empty .meta-info-strip {
+    display: none;
+  }
+
+  .app-header--empty .navbar-actions {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header--empty {
+    padding: 18px 12px;
+  }
+
+  .app-header--empty .brand-title {
+    font-size: 1.55rem;
+    gap: 12px;
+  }
+
+  .app-header--empty .brand-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    box-shadow: 0 0 28px rgba(59, 130, 246, 0.55), 0 0 56px rgba(139, 92, 246, 0.25);
+  }
+
+  .app-header--empty .brand-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+  }
+}
