@@ -60,6 +60,15 @@ export function getCourseGradient(courseCode: string): string {
 }
 
 /**
+ * Strips "UTEC-BA" prefix and cleans classroom location strings.
+ */
+export function formatLocation(loc?: string): string {
+  if (!loc) return '';
+  let clean = loc.replace(/UTEC-BA\s*/gi, '').replace(/^-+|-+$/g, '').trim();
+  return clean;
+}
+
+/**
  * Parses time string like "Mar. 15:00 - 17:00" or "Lun. 08:00 - 10:00"
  */
 export function parseHorarioString(horarioStr: string): { day: DayOfWeek; startTime: string; endTime: string; startMinutes: number; endMinutes: number } | null {

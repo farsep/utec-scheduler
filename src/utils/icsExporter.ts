@@ -1,3 +1,4 @@
+import { formatLocation } from './scheduleUtils';
 import type { Course, Session } from '../types/schedule';
 
 export function generateICS(courses: Course[], selectedSections: Record<string, string>): string {
@@ -10,7 +11,7 @@ export function generateICS(courses: Course[], selectedSections: Record<string, 
     'X-WR-CALNAME:Mi Horario UTEC'
   ];
 
-  // Arbitrary start date for semester schedule preview (e.g. Monday Aug 17, 2026)
+  // Base start date for semester schedule preview (e.g. Monday Aug 17, 2026)
   const baseMonday = new Date(2026, 7, 17); // 2026-08-17 is a Monday
 
   const dayOffset: Record<string, number> = {
@@ -28,6 +29,13 @@ export function generateICS(courses: Course[], selectedSections: Record<string, 
     const section = course.sections.find(s => s.sectionNumber === secNum);
     if (!section) return;
 
+    const mainSecNum = secNum.split(' (')[0];
+    let subGroupLabel = '';
+    const matchParen = secNum.match(/\((.*?)\)/);
+    if (matchParen && matchParen[1]) {
+      subGroupLabel = matchParen[1];
+    }
+
     section.sessions.forEach(sess => {
       const offset = dayOffset[sess.day] ?? 0;
       const eventDate = new Date(baseMonday);
@@ -43,6 +51,14 @@ export function generateICS(courses: Course[], selectedSections: Record<string, 
       const dtStart = `${year}${month}${day}T${startH}${startM}00`;
       const dtEnd = `${year}${month}${day}T${endH}${endM}00`;
 
+      // Clean summary line
+      const groupTitle = subGroupLabel ? `${sess.sessionGroup}` : sess.sessionGroup;
+      const summaryText = `[${courseCode}] ${course.name} - Sec ${mainSecNum} (${groupTitle})`;
+
+      // Clean description
+      const profText = sess.professor || section.professors[0] || 'Por asignar';
+      const descText = `Curso: ${course.name}\\nSección: ${mainSecNum}${subGroupLabel ? ` (${subGroupLabel})` : ''}\\nSesión: ${sess.sessionGroup}\\nProfesor: ${profText}\\nModalidad: ${sess.modality || 'Presencial'}`;
+
       ics.push(
         'BEGIN:VEVENT',
         `UID:${courseCode}-${secNum}-${sess.id}@utec.edu.pe`,
@@ -50,9 +66,9 @@ export function generateICS(courses: Course[], selectedSections: Record<string, 
         `DTSTART:${dtStart}`,
         `DTEND:${dtEnd}`,
         `RRULE:FREQ=WEEKLY;UNTIL=${year}1215T235959Z`,
-        `SUMMARY:[${courseCode}] ${course.name} - Sec ${secNum} (${sess.sessionGroup})`,
-        `LOCATION:${sess.location || 'UTEC'}`,
-        `DESCRIPTION:Profesor: ${sess.professor || 'Por asignar'}\\nModalidad: ${sess.modality}`,
+        `SUMMARY:${summaryText}`,
+        `LOCATION:${formatLocation(sess.location) || 'Virtual'}`,
+        `DESCRIPTION:${descText}`,
         'END:VEVENT'
       );
     });
