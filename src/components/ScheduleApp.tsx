@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import { Navbar } from './Navbar';
+import { StudentBanner } from './StudentBanner';
 import { CourseSidebar } from './CourseSidebar';
 import { TimetableGrid } from './TimetableGrid';
 import { ConflictBanner } from './ConflictBanner';
@@ -115,11 +116,10 @@ export const ScheduleApp: React.FC = () => {
     setHasPdfLoaded(true);
     const { courses: pdfCourses, eligibleCourseCodes, eligibleCoursesMap, metadata: pdfMeta } = pdfResult;
 
+    setMetadata(prev => ({ ...prev, ...pdfMeta }));
+
     if (!hasExcelLoaded || courses.length === 0) {
       setCourses(pdfCourses);
-      if (pdfMeta.studentName) {
-        setMetadata(prev => ({ ...prev, studentName: pdfMeta.studentName }));
-      }
     } else {
       setCourses(prev =>
         prev.map(c => {
@@ -195,6 +195,8 @@ export const ScheduleApp: React.FC = () => {
         coursesCount={courses.length}
         eligibleCount={eligibleCount}
       />
+
+      <StudentBanner metadata={metadata} />
 
       {courses.length === 0 ? (
         /* Empty State Hero Banner when no file is loaded */
