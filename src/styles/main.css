@@ -498,6 +498,81 @@ body::after {
   flex-shrink: 0;
 }
 
+/* Main Section Group Container */
+.main-section-box {
+  background: rgba(14, 20, 36, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.main-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.subsections-count-badge {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.obligatorio-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.obligatorio-session-pill {
+  background: rgba(59, 130, 246, 0.18);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.subsection-card {
+  background: rgba(10, 15, 30, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all var(--transition-fast);
+  cursor: grab;
+}
+
+.subsection-card:active {
+  cursor: grabbing;
+}
+
+.subsection-card:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(18, 26, 50, 0.8);
+}
+
+.subsection-card.selected {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
 .section-badge {
   font-size: 0.9rem;
   font-weight: 700;
