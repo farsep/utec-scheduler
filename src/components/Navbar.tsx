@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Upload, Sparkles, User, BookOpen, Trash2, RefreshCw } from 'lucide-react';
+import { Calendar, Upload, Sparkles, Trash2 } from 'lucide-react';
 import type { MetadataInfo } from '../types/schedule';
 
 interface NavbarProps {
@@ -32,21 +32,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       <div className="meta-info-strip">
-        {metadata.studentName && (
-          <div className="meta-chip">
-            <User size={14} color="var(--accent-primary)" />
-            <span>Alumno:</span>
-            <span className="meta-chip-val">{metadata.studentName}</span>
-          </div>
-        )}
-        {metadata.major && (
-          <div className="meta-chip">
-            <BookOpen size={14} color="var(--accent-emerald)" />
-            <span>Carrera:</span>
-            <span className="meta-chip-val">{metadata.major} ({metadata.semester || '2026-2'})</span>
-          </div>
-        )}
-
         <div className="meta-chip">
           <span style={{ color: 'var(--text-muted)' }}>Cursos Cargados:</span>
           <span className="meta-chip-val" style={{ color: 'var(--accent-primary)' }}>{coursesCount}</span>
