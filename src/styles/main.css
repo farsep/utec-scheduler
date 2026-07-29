@@ -44,7 +44,8 @@
   padding: 0;
 }
 
-html, body {
+html,
+body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -804,8 +805,15 @@ body::after {
 }
 
 @keyframes pulseAlert {
-  0%, 100% { border-color: rgba(239, 68, 68, 0.4); }
-  50% { border-color: rgba(239, 68, 68, 0.9); }
+
+  0%,
+  100% {
+    border-color: rgba(239, 68, 68, 0.4);
+  }
+
+  50% {
+    border-color: rgba(239, 68, 68, 0.9);
+  }
 }
 
 /* Timetable Grid Container */
@@ -927,9 +935,21 @@ body::after {
 }
 
 @keyframes shakeConflict {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-3px); }
-  40%, 80% { transform: translateX(3px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-3px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(3px);
+  }
 }
 
 .block-course-code {
@@ -971,15 +991,19 @@ body::after {
   0% {
     transform: translateX(0%);
   }
+
   15% {
     transform: translateX(0%);
   }
+
   75% {
     transform: translateX(calc(-100% + 120px));
   }
+
   85% {
     transform: translateX(calc(-100% + 120px));
   }
+
   100% {
     transform: translateX(0%);
   }
@@ -1023,8 +1047,17 @@ body::after {
 }
 
 @keyframes ghostPulse {
-  0%, 100% { opacity: 0.75; transform: scale(0.99); }
-  50% { opacity: 1; transform: scale(1.01); }
+
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(0.99);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.01);
+  }
 }
 
 /* Stats Summary Footer */
@@ -1175,6 +1208,7 @@ body::after {
    RESPONSIVE: TABLET  (≤ 1024px)
    ======================================== */
 @media (max-width: 1024px) {
+
   /* Header — allow wrapping on tablet */
   .app-header {
     padding: 8px 14px;
@@ -1285,6 +1319,7 @@ body::after {
    RESPONSIVE: SMALL TABLET  (≤ 768px)
    ======================================== */
 @media (max-width: 768px) {
+
   /* Header — stack layout */
   .app-header {
     flex-direction: column;
@@ -1293,7 +1328,7 @@ body::after {
     padding: 10px 12px;
   }
 
-  .app-header > .brand-title {
+  .app-header>.brand-title {
     justify-content: center;
   }
 
@@ -1407,6 +1442,7 @@ body::after {
    RESPONSIVE: MOBILE  (≤ 640px)
    ======================================== */
 @media (max-width: 640px) {
+
   /* Background glows — shrink to avoid overflow */
   body::before {
     width: 300px;
@@ -1419,24 +1455,30 @@ body::after {
     height: 250px;
   }
 
-  /* Header — compact mobile */
+  /* Header — stacked on mobile for prominent brand & buttons with text */
   .app-header {
-    padding: 8px 10px;
-    gap: 6px;
+    padding: 12px 10px;
+    gap: 12px;
+    flex-direction: column;
+    align-items: center;
   }
 
   .brand-title {
-    font-size: 1.05rem;
-    gap: 6px;
+    font-size: 1.45rem;
+    gap: 10px;
+    justify-content: center;
+    width: 100%;
   }
 
   .brand-logo {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
   }
 
   .brand-badge {
-    display: none;
+    display: inline-block;
+    font-size: 0.65rem;
   }
 
   /* Hide meta strips on mobile — too noisy */
@@ -1447,18 +1489,21 @@ body::after {
   .navbar-actions {
     width: 100%;
     justify-content: center;
+    flex-wrap: nowrap;
+    gap: 4px;
   }
 
-  /* Icon-only buttons on mobile */
-  .navbar-actions .btn span {
-    display: none;
-  }
-
+  /* Show button text but make them ultra-compact to fit one row */
   .navbar-actions .btn {
-    padding: 8px;
-    min-width: 40px;
-    min-height: 40px;
-    justify-content: center;
+    padding: 6px 8px;
+    font-size: 0.65rem;
+    min-height: 32px;
+    white-space: nowrap;
+  }
+
+  .navbar-actions .btn svg {
+    width: 13px;
+    height: 13px;
   }
 
   /* Student Banner — minimal */
@@ -1732,6 +1777,7 @@ body::after {
    TOUCH TARGET ACCESSIBILITY
    ======================================== */
 @media (pointer: coarse) {
+
   .select-btn,
   .filter-pill-btn,
   .tab-btn,
