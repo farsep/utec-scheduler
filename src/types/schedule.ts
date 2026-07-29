@@ -42,8 +42,11 @@ export interface MetadataInfo {
   studentName?: string;
   program?: string;
   major?: string;
+  malla?: string;
   semester?: string;
   registrationTime?: string;
+  reportDate?: string;
+  reportTime?: string;
 }
 
 export interface ScheduleOption {

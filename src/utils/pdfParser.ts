@@ -39,24 +39,64 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
   for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
     const page = await pdfDoc.getPage(pageNum);
     const textContent = await page.getTextContent();
-    
-    const pageText = textContent.items
-      .map((item: any) => item.str)
-      .join(' ');
-    fullText += pageText + '\n';
 
+    const pageItems: PDFTextItem[] = [];
     textContent.items.forEach((item: any) => {
       const str = (item.str || '').trim();
       if (!str) return;
       const transform = item.transform || [1, 0, 0, 1, 0, 0];
       const x = transform[4];
       const y = transform[5];
-      allItems.push({ str, x, y, page: pageNum });
+      const ptItem = { str, x, y, page: pageNum };
+      allItems.push(ptItem);
+      pageItems.push(ptItem);
     });
+
+    // Reconstruct page text with newlines when Y-coordinate changes
+    const pageSorted = [...pageItems].sort((a, b) => b.y - a.y);
+    const lines: string[] = [];
+    let currLine: string[] = [];
+    let currY: number | null = null;
+
+    pageSorted.forEach(item => {
+      if (currY === null || Math.abs(item.y - currY) <= 4.0) {
+        currLine.push(item.str);
+        if (currY === null) currY = item.y;
+      } else {
+        lines.push(currLine.join(' '));
+        currLine = [item.str];
+        currY = item.y;
+      }
+    });
+    if (currLine.length > 0) lines.push(currLine.join(' '));
+
+    fullText += lines.join('\n') + '\n';
   }
 
-  const studentMatch = fullText.match(/Alumno:\s*([^\n\r]+)/i);
-  if (studentMatch) metadata.studentName = studentMatch[1].trim();
+  // Extract Clean Metadata header fields appearing before course table
+  const studentMatch = fullText.match(/Alumno\s*:\s*(.+?)(?=\s*(?:Programa|Carrera|Malla|Periodo|Turno|Código|$|\n))/i);
+  if (studentMatch) metadata.studentName = studentMatch[1].replace(/\s+/g, ' ').trim();
+
+  const programMatch = fullText.match(/Programa\s*:\s*(.+?)(?=\s*(?:Carrera|Malla|Periodo|Turno|Código|$|\n))/i);
+  if (programMatch) metadata.program = programMatch[1].replace(/\s+/g, ' ').trim();
+
+  const majorMatch = fullText.match(/Carrera\s*:\s*(.+?)(?=\s*(?:Malla|Periodo|Turno|Código|$|\n))/i);
+  if (majorMatch) metadata.major = majorMatch[1].replace(/\s+/g, ' ').trim();
+
+  const mallaMatch = fullText.match(/Malla\s*:\s*(.+?)(?=\s*(?:Periodo|Turno|Código|$|\n))/i);
+  if (mallaMatch) metadata.malla = mallaMatch[1].replace(/\s+/g, ' ').trim();
+
+  const semesterMatch = fullText.match(/Periodo\s*:\s*(.+?)(?=\s*(?:Turno|Código|$|\n))/i);
+  if (semesterMatch) metadata.semester = semesterMatch[1].replace(/\s+/g, ' ').trim();
+
+  const regMatch = fullText.match(/Turno\s*(?:de\s*Matrícula)?\s*:\s*(.+?)(?=\s*(?:Código|$|\n))/i);
+  if (regMatch) metadata.registrationTime = regMatch[1].replace(/\s+/g, ' ').trim();
+
+  const dateMatch = fullText.match(/Fecha\s*:\s*(.+?)(?=\s*(?:Hora|Alumno|Código|$|\n))/i);
+  if (dateMatch) metadata.reportDate = dateMatch[1].replace(/\s+/g, ' ').trim();
+
+  const timeMatch = fullText.match(/Hora\s*:\s*(.+?)(?=\s*(?:Alumno|Programa|Código|$|\n))/i);
+  if (timeMatch) metadata.reportTime = timeMatch[1].replace(/\s+/g, ' ').trim();
 
   // Group text items into row blocks based on PDF Y-coordinates
   const sortedItems = [...allItems].sort((a, b) => b.page !== a.page ? a.page - b.page : b.y - a.y);
@@ -313,7 +353,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
           endMinutes: r.endMinutes,
           frequency: 'Semana General',
           location: r.location,
-          vacancies: sRows[0]?.vacancies || 30,
+          vacancies: r.vacancies,
           enrolled: 0,
           professor: r.professor,
           email: ''
