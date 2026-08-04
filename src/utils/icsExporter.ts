@@ -11,8 +11,17 @@ export function generateICS(courses: Course[], selectedSections: Record<string, 
     'X-WR-CALNAME:Mi Horario UTEC'
   ];
 
-  // Base start date for semester schedule preview (e.g. Monday Aug 17, 2026)
-  const baseMonday = new Date(2026, 7, 17); // 2026-08-17 is a Monday
+  // Base start date for semester classes: August 10, 2026 (Monday)
+  const SEMESTER_WEEKS = 16;
+  const baseMonday = new Date(2026, 7, 10); // 2026-08-10 is a Monday (August 10th)
+
+  // Semester end date (Sunday of the 16th week: Nov 29, 2026)
+  const semesterEndDate = new Date(baseMonday);
+  semesterEndDate.setDate(baseMonday.getDate() + (SEMESTER_WEEKS * 7) - 1);
+  const untilYear = semesterEndDate.getFullYear();
+  const untilMonth = String(semesterEndDate.getMonth() + 1).padStart(2, '0');
+  const untilDay = String(semesterEndDate.getDate()).padStart(2, '0');
+  const untilStr = `${untilYear}${untilMonth}${untilDay}T235959Z`;
 
   const dayOffset: Record<string, number> = {
     Lun: 0,
@@ -20,7 +29,8 @@ export function generateICS(courses: Course[], selectedSections: Record<string, 
     Mie: 2,
     Jue: 3,
     Vie: 4,
-    Sab: 5
+    Sab: 5,
+    Dom: 6
   };
 
   Object.entries(selectedSections).forEach(([courseCode, secNum]) => {
@@ -65,7 +75,7 @@ export function generateICS(courses: Course[], selectedSections: Record<string, 
         `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
         `DTSTART:${dtStart}`,
         `DTEND:${dtEnd}`,
-        `RRULE:FREQ=WEEKLY;UNTIL=${year}1215T235959Z`,
+        `RRULE:FREQ=WEEKLY;UNTIL=${untilStr}`,
         `SUMMARY:${summaryText}`,
         `LOCATION:${formatLocation(sess.location) || 'Virtual'}`,
         `DESCRIPTION:${descText}`,
