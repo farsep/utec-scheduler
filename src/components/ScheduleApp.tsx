@@ -11,7 +11,7 @@ import { ExportModal } from './ExportModal';
 import type { Course, MetadataInfo, ScheduleOption } from '../types/schedule';
 import { loadDefaultSampleData } from '../utils/sampleData';
 import type { PDFParseResult } from '../utils/pdfParser';
-import { detectConflicts, calculateTotalHours } from '../utils/scheduleUtils';
+import { detectConflicts, calculateTotalHours, matchSectionNumber } from '../utils/scheduleUtils';
 import { Download, RefreshCw, CheckCircle, Upload, Sparkles } from 'lucide-react';
 
 export const ScheduleApp: React.FC = () => {
@@ -114,9 +114,18 @@ export const ScheduleApp: React.FC = () => {
 
   const handlePDFParsed = (pdfResult: PDFParseResult) => {
     setHasPdfLoaded(true);
-    const { courses: pdfCourses, eligibleCourseCodes, eligibleCoursesMap, metadata: pdfMeta } = pdfResult;
+    const { courses: pdfCourses, eligibleCourseCodes, eligibleCoursesMap, metadata: pdfMeta, isConsolidado, enrolledSections } = pdfResult;
 
     setMetadata(prev => ({ ...prev, ...pdfMeta }));
+
+    if (isConsolidado && enrolledSections) {
+      setCourses(pdfCourses);
+      setOptions(prev =>
+        prev.map(opt => (opt.id === activeOptionId ? { ...opt, selectedSections: enrolledSections } : opt))
+      );
+      setIsExportOpen(true);
+      return;
+    }
 
     if (!hasExcelLoaded || courses.length === 0) {
       setCourses(pdfCourses);
