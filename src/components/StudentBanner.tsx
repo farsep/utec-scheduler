@@ -9,12 +9,18 @@ interface StudentBannerProps {
 export const StudentBanner: React.FC<StudentBannerProps> = ({ metadata }) => {
   if (!metadata.studentName && !metadata.major) return null;
 
+  const isConsolidado = Boolean(metadata.isConsolidado);
+
   return (
     <div className="student-metadata-banner">
       <div className="student-meta-item student-name">
         <User size={15} color="var(--accent-primary)" />
         <span className="student-meta-label">Alumno:</span>
-        <span className="student-meta-value">{metadata.studentName || 'Farid Espinoza'}</span>
+        <span className="student-meta-value">
+          {isConsolidado && metadata.studentCode
+            ? `${metadata.studentCode} - ${metadata.studentName}`
+            : (metadata.studentName || 'Farid Espinoza')}
+        </span>
       </div>
 
       {metadata.major && (
@@ -33,7 +39,7 @@ export const StudentBanner: React.FC<StudentBannerProps> = ({ metadata }) => {
         </div>
       )}
 
-      {metadata.program && (
+      {!isConsolidado && metadata.program && (
         <div className="student-meta-item">
           <span className="student-meta-label">Programa:</span>
           <span className="student-meta-value">{metadata.program}</span>
@@ -48,10 +54,26 @@ export const StudentBanner: React.FC<StudentBannerProps> = ({ metadata }) => {
         </div>
       )}
 
+      {isConsolidado && metadata.academicCredits && (
+        <div className="student-meta-item">
+          <span className="student-meta-label">Créditos Académicos:</span>
+          <span className="student-meta-value">{metadata.academicCredits}</span>
+        </div>
+      )}
+
+      {isConsolidado && metadata.level && (
+        <div className="student-meta-item">
+          <span className="student-meta-label">Nivel:</span>
+          <span className="student-meta-value">{metadata.level}</span>
+        </div>
+      )}
+
       {metadata.registrationTime && (
         <div className="student-meta-item registration-turn">
           <Clock size={15} color="#f43f5e" />
-          <span className="student-meta-label">Turno de Matrícula:</span>
+          <span className="student-meta-label">
+            {isConsolidado ? 'Fecha de Matrícula:' : 'Turno de Matrícula:'}
+          </span>
           <span className="student-meta-value highlight-turn">{metadata.registrationTime}</span>
         </div>
       )}

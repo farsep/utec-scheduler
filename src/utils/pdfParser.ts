@@ -24,6 +24,7 @@ interface PDFTextItem {
 }
 
 function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata: MetadataInfo): PDFParseResult {
+  metadata.isConsolidado = true;
   const sortedItems = [...allItems].sort((a, b) => (b.page !== a.page ? a.page - b.page : b.y !== a.y ? b.y - a.y : a.x - b.x));
 
   // Find course code anchors at x ~ 72 (65 <= x <= 95)
@@ -254,7 +255,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
     });
 
     // Reconstruct page text with newlines when Y-coordinate changes
-    const pageSorted = [...pageItems].sort((a, b) => b.y - a.y);
+    const pageSorted = [...pageItems].sort((a, b) => b.y !== a.y ? b.y - a.y : a.x - b.x);
     const lines: string[] = [];
     let currLine: string[] = [];
     let currY: number | null = null;
@@ -274,7 +275,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
     fullText += lines.join('\n') + '\n';
   }
 
-  // Extract Clean Metadata header fields appearing before course table
+  // Extract Clean Metadata header fields for standard Carga Hábil / Cursos Habilitados PDFs
   const studentMatch = fullText.match(/Alumno\s*:\s*(.+?)(?=\s*(?:Programa|Carrera|Malla|Periodo|Turno|Código|$|\n))/i);
   if (studentMatch) metadata.studentName = studentMatch[1].replace(/\s+/g, ' ').trim();
 
@@ -293,13 +294,74 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
   const regMatch = fullText.match(/Turno\s*(?:de\s*Matrícula)?\s*:\s*(.+?)(?=\s*(?:Código|$|\n))/i);
   if (regMatch) metadata.registrationTime = regMatch[1].replace(/\s+/g, ' ').trim();
 
-  const dateMatch = fullText.match(/Fecha\s*:\s*(.+?)(?=\s*(?:Hora|Alumno|Código|$|\n))/i);
-  if (dateMatch) metadata.reportDate = dateMatch[1].replace(/\s+/g, ' ').trim();
-
-  const timeMatch = fullText.match(/Hora\s*:\s*(.+?)(?=\s*(?:Alumno|Programa|Código|$|\n))/i);
-  if (timeMatch) metadata.reportTime = timeMatch[1].replace(/\s+/g, ' ').trim();
-
   if (fullText.toLowerCase().includes('consolidado de matr')) {
+    const page1Items = allItems.filter(it => it.page === 1);
+    const sortedP1 = [...page1Items].sort((a, b) => b.y !== a.y ? b.y - a.y : a.x - b.x);
+
+    const progLabel = sortedP1.find(it => it.str.includes('Programa:'));
+    const carLabel = sortedP1.find(it => it.str.includes('Carrera:'));
+    const alumLabel = sortedP1.find(it => it.str.includes('Alumno:'));
+    const fecLabel = sortedP1.find(it => it.str.includes('Fecha de Matrícula:'));
+    const perLabel = sortedP1.find(it => it.str.includes('Periodo:'));
+    const credLabel = sortedP1.find(it => it.str.includes('Créditos'));
+    const nivLabel = sortedP1.find(it => it.str.includes('Nivel:'));
+
+    if (progLabel) {
+      const pItems = sortedP1.filter(it => it.x >= 200 && it.x < 500 && it.y <= progLabel.y + 2 && it.y >= (carLabel ? carLabel.y + 2 : progLabel.y - 20));
+      const val = pItems.map(i => i.str).join(' ').trim();
+      if (val) metadata.program = val;
+    }
+
+    if (perLabel) {
+      const pItems = sortedP1.filter(it => it.x >= 600 && it.y <= perLabel.y + 2 && it.y >= (credLabel ? credLabel.y + 2 : perLabel.y - 20));
+      const val = pItems.map(i => i.str).join(' ').trim();
+      if (val) metadata.semester = val;
+    }
+
+    if (carLabel) {
+      const cItems = sortedP1.filter(it => it.x >= 200 && it.x < 500 && it.y <= carLabel.y + 2 && it.y >= (alumLabel ? alumLabel.y + 2 : carLabel.y - 20));
+      const fullCarStr = cItems.map(i => i.str).join(' ').trim();
+      if (fullCarStr.includes(' - ')) {
+        const parts = fullCarStr.split(' - ');
+        metadata.major = parts[0].trim();
+        metadata.malla = parts[1].trim();
+      } else if (fullCarStr) {
+        metadata.major = fullCarStr;
+      }
+    }
+
+    if (credLabel) {
+      const cItems = sortedP1.filter(it => it.x >= 600 && it.y <= credLabel.y + 2 && it.y >= (nivLabel ? nivLabel.y + 2 : credLabel.y - 20));
+      const val = cItems.map(i => i.str).join(' ').trim();
+      if (val) metadata.academicCredits = val;
+    }
+
+    if (alumLabel) {
+      const minY = fecLabel ? fecLabel.y + 1.0 : alumLabel.y - 35.0;
+      const maxY = alumLabel.y + 2.0;
+      const aItems = sortedP1.filter(it => it.x >= 100 && it.x < 500 && it.y <= maxY && it.y >= minY);
+      const fullStudentStr = aItems.map(i => i.str).join(' ').replace(/^Alumno:\s*/i, '').trim();
+      if (fullStudentStr.includes(' - ')) {
+        const parts = fullStudentStr.split(' - ');
+        metadata.studentCode = parts[0].trim();
+        metadata.studentName = parts.slice(1).join(' - ').trim();
+      } else if (fullStudentStr) {
+        metadata.studentName = fullStudentStr;
+      }
+    }
+
+    if (nivLabel) {
+      const nItems = sortedP1.filter(it => it.x >= 600 && it.y <= nivLabel.y + 2 && it.y >= nivLabel.y - 20);
+      const rawNiv = nItems.map(i => i.str).join(' ').trim();
+      if (rawNiv) metadata.level = rawNiv.replace(/Fecha.*/i, '').trim();
+    }
+
+    if (fecLabel) {
+      const fItems = sortedP1.filter(it => it.x >= 200 && it.x < 500 && it.y <= fecLabel.y + 2 && it.y >= fecLabel.y - 20);
+      const val = fItems.map(i => i.str).join(' ').trim();
+      if (val) metadata.registrationTime = val;
+    }
+
     return parseConsolidadoPDF(allItems, fullText, metadata);
   }
 

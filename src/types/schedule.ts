@@ -40,13 +40,18 @@ export interface Course {
 
 export interface MetadataInfo {
   studentName?: string;
+  studentCode?: string;
   program?: string;
   major?: string;
   malla?: string;
   semester?: string;
+  academicCredits?: number | string;
+  level?: string;
   registrationTime?: string;
+  extracurricularRegistrationTime?: string;
   reportDate?: string;
   reportTime?: string;
+  isConsolidado?: boolean;
 }
 
 export interface ScheduleOption {
