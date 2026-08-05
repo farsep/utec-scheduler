@@ -1,4 +1,4 @@
-import type { Course, DayOfWeek, Session, SessionType, Conflict } from '../types/schedule';
+import type { Course, Section, DayOfWeek, Session, SessionType, Conflict } from '../types/schedule';
 
 export const DAYS: DayOfWeek[] = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
 
@@ -112,24 +112,30 @@ export function formatLocation(loc?: string): string {
 }
 
 /**
+ * Safely parses Spanish day strings (e.g. "Miércoles", "Sábado", "Lun", "Mié", "Sáb") into DayOfWeek enum.
+ */
+export function parseDayOfWeek(raw: string): DayOfWeek {
+  if (!raw) return 'Lun';
+  const clean = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  if (clean.startsWith('mar')) return 'Mar';
+  if (clean.startsWith('mie')) return 'Mie';
+  if (clean.startsWith('jue')) return 'Jue';
+  if (clean.startsWith('vie')) return 'Vie';
+  if (clean.startsWith('sab')) return 'Sab';
+  if (clean.startsWith('dom')) return 'Dom' as DayOfWeek;
+  return 'Lun';
+}
+
+/**
  * Parses time string like "Mar. 15:00 - 17:00" or "Lun. 08:00 - 10:00"
  */
 export function parseHorarioString(horarioStr: string): { day: DayOfWeek; startTime: string; endTime: string; startMinutes: number; endMinutes: number } | null {
   if (!horarioStr) return null;
   
-  const match = horarioStr.trim().match(/(Lun|Mar|Mie|Jue|Vie|Sab|Dom)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/i);
+  const match = horarioStr.trim().match(/(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo|Lun|Mar|Mié|Mie|Jue|Vie|Sáb|Sab|Dom)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/i);
   if (!match) return null;
 
-  let rawDay = match[1].substring(0, 3);
-  rawDay = rawDay.charAt(0).toUpperCase() + rawDay.slice(1).toLowerCase();
-  
-  let day: DayOfWeek = 'Lun';
-  if (rawDay.startsWith('Mar')) day = 'Mar';
-  else if (rawDay.startsWith('Mie')) day = 'Mie';
-  else if (rawDay.startsWith('Jue')) day = 'Jue';
-  else if (rawDay.startsWith('Vie')) day = 'Vie';
-  else if (rawDay.startsWith('Sab')) day = 'Sab';
-  else day = 'Lun';
+  const day = parseDayOfWeek(match[1]);
 
   const startTime = match[2].padStart(5, '0');
   const endTime = match[3].padStart(5, '0');
@@ -225,4 +231,44 @@ export function calculateTotalHours(courses: Course[], selectedSections: Record<
     });
   });
   return Math.round((totalMinutes / 60) * 10) / 10;
+}
+
+/**
+ * Matches a main section number and optional subgroup label (e.g. "3", "Lab. 31") to the exact sectionNumber in a course's sections array (e.g. "3 (LABORATORIO 31)").
+ */
+export function matchSectionNumber(sections: Section[], mainSecNum: string, groupStr?: string): string {
+  if (!sections || sections.length === 0) {
+    return groupStr ? `${mainSecNum} (${groupStr})` : mainSecNum;
+  }
+
+  // 1. Exact match
+  const targetLabel = groupStr ? `${mainSecNum} (${groupStr})` : mainSecNum;
+  const exact = sections.find(s => s.sectionNumber === targetLabel);
+  if (exact) return exact.sectionNumber;
+
+  if (!groupStr || groupStr === '-' || groupStr === mainSecNum) {
+    const mainOnly = sections.find(s => s.sectionNumber === mainSecNum || s.sectionNumber.split(' (')[0] === mainSecNum);
+    if (mainOnly) return mainOnly.sectionNumber;
+  }
+
+  // 2. Fuzzy match on subgroup digits (e.g. "31" in "Lab. 31" matching "3 (LABORATORIO 31)")
+  const cleanGroup = groupStr ? groupStr.replace(/^(?:Lab\.|Prac\.|Tall\.)\s*/i, '').trim() : '';
+  const groupNumMatch = cleanGroup.match(/\d+/);
+  const groupNum = groupNumMatch ? groupNumMatch[0] : cleanGroup;
+
+  if (groupNum) {
+    const fuzzy = sections.find(s => {
+      const sMain = s.sectionNumber.split(' (')[0];
+      if (sMain !== mainSecNum) return false;
+      const sParen = s.sectionNumber.match(/\((.*?)\)/);
+      if (!sParen) return false;
+      const parenContent = sParen[1].toUpperCase();
+      return parenContent.includes(groupNum) || (groupStr && parenContent.includes(groupStr.toUpperCase()));
+    });
+    if (fuzzy) return fuzzy.sectionNumber;
+  }
+
+  // 3. Fallback to main section number match
+  const fallback = sections.find(s => s.sectionNumber.split(' (')[0] === mainSecNum);
+  return fallback ? fallback.sectionNumber : targetLabel;
 }

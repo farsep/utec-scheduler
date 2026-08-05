@@ -88,7 +88,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         </div>
 
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-          Sube tu archivo PDF de <strong>Cursos Habilitados</strong> y/o tu archivo Excel de <strong>Oferta Académica</strong>. Todo PDF debe ser subido directamente por el alumno.
+          Sube tu <strong>Consolidado de Matrícula PDF</strong> para cargar directamente tus cursos matriculados y exportar tu calendario .ics en 1 clic, tu PDF de <strong>Cursos Habilitados</strong> y/o tu archivo Excel de <strong>Oferta Académica</strong>.
         </p>
 
         {errorMsg && (
@@ -134,8 +134,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           <div className={`dropzone-container ${hasPDFData ? 'active' : ''}`}>
             <FileText size={32} color="var(--accent-rose)" />
             <div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Cursos PDF (.pdf)</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Subida del Alumno</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Consolidado / Cursos (.pdf)</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Consolidado de Matrícula o Cursos Habilitados</div>
             </div>
             {hasPDFData ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>

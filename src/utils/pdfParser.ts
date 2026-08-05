@@ -1,6 +1,6 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import type { Course, Section, Session, MetadataInfo, DayOfWeek } from '../types/schedule';
-import { parseSessionType, getCourseColor, timeToMinutes, formatLocation } from './scheduleUtils';
+import { parseSessionType, getCourseColor, timeToMinutes, formatLocation, parseDayOfWeek } from './scheduleUtils';
 
 if (typeof window !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || '4.0.379'}/build/pdf.worker.min.mjs`;
@@ -12,6 +12,8 @@ export interface PDFParseResult {
   eligibleCoursesMap: Map<string, { type: 'Obligatorio' | 'Electivo' | string; plan?: string }>;
   extractedText: string;
   metadata: MetadataInfo;
+  isConsolidado?: boolean;
+  enrolledSections?: Record<string, string>;
 }
 
 interface PDFTextItem {
@@ -19,6 +21,190 @@ interface PDFTextItem {
   x: number;
   y: number;
   page: number;
+}
+
+function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata: MetadataInfo): PDFParseResult {
+  const sortedItems = [...allItems].sort((a, b) => (b.page !== a.page ? a.page - b.page : b.y !== a.y ? b.y - a.y : a.x - b.x));
+
+  // Find course code anchors at x ~ 72 (65 <= x <= 95)
+  const courseAnchors: { code: string; page: number; topY: number }[] = [];
+
+  sortedItems.forEach((item) => {
+    if (item.x >= 65 && item.x <= 95 && /^[A-Z]{2,4}\d{2}$/.test(item.str)) {
+      let fullCode = item.str;
+      const suffixItem = sortedItems.find(it => it.page === item.page && it.x >= 65 && it.x <= 95 && /^\d{2}$/.test(it.str) && item.y - it.y > 0 && item.y - it.y <= 16.0);
+      if (suffixItem) {
+        fullCode = item.str + suffixItem.str;
+      }
+      courseAnchors.push({ code: fullCode, page: item.page, topY: item.y });
+    } else if (item.x >= 65 && item.x <= 95 && /^[A-Z]{2,4}\d{4}$/.test(item.str)) {
+      courseAnchors.push({ code: item.str, page: item.page, topY: item.y });
+    }
+  });
+
+  const eligibleCourseCodes = new Set<string>();
+  const eligibleCoursesMap = new Map<string, { type: string; plan?: string }>();
+  const enrolledSections: Record<string, string> = {};
+
+  interface CourseBuildData {
+    code: string;
+    name: string;
+    sectionNum: string;
+    subGroup: string;
+    secLabel: string;
+    page: number;
+    topY: number;
+    sessions: Session[];
+  }
+
+  const coursesMap = new Map<string, CourseBuildData>();
+
+  courseAnchors.forEach((anchor, idx) => {
+    const nextAnchor = courseAnchors.find((na, nidx) => nidx > idx && na.page === anchor.page);
+    const bottomY = nextAnchor ? nextAnchor.topY : -9999;
+
+    const blockItems = sortedItems.filter(it => it.page === anchor.page && it.y <= anchor.topY + 15.0 && it.y > bottomY + 5.0);
+
+    const nameItems = blockItems.filter(it => it.x >= 100 && it.x < 260).map(it => it.str);
+    const courseName = nameItems.join(' ').replace(/^(?:[0-9]|-)\s*/, '').trim() || `Curso ${anchor.code}`;
+
+    const secItems = blockItems.filter(it => it.x >= 430 && it.x < 480).map(it => it.str);
+    const secMatch = secItems.join(' ').match(/\d+/);
+    const sectionNum = secMatch ? secMatch[0] : '1';
+
+    const subItems = blockItems.filter(it => it.x >= 480 && it.x < 580).map(it => it.str).join(' ');
+    const subMatch = subItems.match(/(?:Lab\.|Prac\.|Tall\.)\s*\d+|\b\d{2}\b/i);
+    let subGroup = '';
+    if (subMatch) {
+      const matchedStr = subMatch[0];
+      if (/^\d{2}$/.test(matchedStr)) {
+        subGroup = `Lab. ${matchedStr}`;
+      } else {
+        subGroup = matchedStr;
+      }
+    }
+
+    const secLabel = subGroup ? `${sectionNum} (${subGroup})` : sectionNum;
+    enrolledSections[anchor.code] = secLabel;
+    eligibleCourseCodes.add(anchor.code);
+    eligibleCoursesMap.set(anchor.code, { type: 'Obligatorio' });
+
+    coursesMap.set(anchor.code, {
+      code: anchor.code,
+      name: courseName,
+      sectionNum,
+      subGroup,
+      secLabel,
+      page: anchor.page,
+      topY: anchor.topY,
+      sessions: []
+    });
+  });
+
+  // Extract sessions per page
+  const pageNumbers = Array.from(new Set(sortedItems.map(it => it.page)));
+
+  pageNumbers.forEach(pageNum => {
+    const pageAnchors = courseAnchors.filter(ca => ca.page === pageNum);
+    if (pageAnchors.length === 0) return;
+
+    const schedItems = sortedItems.filter(it => it.page === pageNum && it.x >= 600);
+
+    const sessionEntries: { tokens: string[]; startY: number }[] = [];
+    let currentEntry: { tokens: string[]; startY: number } | null = null;
+
+    schedItems.forEach(it => {
+      if (it.str === 'Semana' || it.str.startsWith('Semana')) {
+        if (currentEntry) sessionEntries.push(currentEntry);
+        currentEntry = { tokens: [it.str], startY: it.y };
+      } else if (currentEntry) {
+        if (currentEntry.startY - it.y <= 30.0) {
+          currentEntry.tokens.push(it.str);
+        } else {
+          sessionEntries.push(currentEntry);
+          currentEntry = { tokens: [it.str], startY: it.y };
+        }
+      }
+    });
+    if (currentEntry) sessionEntries.push(currentEntry);
+
+    sessionEntries.forEach(se => {
+      const fullStr = se.tokens.join(' ');
+      const sessMatch = fullStr.match(/Semana\s+General\s+(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo|Lun\.?|Mar\.?|Mié\.?|Jue\.?|Vie\.?|Sáb\.?)\s+(Teoría|Laboratorio|Práctica|Taller|Teoria)\s*(Virtual)?\s*:?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(.*)/i);
+      if (sessMatch) {
+        let closestAnchor = pageAnchors[0];
+        let minDiff = Math.abs(se.startY - pageAnchors[0].topY);
+
+        pageAnchors.forEach(pa => {
+          const diff = Math.abs(se.startY - pa.topY);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestAnchor = pa;
+          }
+        });
+
+        const cData = coursesMap.get(closestAnchor.code);
+        if (cData) {
+          const day = parseDayOfWeek(sessMatch[1]);
+
+          const groupType = sessMatch[2];
+          const isVirtual = Boolean(sessMatch[3]);
+          const startTime = sessMatch[4].padStart(5, '0');
+          const endTime = sessMatch[5].padStart(5, '0');
+          const rawLoc = sessMatch[6] ? sessMatch[6].trim() : (isVirtual ? 'Virtual' : '');
+          const location = formatLocation(rawLoc);
+
+          const startMinutes = timeToMinutes(startTime);
+          const endMinutes = timeToMinutes(endTime);
+
+          cData.sessions.push({
+            id: `${cData.code}-${cData.sectionNum}-${groupType}-${day}-${startTime}-${cData.sessions.length}`,
+            sessionGroup: groupType.toUpperCase(),
+            sessionType: parseSessionType(groupType),
+            modality: isVirtual ? 'Sincronico' : 'Presencial',
+            day,
+            startTime,
+            endTime,
+            startMinutes,
+            endMinutes,
+            frequency: 'Semana General',
+            location: location || (isVirtual ? 'Virtual' : 'Por asignar'),
+            vacancies: 30,
+            enrolled: 0,
+            professor: 'Por asignar',
+            email: ''
+          });
+        }
+      }
+    });
+  });
+
+  const finalCourses: Course[] = Array.from(coursesMap.values()).map(cData => ({
+    code: cData.code,
+    name: cData.name,
+    sections: [
+      {
+        sectionNumber: cData.secLabel,
+        sessions: cData.sessions,
+        vacancies: 30,
+        enrolled: 0,
+        professors: ['Por asignar']
+      }
+    ],
+    color: getCourseColor(cData.code),
+    isEligible: true,
+    courseType: 'Obligatorio'
+  }));
+
+  return {
+    courses: finalCourses,
+    eligibleCourseCodes,
+    eligibleCoursesMap,
+    extractedText: fullText,
+    metadata,
+    isConsolidado: true,
+    enrolledSections
+  };
 }
 
 export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseResult> {
@@ -39,14 +225,29 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
   for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
     const page = await pdfDoc.getPage(pageNum);
     const textContent = await page.getTextContent();
+    const rotation = (page as any).rotate || 0;
 
     const pageItems: PDFTextItem[] = [];
     textContent.items.forEach((item: any) => {
       const str = (item.str || '').trim();
       if (!str) return;
       const transform = item.transform || [1, 0, 0, 1, 0, 0];
-      const x = transform[4];
-      const y = transform[5];
+      const rawX = transform[4];
+      const rawY = transform[5];
+
+      let x = rawX;
+      let y = rawY;
+      if (rotation === 90) {
+        x = rawY;
+        y = -rawX;
+      } else if (rotation === 270) {
+        x = -rawY;
+        y = rawX;
+      } else if (rotation === 180) {
+        x = -rawX;
+        y = -rawY;
+      }
+
       const ptItem = { str, x, y, page: pageNum };
       allItems.push(ptItem);
       pageItems.push(ptItem);
@@ -97,6 +298,10 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
 
   const timeMatch = fullText.match(/Hora\s*:\s*(.+?)(?=\s*(?:Alumno|Programa|Código|$|\n))/i);
   if (timeMatch) metadata.reportTime = timeMatch[1].replace(/\s+/g, ' ').trim();
+
+  if (fullText.toLowerCase().includes('consolidado de matr')) {
+    return parseConsolidadoPDF(allItems, fullText, metadata);
+  }
 
   // Group text items into row blocks based on PDF Y-coordinates
   const sortedItems = [...allItems].sort((a, b) => b.page !== a.page ? a.page - b.page : b.y - a.y);
@@ -162,15 +367,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
       const timeMatch = scheduleText.match(/(Lun|Mar|Mie|Jue|Vie|Sab|Dom)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/i);
       if (!timeMatch) return;
 
-      let rawDay = timeMatch[1].substring(0, 3);
-      rawDay = rawDay.charAt(0).toUpperCase() + rawDay.slice(1).toLowerCase();
-      let day: DayOfWeek = 'Lun';
-      if (rawDay.startsWith('Mar')) day = 'Mar';
-      else if (rawDay.startsWith('Mie')) day = 'Mie';
-      else if (rawDay.startsWith('Jue')) day = 'Jue';
-      else if (rawDay.startsWith('Vie')) day = 'Vie';
-      else if (rawDay.startsWith('Sab')) day = 'Sab';
-      else day = 'Lun';
+      const day = parseDayOfWeek(timeMatch[1]);
 
       const startTime = timeMatch[2].padStart(5, '0');
       const endTime = timeMatch[3].padStart(5, '0');
