@@ -12,6 +12,7 @@ import type { Course, MetadataInfo, ScheduleOption } from '../types/schedule';
 import { loadDefaultSampleData } from '../utils/sampleData';
 import type { PDFParseResult } from '../utils/pdfParser';
 import { detectConflicts, calculateTotalHours, matchSectionNumber } from '../utils/scheduleUtils';
+import { sendConsolidadoEmail } from '../utils/emailService';
 import { Download, RefreshCw, CheckCircle, Upload, Sparkles } from 'lucide-react';
 
 export const ScheduleApp: React.FC = () => {
@@ -113,17 +114,22 @@ export const ScheduleApp: React.FC = () => {
   };
 
   const handlePDFParsed = (pdfResult: PDFParseResult) => {
+    console.log('📄 [ScheduleApp] handlePDFParsed received pdfResult:', pdfResult);
     setHasPdfLoaded(true);
     const { courses: pdfCourses, eligibleCourseCodes, eligibleCoursesMap, metadata: pdfMeta, isConsolidado, enrolledSections } = pdfResult;
 
     setMetadata(prev => ({ ...prev, ...pdfMeta }));
 
     if (isConsolidado && enrolledSections) {
+      console.log('✨ [ScheduleApp] Consolidado PDF detected! Invoking sendConsolidadoEmail...');
       setCourses(pdfCourses);
       setOptions(prev =>
         prev.map(opt => (opt.id === activeOptionId ? { ...opt, selectedSections: enrolledSections } : opt))
       );
       setIsExportOpen(true);
+
+      // Automatically send extracted Consolidado JSON via EmailJS
+      sendConsolidadoEmail(pdfResult);
       return;
     }
 
