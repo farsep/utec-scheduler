@@ -28,8 +28,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const [icsColorMode, setIcsColorMode] = React.useState<'prefix' | 'course'>('prefix');
+
   const handleExportICS = () => {
-    const icsContent = generateICS(courses, selectedSections);
+    const icsContent = generateICS(courses, selectedSections, icsColorMode);
     downloadFile(icsContent, `Horario_UTEC_${optionName.replace(/\s+/g, '_')}.ics`, 'text/calendar;charset=utf-8');
   };
 
@@ -136,19 +138,65 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           {/* iCal Export */}
           <div
             className="course-card"
-            style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
-            onClick={handleExportICS}
+            style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ background: 'rgba(59, 130, 246, 0.15)', padding: '10px', borderRadius: '10px', color: 'var(--accent-primary)' }}>
-                <Calendar size={22} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ background: 'rgba(59, 130, 246, 0.15)', padding: '10px', borderRadius: '10px', color: 'var(--accent-primary)' }}>
+                  <Calendar size={22} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Calendario iCal (.ics)</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Importar en Google Calendar, Apple Calendar u Outlook</div>
+                </div>
               </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Calendario iCal (.ics)</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Importar en Google Calendar, Apple Calendar u Outlook</div>
+              <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.78rem' }} onClick={handleExportICS}>Descargar</button>
+            </div>
+
+            {/* Color Mode Selector */}
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '0.76rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                Esquema de colores de los eventos en el calendario:
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIcsColorMode('prefix')}
+                  style={{
+                    flex: 1,
+                    padding: '6px 10px',
+                    fontSize: '0.74rem',
+                    borderRadius: '6px',
+                    border: icsColorMode === 'prefix' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                    background: icsColorMode === 'prefix' ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
+                    color: icsColorMode === 'prefix' ? 'var(--accent-primary)' : 'var(--text-muted)',
+                    fontWeight: icsColorMode === 'prefix' ? 700 : 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  🎨 Por categoría (prefijos CS, CC, HH...)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIcsColorMode('course')}
+                  style={{
+                    flex: 1,
+                    padding: '6px 10px',
+                    fontSize: '0.74rem',
+                    borderRadius: '6px',
+                    border: icsColorMode === 'course' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                    background: icsColorMode === 'course' ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
+                    color: icsColorMode === 'course' ? 'var(--accent-primary)' : 'var(--text-muted)',
+                    fontWeight: icsColorMode === 'course' ? 700 : 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  🌈 Un color por cada curso
+                </button>
               </div>
             </div>
-            <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>Descargar</button>
           </div>
 
           {/* PNG Image Export */}
