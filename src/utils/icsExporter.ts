@@ -1,7 +1,13 @@
-import { formatLocation } from './scheduleUtils';
+import { formatLocation, getCourseColor, getCoursePrefix } from './scheduleUtils';
 import type { Course, Session } from '../types/schedule';
 
-export function generateICS(courses: Course[], selectedSections: Record<string, string>): string {
+export type ICSColorMode = 'prefix' | 'course';
+
+export function generateICS(
+  courses: Course[],
+  selectedSections: Record<string, string>,
+  colorMode: ICSColorMode = 'prefix'
+): string {
   let ics = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -46,6 +52,9 @@ export function generateICS(courses: Course[], selectedSections: Record<string, 
       subGroupLabel = matchParen[1];
     }
 
+    const coursePrefix = getCoursePrefix(courseCode);
+    const courseColor = getCourseColor(courseCode, colorMode);
+
     section.sessions.forEach(sess => {
       const offset = dayOffset[sess.day] ?? 0;
       const eventDate = new Date(baseMonday);
@@ -79,6 +88,9 @@ export function generateICS(courses: Course[], selectedSections: Record<string, 
         `SUMMARY:${summaryText}`,
         `LOCATION:${formatLocation(sess.location) || 'Virtual'}`,
         `DESCRIPTION:${descText}`,
+        `CATEGORIES:${coursePrefix}`,
+        `COLOR:${courseColor}`,
+        `X-APPLE-CALENDAR-COLOR:${courseColor}`,
         'END:VEVENT'
       );
     });

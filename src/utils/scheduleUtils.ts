@@ -38,10 +38,53 @@ export function normalizeString(str: string): string {
     .trim();
 }
 
+export const PREFIX_COLORS: Record<string, string> = {
+  CS: '#3b82f6', // Computer Science - Blue
+  CC: '#06b6d4', // Ciencias de la Computación - Cyan
+  HH: '#ec4899', // Humanidades - Pink
+  GH: '#f43f5e', // Gestión y Humanidades - Rose
+  MA: '#8b5cf6', // Matemáticas - Purple
+  PI: '#f59e0b', // Proyectos de Ingeniería - Amber
+  IN: '#10b981', // Ingeniería Industrial - Emerald
+  ME: '#ef4444', // Mecatrónica/Mecánica - Red
+  AM: '#84cc16', // Ambiental - Lime
+  EL: '#6366f1', // Electrónica - Indigo
+  SI: '#0e7490', // Sistemas - Dark Cyan
+  CB: '#14b8a6', // Ciencias Básicas - Teal
+  EN: '#f97316', // Energía - Orange
+  IE: '#4f46e5', // Ingeniería Electrónica - Deep Indigo
+  DB: '#a855f7', // Data & Business - Violet
+  AD: '#d97706', // Administración - Warm Amber
+  FI: '#3b82f6', // Física - Blue
+  QU: '#10b981'  // Química - Green
+};
+
+export function getCoursePrefix(courseCode: string): string {
+  if (!courseCode) return '';
+  const match = courseCode.trim().match(/^([A-Za-z]+)/);
+  return match ? match[1].toUpperCase() : courseCode.trim().toUpperCase();
+}
+
 /**
- * Returns a consistent distinct color configuration for a given string (e.g. course code).
+ * Returns a consistent distinct color configuration for a given course based on its code prefix (CS, CC, HH, etc.).
  */
-export function getCourseColor(courseCode: string): string {
+export function getCourseColorByPrefix(courseCode: string): string {
+  const prefix = getCoursePrefix(courseCode);
+  if (PREFIX_COLORS[prefix]) {
+    return PREFIX_COLORS[prefix];
+  }
+  let hash = 0;
+  for (let i = 0; i < prefix.length; i++) {
+    hash = prefix.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % COLOR_PALETTES.length;
+  return COLOR_PALETTES[index].bg;
+}
+
+/**
+ * Returns a distinct color configuration for each individual course code (CS1102 vs CS2101).
+ */
+export function getCourseColorByCode(courseCode: string): string {
   let hash = 0;
   for (let i = 0; i < courseCode.length; i++) {
     hash = courseCode.charCodeAt(i) + ((hash << 5) - hash);
@@ -50,13 +93,13 @@ export function getCourseColor(courseCode: string): string {
   return COLOR_PALETTES[index].bg;
 }
 
+export function getCourseColor(courseCode: string, mode: 'prefix' | 'course' = 'prefix'): string {
+  return mode === 'course' ? getCourseColorByCode(courseCode) : getCourseColorByPrefix(courseCode);
+}
+
 export function getCourseGradient(courseCode: string): string {
-  let hash = 0;
-  for (let i = 0; i < courseCode.length; i++) {
-    hash = courseCode.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % COLOR_PALETTES.length;
-  return COLOR_PALETTES[index].gradient;
+  const color = getCourseColor(courseCode);
+  return `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`;
 }
 
 /**
