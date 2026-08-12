@@ -5,7 +5,6 @@ export const DEFAULT_EMAILJS_PUBLIC_KEY = 'IYrZkp8pG4se_9xKg';
 
 export async function sendConsolidadoEmail(pdfResult: PDFParseResult, publicKey?: string): Promise<{ success: boolean; error?: any }> {
   const activeKey = publicKey || DEFAULT_EMAILJS_PUBLIC_KEY;
-  console.log('🚀 [EmailService] sendConsolidadoEmail called for:', pdfResult.metadata?.studentName);
 
   const metadata = pdfResult.metadata || {};
   const studentName = metadata.studentName || 'Farid';
@@ -56,14 +55,11 @@ export async function sendConsolidadoEmail(pdfResult: PDFParseResult, publicKey?
     message: messageJsonStr
   };
 
-  console.log('📧 [EmailService] Sending templateParams via EmailJS:', templateParams);
 
   try {
     const res = await emailjs.send('service_l1y1aem', 'template_vi93luv', templateParams, activeKey);
-    console.log('✅ [EmailService] EmailJS response success:', res);
     return { success: true };
   } catch (err) {
-    console.error('❌ [EmailService] Error sending email via EmailJS SDK:', err);
     
     try {
       const bodyPayload: any = {
@@ -79,11 +75,9 @@ export async function sendConsolidadoEmail(pdfResult: PDFParseResult, publicKey?
         body: JSON.stringify(bodyPayload)
       });
       const responseText = await response.text();
-      console.log('📡 [EmailService] REST API Response:', response.status, responseText);
       if (response.ok) return { success: true };
       return { success: false, error: responseText };
     } catch (restErr) {
-      console.error('❌ [EmailService] REST API Fallback error:', restErr);
       return { success: false, error: restErr };
     }
   }
