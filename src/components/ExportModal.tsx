@@ -1,8 +1,9 @@
-import React from 'react';
-import { X, Calendar, Image, FileSpreadsheet, Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Calendar, Image, FileSpreadsheet, Download, RefreshCw, Sparkles } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { generateICS, downloadFile } from '../utils/icsExporter';
 import { formatLocation } from '../utils/scheduleUtils';
+import { GoogleCalendarModal } from './GoogleCalendarModal';
 import type { Course } from '../types/schedule';
 
 interface ExportModalProps {
@@ -11,6 +12,7 @@ interface ExportModalProps {
   courses: Course[];
   selectedSections: Record<string, string>;
   optionName: string;
+  isConsolidado?: boolean;
 }
 
 function escapeCSVCell(val: string | number | undefined | null): string {
@@ -24,11 +26,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   onClose,
   courses,
   selectedSections,
-  optionName
+  optionName,
+  isConsolidado = false
 }) => {
   if (!isOpen) return null;
 
-  const [icsColorMode, setIcsColorMode] = React.useState<'prefix' | 'course'>('prefix');
+  const [icsColorMode, setIcsColorMode] = useState<'prefix' | 'course'>('prefix');
+  const [isGCalModalOpen, setIsGCalModalOpen] = useState(false);
 
   const handleExportICS = () => {
     const icsContent = generateICS(courses, selectedSections, icsColorMode);
@@ -118,124 +122,177 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Download size={22} color="var(--accent-primary)" />
-            <h3 className="modal-title">Exportar Horario ({optionName})</h3>
+    <>
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-card" onClick={e => e.stopPropagation()}>
+          <div className="modal-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Download size={22} color="var(--accent-primary)" />
+              <h3 className="modal-title">Exportar u Organizar Horario ({optionName})</h3>
+            </div>
+            <button className="close-btn" onClick={onClose}>
+              <X size={20} />
+            </button>
           </div>
-          <button className="close-btn" onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
 
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-          Selecciona el formato en el que deseas guardar o sincronizar tu horario semanal.
-        </p>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            Selecciona el formato o servicio con el que deseas sincronizar tu horario semanal.
+          </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {/* iCal Export */}
-          <div
-            className="course-card"
-            style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Google Calendar Direct Sync Option */}
+            <div
+              className="course-card"
+              style={{
+                padding: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: 'linear-gradient(135deg, rgba(66, 133, 244, 0.15) 0%, rgba(52, 168, 83, 0.1) 100%)',
+                border: '1px solid rgba(66, 133, 244, 0.4)',
+                cursor: 'pointer'
+              }}
+              onClick={() => setIsGCalModalOpen(true)}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ background: 'rgba(59, 130, 246, 0.15)', padding: '10px', borderRadius: '10px', color: 'var(--accent-primary)' }}>
+                <div style={{ background: '#4285F4', padding: '10px', borderRadius: '10px', color: '#ffffff' }}>
                   <Calendar size={22} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Calendario iCal (.ics)</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Importar en Google Calendar, Apple Calendar u Outlook</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.94rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Sincronizar con Google Calendar
+                    <span style={{ fontSize: '0.68rem', background: '#34A853', color: '#fff', padding: '2px 6px', borderRadius: '10px' }}>DIRECTO</span>
+                  </div>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
+                    {isConsolidado ? 'Agrega o edita tus clases del Consolidado en tu Google Calendar' : 'Agrega y actualiza tus cursos directamente en Google Calendar'}
+                  </div>
                 </div>
               </div>
-              <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.78rem' }} onClick={handleExportICS}>Descargar</button>
+              <button
+                className="btn btn-primary"
+                style={{
+                  padding: '8px 14px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  background: '#4285F4',
+                  borderColor: '#4285F4'
+                }}
+              >
+                Conectar / Sincronizar
+              </button>
             </div>
 
-            {/* Color Mode Selector */}
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontSize: '0.76rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                Esquema de colores de los eventos en el calendario:
+            {/* iCal Export */}
+            <div
+              className="course-card"
+              style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ background: 'rgba(59, 130, 246, 0.15)', padding: '10px', borderRadius: '10px', color: 'var(--accent-primary)' }}>
+                    <Calendar size={22} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Calendario iCal (.ics)</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Importar archivo en Apple Calendar, Outlook u otros</div>
+                  </div>
+                </div>
+                <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.78rem' }} onClick={handleExportICS}>Descargar</button>
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setIcsColorMode('prefix')}
-                  style={{
-                    flex: 1,
-                    padding: '6px 10px',
-                    fontSize: '0.74rem',
-                    borderRadius: '6px',
-                    border: icsColorMode === 'prefix' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                    background: icsColorMode === 'prefix' ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
-                    color: icsColorMode === 'prefix' ? 'var(--accent-primary)' : 'var(--text-muted)',
-                    fontWeight: icsColorMode === 'prefix' ? 700 : 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  🎨 Por categoría (prefijos CS, CC, HH...)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIcsColorMode('course')}
-                  style={{
-                    flex: 1,
-                    padding: '6px 10px',
-                    fontSize: '0.74rem',
-                    borderRadius: '6px',
-                    border: icsColorMode === 'course' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                    background: icsColorMode === 'course' ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
-                    color: icsColorMode === 'course' ? 'var(--accent-primary)' : 'var(--text-muted)',
-                    fontWeight: icsColorMode === 'course' ? 700 : 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  🌈 Un color por cada curso
-                </button>
-              </div>
-            </div>
-          </div>
 
-          {/* PNG Image Export */}
-          <div
-            className="course-card"
-            style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
-            onClick={handleExportImage}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ background: 'rgba(16, 185, 129, 0.15)', padding: '10px', borderRadius: '10px', color: 'var(--accent-emerald)' }}>
-                <Image size={22} />
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Imagen PNG de alta resolución</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Captura visual completa de tu grilla semanal</div>
+              {/* Color Mode Selector */}
+              <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '0.76rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Esquema de colores de los eventos en el archivo .ics:
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIcsColorMode('prefix')}
+                    style={{
+                      flex: 1,
+                      padding: '6px 10px',
+                      fontSize: '0.74rem',
+                      borderRadius: '6px',
+                      border: icsColorMode === 'prefix' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                      background: icsColorMode === 'prefix' ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
+                      color: icsColorMode === 'prefix' ? 'var(--accent-primary)' : 'var(--text-muted)',
+                      fontWeight: icsColorMode === 'prefix' ? 700 : 500,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    🎨 Por categoría (prefijos CS, CC, HH...)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIcsColorMode('course')}
+                    style={{
+                      flex: 1,
+                      padding: '6px 10px',
+                      fontSize: '0.74rem',
+                      borderRadius: '6px',
+                      border: icsColorMode === 'course' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                      background: icsColorMode === 'course' ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
+                      color: icsColorMode === 'course' ? 'var(--accent-primary)' : 'var(--text-muted)',
+                      fontWeight: icsColorMode === 'course' ? 700 : 500,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    🌈 Un color por cada curso
+                  </button>
+                </div>
               </div>
             </div>
-            <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>Descargar</button>
-          </div>
 
-          {/* CSV Export */}
-          <div
-            className="course-card"
-            style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
-            onClick={handleExportCSV}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ background: 'rgba(245, 158, 11, 0.15)', padding: '10px', borderRadius: '10px', color: 'var(--accent-amber)' }}>
-                <FileSpreadsheet size={22} />
+            {/* PNG Image Export */}
+            <div
+              className="course-card"
+              style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+              onClick={handleExportImage}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ background: 'rgba(16, 185, 129, 0.15)', padding: '10px', borderRadius: '10px', color: 'var(--accent-emerald)' }}>
+                  <Image size={22} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Imagen PNG de alta resolución</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Captura visual completa de tu grilla semanal</div>
+                </div>
               </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Lista en CSV / Excel (UTF-8)</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Resumen completo con subsecciones, docentes y horarios</div>
-              </div>
+              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>Descargar</button>
             </div>
-            <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>Descargar</button>
+
+            {/* CSV Export */}
+            <div
+              className="course-card"
+              style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+              onClick={handleExportCSV}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ background: 'rgba(245, 158, 11, 0.15)', padding: '10px', borderRadius: '10px', color: 'var(--accent-amber)' }}>
+                  <FileSpreadsheet size={22} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Lista en CSV / Excel (UTF-8)</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Resumen completo con subsecciones, docentes y horarios</div>
+                </div>
+              </div>
+              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>Descargar</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <GoogleCalendarModal
+        isOpen={isGCalModalOpen}
+        onClose={() => setIsGCalModalOpen(false)}
+        courses={courses}
+        selectedSections={selectedSections}
+        optionName={optionName}
+        isConsolidado={isConsolidado}
+      />
+    </>
   );
 };
