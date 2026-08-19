@@ -339,13 +339,14 @@ export const ScheduleApp: React.FC = () => {
         hasPDFData={hasPdfLoaded}
       />
 
-      {/* Export Modal */}
+      {/* Export & Google Calendar Modal */}
       <ExportModal
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
         courses={courses}
         selectedSections={selectedSections}
         optionName={activeOption ? activeOption.name : 'Horario'}
+        isConsolidado={Boolean(metadata.isConsolidado)}
       />
     </div>
   );
