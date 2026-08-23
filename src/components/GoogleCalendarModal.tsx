@@ -137,8 +137,8 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
         {/* Header */}
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ background: 'rgba(66, 133, 244, 0.18)', padding: '8px', borderRadius: '10px', color: '#4285F4' }}>
-              <Calendar size={22} />
+            <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '6px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(66, 133, 244, 0.3)' }}>
+              <img src="/google-calendar-icon.svg" alt="Google Calendar" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
             </div>
             <div>
               <h3 className="modal-title" style={{ fontSize: '1.15rem' }}>
@@ -403,7 +403,7 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
               </>
             ) : (
               <>
-                <Calendar size={18} />
+                <img src="/google-calendar-icon.svg" alt="Google Calendar" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
                 <span>
                   {isConsolidado
                     ? 'Sincronizar / Agregar Cursos de Consolidado a Google Calendar'

@@ -226,7 +226,7 @@ export const ScheduleApp: React.FC = () => {
                 Arma tu Horario de Matrícula
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-                Sube <strong>un archivo PDF de Cursos Habilitados</strong>, <strong>un archivo Excel</strong>, o <strong>ambos</strong> para comenzar a armar tu horario con drag & drop.
+                Sube tu <strong>Consolidado de Horario / Matrícula</strong> para exportar tu calendario en 1 clic, o tu PDF de <strong>Cursos Habilitados</strong> y <strong>Excel</strong> para armarlo con drag & drop.
               </p>
             </div>
 
@@ -241,7 +241,7 @@ export const ScheduleApp: React.FC = () => {
             </div>
 
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'rgba(255, 255, 255, 0.03)', padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-              Soporta: Solo PDF • Solo Excel • Ambos archivos combinados
+              Soporta: Consolidado de Horario • Consolidado de Matrícula • Cursos Habilitados • Excel
             </div>
           </div>
         </div>

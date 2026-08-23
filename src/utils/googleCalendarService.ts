@@ -227,6 +227,9 @@ export async function getOrCreateUTECCalendar(accessToken: string): Promise<stri
 /**
  * Synchronizes and adds/edits courses directly in Google Calendar
  */
+/**
+ * Synchronizes and adds/edits courses directly in Google Calendar with high concurrency
+ */
 export async function syncScheduleToGoogleCalendar(
   accessToken: string,
   courses: Course[],
@@ -236,7 +239,7 @@ export async function syncScheduleToGoogleCalendar(
 ): Promise<SyncResult> {
   const calendarId = targetCalendarId || (await getOrCreateUTECCalendar(accessToken));
 
-  // Step 1: Clear previously tracked UTEC events in this calendar to support editing/updating schedule directly
+  // Step 1: Clear previously tracked UTEC events in parallel
   const deletedCount = await clearTrackedUTECEvents(accessToken, calendarId);
 
   // Step 2: Calculate date bounds for UTEC semester
@@ -260,8 +263,8 @@ export async function syncScheduleToGoogleCalendar(
     Dom: 6
   };
 
-  const newEventIds: string[] = [];
-  let eventsCreated = 0;
+  // Prepare all event payloads upfront
+  const eventPayloads: { courseCode: string; payload: any }[] = [];
 
   for (const [courseCode, secNum] of Object.entries(selectedSections)) {
     const course = courses.find(c => c.code === courseCode);
@@ -307,45 +310,64 @@ export async function syncScheduleToGoogleCalendar(
 
       const locationText = formatLocation(sess.location) ? `${formatLocation(sess.location)}, UTEC Barranco` : 'UTEC Barranco';
 
-      const eventPayload = {
-        summary: summaryText,
-        location: locationText,
-        description: descriptionText,
-        start: {
-          dateTime: `${startDateTime}-05:00`,
-          timeZone: 'America/Lima'
-        },
-        end: {
-          dateTime: `${endDateTime}-05:00`,
-          timeZone: 'America/Lima'
-        },
-        recurrence: [
-          `RRULE:FREQ=WEEKLY;UNTIL=${untilStr}`
-        ],
-        colorId: googleColorId
-      };
+      eventPayloads.push({
+        courseCode,
+        payload: {
+          summary: summaryText,
+          location: locationText,
+          description: descriptionText,
+          start: {
+            dateTime: `${startDateTime}-05:00`,
+            timeZone: 'America/Lima'
+          },
+          end: {
+            dateTime: `${endDateTime}-05:00`,
+            timeZone: 'America/Lima'
+          },
+          recurrence: [
+            `RRULE:FREQ=WEEKLY;UNTIL=${untilStr}`
+          ],
+          colorId: googleColorId
+        }
+      });
+    }
+  }
 
-      try {
-        const createRes = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`, {
+  // Step 3: Execute creation in high-performance concurrent chunks (batch size: 6)
+  const newEventIds: string[] = [];
+  let eventsCreated = 0;
+  const CHUNK_SIZE = 6;
+  const endpoint = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
+
+  for (let i = 0; i < eventPayloads.length; i += CHUNK_SIZE) {
+    const chunk = eventPayloads.slice(i, i + CHUNK_SIZE);
+    const results = await Promise.allSettled(
+      chunk.map(async ({ payload }) => {
+        const createRes = await fetch(endpoint, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(eventPayload)
+          body: JSON.stringify(payload)
         });
-
         if (createRes.ok) {
-          const createdEvent = await createRes.json();
-          newEventIds.push(createdEvent.id);
-          eventsCreated++;
+          return await createRes.json();
         } else {
-          console.error(`Failed to create event for ${courseCode}:`, await createRes.text());
+          const errText = await createRes.text();
+          throw new Error(errText);
         }
-      } catch (err) {
-        console.error(`Error inserting event for ${courseCode}:`, err);
+      })
+    );
+
+    results.forEach((res) => {
+      if (res.status === 'fulfilled' && res.value?.id) {
+        newEventIds.push(res.value.id);
+        eventsCreated++;
+      } else if (res.status === 'rejected') {
+        console.error('Failed to create an event batch item:', res.reason);
       }
-    }
+    });
   }
 
   // Save active event IDs to local storage for future edit/update sync operations
@@ -364,7 +386,7 @@ export async function syncScheduleToGoogleCalendar(
 }
 
 /**
- * Clears tracked UTEC calendar events from the specified Google Calendar
+ * Clears tracked UTEC calendar events from the specified Google Calendar in parallel
  */
 export async function clearTrackedUTECEvents(accessToken: string, calendarId: string): Promise<number> {
   const storageKey = `utec_gcal_events_${calendarId}`;
@@ -380,18 +402,27 @@ export async function clearTrackedUTECEvents(accessToken: string, calendarId: st
   let deletedCount = 0;
 
   if (eventIds.length > 0) {
-    for (const eventId of eventIds) {
-      try {
-        const delRes = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${accessToken}` }
-        });
-        if (delRes.ok || delRes.status === 404) {
+    const CHUNK_SIZE = 6;
+    for (let i = 0; i < eventIds.length; i += CHUNK_SIZE) {
+      const chunk = eventIds.slice(i, i + CHUNK_SIZE);
+      const results = await Promise.allSettled(
+        chunk.map(async (eventId) => {
+          const delRes = await fetch(
+            `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
+            {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${accessToken}` }
+            }
+          );
+          return delRes.ok || delRes.status === 404;
+        })
+      );
+
+      results.forEach((res) => {
+        if (res.status === 'fulfilled' && res.value) {
           deletedCount++;
         }
-      } catch (e) {
-        // Ignore single deletion error
-      }
+      });
     }
   }
 
