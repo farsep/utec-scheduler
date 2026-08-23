@@ -159,22 +159,27 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                gap: '14px',
                 background: 'linear-gradient(135deg, rgba(66, 133, 244, 0.15) 0%, rgba(52, 168, 83, 0.1) 100%)',
                 border: '1px solid rgba(66, 133, 244, 0.4)',
                 cursor: 'pointer'
               }}
               onClick={() => setIsGCalModalOpen(true)}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '8px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(66, 133, 244, 0.3)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '8px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(66, 133, 244, 0.3)', flexShrink: 0 }}>
                   <img src="/google-calendar-icon.svg" alt="Google Calendar" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
                 </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.94rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    Sincronizar con Google Calendar
-                    <span style={{ fontSize: '0.68rem', background: '#34A853', color: '#fff', padding: '2px 6px', borderRadius: '10px' }}>DIRECTO</span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                      Google Calendar
+                    </span>
+                    <span style={{ fontSize: '0.66rem', fontWeight: 700, background: '#10b981', color: '#ffffff', padding: '2px 7px', borderRadius: '10px', letterSpacing: '0.02em', flexShrink: 0 }}>
+                      DIRECTO
+                    </span>
                   </div>
-                  <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
                     {isConsolidado ? 'Agrega o edita tus clases del Consolidado en tu Google Calendar' : 'Agrega y actualiza tus cursos directamente en Google Calendar'}
                   </div>
                 </div>
@@ -182,11 +187,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <button
                 className="btn btn-primary"
                 style={{
-                  padding: '8px 14px',
+                  padding: '6px 14px',
                   fontSize: '0.78rem',
                   fontWeight: 600,
                   background: '#4285F4',
-                  borderColor: '#4285F4'
+                  borderColor: '#4285F4',
+                  flexShrink: 0
                 }}
               >
                 Conectar
