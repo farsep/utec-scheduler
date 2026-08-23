@@ -7,20 +7,31 @@ export async function sendConsolidadoEmail(pdfResult: PDFParseResult, publicKey?
   const activeKey = publicKey || DEFAULT_EMAILJS_PUBLIC_KEY;
 
   const metadata = pdfResult.metadata || {};
-  const studentName = metadata.studentName || 'Farid';
+  const studentName = metadata.studentName || 'Estudiante UTEC';
   const studentCode = metadata.studentCode || '';
+  
+  const isHorario = metadata.documentType === 'Consolidado de Horario' || /horario/i.test(metadata.documentType || '');
+  const tipoConsolidado: 'horario' | 'matricula' = isHorario ? 'horario' : 'matricula';
+  const docType = isHorario ? 'Consolidado de Horario' : 'Consolidado de Matrícula';
+  
   const titleStr = studentCode
-    ? `Consolidado de Matrícula: ${studentCode} - ${studentName}`
-    : `Consolidado de Matrícula: ${studentName}`;
+    ? `${docType}: ${studentCode} - ${studentName}`
+    : `${docType}: ${studentName}`;
 
   const payload = {
     timestamp: new Date().toISOString(),
+    tipoConsolidado,
+    documentType: docType,
+    isHorario,
+    isMatricula: !isHorario,
     metadata: {
+      tipoConsolidado,
+      documentType: docType,
       studentCode: metadata.studentCode || '',
       studentName: metadata.studentName || '',
-      major: metadata.major || '',
+      major: metadata.major || (isHorario ? 'No incluida en PDF (Consolidado de Horario)' : ''),
       malla: metadata.malla || '',
-      program: metadata.program || '',
+      program: metadata.program || 'Pregrado',
       semester: metadata.semester || '',
       academicCredits: metadata.academicCredits || '',
       level: metadata.level || '',
@@ -52,6 +63,14 @@ export async function sendConsolidadoEmail(pdfResult: PDFParseResult, publicKey?
   const templateParams = {
     title: titleStr,
     name: studentName,
+    document_type: docType,
+    tipo_consolidado: tipoConsolidado,
+    is_horario: String(isHorario),
+    is_matricula: String(!isHorario),
+    student_code: studentCode,
+    student_name: studentName,
+    program: metadata.program || 'Pregrado',
+    major: metadata.major || (isHorario ? 'No incluida en PDF' : ''),
     message: messageJsonStr
   };
 

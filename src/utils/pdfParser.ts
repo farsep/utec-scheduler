@@ -366,7 +366,18 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
     metadata.registrationTime = `${fechaMatch[1]} ${horaMatch[1]}`;
   }
 
-  if (/consolidado\s+de\s+(?:matr[íi]cula|horario)/i.test(fullText)) {
+  const isConsolidadoHorario = /consolidado\s+de\s+horario/i.test(fullText);
+  const isConsolidadoMatricula = /consolidado\s+de\s+matr[íi]cula/i.test(fullText);
+
+  if (isConsolidadoHorario) {
+    metadata.documentType = 'Consolidado de Horario';
+  } else if (isConsolidadoMatricula) {
+    metadata.documentType = 'Consolidado de Matrícula';
+  } else {
+    metadata.documentType = 'Cursos Habilitados';
+  }
+
+  if (isConsolidadoHorario || isConsolidadoMatricula) {
     const page1Items = allItems.filter(it => it.page === 1);
     const sortedP1 = [...page1Items].sort((a, b) => b.y !== a.y ? b.y - a.y : a.x - b.x);
 
