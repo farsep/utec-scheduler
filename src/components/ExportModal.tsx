@@ -189,7 +189,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   borderColor: '#4285F4'
                 }}
               >
-                Conectar / Sincronizar
+                Conectar
               </button>
             </div>
 
