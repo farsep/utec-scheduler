@@ -27,6 +27,9 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
   metadata.isConsolidado = true;
   const sortedItems = [...allItems].sort((a, b) => (b.page !== a.page ? a.page - b.page : b.y !== a.y ? b.y - a.y : a.x - b.x));
 
+  // Determine layout: check header x position of Sección or document title
+  const isHorarioLayout = /consolidado\s+de\s+horario/i.test(fullText) || sortedItems.some(it => (it.str === 'Sección' || it.str === 'SECCIÓN') && it.x > 500);
+
   // Find course code anchors at x ~ 72 (65 <= x <= 95)
   const courseAnchors: { code: string; page: number; topY: number }[] = [];
 
@@ -53,6 +56,7 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
     sectionNum: string;
     subGroup: string;
     secLabel: string;
+    professor: string;
     page: number;
     topY: number;
     sessions: Session[];
@@ -66,22 +70,45 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
 
     const blockItems = sortedItems.filter(it => it.page === anchor.page && it.y <= anchor.topY + 15.0 && it.y > bottomY + 5.0);
 
-    const nameItems = blockItems.filter(it => it.x >= 100 && it.x < 260).map(it => it.str);
+    const nameMaxX = isHorarioLayout ? 225 : 260;
+    const nameItems = blockItems
+      .filter(it => it.x >= 100 && it.x < nameMaxX)
+      .map(it => it.str)
+      .filter(s => !/^(?:Obligatorio|Electivo)$/i.test(s));
     const courseName = nameItems.join(' ').replace(/^(?:[0-9]|-)\s*/, '').trim() || `Curso ${anchor.code}`;
 
-    const secItems = blockItems.filter(it => it.x >= 430 && it.x < 480).map(it => it.str);
-    const secMatch = secItems.join(' ').match(/\d+/);
-    const sectionNum = secMatch ? secMatch[0] : '1';
+    let professor = 'Por asignar';
+    if (isHorarioLayout) {
+      const profItems = blockItems.filter(it => it.x >= 250 && it.x < 380).map(it => it.str);
+      if (profItems.length > 0) {
+        professor = profItems.join(' ').replace(/,$/, '').trim();
+      }
+    }
 
-    const subItems = blockItems.filter(it => it.x >= 480 && it.x < 580).map(it => it.str).join(' ');
-    const subMatch = subItems.match(/(?:Lab\.|Prac\.|Tall\.)\s*\d+|\b\d{2}\b/i);
+    let sectionNum = '1';
     let subGroup = '';
-    if (subMatch) {
-      const matchedStr = subMatch[0];
-      if (/^\d{2}$/.test(matchedStr)) {
-        subGroup = `Lab. ${matchedStr}`;
-      } else {
-        subGroup = matchedStr;
+
+    if (isHorarioLayout) {
+      const secItems = blockItems.filter(it => it.x >= 530 && it.x < 585).map(it => it.str);
+      const secMatch = secItems.join(' ').match(/\d+/);
+      sectionNum = secMatch ? secMatch[0] : '1';
+
+      const subItems = blockItems.filter(it => it.x >= 585 && it.x < 620).map(it => it.str).join(' ');
+      const subMatch = subItems.match(/(?:Lab\.|Prac\.|Tall\.)\s*\d+|\b\d{2}\b/i);
+      if (subMatch) {
+        const matchedStr = subMatch[0];
+        subGroup = /^\d{2}$/.test(matchedStr) ? `Lab. ${matchedStr}` : matchedStr;
+      }
+    } else {
+      const secItems = blockItems.filter(it => it.x >= 430 && it.x < 480).map(it => it.str);
+      const secMatch = secItems.join(' ').match(/\d+/);
+      sectionNum = secMatch ? secMatch[0] : '1';
+
+      const subItems = blockItems.filter(it => it.x >= 480 && it.x < 580).map(it => it.str).join(' ');
+      const subMatch = subItems.match(/(?:Lab\.|Prac\.|Tall\.)\s*\d+|\b\d{2}\b/i);
+      if (subMatch) {
+        const matchedStr = subMatch[0];
+        subGroup = /^\d{2}$/.test(matchedStr) ? `Lab. ${matchedStr}` : matchedStr;
       }
     }
 
@@ -96,11 +123,15 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
       sectionNum,
       subGroup,
       secLabel,
+      professor,
       page: anchor.page,
       topY: anchor.topY,
       sessions: []
     });
   });
+
+  // Sort anchors per page strictly descending by Y coordinate
+  courseAnchors.sort((a, b) => (b.page !== a.page ? a.page - b.page : b.topY - a.topY));
 
   // Extract sessions per page
   const pageNumbers = Array.from(new Set(sortedItems.map(it => it.page)));
@@ -133,48 +164,64 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
       const fullStr = se.tokens.join(' ');
       const sessMatch = fullStr.match(/Semana\s+General\s+(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo|Lun\.?|Mar\.?|Mié\.?|Jue\.?|Vie\.?|Sáb\.?)\s+(Teoría|Laboratorio|Práctica|Taller|Teoria)\s*(Virtual)?\s*:?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(.*)/i);
       if (sessMatch) {
-        let closestAnchor = pageAnchors[0];
-        let minDiff = Math.abs(se.startY - pageAnchors[0].topY);
+        let matchedAnchor: { code: string; page: number; topY: number } | undefined;
 
-        pageAnchors.forEach(pa => {
-          const diff = Math.abs(se.startY - pa.topY);
-          if (diff < minDiff) {
-            minDiff = diff;
-            closestAnchor = pa;
-          }
-        });
-
-        const cData = coursesMap.get(closestAnchor.code);
-        if (cData) {
-          const day = parseDayOfWeek(sessMatch[1]);
-
-          const groupType = sessMatch[2];
-          const isVirtual = Boolean(sessMatch[3]);
-          const startTime = sessMatch[4].padStart(5, '0');
-          const endTime = sessMatch[5].padStart(5, '0');
-          const rawLoc = sessMatch[6] ? sessMatch[6].trim() : (isVirtual ? 'Virtual' : '');
-          const location = formatLocation(rawLoc);
-
-          const startMinutes = timeToMinutes(startTime);
-          const endMinutes = timeToMinutes(endTime);
-
-          cData.sessions.push({
-            id: `${cData.code}-${cData.sectionNum}-${groupType}-${day}-${startTime}-${cData.sessions.length}`,
-            sessionGroup: groupType.toUpperCase(),
-            sessionType: parseSessionType(groupType),
-            modality: isVirtual ? 'Sincronico' : 'Presencial',
-            day,
-            startTime,
-            endTime,
-            startMinutes,
-            endMinutes,
-            frequency: 'Semana General',
-            location: location || (isVirtual ? 'Virtual' : 'Por asignar'),
-            vacancies: 30,
-            enrolled: 0,
-            professor: 'Por asignar',
-            email: ''
+        if (isHorarioLayout) {
+          // In Consolidado de Horario, each course anchor is at the top of its row block.
+          // A session belongs to an anchor if it lies within the row's vertical bounds.
+          matchedAnchor = pageAnchors.find((anchor, idx) => {
+            const nextAnchor = pageAnchors.find((na, nidx) => nidx > idx);
+            const topBound = anchor.topY + 15.0;
+            const bottomBound = nextAnchor ? nextAnchor.topY + 2.0 : -99999;
+            return se.startY <= topBound && se.startY > bottomBound;
           });
+        } else {
+          let closestAnchor = pageAnchors[0];
+          let minDiff = Math.abs(se.startY - pageAnchors[0].topY);
+
+          pageAnchors.forEach(pa => {
+            const diff = Math.abs(se.startY - pa.topY);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closestAnchor = pa;
+            }
+          });
+          matchedAnchor = closestAnchor;
+        }
+
+        if (matchedAnchor) {
+          const cData = coursesMap.get(matchedAnchor.code);
+          if (cData) {
+            const day = parseDayOfWeek(sessMatch[1]);
+
+            const groupType = sessMatch[2];
+            const isVirtual = Boolean(sessMatch[3]) || /virtual/i.test(sessMatch[6] || '');
+            const startTime = sessMatch[4].padStart(5, '0');
+            const endTime = sessMatch[5].padStart(5, '0');
+            const rawLoc = sessMatch[6] ? sessMatch[6].replace(/\s*\b\d+$/, '').trim() : (isVirtual ? 'Virtual' : '');
+            const location = formatLocation(rawLoc);
+
+            const startMinutes = timeToMinutes(startTime);
+            const endMinutes = timeToMinutes(endTime);
+
+            cData.sessions.push({
+              id: `${cData.code}-${cData.sectionNum}-${groupType}-${day}-${startTime}-${cData.sessions.length}`,
+              sessionGroup: groupType.toUpperCase(),
+              sessionType: parseSessionType(groupType),
+              modality: isVirtual ? 'Sincronico' : 'Presencial',
+              day,
+              startTime,
+              endTime,
+              startMinutes,
+              endMinutes,
+              frequency: 'Semana General',
+              location: location || (isVirtual ? 'Virtual' : 'Por asignar'),
+              vacancies: 30,
+              enrolled: 0,
+              professor: cData.professor || 'Por asignar',
+              email: ''
+            });
+          }
         }
       }
     });
@@ -189,7 +236,7 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
         sessions: cData.sessions,
         vacancies: 30,
         enrolled: 0,
-        professors: ['Por asignar']
+        professors: [cData.professor || 'Por asignar']
       }
     ],
     color: getCourseColor(cData.code),
@@ -215,7 +262,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
     pdfDoc = await loadingTask.promise;
   } catch (err) {
     console.error('Error loading PDF document with worker, trying fallback:', err);
-    const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer), isEvalSupported: false });
+    const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer), isEvalSupported: false } as any);
     pdfDoc = await loadingTask.promise;
   }
 
@@ -275,26 +322,51 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
     fullText += lines.join('\n') + '\n';
   }
 
-  // Extract Clean Metadata header fields for standard Carga Hábil / Cursos Habilitados PDFs
-  const studentMatch = fullText.match(/Alumno\s*:\s*(.+?)(?=\s*(?:Programa|Carrera|Malla|Periodo|Turno|Código|$|\n))/i);
-  if (studentMatch) metadata.studentName = studentMatch[1].replace(/\s+/g, ' ').trim();
+  // Extract Clean Metadata header fields
+  const studentMatch = fullText.match(/Alumno\s*:\s*(.+?)(?=\s*(?:Programa|Carrera|Malla|Periodo|Turno|Código|Nivel|$|\n))/i);
+  if (studentMatch) {
+    const fullStudentStr = studentMatch[1].replace(/\s+/g, ' ').trim();
+    if (fullStudentStr.includes(' - ')) {
+      const parts = fullStudentStr.split(' - ');
+      metadata.studentCode = parts[0].trim();
+      metadata.studentName = parts.slice(1).join(' - ').trim();
+    } else {
+      metadata.studentName = fullStudentStr;
+    }
+  }
 
-  const programMatch = fullText.match(/Programa\s*:\s*(.+?)(?=\s*(?:Carrera|Malla|Periodo|Turno|Código|$|\n))/i);
+  const programMatch = fullText.match(/Programa\s*:\s*(.+?)(?=\s*(?:Carrera|Malla|Periodo|Turno|Código|Nivel|$|\n))/i);
   if (programMatch) metadata.program = programMatch[1].replace(/\s+/g, ' ').trim();
 
-  const majorMatch = fullText.match(/Carrera\s*:\s*(.+?)(?=\s*(?:Malla|Periodo|Turno|Código|$|\n))/i);
-  if (majorMatch) metadata.major = majorMatch[1].replace(/\s+/g, ' ').trim();
+  const majorMatch = fullText.match(/Carrera\s*:\s*(.+?)(?=\s*(?:Malla|Periodo|Turno|Código|Nivel|$|\n))/i);
+  if (majorMatch) {
+    const fullCarStr = majorMatch[1].replace(/\s+/g, ' ').trim();
+    if (fullCarStr.includes(' - ')) {
+      const parts = fullCarStr.split(' - ');
+      metadata.major = parts[0].trim();
+      metadata.malla = parts[1].trim();
+    } else {
+      metadata.major = fullCarStr;
+    }
+  }
 
-  const mallaMatch = fullText.match(/Malla\s*:\s*(.+?)(?=\s*(?:Periodo|Turno|Código|$|\n))/i);
+  const mallaMatch = fullText.match(/Malla\s*:\s*(.+?)(?=\s*(?:Periodo|Turno|Código|Nivel|$|\n))/i);
   if (mallaMatch) metadata.malla = mallaMatch[1].replace(/\s+/g, ' ').trim();
 
-  const semesterMatch = fullText.match(/Periodo\s*:\s*(.+?)(?=\s*(?:Turno|Código|$|\n))/i);
+  const semesterMatch = fullText.match(/Periodo\s*:\s*(.+?)(?=\s*(?:Turno|Código|Créditos|Nivel|$|\n))/i);
   if (semesterMatch) metadata.semester = semesterMatch[1].replace(/\s+/g, ' ').trim();
 
   const regMatch = fullText.match(/Turno\s*(?:de\s*Matrícula)?\s*:\s*(.+?)(?=\s*(?:Código|$|\n))/i);
   if (regMatch) metadata.registrationTime = regMatch[1].replace(/\s+/g, ' ').trim();
 
-  if (fullText.toLowerCase().includes('consolidado de matr')) {
+  // Handle Date/Time in Consolidado de Horario
+  const fechaMatch = fullText.match(/Fecha\s*:\s*(\d{1,2}\/\d{1,2}\/\d{2,4})/i);
+  const horaMatch = fullText.match(/Hora\s*:\s*(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)?)/i);
+  if (fechaMatch && horaMatch && !metadata.registrationTime) {
+    metadata.registrationTime = `${fechaMatch[1]} ${horaMatch[1]}`;
+  }
+
+  if (/consolidado\s+de\s+(?:matr[íi]cula|horario)/i.test(fullText)) {
     const page1Items = allItems.filter(it => it.page === 1);
     const sortedP1 = [...page1Items].sort((a, b) => b.y !== a.y ? b.y - a.y : a.x - b.x);
 
@@ -306,19 +378,19 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
     const credLabel = sortedP1.find(it => it.str.includes('Créditos'));
     const nivLabel = sortedP1.find(it => it.str.includes('Nivel:'));
 
-    if (progLabel) {
+    if (progLabel && !metadata.program) {
       const pItems = sortedP1.filter(it => it.x >= 200 && it.x < 500 && it.y <= progLabel.y + 2 && it.y >= (carLabel ? carLabel.y + 2 : progLabel.y - 20));
       const val = pItems.map(i => i.str).join(' ').trim();
       if (val) metadata.program = val;
     }
 
-    if (perLabel) {
+    if (perLabel && !metadata.semester) {
       const pItems = sortedP1.filter(it => it.x >= 600 && it.y <= perLabel.y + 2 && it.y >= (credLabel ? credLabel.y + 2 : perLabel.y - 20));
       const val = pItems.map(i => i.str).join(' ').trim();
       if (val) metadata.semester = val;
     }
 
-    if (carLabel) {
+    if (carLabel && !metadata.major) {
       const cItems = sortedP1.filter(it => it.x >= 200 && it.x < 500 && it.y <= carLabel.y + 2 && it.y >= (alumLabel ? alumLabel.y + 2 : carLabel.y - 20));
       const fullCarStr = cItems.map(i => i.str).join(' ').trim();
       if (fullCarStr.includes(' - ')) {
@@ -336,7 +408,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
       if (val) metadata.academicCredits = val;
     }
 
-    if (alumLabel) {
+    if (alumLabel && !metadata.studentName) {
       const minY = fecLabel ? fecLabel.y + 1.0 : alumLabel.y - 35.0;
       const maxY = alumLabel.y + 2.0;
       const aItems = sortedP1.filter(it => it.x >= 100 && it.x < 500 && it.y <= maxY && it.y >= minY);
@@ -356,7 +428,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
       if (rawNiv) metadata.level = rawNiv.replace(/Fecha.*/i, '').trim();
     }
 
-    if (fecLabel) {
+    if (fecLabel && !metadata.registrationTime) {
       const fItems = sortedP1.filter(it => it.x >= 200 && it.x < 500 && it.y <= fecLabel.y + 2 && it.y >= fecLabel.y - 20);
       const val = fItems.map(i => i.str).join(' ').trim();
       if (val) metadata.registrationTime = val;
