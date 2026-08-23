@@ -7,21 +7,38 @@ interface StudentBannerProps {
 }
 
 export const StudentBanner: React.FC<StudentBannerProps> = ({ metadata }) => {
-  if (!metadata.studentName && !metadata.major) return null;
+  if (!metadata.studentName && !metadata.major && !metadata.program) return null;
 
   const isConsolidado = Boolean(metadata.isConsolidado);
+  const isHorario = metadata.documentType === 'Consolidado de Horario';
 
   return (
     <div className="student-metadata-banner">
+      {metadata.documentType && (
+        <div className="student-meta-item" style={{ background: 'rgba(59, 130, 246, 0.12)', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
+          <Sparkles size={14} color="var(--accent-primary)" />
+          <span className="student-meta-value" style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>
+            {metadata.documentType}
+          </span>
+        </div>
+      )}
+
       <div className="student-meta-item student-name">
         <User size={15} color="var(--accent-primary)" />
         <span className="student-meta-label">Alumno:</span>
         <span className="student-meta-value">
           {isConsolidado && metadata.studentCode
             ? `${metadata.studentCode} - ${metadata.studentName}`
-            : (metadata.studentName || 'Farid Espinoza')}
+            : (metadata.studentName || 'Estudiante UTEC')}
         </span>
       </div>
+
+      {metadata.program && (
+        <div className="student-meta-item">
+          <span className="student-meta-label">Programa:</span>
+          <span className="student-meta-value">{metadata.program}</span>
+        </div>
+      )}
 
       {metadata.major && (
         <div className="student-meta-item">
@@ -36,13 +53,6 @@ export const StudentBanner: React.FC<StudentBannerProps> = ({ metadata }) => {
           <Award size={15} color="var(--accent-purple)" />
           <span className="student-meta-label">Malla:</span>
           <span className="student-meta-value">{metadata.malla}</span>
-        </div>
-      )}
-
-      {!isConsolidado && metadata.program && (
-        <div className="student-meta-item">
-          <span className="student-meta-label">Programa:</span>
-          <span className="student-meta-value">{metadata.program}</span>
         </div>
       )}
 
@@ -72,7 +82,7 @@ export const StudentBanner: React.FC<StudentBannerProps> = ({ metadata }) => {
         <div className="student-meta-item registration-turn">
           <Clock size={15} color="#f43f5e" />
           <span className="student-meta-label">
-            {isConsolidado ? 'Fecha de Matrícula:' : 'Turno de Matrícula:'}
+            {isHorario ? 'Fecha y Hora:' : (isConsolidado ? 'Fecha de Matrícula:' : 'Turno de Matrícula:')}
           </span>
           <span className="student-meta-value highlight-turn">{metadata.registrationTime}</span>
         </div>
