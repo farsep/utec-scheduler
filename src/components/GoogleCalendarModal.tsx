@@ -229,28 +229,65 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
               background: 'rgba(239, 68, 68, 0.12)',
               border: '1px solid rgba(239, 68, 68, 0.3)',
               borderRadius: '8px',
-              padding: '12px 14px',
+              padding: '14px 16px',
               fontSize: '0.8rem',
               color: '#f87171',
               display: 'flex',
               flexDirection: 'column',
-              gap: '8px'
+              gap: '10px'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.86rem' }}>
               <AlertCircle size={18} />
-              <span>{errorMessage}</span>
+              <span>
+                {errorMessage.includes('Google Calendar API') || errorMessage.includes('SERVICE_DISABLED')
+                  ? 'La API de Google Calendar está deshabilitada en tu proyecto de Google Cloud'
+                  : 'Error de Google Calendar'}
+              </span>
             </div>
-            <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-              💡 <strong>¿Por qué sucede esto?</strong> Google requiere que la URL de origen de tu aplicación (por ejemplo <code>http://localhost:4321</code> o tu dominio) esté registrada en la consola de Google Cloud.
-              <br /><br />
-              <strong>Soluciones rápidas:</strong>
-              <ul style={{ margin: '6px 0 0 16px', padding: 0 }}>
-                <li><strong>Opción A:</strong> Usa tu propio <em>Google OAuth Client ID</em> ingresándolo en la sección de ⚙️ <em>Configuración avanzada</em> abajo.</li>
-                <li><strong>Opción B:</strong> Haz clic en <em>"▶ ¿Prefieres agregar clases individualmente..."</em> abajo para agregarlas con un clic sin necesidad de autenticar la cuenta.</li>
-                <li><strong>Opción C:</strong> Descarga el archivo <code>.ics</code> e impórtalo directamente en Google Calendar.</li>
-              </ul>
-            </div>
+
+            {errorMessage.includes('Google Calendar API') || errorMessage.includes('SERVICE_DISABLED') ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                <span>
+                  Para que tu aplicación pueda crear el calendario y agregar tus clases, debes habilitar la <strong>Google Calendar API</strong> en Google Cloud Console (solo toma 1 clic).
+                </span>
+                <a
+                  href="https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview?project=787795729132"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{
+                    alignSelf: 'flex-start',
+                    background: '#4285F4',
+                    padding: '8px 14px',
+                    fontSize: '0.78rem',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    marginTop: '4px'
+                  }}
+                >
+                  <ExternalLink size={14} />
+                  Habilitar Google Calendar API en Google Cloud ↗
+                </a>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Una vez que hagas clic en <strong>"Habilitar"</strong> en Google Cloud, espera 1 minuto y vuelve a presionar <em>"Sincronizar Horario a Google Calendar"</em>.
+                </span>
+              </div>
+            ) : (
+              <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                <p style={{ margin: '0 0 6px 0', color: '#f87171' }}>{errorMessage}</p>
+                💡 <strong>¿Por qué sucede esto?</strong> Google requiere que la URL de origen de tu aplicación (por ejemplo <code>http://localhost:4321</code> o tu dominio) esté autorizada en Google Cloud.
+                <br /><br />
+                <strong>Alternativas disponibles:</strong>
+                <ul style={{ margin: '6px 0 0 16px', padding: 0 }}>
+                  <li><strong>Opción A:</strong> Usa tu propio <em>Google OAuth Client ID</em> ingresándolo en ⚙️ <em>Configuración avanzada</em> abajo.</li>
+                  <li><strong>Opción B:</strong> Haz clic en <em>"▶ ¿Prefieres agregar clases individualmente..."</em> abajo para agregarlas con un clic directo.</li>
+                  <li><strong>Opción C:</strong> Descarga el archivo <code>.ics</code> e impórtalo en Google Calendar.</li>
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
