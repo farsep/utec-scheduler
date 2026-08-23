@@ -234,49 +234,55 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
               color: '#f87171',
               display: 'flex',
               flexDirection: 'column',
-              gap: '10px'
+              gap: '8px'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.86rem' }}>
-              <AlertCircle size={18} />
-              <span>
-                {errorMessage.includes('Google Calendar API') || errorMessage.includes('SERVICE_DISABLED')
-                  ? 'La API de Google Calendar está deshabilitada en tu proyecto de Google Cloud'
-                  : 'Error de Google Calendar'}
-              </span>
-            </div>
-
-            {errorMessage.includes('Google Calendar API') || errorMessage.includes('SERVICE_DISABLED') ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                <span>
-                  Para que tu aplicación pueda crear el calendario y agregar tus clases, debes habilitar la <strong>Google Calendar API</strong> en Google Cloud Console (solo toma 1 clic).
-                </span>
-                <a
-                  href="https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview?project=787795729132"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary"
-                  style={{
-                    alignSelf: 'flex-start',
-                    background: '#4285F4',
-                    padding: '8px 14px',
-                    fontSize: '0.78rem',
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    marginTop: '4px'
-                  }}
-                >
-                  <ExternalLink size={14} />
-                  Habilitar Google Calendar API en Google Cloud ↗
-                </a>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  Una vez que hagas clic en <strong>"Habilitar"</strong> en Google Cloud, espera 1 minuto y vuelve a presionar <em>"Sincronizar Horario a Google Calendar"</em>.
-                </span>
+            {/popup|closed|ventana/i.test(errorMessage) ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', color: '#fca5a5' }}>
+                <AlertCircle size={17} style={{ flexShrink: 0 }} />
+                <span>Cerraste la ventana emergente antes de conectar tu cuenta de Google.</span>
               </div>
+            ) : /Google Calendar API|SERVICE_DISABLED/i.test(errorMessage) ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.86rem' }}>
+                  <AlertCircle size={18} />
+                  <span>La API de Google Calendar está deshabilitada en tu proyecto de Google Cloud</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                  <span>
+                    Para que tu aplicación pueda crear el calendario y agregar tus clases, debes habilitar la <strong>Google Calendar API</strong> en Google Cloud Console (solo toma 1 clic).
+                  </span>
+                  <a
+                    href="https://console.developers.google.com/apis/api/calendar-json.googleapis.com/overview?project=787795729132"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary"
+                    style={{
+                      alignSelf: 'flex-start',
+                      background: '#4285F4',
+                      padding: '8px 14px',
+                      fontSize: '0.78rem',
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginTop: '4px'
+                    }}
+                  >
+                    <ExternalLink size={14} />
+                    Habilitar Google Calendar API en Google Cloud ↗
+                  </a>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Una vez que hagas clic en <strong>"Habilitar"</strong> en Google Cloud, espera 1 minuto y vuelve a presionar <em>"Sincronizar Horario a Google Calendar"</em>.
+                  </span>
+                </div>
+              </>
             ) : (
               <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.86rem', color: '#f87171', marginBottom: '6px' }}>
+                  <AlertCircle size={18} />
+                  <span>Error de Google Calendar</span>
+                </div>
                 <p style={{ margin: '0 0 6px 0', color: '#f87171' }}>{errorMessage}</p>
                 💡 <strong>¿Por qué sucede esto?</strong> Google requiere que la URL de origen de tu aplicación (por ejemplo <code>http://localhost:4321</code> o tu dominio) esté autorizada en Google Cloud.
                 <br /><br />
