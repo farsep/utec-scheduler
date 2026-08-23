@@ -88,8 +88,18 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         </div>
 
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-          Sube tu <strong>Consolidado de Matrícula PDF</strong> para cargar directamente tus cursos matriculados y exportar tu calendario .ics en 1 clic, tu PDF de <strong>Cursos Habilitados</strong> y/o tu archivo Excel de <strong>Oferta Académica</strong>.
+          Sube tu <strong>Consolidado de Matrícula</strong>, <strong>Consolidado de Horario</strong>, tu PDF de <strong>Cursos Habilitados</strong> y/o tu archivo Excel de <strong>Oferta Académica</strong>.
         </p>
+
+        {/* Consolidado Automatic Flow Info Badge */}
+        <div style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(16, 185, 129, 0.1) 100%)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '12px 14px', borderRadius: '10px', fontSize: '0.78rem', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ fontWeight: 700, color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>✨ Sincronización Automática con Consolidados:</span>
+          </div>
+          <div style={{ color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+            Si subes un <strong>Consolidado de Horario</strong> o <strong>Consolidado de Matrícula</strong>, el sistema cargará automáticamente todas tus clases matriculadas y abrirá directamente las opciones de exportación (Google Calendar e iCal <code>.ics</code>).
+          </div>
+        </div>
 
         {errorMsg && (
           <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#fca5a5', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -104,7 +114,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             <FileSpreadsheet size={32} color="var(--accent-emerald)" />
             <div>
               <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Oferta Excel (.xlsx)</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Catálogo General</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Catálogo General de Cursos</div>
             </div>
             {hasExcelData ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -134,8 +144,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           <div className={`dropzone-container ${hasPDFData ? 'active' : ''}`}>
             <FileText size={32} color="var(--accent-rose)" />
             <div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Consolidado / Cursos (.pdf)</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Consolidado de Matrícula o Cursos Habilitados</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>PDF de Horario / Cursos</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Consolidado de Horario, Consolidado de Matrícula o Cursos Habilitados</div>
             </div>
             {hasPDFData ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>

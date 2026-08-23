@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { X, Calendar, Image, FileSpreadsheet, Download, RefreshCw, Sparkles } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import { generateICS, downloadFile } from '../utils/icsExporter';
 import { formatLocation } from '../utils/scheduleUtils';
 import { GoogleCalendarModal } from './GoogleCalendarModal';
@@ -33,6 +32,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
   const [icsColorMode, setIcsColorMode] = useState<'prefix' | 'course'>('prefix');
   const [isGCalModalOpen, setIsGCalModalOpen] = useState(false);
+  const [isExportingImage, setIsExportingImage] = useState(false);
 
   const handleExportICS = () => {
     const icsContent = generateICS(courses, selectedSections, icsColorMode);
@@ -41,11 +41,20 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
   const handleExportImage = async () => {
     const gridElem = document.querySelector('.timetable-grid-wrapper') as HTMLElement;
-    if (!gridElem) return;
+    if (!gridElem || isExportingImage) return;
+
+    setIsExportingImage(true);
     try {
+      // Dynamically load html2canvas only when needed to keep initial bundle light
+      const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(gridElem, {
         scale: 2,
-        backgroundColor: '#080b11'
+        backgroundColor: '#080b11',
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        removeContainer: true,
+        imageTimeout: 0
       });
       const dataUrl = canvas.toDataURL('image/png');
       const a = document.createElement('a');
@@ -54,6 +63,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       a.click();
     } catch (err) {
       console.error('Failed to export schedule image:', err);
+    } finally {
+      setIsExportingImage(false);
     }
   };
 
@@ -155,8 +166,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               onClick={() => setIsGCalModalOpen(true)}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ background: '#4285F4', padding: '10px', borderRadius: '10px', color: '#ffffff' }}>
-                  <Calendar size={22} />
+                <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '8px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(66, 133, 244, 0.3)' }}>
+                  <img src="/google-calendar-icon.svg" alt="Google Calendar" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '0.94rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -261,7 +272,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Captura visual completa de tu grilla semanal</div>
                 </div>
               </div>
-              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>Descargar</button>
+              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem', gap: '6px' }} disabled={isExportingImage}>
+                {isExportingImage ? <RefreshCw size={14} className="spin-icon" /> : null}
+                <span>{isExportingImage ? 'Generando...' : 'Descargar'}</span>
+              </button>
             </div>
 
             {/* CSV Export */}
