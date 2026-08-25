@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-140 -150 280 280" width="100%" height="100%">
+  <defs>
+    <!-- Cyan / Blue Gradients -->
+    <linearGradient id="fav-cyan-bright" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F0FF" />
+      <stop offset="100%" stop-color="#0072FF" />
+    </linearGradient>
+    <linearGradient id="fav-cyan-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284C7" />
+      <stop offset="100%" stop-color="#034E8C" />
+    </linearGradient>
+    <linearGradient id="fav-cyan-light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7DD3FC" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+
+    <!-- Magenta / Pink Gradients -->
+    <linearGradient id="fav-pink-bright" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF2E93" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+    <linearGradient id="fav-pink-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#BE123C" />
+      <stop offset="100%" stop-color="#831843" />
+    </linearGradient>
+    <linearGradient id="fav-pink-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDA4AF" />
+      <stop offset="100%" stop-color="#F43F5E" />
+    </linearGradient>
+  </defs>
+
+  <g id="monogram-1-1">
+    <!-- Cuadrante Superior Izquierdo (M) -->
+    <path d="M -110 -105 L -50 -140 L -50 -25 L -110 10 Z" fill="url(#fav-cyan-bright)" />
+    <path d="M -110 -105 L -70 -130 L -15 -95 L -50 -70 Z" fill="url(#fav-cyan-light)" />
+    <path d="M -50 -70 L 0 -40 L 0 35 L -50 0 Z" fill="url(#fav-cyan-dark)" />
+
+    <!-- Cuadrante Superior Derecho (L / Calendario) -->
+    <path d="M 0 -115 L 60 -150 L 110 -120 L 50 -85 Z" fill="url(#fav-pink-bright)" />
+    <path d="M 50 -85 L 110 -120 L 110 0 L 50 35 Z" fill="url(#fav-pink-dark)" />
+    <path d="M 0 -115 L 50 -85 L 50 0 L 0 -30 Z" fill="url(#fav-pink-bright)" />
+    <path d="M 55 -45 L 105 -75 L 105 -50 L 55 -20 Z" fill="url(#fav-pink-accent)" />
+
+    <!-- Cuadrante Inferior Izquierdo (Base M) -->
+    <path d="M -110 10 L -50 45 L -50 130 L -110 95 Z" fill="url(#fav-pink-bright)" />
+    <path d="M -50 45 L 0 15 L 0 90 L -50 130 Z" fill="url(#fav-pink-dark)" />
+
+    <!-- Cuadrante Inferior Derecho (Base L) -->
+    <path d="M 0 35 L 50 0 L 110 35 L 60 70 Z" fill="url(#fav-cyan-bright)" />
+    <path d="M 0 90 L 60 125 L 110 95 L 50 60 Z" fill="url(#fav-cyan-dark)" />
+    <path d="M 50 0 L 110 35 L 110 95 L 50 60 Z" fill="url(#fav-cyan-dark)" />
+    <path d="M 0 35 L 50 60 L 0 90 L -50 60 Z" fill="#00E5FF" />
+
+    <!-- Centro Interconectado -->
+    <polygon points="0,-30 30,-12 0,5 0,5" fill="#FFFFFF" opacity="0.95" />
+    <polygon points="0,-30 -30,-12 0,5 0,5" fill="#E0F2FE" opacity="0.8" />
+  </g>
+</svg>
