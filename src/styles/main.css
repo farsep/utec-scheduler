@@ -1103,19 +1103,25 @@ body::after {
   justify-content: center;
   z-index: 100;
   padding: 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-card {
   width: 100%;
   max-width: 520px;
+  max-height: calc(100dvh - 40px);
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  padding: 28px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: auto;
 }
 
 .modal-header {
@@ -1701,16 +1707,19 @@ body::after {
     font-size: 0.95rem;
   }
 
-  /* Modals — full width minus tiny margin */
+  /* Modals — full width minus tiny margin & scrollable */
   .modal-overlay {
-    padding: 10px;
+    padding: 12px 8px;
+    align-items: flex-start;
   }
 
   .modal-card {
     max-width: 100%;
-    padding: 16px;
+    max-height: calc(100dvh - 24px);
+    padding: 16px 14px;
     border-radius: var(--radius-lg);
     gap: 14px;
+    margin: auto 0;
   }
 
   .modal-title {

@@ -12,18 +12,12 @@ if (typeof Promise !== 'undefined' && !(Promise as any).withResolvers) {
 }
 
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import type { Course, Section, Session, MetadataInfo, DayOfWeek } from '../types/schedule';
 import { parseSessionType, getCourseColor, timeToMinutes, formatLocation, parseDayOfWeek } from './scheduleUtils';
 
 if (typeof window !== 'undefined') {
-  try {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
-      import.meta.url
-    ).toString();
-  } catch {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || '6.1.200'}/legacy/build/pdf.worker.min.mjs`;
-  }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 }
 
 export interface PDFParseResult {
