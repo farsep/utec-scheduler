@@ -40,11 +40,36 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
   if (!isOpen) return null;
 
+  const readFileBuffer = (file: File): Promise<ArrayBuffer> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result instanceof ArrayBuffer) {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Formato de datos no válido'));
+        }
+      };
+      reader.onerror = () => {
+        reject(reader.error || new Error('No se pudo leer el archivo en el dispositivo'));
+      };
+      try {
+        reader.readAsArrayBuffer(file);
+      } catch (e) {
+        if (typeof file.arrayBuffer === 'function') {
+          file.arrayBuffer().then(resolve).catch(reject);
+        } else {
+          reject(e);
+        }
+      }
+    });
+  };
+
   const handleExcelFile = async (file: File) => {
     setErrorMsg(null);
     setIsProcessing('excel');
     try {
-      const buffer = await file.arrayBuffer();
+      const buffer = await readFileBuffer(file);
       const result = parseExcelFile(buffer);
       if (result.courses.length === 0) {
         setErrorMsg('No se pudieron encontrar cursos válidos en el archivo Excel.');
@@ -52,11 +77,12 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         onDataParsed(result.courses, result.metadata);
         setExcelLoadedName(file.name);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Excel parse error:', err);
-      setErrorMsg('Error al leer el archivo Excel.');
+      setErrorMsg(err.message || 'Error al leer el archivo Excel.');
     } finally {
       setIsProcessing(null);
+      if (excelInputRef.current) excelInputRef.current.value = '';
     }
   };
 
@@ -64,7 +90,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
     setErrorMsg(null);
     setIsProcessing('pdf');
     try {
-      const buffer = await file.arrayBuffer();
+      const buffer = await readFileBuffer(file);
       const result = await parsePDFFile(buffer);
       if (result.courses.length === 0 && result.eligibleCourseCodes.size === 0) {
         setErrorMsg('No se pudieron encontrar cursos o horarios en el archivo PDF.');
@@ -72,11 +98,12 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         onPDFParsed(result);
         setPdfLoadedName(file.name);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('PDF parse error:', err);
-      setErrorMsg('Error al procesar el archivo PDF.');
+      setErrorMsg(err.message || 'Error al procesar el archivo PDF.');
     } finally {
       setIsProcessing(null);
+      if (pdfInputRef.current) pdfInputRef.current.value = '';
     }
   };
 
@@ -88,8 +115,6 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
     } else {
       handlePDFFile(file);
     }
-    // Reset value so the user can re-upload the same file if needed
-    e.target.value = '';
   };
 
   const triggerExcelPicker = (e?: React.MouseEvent) => {
