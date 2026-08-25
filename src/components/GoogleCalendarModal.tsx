@@ -558,6 +558,17 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
             </div>
           )}
         </div>
+
+        {/* Legal & Policy Links */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', fontSize: '0.72rem', color: 'var(--text-muted)', paddingTop: '4px' }}>
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+            Política de Privacidad
+          </a>
+          <span>•</span>
+          <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+            Términos del Servicio
+          </a>
+        </div>
       </div>
     </div>
   );

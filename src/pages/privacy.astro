@@ -1,0 +1,190 @@
+---
+import '../styles/main.css';
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" type="image/svg+xml" href="/MatricuLAB.svg" />
+  <link rel="apple-touch-icon" href="/MatricuLAB.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de Privacidad | MatrícuLAB</title>
+  <meta name="description" content="Política de Privacidad de MatrícuLAB - Armador y planificador de horarios universitarios para estudiantes de UTEC." />
+  <style>
+    .legal-container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 40px 20px 80px 20px;
+      color: var(--text-primary);
+      line-height: 1.7;
+    }
+    .legal-header {
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    .legal-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+    .legal-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+    .legal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    .legal-section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+      margin-top: 28px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .legal-card p, .legal-card li {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+    .legal-card ul {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+    .legal-card strong {
+      color: var(--text-primary);
+    }
+    .highlight-box {
+      background: rgba(59, 130, 246, 0.08);
+      border-left: 4px solid var(--accent-primary);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+    }
+    .highlight-box p {
+      margin-bottom: 0;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+    .nav-links {
+      display: flex;
+      gap: 16px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.9rem;
+    }
+    .nav-links a {
+      color: var(--accent-primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="legal-container">
+    <div class="legal-header">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <a href="/" style="display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-size: 0.88rem;">
+          ← Volver a MatrícuLAB
+        </a>
+      </div>
+      <h1 class="legal-title">Política de Privacidad</h1>
+      <div class="legal-subtitle">
+        <strong>MatrícuLAB (UTEC Scheduler)</strong> • Última actualización: 25 de agosto de 2026
+      </div>
+    </div>
+
+    <div class="legal-card">
+      <p>
+        Bienvenido a <strong>MatrícuLAB</strong> (disponible en <code>https://utec-scheduler-ba17fd.gitlab.io/</code>). Nos comprometemos a proteger y respetar la privacidad de los estudiantes y usuarios de nuestra aplicación.
+      </p>
+
+      <h2 class="legal-section-title">1. Información General y Naturaleza de la Aplicación</h2>
+      <p>
+        MatrícuLAB es una herramienta web de planificación de horarios académicos diseñada para estudiantes de la <strong>Universidad de Ingeniería y Tecnología (UTEC)</strong>. La aplicación funciona con una arquitectura orientada al cliente (<em>Client-Side</em>), lo que significa que el procesamiento de tus archivos y datos ocurre directamente en tu navegador web.
+      </p>
+
+      <h2 class="legal-section-title">2. Datos Procesados y Métodos de Manejo</h2>
+      <ul>
+        <li>
+          <strong>Archivos Excel y PDF:</strong> Los archivos de oferta académica, consolidado de matrícula o consolidado de horarios que subes se procesan exclusivamente en la memoria local de tu dispositivo. Ningún archivo ni su contenido se envía a servidores de terceros ni se almacena en bases de datos externas.
+        </li>
+        <li>
+          <strong>Almacenamiento Local (Local Storage):</strong> La aplicación almacena de forma local en tu navegador las opciones de horarios que diseñas, configuraciones de color y preferencias para que puedas continuar tu sesión.
+        </li>
+      </ul>
+
+      <h2 class="legal-section-title">3. Uso de Servicios y APIs de Google (Google Calendar)</h2>
+      <p>
+        MatrícuLAB ofrece la funcionalidad opcional de sincronizar tu horario seleccionado directamente con tu cuenta de <strong>Google Calendar</strong> a través del protocolo OAuth 2.0 de Google Identity Services.
+      </p>
+      <ul>
+        <li>
+          <strong>Permisos solicitados (Scopes):</strong> Solicitamos acceso a los ámbitos de Google Calendar (<code>https://www.googleapis.com/auth/calendar.events</code> y <code>https://www.googleapis.com/auth/calendar</code>) única y exclusivamente para crear el calendario dedicado llamado <em>"UTEC - Mi Horario"</em> y registrar los eventos y horarios de tus clases semanales.
+        </li>
+        <li>
+          <strong>Datos de perfil:</strong> Obtenemos únicamente la dirección de correo electrónico del usuario para verificar la sesión activa y mostrar qué cuenta está conectada en la interfaz.
+        </li>
+        <li>
+          <strong>Tokens de Acceso:</strong> El token de autenticación de Google se almacena únicamente en tu navegador (<em>localStorage</em>) durante su tiempo de validez y nunca es transferido a nuestros servidores.
+        </li>
+      </ul>
+
+      <div class="highlight-box">
+        <p>
+          <strong>Cumplimiento de la Política de Datos de Usuario de Google:</strong><br />
+          El uso y la transferencia por parte de MatrícuLAB a cualquier otra aplicación de la información recibida a través de las APIs de Google se adherirá estrictamente a la <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" style="color: var(--accent-primary); text-decoration: underline;">Política de Datos de Usuario de los Servicios de las APIs de Google</a> (<em>Google API Services User Data Policy</em>), incluidos los requisitos de <strong>Uso Limitado (Limited Use)</strong>.
+        </p>
+      </div>
+
+      <h2 class="legal-section-title">4. No Comercialización ni Divulgación de Datos</h2>
+      <p>
+        MatrícuLAB <strong>NO</strong> vende, <strong>NO</strong> alquila, <strong>NO</strong> transfiere y <strong>NO</strong> comparte información personal ni datos de Google de ningún usuario con terceros. La información nunca se utiliza con fines publicitarios, de marketing, ni para entrenar modelos de inteligencia artificial general.
+      </p>
+
+      <h2 class="legal-section-title">5. Control del Usuario, Revocación y Eliminación</h2>
+      <p>
+        El usuario tiene control total sobre sus datos en todo momento:
+      </p>
+      <ul>
+        <li>
+          <strong>Desconectar la cuenta:</strong> Puedes cerrar sesión en cualquier momento haciendo clic en el botón <em>"Desconectar"</em> en el modal de Google Calendar dentro de la web, lo cual eliminará inmediatamente los tokens de acceso guardados en tu navegador.
+        </li>
+        <li>
+          <strong>Revocar permisos de Google:</strong> Puedes revocar el acceso a MatrícuLAB en cualquier momento desde la administración de seguridad de tu cuenta de Google en <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" style="color: var(--accent-primary);">Permisos de la Cuenta de Google</a>.
+        </li>
+        <li>
+          <strong>Eliminar datos locales:</strong> Puedes restablecer y borrar todos tus horarios y datos locales desde el botón <em>"Limpiar Horario"</em> o limpiando los datos de navegación de tu explorador.
+        </li>
+      </ul>
+
+      <h2 class="legal-section-title">6. Contacto</h2>
+      <p>
+        Si tienes preguntas o inquietudes sobre esta Política de Privacidad o sobre el funcionamiento de la aplicación, puedes ponerte en contacto con el desarrollador a través de:
+      </p>
+      <ul>
+        <li><strong>Repositorio del Proyecto:</strong> <a href="https://gitlab.com/utec-scheduler-ba17fd/utec-scheduler-ba17fd.gitlab.io" target="_blank" rel="noopener noreferrer" style="color: var(--accent-primary);">GitLab / MatrícuLAB</a></li>
+        <li><strong>Sitio Web:</strong> <a href="https://utec-scheduler-ba17fd.gitlab.io/" style="color: var(--accent-primary);">https://utec-scheduler-ba17fd.gitlab.io/</a></li>
+      </ul>
+    </div>
+
+    <div class="nav-links">
+      <a href="/">← Inicio</a>
+      <a href="/terms">Términos del Servicio →</a>
+    </div>
+  </div>
+</body>
+</html>

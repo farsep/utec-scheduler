@@ -13,7 +13,7 @@ import { loadDefaultSampleData } from '../utils/sampleData';
 import type { PDFParseResult } from '../utils/pdfParser';
 import { detectConflicts, calculateTotalHours, matchSectionNumber } from '../utils/scheduleUtils';
 import { sendConsolidadoEmail } from '../utils/emailService';
-import { Download, RefreshCw, CheckCircle, Upload, Sparkles } from 'lucide-react';
+import { Download, RefreshCw, CheckCircle, Upload, Sparkles, AlertCircle } from 'lucide-react';
 
 export const ScheduleApp: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -316,7 +316,12 @@ export const ScheduleApp: React.FC = () => {
                 </div>
               </div>
 
-              {conflicts.length === 0 && Object.keys(selectedSections).length > 0 && (
+              {conflicts.length > 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-rose)', fontWeight: 700, fontSize: '0.88rem' }}>
+                  <AlertCircle size={18} />
+                  <span>Conflicto Detectado: Horarios Superpuestos</span>
+                </div>
+              ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-emerald)', fontWeight: 700, fontSize: '0.88rem' }}>
                   <CheckCircle size={18} />
                   <span>¡Horario Válido y Sin Cruces!</span>
@@ -326,6 +331,19 @@ export const ScheduleApp: React.FC = () => {
           </section>
         </main>
       )}
+
+      {/* App Footer */}
+      <footer style={{ marginTop: 'auto', padding: '16px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', fontSize: '0.78rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', width: '100%' }}>
+        <span>MatrícuLAB © 2026</span>
+        <span>•</span>
+        <a href="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+          Política de Privacidad
+        </a>
+        <span>•</span>
+        <a href="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+          Términos del Servicio
+        </a>
+      </footer>
 
       {/* Upload & Data Management Modal */}
       <FileUploadModal
