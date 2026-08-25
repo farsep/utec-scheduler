@@ -3,7 +3,7 @@ import { formatLocation, getCourseColor, getCoursePrefix } from './scheduleUtils
 
 // Google OAuth 2.0 Client Configuration
 // Uses built-in client ID or custom client ID stored in localStorage/environment
-const DEFAULT_CLIENT_ID = '787795729132-i7jvu7qdl1lhckr7f2n9pnbibk4ousfe.apps.googleusercontent.com';
+const DEFAULT_CLIENT_ID = '383894781243-h8kq4jundmvmn91ae18t3vqifaibf7gj.apps.googleusercontent.com';
 
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.app.created https://www.googleapis.com/auth/calendar';
 
