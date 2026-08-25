@@ -1,15 +1,28 @@
-import * as pdfjsLib from 'pdfjs-dist';
+// Polyfill Promise.withResolvers for iOS Safari < 17.4 and mobile WebKit
+if (typeof Promise !== 'undefined' && !(Promise as any).withResolvers) {
+  (Promise as any).withResolvers = function <T>() {
+    let resolve!: (value: T | PromiseLike<T>) => void;
+    let reject!: (reason?: any) => void;
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+}
+
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import type { Course, Section, Session, MetadataInfo, DayOfWeek } from '../types/schedule';
 import { parseSessionType, getCourseColor, timeToMinutes, formatLocation, parseDayOfWeek } from './scheduleUtils';
 
 if (typeof window !== 'undefined') {
   try {
     pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/build/pdf.worker.min.mjs',
+      'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
       import.meta.url
     ).toString();
   } catch {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || '6.1.200'}/build/pdf.worker.min.mjs`;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version || '6.1.200'}/legacy/build/pdf.worker.min.mjs`;
   }
 }
 
@@ -264,13 +277,34 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
 
 export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseResult> {
   let pdfDoc;
+  // Clone ArrayBuffer so worker transfer does not detach original memory on retry
+  const primaryData = new Uint8Array(arrayBuffer.slice(0));
+
   try {
-    const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
+    const loadingTask = pdfjsLib.getDocument({
+      data: primaryData,
+      useSystemFonts: true,
+      isEvalSupported: false,
+      cMapPacked: true
+    } as any);
     pdfDoc = await loadingTask.promise;
   } catch (err) {
-    console.error('Error loading PDF document with worker, trying fallback:', err);
-    const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer), isEvalSupported: false } as any);
-    pdfDoc = await loadingTask.promise;
+    console.warn('Primary PDF worker loading encountered issue, trying fallback in-memory parser:', err);
+    try {
+      const fallbackData = new Uint8Array(arrayBuffer.slice(0));
+      const fallbackTask = pdfjsLib.getDocument({
+        data: fallbackData,
+        disableWorker: true,
+        useWorkerFetch: false,
+        isEvalSupported: false,
+        useSystemFonts: true,
+        cMapPacked: true
+      } as any);
+      pdfDoc = await fallbackTask.promise;
+    } catch (fallbackErr) {
+      console.error('All PDF parsing strategies failed:', fallbackErr);
+      throw fallbackErr;
+    }
   }
 
   const allItems: PDFTextItem[] = [];
