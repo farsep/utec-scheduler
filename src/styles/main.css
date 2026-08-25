@@ -1159,7 +1159,8 @@ body::after {
 }
 
 .dropzone-container:hover,
-.dropzone-container.active {
+.dropzone-container.active,
+.dropzone-container.dragging {
   border-color: var(--accent-primary);
   background: rgba(59, 130, 246, 0.1);
 }

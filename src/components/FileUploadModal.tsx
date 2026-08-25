@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, FileSpreadsheet, FileText, Upload, CheckCircle2, Download, AlertCircle, Trash2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, FileSpreadsheet, FileText, Upload, CheckCircle2, Download, AlertCircle, Trash2, Loader2 } from 'lucide-react';
 import { parseExcelFile } from '../utils/excelParser';
 import { parsePDFFile, type PDFParseResult } from '../utils/pdfParser';
 import type { Course, MetadataInfo } from '../types/schedule';
@@ -15,6 +15,9 @@ interface FileUploadModalProps {
   hasPDFData: boolean;
 }
 
+const EXCEL_ACCEPT = '.xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/comma-separated-values';
+const PDF_ACCEPT = '.pdf,application/pdf';
+
 export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   isOpen,
   onClose,
@@ -27,32 +30,39 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
 }) => {
   const [excelLoadedName, setExcelLoadedName] = useState<string | null>(null);
   const [pdfLoadedName, setPdfLoadedName] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState<'excel' | 'pdf' | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isDraggingExcel, setIsDraggingExcel] = useState(false);
+  const [isDraggingPDF, setIsDraggingPDF] = useState(false);
+
+  const excelInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
-  const handleExcelDrop = (file: File) => {
+  const handleExcelFile = async (file: File) => {
     setErrorMsg(null);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const buffer = e.target?.result as ArrayBuffer;
-        const result = parseExcelFile(buffer);
-        if (result.courses.length === 0) {
-          setErrorMsg('No se pudieron encontrar cursos válidos en el archivo Excel.');
-        } else {
-          onDataParsed(result.courses, result.metadata);
-          setExcelLoadedName(file.name);
-        }
-      } catch (err) {
-        setErrorMsg('Error al leer el archivo Excel.');
+    setIsProcessing('excel');
+    try {
+      const buffer = await file.arrayBuffer();
+      const result = parseExcelFile(buffer);
+      if (result.courses.length === 0) {
+        setErrorMsg('No se pudieron encontrar cursos válidos en el archivo Excel.');
+      } else {
+        onDataParsed(result.courses, result.metadata);
+        setExcelLoadedName(file.name);
       }
-    };
-    reader.readAsArrayBuffer(file);
+    } catch (err) {
+      console.error('Excel parse error:', err);
+      setErrorMsg('Error al leer el archivo Excel.');
+    } finally {
+      setIsProcessing(null);
+    }
   };
 
-  const handlePDFDrop = async (file: File) => {
+  const handlePDFFile = async (file: File) => {
     setErrorMsg(null);
+    setIsProcessing('pdf');
     try {
       const buffer = await file.arrayBuffer();
       const result = await parsePDFFile(buffer);
@@ -63,15 +73,33 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         setPdfLoadedName(file.name);
       }
     } catch (err) {
+      console.error('PDF parse error:', err);
       setErrorMsg('Error al procesar el archivo PDF.');
+    } finally {
+      setIsProcessing(null);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'excel' | 'pdf') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (type === 'excel') handleExcelDrop(file);
-    else handlePDFDrop(file);
+    if (type === 'excel') {
+      handleExcelFile(file);
+    } else {
+      handlePDFFile(file);
+    }
+    // Reset value so the user can re-upload the same file if needed
+    e.target.value = '';
+  };
+
+  const triggerExcelPicker = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    excelInputRef.current?.click();
+  };
+
+  const triggerPDFPicker = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    pdfInputRef.current?.click();
   };
 
   return (
@@ -109,9 +137,42 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         )}
 
         <div className="upload-grid">
+          {/* Hidden File Inputs (accessible to all mobile browsers) */}
+          <input
+            ref={excelInputRef}
+            type="file"
+            accept={EXCEL_ACCEPT}
+            onChange={e => handleFileChange(e, 'excel')}
+            style={{ position: 'absolute', opacity: 0, width: '1px', height: '1px', pointerEvents: 'none', zIndex: -1 }}
+            aria-hidden="true"
+          />
+          <input
+            ref={pdfInputRef}
+            type="file"
+            accept={PDF_ACCEPT}
+            onChange={e => handleFileChange(e, 'pdf')}
+            style={{ position: 'absolute', opacity: 0, width: '1px', height: '1px', pointerEvents: 'none', zIndex: -1 }}
+            aria-hidden="true"
+          />
+
           {/* Excel Uploader / Status */}
-          <div className={`dropzone-container ${hasExcelData ? 'active' : ''}`}>
-            <FileSpreadsheet size={32} color="var(--accent-emerald)" />
+          <div
+            className={`dropzone-container ${hasExcelData ? 'active' : ''} ${isDraggingExcel ? 'dragging' : ''}`}
+            onClick={() => !hasExcelData && !isProcessing && triggerExcelPicker()}
+            onDragOver={e => { e.preventDefault(); setIsDraggingExcel(true); }}
+            onDragLeave={() => setIsDraggingExcel(false)}
+            onDrop={e => {
+              e.preventDefault();
+              setIsDraggingExcel(false);
+              const file = e.dataTransfer.files?.[0];
+              if (file) handleExcelFile(file);
+            }}
+          >
+            {isProcessing === 'excel' ? (
+              <Loader2 size={32} className="spin-icon" color="var(--accent-emerald)" />
+            ) : (
+              <FileSpreadsheet size={32} color="var(--accent-emerald)" />
+            )}
             <div>
               <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Oferta Excel (.xlsx)</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Catálogo General de Cursos</div>
@@ -122,8 +183,10 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                   <CheckCircle2 size={14} /> {excelLoadedName || 'Excel Cargado'}
                 </div>
                 <button
+                  type="button"
                   className="btn btn-secondary"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     onClearExcel();
                     setExcelLoadedName(null);
                   }}
@@ -133,16 +196,36 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 </button>
               </div>
             ) : (
-              <label className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '6px 12px' }}>
-                Examinar Excel
-                <input type="file" accept=".xlsx, .xls, .csv" onChange={e => handleFileChange(e, 'excel')} style={{ display: 'none' }} />
-              </label>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={isProcessing === 'excel'}
+                onClick={triggerExcelPicker}
+                style={{ fontSize: '0.78rem', padding: '6px 14px' }}
+              >
+                {isProcessing === 'excel' ? 'Procesando...' : 'Examinar Excel'}
+              </button>
             )}
           </div>
 
           {/* PDF Uploader / Status */}
-          <div className={`dropzone-container ${hasPDFData ? 'active' : ''}`}>
-            <FileText size={32} color="var(--accent-rose)" />
+          <div
+            className={`dropzone-container ${hasPDFData ? 'active' : ''} ${isDraggingPDF ? 'dragging' : ''}`}
+            onClick={() => !hasPDFData && !isProcessing && triggerPDFPicker()}
+            onDragOver={e => { e.preventDefault(); setIsDraggingPDF(true); }}
+            onDragLeave={() => setIsDraggingPDF(false)}
+            onDrop={e => {
+              e.preventDefault();
+              setIsDraggingPDF(false);
+              const file = e.dataTransfer.files?.[0];
+              if (file) handlePDFFile(file);
+            }}
+          >
+            {isProcessing === 'pdf' ? (
+              <Loader2 size={32} className="spin-icon" color="var(--accent-rose)" />
+            ) : (
+              <FileText size={32} color="var(--accent-rose)" />
+            )}
             <div>
               <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>PDF de Horario / Cursos</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Consolidado de Horario, Consolidado de Matrícula o Cursos Habilitados</div>
@@ -153,8 +236,10 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                   <CheckCircle2 size={14} /> {pdfLoadedName || 'PDF Cargado'}
                 </div>
                 <button
+                  type="button"
                   className="btn btn-secondary"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     onClearPDF();
                     setPdfLoadedName(null);
                   }}
@@ -164,10 +249,15 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 </button>
               </div>
             ) : (
-              <label className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '6px 12px' }}>
-                Examinar PDF
-                <input type="file" accept=".pdf" onChange={e => handleFileChange(e, 'pdf')} style={{ display: 'none' }} />
-              </label>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={isProcessing === 'pdf'}
+                onClick={triggerPDFPicker}
+                style={{ fontSize: '0.78rem', padding: '6px 14px' }}
+              >
+                {isProcessing === 'pdf' ? 'Procesando...' : 'Examinar PDF'}
+              </button>
             )}
           </div>
         </div>

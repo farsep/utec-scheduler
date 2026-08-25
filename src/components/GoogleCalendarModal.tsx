@@ -4,6 +4,7 @@ import type { Course } from '../types/schedule';
 import {
   getSavedAuth,
   requestGoogleAccessToken,
+  loadGoogleGsiScript,
   logoutGoogle,
   syncScheduleToGoogleCalendar,
   clearTrackedUTECEvents,
@@ -43,7 +44,11 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
   const [showClientIdInput, setShowClientIdInput] = useState(false);
 
   useEffect(() => {
-    setAuth(getSavedAuth());
+    if (isOpen) {
+      setAuth(getSavedAuth());
+      // Preload Google Identity Services script so first click popup is not blocked
+      loadGoogleGsiScript().catch(() => {});
+    }
   }, [isOpen]);
 
   const handleConnect = async () => {
