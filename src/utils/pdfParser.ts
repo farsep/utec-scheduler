@@ -1,18 +1,5 @@
-// Polyfill Promise.withResolvers for iOS Safari < 17.4 and mobile WebKit
-if (typeof Promise !== 'undefined' && !(Promise as any).withResolvers) {
-  (Promise as any).withResolvers = function <T>() {
-    let resolve!: (value: T | PromiseLike<T>) => void;
-    let reject!: (reason?: any) => void;
-    const promise = new Promise<T>((res, rej) => {
-      resolve = res;
-      reject = rej;
-    });
-    return { promise, resolve, reject };
-  };
-}
-
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
-import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.js?url';
 import type { Course, Section, Session, MetadataInfo, DayOfWeek } from '../types/schedule';
 import { parseSessionType, getCourseColor, timeToMinutes, formatLocation, parseDayOfWeek } from './scheduleUtils';
 
