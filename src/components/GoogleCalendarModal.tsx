@@ -164,23 +164,22 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
           style={{
             background: auth ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255, 255, 255, 0.03)',
             border: auth ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border-color)',
-            borderRadius: '10px',
+            borderRadius: '12px',
             padding: '14px 16px',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            flexDirection: 'column',
             gap: '12px'
           }}
         >
           {auth ? (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <CheckCircle2 size={20} color="var(--accent-emerald)" />
-                <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+            <div className="export-card-row" style={{ width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                <CheckCircle2 size={22} color="var(--accent-emerald)" style={{ flexShrink: 0 }} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                     Cuenta de Google Conectada
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {auth.userEmail || 'Permisos de Google Calendar otorgados'}
                   </div>
                 </div>
@@ -188,22 +187,22 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
               <button
                 onClick={handleLogout}
                 className="btn btn-secondary"
-                style={{ padding: '6px 12px', fontSize: '0.75rem', gap: '6px' }}
+                style={{ padding: '7px 14px', fontSize: '0.78rem', gap: '6px', flexShrink: 0 }}
                 title="Desconectar cuenta"
               >
                 <LogOut size={14} />
                 Desconectar
               </button>
-            </>
+            </div>
           ) : (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <ShieldCheck size={20} color="#4285F4" />
-                <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+            <div className="export-card-row" style={{ width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: 1, minWidth: 0 }}>
+                <ShieldCheck size={22} color="#4285F4" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                     Conexión Directa con Google
                   </div>
-                  <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
                     Agrega y edita tus clases directamente en tu Google Calendar sin archivos intermedios.
                   </div>
                 </div>
@@ -215,15 +214,15 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
                 style={{
                   background: 'linear-gradient(135deg, #4285F4 0%, #34A853 50%, #EA4335 100%)',
                   border: 'none',
-                  padding: '8px 14px',
-                  fontSize: '0.8rem',
+                  padding: '9px 16px',
+                  fontSize: '0.82rem',
                   fontWeight: 600,
-                  whiteSpace: 'nowrap'
+                  flexShrink: 0
                 }}
               >
                 {loading ? <RefreshCw size={15} className="spin-icon" /> : 'Conectar Google'}
               </button>
-            </>
+            </div>
           )}
         </div>
 
@@ -349,13 +348,12 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
           <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
             Esquema de colores para los eventos de Google Calendar:
           </label>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="export-color-grid">
             <button
               type="button"
               onClick={() => setColorMode('prefix')}
               style={{
-                flex: 1,
-                padding: '8px 12px',
+                padding: '9px 12px',
                 fontSize: '0.76rem',
                 borderRadius: '8px',
                 border: colorMode === 'prefix' ? '1px solid #4285F4' : '1px solid var(--border-color)',
@@ -363,17 +361,17 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
                 color: colorMode === 'prefix' ? '#4285F4' : 'var(--text-muted)',
                 fontWeight: colorMode === 'prefix' ? 700 : 500,
                 cursor: 'pointer',
-                transition: 'all 0.15s ease'
+                transition: 'all 0.15s ease',
+                textAlign: 'center'
               }}
             >
-              🎨 Por categoría de carrera (CS, CC, MA...)
+              🎨 Por categoría de carrera (CS, CC...)
             </button>
             <button
               type="button"
               onClick={() => setColorMode('course')}
               style={{
-                flex: 1,
-                padding: '8px 12px',
+                padding: '9px 12px',
                 fontSize: '0.76rem',
                 borderRadius: '8px',
                 border: colorMode === 'course' ? '1px solid #4285F4' : '1px solid var(--border-color)',
@@ -381,7 +379,8 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
                 color: colorMode === 'course' ? '#4285F4' : 'var(--text-muted)',
                 fontWeight: colorMode === 'course' ? 700 : 500,
                 cursor: 'pointer',
-                transition: 'all 0.15s ease'
+                transition: 'all 0.15s ease',
+                textAlign: 'center'
               }}
             >
               🌈 Un color único por cada curso
