@@ -24,6 +24,8 @@ interface PDFTextItem {
   page: number;
 }
 
+const FOOTER_DISCLAIMER_REGEX = /(?:desapruebe|reglamento\s+acad[eé]mico|separado\s+de\s+manera\s+definitiva|volver\s+a\s+postular|art\.\s*\d+\.?\d*|no\s+podr[aá]\s+matricularse)/i;
+
 function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata: MetadataInfo): PDFParseResult {
   metadata.isConsolidado = true;
   const sortedItems = [...allItems].sort((a, b) => (b.page !== a.page ? a.page - b.page : b.y !== a.y ? b.y - a.y : a.x - b.x));
@@ -67,20 +69,44 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
 
   courseAnchors.forEach((anchor, idx) => {
     const nextAnchor = courseAnchors.find((na, nidx) => nidx > idx && na.page === anchor.page);
-    const bottomY = nextAnchor ? nextAnchor.topY : -9999;
 
-    const blockItems = sortedItems.filter(it => it.page === anchor.page && it.y <= anchor.topY + 15.0 && it.y > bottomY + 5.0);
+    // Identify page footer disclaimer if any on this anchor's page
+    const pageFooterItems = sortedItems.filter(it => it.page === anchor.page && (
+      FOOTER_DISCLAIMER_REGEX.test(it.str) ||
+      (it.y < 60 && /^\d+$/.test(it.str))
+    ));
+    const pageFooterY = pageFooterItems.length > 0 ? Math.max(...pageFooterItems.map(it => it.y)) : -9999;
+
+    const bottomY = nextAnchor ? nextAnchor.topY : (pageFooterY > -9999 ? pageFooterY : anchor.topY - 120.0);
+
+    const blockItems = sortedItems.filter(it =>
+      it.page === anchor.page &&
+      it.y <= anchor.topY + 15.0 &&
+      it.y > bottomY + 2.0 &&
+      (pageFooterY === -9999 || it.y > pageFooterY + 2.0) &&
+      !FOOTER_DISCLAIMER_REGEX.test(it.str)
+    );
 
     const nameMaxX = isHorarioLayout ? 225 : 260;
     const nameItems = blockItems
-      .filter(it => it.x >= 100 && it.x < nameMaxX)
+      .filter(it => it.x >= 100 && it.x < nameMaxX && it.y >= anchor.topY - 45.0)
       .map(it => it.str)
-      .filter(s => !/^(?:Obligatorio|Electivo)$/i.test(s));
-    const courseName = nameItems.join(' ').replace(/^(?:[0-9]|-)\s*/, '').trim() || `Curso ${anchor.code}`;
+      .filter(s => !/^(?:Obligatorio|Electivo)$/i.test(s) && !FOOTER_DISCLAIMER_REGEX.test(s));
+    
+    let courseName = nameItems.join(' ')
+      .replace(/^(?:[0-9]|-)\s*/, '')
+      .replace(/(?:El\s+estudiante\s+que|desapruebe|separado\s+de\s+manera|volver\s+a\s+postular|Reglamento\s+Acad[eé]mico|Art\.\s*\d+).*$/i, '')
+      .trim();
+    if (!courseName) {
+      courseName = `Curso ${anchor.code}`;
+    }
 
     let professor = 'Por asignar';
     if (isHorarioLayout) {
-      const profItems = blockItems.filter(it => it.x >= 250 && it.x < 380).map(it => it.str);
+      const profItems = blockItems
+        .filter(it => it.x >= 250 && it.x < 380 && it.y >= anchor.topY - 45.0)
+        .map(it => it.str)
+        .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s));
       if (profItems.length > 0) {
         professor = profItems.join(' ').replace(/,$/, '').trim();
       }
@@ -90,22 +116,36 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
     let subGroup = '';
 
     if (isHorarioLayout) {
-      const secItems = blockItems.filter(it => it.x >= 530 && it.x < 585).map(it => it.str);
+      const secItems = blockItems
+        .filter(it => it.x >= 530 && it.x < 585 && it.y >= anchor.topY - 45.0)
+        .map(it => it.str)
+        .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s));
       const secMatch = secItems.join(' ').match(/\d+/);
       sectionNum = secMatch ? secMatch[0] : '1';
 
-      const subItems = blockItems.filter(it => it.x >= 585 && it.x < 620).map(it => it.str).join(' ');
+      const subItems = blockItems
+        .filter(it => it.x >= 585 && it.x < 620 && it.y >= anchor.topY - 45.0)
+        .map(it => it.str)
+        .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s))
+        .join(' ');
       const subMatch = subItems.match(/(?:Lab\.|Prac\.|Tall\.)\s*\d+|\b\d{2}\b/i);
       if (subMatch) {
         const matchedStr = subMatch[0];
         subGroup = /^\d{2}$/.test(matchedStr) ? `Lab. ${matchedStr}` : matchedStr;
       }
     } else {
-      const secItems = blockItems.filter(it => it.x >= 430 && it.x < 480).map(it => it.str);
+      const secItems = blockItems
+        .filter(it => it.x >= 430 && it.x < 480 && it.y >= anchor.topY - 45.0)
+        .map(it => it.str)
+        .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s));
       const secMatch = secItems.join(' ').match(/\d+/);
       sectionNum = secMatch ? secMatch[0] : '1';
 
-      const subItems = blockItems.filter(it => it.x >= 480 && it.x < 580).map(it => it.str).join(' ');
+      const subItems = blockItems
+        .filter(it => it.x >= 480 && it.x < 580 && it.y >= anchor.topY - 45.0)
+        .map(it => it.str)
+        .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s))
+        .join(' ');
       const subMatch = subItems.match(/(?:Lab\.|Prac\.|Tall\.)\s*\d+|\b\d{2}\b/i);
       if (subMatch) {
         const matchedStr = subMatch[0];
@@ -141,7 +181,18 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
     const pageAnchors = courseAnchors.filter(ca => ca.page === pageNum);
     if (pageAnchors.length === 0) return;
 
-    const schedItems = sortedItems.filter(it => it.page === pageNum && it.x >= 600);
+    const pageFooterItems = sortedItems.filter(it => it.page === pageNum && (
+      FOOTER_DISCLAIMER_REGEX.test(it.str) ||
+      (it.y < 60 && /^\d+$/.test(it.str))
+    ));
+    const pageFooterY = pageFooterItems.length > 0 ? Math.max(...pageFooterItems.map(it => it.y)) : -9999;
+
+    const schedItems = sortedItems.filter(it =>
+      it.page === pageNum &&
+      it.x >= 600 &&
+      (pageFooterY === -9999 || it.y > pageFooterY + 2.0) &&
+      !FOOTER_DISCLAIMER_REGEX.test(it.str)
+    );
 
     const sessionEntries: { tokens: string[]; startY: number }[] = [];
     let currentEntry: { tokens: string[]; startY: number } | null = null;
@@ -173,7 +224,7 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
           matchedAnchor = pageAnchors.find((anchor, idx) => {
             const nextAnchor = pageAnchors.find((na, nidx) => nidx > idx);
             const topBound = anchor.topY + 15.0;
-            const bottomBound = nextAnchor ? nextAnchor.topY + 2.0 : -99999;
+            const bottomBound = nextAnchor ? nextAnchor.topY + 2.0 : (pageFooterY > -9999 ? pageFooterY : -99999);
             return se.startY <= topBound && se.startY > bottomBound;
           });
         } else {
@@ -261,8 +312,10 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
   // Clone ArrayBuffer so worker transfer does not detach original memory on retry
   const primaryData = new Uint8Array(arrayBuffer.slice(0));
 
+  const getDocumentFn = (pdfjsLib as any).getDocument || (pdfjsLib as any).default?.getDocument;
+
   try {
-    const loadingTask = pdfjsLib.getDocument({
+    const loadingTask = getDocumentFn({
       data: primaryData,
       useSystemFonts: true,
       isEvalSupported: false,
@@ -273,7 +326,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
     console.warn('Primary PDF worker loading encountered issue, trying fallback in-memory parser:', err);
     try {
       const fallbackData = new Uint8Array(arrayBuffer.slice(0));
-      const fallbackTask = pdfjsLib.getDocument({
+      const fallbackTask = getDocumentFn({
         data: fallbackData,
         disableWorker: true,
         useWorkerFetch: false,
@@ -494,7 +547,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
     const nameWords = items
       .filter(i => i.x >= 90 && i.x < 172)
       .map(i => i.str)
-      .filter(s => s && !/^(?:AND|CD|MALLA)-\d{4}/i.test(s));
+      .filter(s => s && !/^(?:AND|CD|MALLA)-\d{4}/i.test(s) && !FOOTER_DISCLAIMER_REGEX.test(s));
 
     const uniqueNameWords: string[] = [];
     nameWords.forEach(w => {
