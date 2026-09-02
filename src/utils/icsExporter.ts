@@ -6,7 +6,8 @@ export type ICSColorMode = 'prefix' | 'course';
 export function generateICS(
   courses: Course[],
   selectedSections: Record<string, string>,
-  colorMode: ICSColorMode = 'prefix'
+  colorMode: ICSColorMode = 'prefix',
+  reminderMinutes: number = 15
 ): string {
   let ics = [
     'BEGIN:VCALENDAR',
@@ -80,7 +81,7 @@ export function generateICS(
       const profText = sess.professor || section.professors[0] || 'Por asignar';
       const descText = `Curso: ${course.name}\\nSección: ${mainSecNum}${subGroupLabel ? ` (${subGroupLabel})` : ''}\\nSesión: ${sess.sessionGroup}\\nProfesor: ${profText}\\nModalidad: ${sess.modality || 'Presencial'}`;
 
-      ics.push(
+      const eventLines = [
         'BEGIN:VEVENT',
         `UID:${courseCode}-${secNum}-${sess.id}@utec.edu.pe`,
         `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
@@ -92,14 +93,21 @@ export function generateICS(
         `DESCRIPTION:${descText}`,
         `CATEGORIES:${coursePrefix}`,
         `COLOR:${courseColor}`,
-        `X-APPLE-CALENDAR-COLOR:${courseColor}`,
-        'BEGIN:VALARM',
-        'ACTION:DISPLAY',
-        'DESCRIPTION:Recordatorio de clase UTEC (15 minutos antes)',
-        'TRIGGER:-PT15M',
-        'END:VALARM',
-        'END:VEVENT'
-      );
+        `X-APPLE-CALENDAR-COLOR:${courseColor}`
+      ];
+
+      if (reminderMinutes > 0) {
+        eventLines.push(
+          'BEGIN:VALARM',
+          'ACTION:DISPLAY',
+          `DESCRIPTION:Recordatorio de clase UTEC (${reminderMinutes} minutos antes)`,
+          `TRIGGER:-PT${reminderMinutes}M`,
+          'END:VALARM'
+        );
+      }
+
+      eventLines.push('END:VEVENT');
+      ics.push(...eventLines);
     });
   });
 

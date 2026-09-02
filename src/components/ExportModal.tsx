@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Calendar, Image, FileSpreadsheet, Download, RefreshCw, Sparkles, Bell } from 'lucide-react';
 import { generateICS, downloadFile } from '../utils/icsExporter';
-import { formatLocation, getCourseColor, getCoursePrefix, getScheduleColorMap } from '../utils/scheduleUtils';
+import { formatLocation, getCourseColor, getCoursePrefix, getScheduleColorMap, REMINDER_OPTIONS } from '../utils/scheduleUtils';
 import { GoogleCalendarModal } from './GoogleCalendarModal';
 import type { Course } from '../types/schedule';
 
@@ -31,11 +31,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   if (!isOpen) return null;
 
   const [icsColorMode, setIcsColorMode] = useState<'prefix' | 'course'>('prefix');
+  const [reminderMinutes, setReminderMinutes] = useState<number>(() => {
+    const saved = localStorage.getItem('utec_reminder_minutes');
+    return saved !== null ? Number(saved) : 15;
+  });
   const [isGCalModalOpen, setIsGCalModalOpen] = useState(false);
   const [isExportingImage, setIsExportingImage] = useState(false);
 
   const handleExportICS = () => {
-    const icsContent = generateICS(courses, selectedSections, icsColorMode);
+    const icsContent = generateICS(courses, selectedSections, icsColorMode, reminderMinutes);
     downloadFile(icsContent, `Horario_UTEC_${optionName.replace(/\s+/g, '_')}.ics`, 'text/calendar;charset=utf-8');
   };
 
@@ -300,21 +304,53 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   );
                 })()}
 
-                {/* 15-minute reminder notice */}
+                {/* Reminder Time Selector */}
                 <div style={{
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: '7px',
-                  fontSize: '0.73rem',
-                  color: 'var(--accent-emerald)',
-                  background: 'rgba(16, 185, 129, 0.08)',
-                  padding: '6px 10px',
-                  borderRadius: '7px',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  background: 'rgba(16, 185, 129, 0.05)',
+                  padding: '9px 12px',
+                  borderRadius: '8px',
                   border: '1px solid rgba(16, 185, 129, 0.2)',
                   marginTop: '4px'
                 }}>
-                  <Bell size={13} style={{ flexShrink: 0 }} />
-                  <span>Alarma / Recordatorio incluido: <strong>15 minutos antes</strong> de cada clase.</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                    <label style={{ fontSize: '0.76rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Bell size={13} color="var(--accent-emerald)" />
+                      <span>Alarma previa (.ics):</span>
+                    </label>
+                    <select
+                      value={reminderMinutes}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setReminderMinutes(val);
+                        localStorage.setItem('utec_reminder_minutes', String(val));
+                      }}
+                      style={{
+                        padding: '4px 9px',
+                        fontSize: '0.74rem',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(16, 185, 129, 0.35)',
+                        background: '#0d131f',
+                        color: '#ffffff',
+                        outline: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                    >
+                      {REMINDER_OPTIONS.map(opt => (
+                        <option key={opt.value} value={opt.value} style={{ background: '#0d131f', color: '#ffffff' }}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ fontSize: '0.71rem', color: reminderMinutes === 0 ? 'var(--text-muted)' : 'var(--accent-emerald)' }}>
+                    {reminderMinutes === 0
+                      ? '🚫 El archivo .ics no contendrá alarmas automáticas.'
+                      : `🔔 Tu calendario móvil o de escritorio te alertará ${REMINDER_OPTIONS.find(o => o.value === reminderMinutes)?.label.toLowerCase()} de cada clase.`}
+                  </div>
                 </div>
               </div>
             </div>

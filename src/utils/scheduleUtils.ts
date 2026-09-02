@@ -347,3 +347,20 @@ export function matchSectionNumber(sections: Section[], mainSecNum: string, grou
   const fallback = sections.find(s => s.sectionNumber.split(' (')[0] === mainSecNum);
   return fallback ? fallback.sectionNumber : targetLabel;
 }
+
+export interface ReminderOption {
+  value: number; // minutes before class (0 = no reminder)
+  label: string;
+}
+
+export const REMINDER_OPTIONS: ReminderOption[] = [
+  { value: 0, label: 'Sin recordatorio' },
+  { value: 5, label: '5 minutos antes' },
+  { value: 10, label: '10 minutos antes' },
+  { value: 15, label: '15 minutos antes (Recomendado)' },
+  { value: 30, label: '30 minutos antes' },
+  { value: 45, label: '45 minutos antes' },
+  { value: 60, label: '1 hora antes' },
+  { value: 120, label: '2 horas antes' },
+  { value: 1440, label: '1 día antes' },
+];

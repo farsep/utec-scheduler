@@ -16,7 +16,7 @@ import {
   type GoogleCalendarAuth,
   type SyncResult
 } from '../utils/googleCalendarService';
-import { getCourseColor, getCoursePrefix, getScheduleColorMap } from '../utils/scheduleUtils';
+import { getCourseColor, getCoursePrefix, getScheduleColorMap, REMINDER_OPTIONS } from '../utils/scheduleUtils';
 
 interface GoogleCalendarModalProps {
   isOpen: boolean;
@@ -39,6 +39,10 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
 
   const [auth, setAuth] = useState<GoogleCalendarAuth | null>(getSavedAuth());
   const [colorMode, setColorMode] = useState<'prefix' | 'course'>('prefix');
+  const [reminderMinutes, setReminderMinutes] = useState<number>(() => {
+    const saved = localStorage.getItem('utec_reminder_minutes');
+    return saved !== null ? Number(saved) : 15;
+  });
   const [loading, setLoading] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
@@ -95,7 +99,9 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
         currentAuth.accessToken,
         courses,
         selectedSections,
-        colorMode
+        colorMode,
+        undefined,
+        reminderMinutes
       );
 
       setSyncResult(result);
@@ -432,21 +438,53 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
             );
           })()}
 
-          {/* 15-minute reminder notice */}
+          {/* Reminder Time Selector */}
           <div style={{
             display: 'flex',
-            alignItems: 'center',
+            flexDirection: 'column',
             gap: '8px',
-            fontSize: '0.75rem',
-            color: '#10b981',
-            background: 'rgba(16, 185, 129, 0.08)',
-            padding: '7px 11px',
-            borderRadius: '8px',
+            background: 'rgba(16, 185, 129, 0.05)',
+            padding: '10px 12px',
+            borderRadius: '10px',
             border: '1px solid rgba(16, 185, 129, 0.22)',
             marginTop: '2px'
           }}>
-            <Bell size={14} style={{ flexShrink: 0 }} />
-            <span>Recordatorio automático: <strong>15 minutos antes</strong> de cada clase para no perder ninguna sesión.</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Bell size={14} color="#10b981" />
+                <span>Tiempo de recordatorio:</span>
+              </label>
+              <select
+                value={reminderMinutes}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setReminderMinutes(val);
+                  localStorage.setItem('utec_reminder_minutes', String(val));
+                }}
+                style={{
+                  padding: '5px 10px',
+                  fontSize: '0.76rem',
+                  borderRadius: '7px',
+                  border: '1px solid rgba(16, 185, 129, 0.35)',
+                  background: '#0d131f',
+                  color: '#ffffff',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                {REMINDER_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value} style={{ background: '#0d131f', color: '#ffffff' }}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ fontSize: '0.72rem', color: reminderMinutes === 0 ? 'var(--text-muted)' : '#10b981' }}>
+              {reminderMinutes === 0
+                ? '🚫 No se configurará ningún recordatorio previo en Google Calendar.'
+                : `🔔 Google Calendar te notificará ${REMINDER_OPTIONS.find(o => o.value === reminderMinutes)?.label.toLowerCase()} de cada clase.`}
+            </div>
           </div>
         </div>
 
