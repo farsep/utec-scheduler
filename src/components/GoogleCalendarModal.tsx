@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, CheckCircle2, LogOut, RefreshCw, Trash2, ExternalLink, ShieldCheck, AlertCircle, Sparkles } from 'lucide-react';
+import { X, Calendar, CheckCircle2, LogOut, RefreshCw, Trash2, ExternalLink, ShieldCheck, AlertCircle, Sparkles, Bell } from 'lucide-react';
 import type { Course } from '../types/schedule';
 import {
   getSavedAuth,
@@ -431,6 +431,23 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
               </div>
             );
           })()}
+
+          {/* 15-minute reminder notice */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '0.75rem',
+            color: '#10b981',
+            background: 'rgba(16, 185, 129, 0.08)',
+            padding: '7px 11px',
+            borderRadius: '8px',
+            border: '1px solid rgba(16, 185, 129, 0.22)',
+            marginTop: '2px'
+          }}>
+            <Bell size={14} style={{ flexShrink: 0 }} />
+            <span>Recordatorio automático: <strong>15 minutos antes</strong> de cada clase para no perder ninguna sesión.</span>
+          </div>
         </div>
 
         {/* Action Buttons */}
