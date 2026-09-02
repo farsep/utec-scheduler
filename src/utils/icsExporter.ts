@@ -39,6 +39,8 @@ export function generateICS(
     Dom: 6
   };
 
+  const sortedSelectedCourseCodes = Object.keys(selectedSections).sort();
+
   Object.entries(selectedSections).forEach(([courseCode, secNum]) => {
     const course = courses.find(c => c.code === courseCode);
     if (!course) return;
@@ -53,7 +55,8 @@ export function generateICS(
     }
 
     const coursePrefix = getCoursePrefix(courseCode);
-    const courseColor = getCourseColor(courseCode, colorMode);
+    const courseIdx = sortedSelectedCourseCodes.indexOf(courseCode);
+    const courseColor = getCourseColor(courseCode, colorMode, courseIdx);
 
     section.sessions.forEach(sess => {
       const offset = dayOffset[sess.day] ?? 0;

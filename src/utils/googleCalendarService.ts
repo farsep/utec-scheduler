@@ -22,23 +22,116 @@ export interface SyncResult {
   message?: string;
 }
 
-// Google Calendar API Color ID mapping from hex colors
-const GOOGLE_COLOR_IDS: Record<string, string> = {
-  '#3b82f6': '1',  // Blue -> Lavender/Blue
-  '#10b981': '2',  // Emerald -> Sage/Green
-  '#8b5cf6': '3',  // Purple -> Grape
-  '#f59e0b': '5',  // Amber -> Yellow
-  '#ec4899': '4',  // Pink -> Flamingo
-  '#06b6d4': '7',  // Cyan -> Peacock
-  '#6366f1': '9',  // Indigo -> Blueberry
-  '#f97316': '6',  // Orange -> Tangerine
-  '#ef4444': '11', // Red -> Tomato
-  '#84cc16': '10', // Lime -> Basil
+// Google Calendar API Color ID names for user display
+export const GOOGLE_COLOR_NAMES: Record<string, string> = {
+  '1': 'Lavanda',
+  '2': 'Salvia (Verde)',
+  '3': 'Uva (Morado)',
+  '4': 'Flamingo (Rosa)',
+  '5': 'Plátano (Amarillo)',
+  '6': 'Mandarina (Naranja)',
+  '7': 'Pavo Real (Cian)',
+  '8': 'Grafito (Gris)',
+  '9': 'Arándano (Azul)',
+  '10': 'Albahaca (Verde Oscuro)',
+  '11': 'Tomate (Rojo)'
 };
 
-function getGoogleColorId(hexColor: string): string {
-  const cleanHex = hexColor.toLowerCase();
-  return GOOGLE_COLOR_IDS[cleanHex] || '1';
+// Alternating high-contrast sequence of Google Calendar color IDs
+export const GOOGLE_CONTRAST_CYCLE = [
+  '11', // Tomate (Rojo)
+  '7',  // Pavo Real (Cian)
+  '5',  // Plátano (Amarillo)
+  '3',  // Uva (Morado)
+  '2',  // Salvia (Verde)
+  '6',  // Mandarina (Naranja)
+  '9',  // Arándano (Azul Rey)
+  '4',  // Flamingo (Rosa)
+  '10', // Albahaca (Verde Oscuro)
+  '1',  // Lavanda
+  '8'   // Grafito
+];
+
+// Contrasting Google Calendar color IDs mapped per academic prefix
+export const GOOGLE_PREFIX_COLORS: Record<string, string> = {
+  CS: '7',  // Peacock (Cyan / Azul Claro)
+  CC: '1',  // Lavender (Azul Suave)
+  MA: '3',  // Grape (Morado)
+  HH: '4',  // Flamingo (Rosa)
+  GH: '11', // Tomato (Rojo)
+  PI: '5',  // Banana (Amarillo)
+  IN: '2',  // Sage (Verde)
+  ME: '11', // Tomato (Rojo)
+  AM: '10', // Basil (Verde Oscuro)
+  EL: '9',  // Blueberry (Azul Intenso)
+  SI: '7',  // Peacock
+  CB: '2',  // Sage
+  EN: '6',  // Tangerine (Naranja)
+  IE: '9',  // Blueberry
+  DB: '3',  // Grape
+  AD: '5',  // Banana
+  FI: '1',  // Lavender
+  QU: '10', // Basil
+  BIO: '4', // Flamingo
+  CIV: '8', // Graphite
+  ID: '11', // Tomato
+  PR: '5',  // Banana
+};
+
+// Fallback Google Calendar API Color ID mapping from hex colors
+const GOOGLE_COLOR_IDS: Record<string, string> = {
+  '#2563eb': '7',  // Blue -> Peacock
+  '#3b82f6': '7',  // Blue -> Peacock
+  '#0284c7': '1',  // Cyan -> Lavender
+  '#dc2626': '11', // Crimson -> Tomato
+  '#ef4444': '11', // Red -> Tomato
+  '#059669': '2',  // Emerald -> Sage
+  '#10b981': '2',  // Emerald -> Sage
+  '#d97706': '5',  // Amber -> Banana
+  '#f59e0b': '5',  // Amber -> Banana
+  '#7c3aed': '3',  // Purple -> Grape
+  '#8b5cf6': '3',  // Purple -> Grape
+  '#ea580c': '6',  // Orange -> Tangerine
+  '#f97316': '6',  // Orange -> Tangerine
+  '#db2777': '4',  // Hot Pink -> Flamingo
+  '#ec4899': '4',  // Pink -> Flamingo
+  '#65a30d': '10', // Lime -> Basil
+  '#84cc16': '10', // Lime -> Basil
+  '#4f46e5': '9',  // Indigo -> Blueberry
+  '#6366f1': '9',  // Indigo -> Blueberry
+  '#06b6d4': '7',  // Cyan -> Peacock
+  '#0891b2': '7',  // Cyan -> Peacock
+  '#c026d3': '4',  // Magenta -> Flamingo
+  '#0d9488': '2',  // Teal -> Sage
+  '#475569': '8',  // Slate -> Graphite
+};
+
+export function getGoogleColorId(
+  hexColor?: string,
+  courseIndex?: number,
+  prefix?: string,
+  colorMode: 'prefix' | 'course' = 'prefix'
+): string {
+  if (colorMode === 'course' && typeof courseIndex === 'number' && courseIndex >= 0) {
+    return GOOGLE_CONTRAST_CYCLE[courseIndex % GOOGLE_CONTRAST_CYCLE.length];
+  }
+  if (colorMode === 'prefix' && prefix && GOOGLE_PREFIX_COLORS[prefix]) {
+    return GOOGLE_PREFIX_COLORS[prefix];
+  }
+  if (hexColor) {
+    const cleanHex = hexColor.toLowerCase();
+    if (GOOGLE_COLOR_IDS[cleanHex]) {
+      return GOOGLE_COLOR_IDS[cleanHex];
+    }
+  }
+  if (prefix) {
+    let hash = 0;
+    for (let i = 0; i < prefix.length; i++) {
+      hash = prefix.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return GOOGLE_CONTRAST_CYCLE[Math.abs(hash) % GOOGLE_CONTRAST_CYCLE.length];
+  }
+  return '7';
 }
 
 /**
@@ -265,6 +358,7 @@ export async function syncScheduleToGoogleCalendar(
 
   // Prepare all event payloads upfront
   const eventPayloads: { courseCode: string; payload: any }[] = [];
+  const sortedSelectedCourseCodes = Object.keys(selectedSections).sort();
 
   for (const [courseCode, secNum] of Object.entries(selectedSections)) {
     const course = courses.find(c => c.code === courseCode);
@@ -279,8 +373,10 @@ export async function syncScheduleToGoogleCalendar(
       subGroupLabel = matchParen[1];
     }
 
-    const courseColor = getCourseColor(courseCode, colorMode);
-    const googleColorId = getGoogleColorId(courseColor);
+    const courseIdx = sortedSelectedCourseCodes.indexOf(courseCode);
+    const prefix = getCoursePrefix(courseCode);
+    const courseColor = getCourseColor(courseCode, colorMode, courseIdx);
+    const googleColorId = getGoogleColorId(courseColor, courseIdx, prefix, colorMode);
 
     for (const sess of section.sessions) {
       const offset = dayOffset[sess.day] ?? 0;

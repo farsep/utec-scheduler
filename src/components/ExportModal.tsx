@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Calendar, Image, FileSpreadsheet, Download, RefreshCw, Sparkles } from 'lucide-react';
 import { generateICS, downloadFile } from '../utils/icsExporter';
-import { formatLocation } from '../utils/scheduleUtils';
+import { formatLocation, getCourseColor, getCoursePrefix } from '../utils/scheduleUtils';
 import { GoogleCalendarModal } from './GoogleCalendarModal';
 import type { Course } from '../types/schedule';
 
@@ -262,6 +262,42 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     🌈 Un color por cada curso
                   </button>
                 </div>
+
+                {/* Live Color Swatch Preview */}
+                {Object.keys(selectedSections).length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '4px', paddingTop: '6px', borderTop: '1px dashed rgba(255, 255, 255, 0.08)' }}>
+                    {Object.keys(selectedSections).sort().map((code, idx) => {
+                      const course = courses.find(c => c.code === code);
+                      const prefix = getCoursePrefix(code);
+                      const color = icsColorMode === 'course'
+                        ? getCourseColor(code, 'course', idx)
+                        : getCourseColor(code, 'prefix');
+                      return (
+                        <span
+                          key={code}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            fontSize: '0.7rem',
+                            padding: '2px 7px',
+                            borderRadius: '6px',
+                            background: 'rgba(255, 255, 255, 0.04)',
+                            border: `1px solid ${color}77`,
+                            color: 'var(--text-primary)'
+                          }}
+                          title={`${course?.name || code} - Color: ${color}`}
+                        >
+                          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: color, boxShadow: `0 0 5px ${color}` }} />
+                          <span style={{ fontWeight: 600 }}>{code}</span>
+                          {icsColorMode === 'prefix' && (
+                            <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>({prefix})</span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
