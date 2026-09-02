@@ -22,20 +22,28 @@ export interface SyncResult {
   message?: string;
 }
 
-// Google Calendar API Color ID names for user display
-export const GOOGLE_COLOR_NAMES: Record<string, string> = {
-  '1': 'Lavanda',
-  '2': 'Salvia (Verde)',
-  '3': 'Uva (Morado)',
-  '4': 'Flamingo (Rosa)',
-  '5': 'Plátano (Amarillo)',
-  '6': 'Mandarina (Naranja)',
-  '7': 'Pavo Real (Cian)',
-  '8': 'Grafito (Gris)',
-  '9': 'Arándano (Azul)',
-  '10': 'Albahaca (Verde Oscuro)',
-  '11': 'Tomate (Rojo)'
+// Official Google Calendar API Event Colors (names, hex colors, and background tints)
+export const GOOGLE_CALENDAR_COLORS: Record<string, { name: string; hex: string; bg: string }> = {
+  '1': { name: 'Lavanda', hex: '#7986cb', bg: 'rgba(121, 134, 203, 0.15)' },
+  '2': { name: 'Salvia (Verde)', hex: '#33b679', bg: 'rgba(51, 182, 121, 0.15)' },
+  '3': { name: 'Uva (Morado)', hex: '#8e24aa', bg: 'rgba(142, 36, 170, 0.15)' },
+  '4': { name: 'Flamingo (Rosa)', hex: '#e67c73', bg: 'rgba(230, 124, 115, 0.15)' },
+  '5': { name: 'Plátano (Amarillo)', hex: '#f6bf26', bg: 'rgba(246, 191, 38, 0.15)' },
+  '6': { name: 'Mandarina (Naranja)', hex: '#f4511e', bg: 'rgba(244, 81, 30, 0.15)' },
+  '7': { name: 'Pavo Real (Cian)', hex: '#039be5', bg: 'rgba(3, 155, 229, 0.15)' },
+  '8': { name: 'Grafito (Gris)', hex: '#616161', bg: 'rgba(97, 97, 97, 0.15)' },
+  '9': { name: 'Arándano (Azul)', hex: '#3f51b5', bg: 'rgba(63, 81, 181, 0.15)' },
+  '10': { name: 'Albahaca (Verde Oscuro)', hex: '#0b8043', bg: 'rgba(11, 128, 67, 0.15)' },
+  '11': { name: 'Tomate (Rojo)', hex: '#d50000', bg: 'rgba(213, 0, 0, 0.15)' }
 };
+
+export const GOOGLE_COLOR_NAMES: Record<string, string> = Object.fromEntries(
+  Object.entries(GOOGLE_CALENDAR_COLORS).map(([id, info]) => [id, info.name])
+);
+
+export function getGoogleColorHex(colorId: string): string {
+  return GOOGLE_CALENDAR_COLORS[colorId]?.hex || '#039be5';
+}
 
 // Alternating high-contrast sequence of Google Calendar color IDs
 export const GOOGLE_CONTRAST_CYCLE = [
