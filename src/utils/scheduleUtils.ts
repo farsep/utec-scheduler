@@ -135,6 +135,43 @@ export function getCourseColor(
   return getCourseColorByPrefix(courseCode);
 }
 
+/**
+ * Computes a mapping of courseCode -> color for a given list of selected courses,
+ * ensuring maximum contrast either by category (prefixes present in the selection) or individually.
+ * When grouped by prefix, each unique prefix present in the selection is guaranteed a distinct,
+ * high-contrast color compared to the other prefix groups present.
+ */
+export function getScheduleColorMap(
+  courseCodes: string[],
+  mode: 'prefix' | 'course' = 'prefix'
+): Record<string, string> {
+  const sortedCodes = [...courseCodes].sort();
+  const colorMap: Record<string, string> = {};
+
+  if (mode === 'course') {
+    sortedCodes.forEach((code, idx) => {
+      colorMap[code] = CONTRAST_COURSE_COLORS[idx % CONTRAST_COURSE_COLORS.length];
+    });
+  } else {
+    // Collect unique prefixes present specifically in this selection
+    const uniquePrefixes: string[] = [];
+    sortedCodes.forEach(code => {
+      const p = getCoursePrefix(code);
+      if (!uniquePrefixes.includes(p)) {
+        uniquePrefixes.push(p);
+      }
+    });
+
+    sortedCodes.forEach(code => {
+      const p = getCoursePrefix(code);
+      const pIdx = uniquePrefixes.indexOf(p);
+      colorMap[code] = CONTRAST_COURSE_COLORS[pIdx % CONTRAST_COURSE_COLORS.length];
+    });
+  }
+
+  return colorMap;
+}
+
 export function getCourseGradient(courseCode: string, mode: 'prefix' | 'course' = 'prefix', courseIndex?: number): string {
   const color = getCourseColor(courseCode, mode, courseIndex);
   return `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`;

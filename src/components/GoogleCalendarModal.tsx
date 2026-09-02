@@ -11,11 +11,12 @@ import {
   getOrCreateUTECCalendar,
   generateGoogleCalendarWebIntentUrl,
   getGoogleColorId,
+  getScheduleGoogleColorMap,
   GOOGLE_COLOR_NAMES,
   type GoogleCalendarAuth,
   type SyncResult
 } from '../utils/googleCalendarService';
-import { getCourseColor, getCoursePrefix } from '../utils/scheduleUtils';
+import { getCourseColor, getCoursePrefix, getScheduleColorMap } from '../utils/scheduleUtils';
 
 interface GoogleCalendarModalProps {
   isOpen: boolean;
@@ -391,41 +392,45 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
           </div>
 
           {/* Live Google Calendar Color Preview */}
-          {selectedCoursesList.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '4px', paddingTop: '6px', borderTop: '1px dashed rgba(255, 255, 255, 0.08)' }}>
-              {selectedCoursesList.map((item, idx) => {
-                const c = item.course!;
-                const prefix = getCoursePrefix(c.code);
-                const hex = colorMode === 'course'
-                  ? getCourseColor(c.code, 'course', idx)
-                  : getCourseColor(c.code, 'prefix');
-                const gColorId = getGoogleColorId(hex, idx, prefix, colorMode);
-                const gColorName = GOOGLE_COLOR_NAMES[gColorId] || 'Color GCal';
+          {selectedCoursesList.length > 0 && (() => {
+            const courseCodes = selectedCoursesList.map(item => item.course!.code);
+            const hexColorMap = getScheduleColorMap(courseCodes, colorMode);
+            const gcalColorMap = getScheduleGoogleColorMap(courseCodes, colorMode);
 
-                return (
-                  <span
-                    key={c.code}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      fontSize: '0.7rem',
-                      padding: '2px 7px',
-                      borderRadius: '6px',
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: `1px solid ${hex}77`,
-                      color: 'var(--text-primary)'
-                    }}
-                    title={`${c.name} - ${gColorName}`}
-                  >
-                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: hex, boxShadow: `0 0 5px ${hex}` }} />
-                    <span style={{ fontWeight: 600 }}>{c.code}</span>
-                    <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>({gColorName})</span>
-                  </span>
-                );
-              })}
-            </div>
-          )}
+            return (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '4px', paddingTop: '6px', borderTop: '1px dashed rgba(255, 255, 255, 0.08)' }}>
+                {selectedCoursesList.map((item) => {
+                  const c = item.course!;
+                  const prefix = getCoursePrefix(c.code);
+                  const hex = hexColorMap[c.code] || getCourseColor(c.code, colorMode);
+                  const gColorId = gcalColorMap[c.code] || '7';
+                  const gColorName = GOOGLE_COLOR_NAMES[gColorId] || 'Color GCal';
+
+                  return (
+                    <span
+                      key={c.code}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        fontSize: '0.7rem',
+                        padding: '2px 7px',
+                        borderRadius: '6px',
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        border: `1px solid ${hex}77`,
+                        color: 'var(--text-primary)'
+                      }}
+                      title={`${c.name} - ${gColorName}`}
+                    >
+                      <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: hex, boxShadow: `0 0 5px ${hex}` }} />
+                      <span style={{ fontWeight: 600 }}>{c.code}</span>
+                      <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>({gColorName})</span>
+                    </span>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Action Buttons */}
