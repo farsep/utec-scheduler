@@ -1,4 +1,4 @@
-import { formatLocation, getCourseColor, getCoursePrefix } from './scheduleUtils';
+import { formatLocation, getCourseColor, getCoursePrefix, getScheduleColorMap } from './scheduleUtils';
 import type { Course, Session } from '../types/schedule';
 
 export type ICSColorMode = 'prefix' | 'course';
@@ -39,7 +39,7 @@ export function generateICS(
     Dom: 6
   };
 
-  const sortedSelectedCourseCodes = Object.keys(selectedSections).sort();
+  const colorMap = getScheduleColorMap(Object.keys(selectedSections), colorMode);
 
   Object.entries(selectedSections).forEach(([courseCode, secNum]) => {
     const course = courses.find(c => c.code === courseCode);
@@ -55,8 +55,7 @@ export function generateICS(
     }
 
     const coursePrefix = getCoursePrefix(courseCode);
-    const courseIdx = sortedSelectedCourseCodes.indexOf(courseCode);
-    const courseColor = getCourseColor(courseCode, colorMode, courseIdx);
+    const courseColor = colorMap[courseCode] || getCourseColor(courseCode, colorMode);
 
     section.sessions.forEach(sess => {
       const offset = dayOffset[sess.day] ?? 0;

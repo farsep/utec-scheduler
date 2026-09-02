@@ -1,5 +1,5 @@
 import type { Course, Session } from '../types/schedule';
-import { formatLocation, getCourseColor, getCoursePrefix } from './scheduleUtils';
+import { formatLocation, getCourseColor, getCoursePrefix, getScheduleColorMap } from './scheduleUtils';
 
 // Google OAuth 2.0 Client Configuration
 // Uses built-in client ID or custom client ID stored in localStorage/environment
@@ -132,6 +132,43 @@ export function getGoogleColorId(
     return GOOGLE_CONTRAST_CYCLE[Math.abs(hash) % GOOGLE_CONTRAST_CYCLE.length];
   }
   return '7';
+}
+
+/**
+ * Computes a mapping of courseCode -> Google Calendar colorId for a given list of selected courses.
+ * When grouped by prefix, each unique prefix present in the student's selection receives a distinct,
+ * high-contrast Google Calendar color from GOOGLE_CONTRAST_CYCLE, ensuring all categories can be
+ * distinguished instantly in Google Calendar without any repeated or conflicting colors.
+ */
+export function getScheduleGoogleColorMap(
+  courseCodes: string[],
+  mode: 'prefix' | 'course' = 'prefix'
+): Record<string, string> {
+  const sortedCodes = [...courseCodes].sort();
+  const colorMap: Record<string, string> = {};
+
+  if (mode === 'course') {
+    sortedCodes.forEach((code, idx) => {
+      colorMap[code] = GOOGLE_CONTRAST_CYCLE[idx % GOOGLE_CONTRAST_CYCLE.length];
+    });
+  } else {
+    // Unique prefixes present specifically among the courses to upload
+    const uniquePrefixes: string[] = [];
+    sortedCodes.forEach(code => {
+      const p = getCoursePrefix(code);
+      if (!uniquePrefixes.includes(p)) {
+        uniquePrefixes.push(p);
+      }
+    });
+
+    sortedCodes.forEach(code => {
+      const p = getCoursePrefix(code);
+      const pIdx = uniquePrefixes.indexOf(p);
+      colorMap[code] = GOOGLE_CONTRAST_CYCLE[pIdx % GOOGLE_CONTRAST_CYCLE.length];
+    });
+  }
+
+  return colorMap;
 }
 
 /**
@@ -358,7 +395,8 @@ export async function syncScheduleToGoogleCalendar(
 
   // Prepare all event payloads upfront
   const eventPayloads: { courseCode: string; payload: any }[] = [];
-  const sortedSelectedCourseCodes = Object.keys(selectedSections).sort();
+  const gcalColorMap = getScheduleGoogleColorMap(Object.keys(selectedSections), colorMode);
+  const hexColorMap = getScheduleColorMap(Object.keys(selectedSections), colorMode);
 
   for (const [courseCode, secNum] of Object.entries(selectedSections)) {
     const course = courses.find(c => c.code === courseCode);
@@ -373,10 +411,8 @@ export async function syncScheduleToGoogleCalendar(
       subGroupLabel = matchParen[1];
     }
 
-    const courseIdx = sortedSelectedCourseCodes.indexOf(courseCode);
-    const prefix = getCoursePrefix(courseCode);
-    const courseColor = getCourseColor(courseCode, colorMode, courseIdx);
-    const googleColorId = getGoogleColorId(courseColor, courseIdx, prefix, colorMode);
+    const courseColor = hexColorMap[courseCode] || getCourseColor(courseCode, colorMode);
+    const googleColorId = gcalColorMap[courseCode] || '7';
 
     for (const sess of section.sessions) {
       const offset = dayOffset[sess.day] ?? 0;

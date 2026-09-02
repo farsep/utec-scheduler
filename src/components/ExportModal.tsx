@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Calendar, Image, FileSpreadsheet, Download, RefreshCw, Sparkles } from 'lucide-react';
 import { generateICS, downloadFile } from '../utils/icsExporter';
-import { formatLocation, getCourseColor, getCoursePrefix } from '../utils/scheduleUtils';
+import { formatLocation, getCourseColor, getCoursePrefix, getScheduleColorMap } from '../utils/scheduleUtils';
 import { GoogleCalendarModal } from './GoogleCalendarModal';
 import type { Course } from '../types/schedule';
 
@@ -264,14 +264,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 </div>
 
                 {/* Live Color Swatch Preview */}
-                {Object.keys(selectedSections).length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '4px', paddingTop: '6px', borderTop: '1px dashed rgba(255, 255, 255, 0.08)' }}>
-                    {Object.keys(selectedSections).sort().map((code, idx) => {
-                      const course = courses.find(c => c.code === code);
-                      const prefix = getCoursePrefix(code);
-                      const color = icsColorMode === 'course'
-                        ? getCourseColor(code, 'course', idx)
-                        : getCourseColor(code, 'prefix');
+                {Object.keys(selectedSections).length > 0 && (() => {
+                  const colorMap = getScheduleColorMap(Object.keys(selectedSections), icsColorMode);
+                  return (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '4px', paddingTop: '6px', borderTop: '1px dashed rgba(255, 255, 255, 0.08)' }}>
+                      {Object.keys(selectedSections).sort().map((code) => {
+                        const course = courses.find(c => c.code === code);
+                        const prefix = getCoursePrefix(code);
+                        const color = colorMap[code] || getCourseColor(code, icsColorMode);
                       return (
                         <span
                           key={code}
@@ -297,7 +297,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       );
                     })}
                   </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
 
