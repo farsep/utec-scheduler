@@ -365,7 +365,8 @@ export async function syncScheduleToGoogleCalendar(
   courses: Course[],
   selectedSections: Record<string, string>,
   colorMode: 'prefix' | 'course' = 'prefix',
-  targetCalendarId?: string
+  targetCalendarId?: string,
+  reminderMinutes: number = 15
 ): Promise<SyncResult> {
   const calendarId = targetCalendarId || (await getOrCreateUTECCalendar(accessToken));
 
@@ -392,6 +393,18 @@ export async function syncScheduleToGoogleCalendar(
     Sab: 5,
     Dom: 6
   };
+
+  const remindersPayload = reminderMinutes > 0
+    ? {
+        useDefault: false,
+        overrides: [
+          { method: 'popup', minutes: reminderMinutes }
+        ]
+      }
+    : {
+        useDefault: false,
+        overrides: []
+      };
 
   // Prepare all event payloads upfront
   const eventPayloads: { courseCode: string; payload: any }[] = [];
@@ -460,12 +473,7 @@ export async function syncScheduleToGoogleCalendar(
             `RRULE:FREQ=WEEKLY;UNTIL=${untilStr}`
           ],
           colorId: googleColorId,
-          reminders: {
-            useDefault: false,
-            overrides: [
-              { method: 'popup', minutes: 15 }
-            ]
-          }
+          reminders: remindersPayload
         }
       });
     }
