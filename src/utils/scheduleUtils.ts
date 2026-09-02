@@ -11,20 +11,35 @@ export const DAY_NAMES: Record<DayOfWeek, string> = {
   Sab: 'Sábado'
 };
 
-export const COLOR_PALETTES = [
-  { bg: '#3b82f6', border: '#1d4ed8', text: '#ffffff', gradient: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }, // Vibrant Blue
-  { bg: '#10b981', border: '#047857', text: '#ffffff', gradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)' }, // Emerald
-  { bg: '#8b5cf6', border: '#6d28d9', text: '#ffffff', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)' }, // Purple
-  { bg: '#f59e0b', border: '#b45309', text: '#ffffff', gradient: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)' }, // Amber
-  { bg: '#ec4899', border: '#be185d', text: '#ffffff', gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)' }, // Pink
-  { bg: '#06b6d4', border: '#0e7490', text: '#ffffff', gradient: 'linear-gradient(135deg, #06b6d4 0%, #0e7490 100%)' }, // Cyan
-  { bg: '#6366f1', border: '#4338ca', text: '#ffffff', gradient: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)' }, // Indigo
-  { bg: '#14b8a6', border: '#0f766e', text: '#ffffff', gradient: 'linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)' }, // Teal
-  { bg: '#f97316', border: '#c2410c', text: '#ffffff', gradient: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)' }, // Orange
-  { bg: '#a855f7', border: '#7e22ce', text: '#ffffff', gradient: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)' }, // Violet
-  { bg: '#ef4444', border: '#b91c1c', text: '#ffffff', gradient: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)' }, // Rose
-  { bg: '#84cc16', border: '#4d7c0f', text: '#ffffff', gradient: 'linear-gradient(135deg, #84cc16 0%, #4d7c0f 100%)' }, // Lime
+export const CONTRAST_COURSE_COLORS = [
+  '#2563eb', // 0: Vivid Royal Blue
+  '#dc2626', // 1: Crimson Red
+  '#059669', // 2: Emerald Green
+  '#d97706', // 3: Golden Amber
+  '#7c3aed', // 4: Rich Purple
+  '#ea580c', // 5: Vibrant Tangerine
+  '#0891b2', // 6: Deep Cyan / Ocean
+  '#db2777', // 7: Hot Pink
+  '#65a30d', // 8: Vivid Lime
+  '#4f46e5', // 9: Electric Indigo
+  '#c026d3', // 10: Bright Magenta
+  '#0d9488', // 11: Dark Teal
+  '#b45309', // 12: Warm Bronze
+  '#9333ea', // 13: Violet Orchid
+  '#e11d48', // 14: Deep Rose
+  '#0284c7', // 15: Sky Blue
+  '#16a34a', // 16: Spring Green
+  '#ca8a04', // 17: Rich Ochre
+  '#475569', // 18: Slate Steel
+  '#be123c', // 19: Ruby Wine
 ];
+
+export const COLOR_PALETTES = CONTRAST_COURSE_COLORS.map(color => ({
+  bg: color,
+  border: `${color}cc`,
+  text: '#ffffff',
+  gradient: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`
+}));
 
 /**
  * Normalizes string removing accents, diacritics, and converting to lower case for search
@@ -39,24 +54,32 @@ export function normalizeString(str: string): string {
 }
 
 export const PREFIX_COLORS: Record<string, string> = {
-  CS: '#3b82f6', // Computer Science - Blue
-  CC: '#06b6d4', // Ciencias de la Computación - Cyan
-  HH: '#ec4899', // Humanidades - Pink
-  GH: '#f43f5e', // Gestión y Humanidades - Rose
-  MA: '#8b5cf6', // Matemáticas - Purple
-  PI: '#f59e0b', // Proyectos de Ingeniería - Amber
-  IN: '#10b981', // Ingeniería Industrial - Emerald
-  ME: '#ef4444', // Mecatrónica/Mecánica - Red
-  AM: '#84cc16', // Ambiental - Lime
-  EL: '#6366f1', // Electrónica - Indigo
-  SI: '#0e7490', // Sistemas - Dark Cyan
-  CB: '#14b8a6', // Ciencias Básicas - Teal
-  EN: '#f97316', // Energía - Orange
-  IE: '#4f46e5', // Ingeniería Electrónica - Deep Indigo
-  DB: '#a855f7', // Data & Business - Violet
-  AD: '#d97706', // Administración - Warm Amber
-  FI: '#3b82f6', // Física - Blue
-  QU: '#10b981'  // Química - Green
+  CS: '#2563eb', // Computer Science - Electric Blue
+  CC: '#0284c7', // Ciencias de la Computación - Vivid Cyan
+  MA: '#7c3aed', // Matemáticas - Rich Purple
+  HH: '#db2777', // Humanidades - Hot Pink
+  GH: '#e11d48', // Gestión y Humanidades - Deep Rose
+  PI: '#d97706', // Proyectos de Ingeniería - Golden Amber
+  IN: '#059669', // Ingeniería Industrial - Emerald Green
+  ME: '#dc2626', // Mecatrónica / Mecánica - Crimson Red
+  AM: '#65a30d', // Ambiental - Vivid Lime
+  EL: '#4f46e5', // Electrónica - Electric Indigo
+  SI: '#0d9488', // Sistemas - Dark Teal
+  CB: '#0891b2', // Ciencias Básicas - Ocean Cyan
+  EN: '#ea580c', // Energía - Tangerine Orange
+  IE: '#1e40af', // Ing. Electrónica e Informática - Deep Navy Blue
+  DB: '#9333ea', // Data & Business - Violet Orchid
+  AD: '#b45309', // Administración - Warm Bronze
+  FI: '#06b6d4', // Física - Bright Cyan
+  QU: '#16a34a', // Química - Spring Jade Green
+  BIO: '#c026d3', // Bioingeniería - Bright Magenta
+  BI: '#c026d3', // Bioingeniería
+  CIV: '#c2410c', // Ingeniería Civil - Terracotta
+  CI: '#c2410c', // Civil
+  MIN: '#475569', // Minería - Slate
+  MI: '#475569', // Minería
+  ID: '#be123c', // Idiomas / Inglés - Ruby
+  PR: '#ca8a04', // Prácticas Preprofesionales - Ochre
 };
 
 export function getCoursePrefix(courseCode: string): string {
@@ -67,6 +90,7 @@ export function getCoursePrefix(courseCode: string): string {
 
 /**
  * Returns a consistent distinct color configuration for a given course based on its code prefix (CS, CC, HH, etc.).
+ * Guarantees contrasting colors between distinct prefix groups.
  */
 export function getCourseColorByPrefix(courseCode: string): string {
   const prefix = getCoursePrefix(courseCode);
@@ -77,28 +101,42 @@ export function getCourseColorByPrefix(courseCode: string): string {
   for (let i = 0; i < prefix.length; i++) {
     hash = prefix.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const index = Math.abs(hash) % COLOR_PALETTES.length;
-  return COLOR_PALETTES[index].bg;
+  const index = Math.abs(hash) % CONTRAST_COURSE_COLORS.length;
+  return CONTRAST_COURSE_COLORS[index];
 }
 
 /**
- * Returns a distinct color configuration for each individual course code (CS1102 vs CS2101).
+ * Returns a distinct high-contrast color for an individual course code.
  */
 export function getCourseColorByCode(courseCode: string): string {
   let hash = 0;
   for (let i = 0; i < courseCode.length; i++) {
     hash = courseCode.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const index = Math.abs(hash) % COLOR_PALETTES.length;
-  return COLOR_PALETTES[index].bg;
+  const index = Math.abs(hash) % CONTRAST_COURSE_COLORS.length;
+  return CONTRAST_COURSE_COLORS[index];
 }
 
-export function getCourseColor(courseCode: string, mode: 'prefix' | 'course' = 'prefix'): string {
-  return mode === 'course' ? getCourseColorByCode(courseCode) : getCourseColorByPrefix(courseCode);
+/**
+ * Returns course color either grouped by prefix or individually per course with high contrast.
+ * When courseIndex is provided in 'course' mode, it maps to zero-collision contrasting hues.
+ */
+export function getCourseColor(
+  courseCode: string,
+  mode: 'prefix' | 'course' = 'prefix',
+  courseIndex?: number
+): string {
+  if (mode === 'course') {
+    if (typeof courseIndex === 'number' && courseIndex >= 0) {
+      return CONTRAST_COURSE_COLORS[courseIndex % CONTRAST_COURSE_COLORS.length];
+    }
+    return getCourseColorByCode(courseCode);
+  }
+  return getCourseColorByPrefix(courseCode);
 }
 
-export function getCourseGradient(courseCode: string): string {
-  const color = getCourseColor(courseCode);
+export function getCourseGradient(courseCode: string, mode: 'prefix' | 'course' = 'prefix', courseIndex?: number): string {
+  const color = getCourseColor(courseCode, mode, courseIndex);
   return `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`;
 }
 
