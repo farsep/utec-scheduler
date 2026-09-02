@@ -459,7 +459,13 @@ export async function syncScheduleToGoogleCalendar(
           recurrence: [
             `RRULE:FREQ=WEEKLY;UNTIL=${untilStr}`
           ],
-          colorId: googleColorId
+          colorId: googleColorId,
+          reminders: {
+            useDefault: false,
+            overrides: [
+              { method: 'popup', minutes: 15 }
+            ]
+          }
         }
       });
     }

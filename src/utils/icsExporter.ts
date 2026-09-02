@@ -93,6 +93,11 @@ export function generateICS(
         `CATEGORIES:${coursePrefix}`,
         `COLOR:${courseColor}`,
         `X-APPLE-CALENDAR-COLOR:${courseColor}`,
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        'DESCRIPTION:Recordatorio de clase UTEC (15 minutos antes)',
+        'TRIGGER:-PT15M',
+        'END:VALARM',
         'END:VEVENT'
       );
     });

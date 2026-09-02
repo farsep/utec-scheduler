@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Calendar, Image, FileSpreadsheet, Download, RefreshCw, Sparkles } from 'lucide-react';
+import { X, Calendar, Image, FileSpreadsheet, Download, RefreshCw, Sparkles, Bell } from 'lucide-react';
 import { generateICS, downloadFile } from '../utils/icsExporter';
 import { formatLocation, getCourseColor, getCoursePrefix, getScheduleColorMap } from '../utils/scheduleUtils';
 import { GoogleCalendarModal } from './GoogleCalendarModal';
@@ -299,6 +299,23 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   </div>
                   );
                 })()}
+
+                {/* 15-minute reminder notice */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  fontSize: '0.73rem',
+                  color: 'var(--accent-emerald)',
+                  background: 'rgba(16, 185, 129, 0.08)',
+                  padding: '6px 10px',
+                  borderRadius: '7px',
+                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                  marginTop: '4px'
+                }}>
+                  <Bell size={13} style={{ flexShrink: 0 }} />
+                  <span>Alarma / Recordatorio incluido: <strong>15 minutos antes</strong> de cada clase.</span>
+                </div>
               </div>
             </div>
 
