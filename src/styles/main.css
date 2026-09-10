@@ -694,39 +694,91 @@ body::after {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   flex-shrink: 0;
+  gap: 16px;
+  min-width: 0; /* allows shrinking */
 }
 
 .option-tabs {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.tab-btn {
+.option-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1 1 0; /* Grow and shrink equally */
+  min-width: 44px; /* Icon + padding */
+  max-width: max-content; /* Don't grow beyond natural size */
+  container-type: inline-size;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  padding: 6px 14px;
   border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  transition: var(--transition-fast);
+  padding: 0 4px;
+}
+
+.tab-wrapper:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.tab-wrapper.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.tab-content-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  padding: 6px 10px;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: var(--transition-fast);
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
 }
 
-.tab-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
+.tab-content-btn .tab-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
-.tab-btn.active {
-  background: var(--accent-gradient);
-  color: white;
-  border-color: transparent;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+/* Hide count pill when wrapper gets too small */
+@container (max-width: 160px) {
+  .tab-content-btn .pill-count {
+    display: none;
+  }
+}
+
+/* Hide text entirely when it's very small */
+@container (max-width: 80px) {
+  .tab-content-btn .tab-name {
+    display: none;
+  }
+  .tab-content-btn {
+    padding: 6px;
+    justify-content: center;
+  }
 }
 
 .add-tab-btn {

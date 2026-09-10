@@ -95,6 +95,45 @@ export const ScheduleApp: React.FC = () => {
     }
   };
 
+  const handleDuplicateOption = (id: string) => {
+    const optionToDuplicate = options.find(o => o.id === id);
+    if (!optionToDuplicate) return;
+
+    const newId = `opt_${Date.now()}`;
+    const baseName = optionToDuplicate.name.replace(/\s*\(Copia\s*\d*\)/, '');
+    
+    let maxCopyNum = 0;
+    options.forEach(o => {
+      if (o.name.startsWith(baseName)) {
+        const match = o.name.match(/\(Copia\s*(\d+)?\)/);
+        if (match) {
+          const num = match[1] ? parseInt(match[1]) : 1;
+          if (num > maxCopyNum) maxCopyNum = num;
+        }
+      }
+    });
+
+    const newName = `${baseName} (Copia ${maxCopyNum + 1})`;
+
+    const newOption: ScheduleOption = {
+      ...optionToDuplicate,
+      id: newId,
+      name: newName,
+      selectedSections: { ...optionToDuplicate.selectedSections }
+    };
+
+    setOptions([...options, newOption]);
+    setActiveOptionId(newId);
+  };
+
+  const handleReorderOptions = (dragIndex: number, dropIndex: number) => {
+    const nextOpts = [...options];
+    const [draggedOption] = nextOpts.splice(dragIndex, 1);
+    nextOpts.splice(dropIndex, 0, draggedOption);
+    setOptions(nextOpts);
+  };
+
+
   // Handlers for File Parsing (Excel, PDF, or Both)
   const handleExcelParsed = (newCourses: Course[], newMeta: MetadataInfo) => {
     setHasExcelLoaded(true);
@@ -267,8 +306,9 @@ export const ScheduleApp: React.FC = () => {
                 activeOptionId={activeOptionId}
                 onSelectOption={setActiveOptionId}
                 onAddOption={handleAddOption}
-                onDuplicateOption={() => {}}
+                onDuplicateOption={handleDuplicateOption}
                 onDeleteOption={handleDeleteOption}
+                onReorderOptions={handleReorderOptions}
               />
 
               <div className="timetable-actions">

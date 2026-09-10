@@ -40,6 +40,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
   });
 
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set(['CC1103', 'CS5352', 'CS2023']));
+  const [collapsedCourses, setCollapsedCourses] = useState<Set<string>>(new Set());
   const [allExpanded, setAllExpanded] = useState<boolean>(false);
 
   // Memoized course filtering
@@ -72,16 +73,30 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
     });
   }, [courses, filterState.searchQuery, filterState.onlyEligible, filterState.typeFilter]);
 
-  const toggleCourseExpand = (code: string) => {
-    setExpandedCourses(prev => {
-      const next = new Set(prev);
-      if (next.has(code)) {
+  const toggleCourseExpand = (code: string, currentlyExpanded: boolean) => {
+    if (currentlyExpanded) {
+      setExpandedCourses(prev => {
+        const next = new Set(prev);
         next.delete(code);
-      } else {
+        return next;
+      });
+      setCollapsedCourses(prev => {
+        const next = new Set(prev);
         next.add(code);
-      }
-      return next;
-    });
+        return next;
+      });
+    } else {
+      setExpandedCourses(prev => {
+        const next = new Set(prev);
+        next.add(code);
+        return next;
+      });
+      setCollapsedCourses(prev => {
+        const next = new Set(prev);
+        next.delete(code);
+        return next;
+      });
+    }
   };
 
   const toggleExpandAll = () => {
@@ -91,6 +106,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
     } else {
       const allCodes = new Set(filteredCourses.map(c => c.code));
       setExpandedCourses(allCodes);
+      setCollapsedCourses(new Set());
       setAllExpanded(true);
     }
   };
@@ -282,7 +298,17 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
           filteredCourses.map(course => {
             const isSelected = !!selectedSections[course.code];
             const activeSectionNum = selectedSections[course.code];
-            const isExpanded = allExpanded || expandedCourses.has(course.code) || isSelected || !!filterState.searchQuery;
+            
+            // A course is expanded if it's explicitly expanded, selected, we are searching, or allExpanded is true
+            // BUT it can be explicitly overridden by collapsedCourses
+            let isExpanded = (allExpanded || expandedCourses.has(course.code) || isSelected || !!filterState.searchQuery);
+            if (collapsedCourses.has(course.code)) {
+              isExpanded = false;
+            }
+            if (expandedCourses.has(course.code)) {
+              isExpanded = true;
+            }
+
             const mainSectionGroups = getCourseMainSectionGroups(course);
 
             return (
@@ -290,7 +316,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                 {/* Course Header Row */}
                 <div
                   className="course-card-header"
-                  onClick={() => toggleCourseExpand(course.code)}
+                  onClick={() => toggleCourseExpand(course.code, isExpanded)}
                 >
                   <div className="course-info">
                     <div className="course-code-row">
