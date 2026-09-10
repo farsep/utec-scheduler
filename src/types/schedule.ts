@@ -53,6 +53,7 @@ export interface MetadataInfo {
   reportTime?: string;
   isConsolidado?: boolean;
   documentType?: 'Consolidado de Matrícula' | 'Consolidado de Horario' | 'Cursos Habilitados' | string;
+  isJsonImport?: boolean;
 }
 
 export interface ScheduleOption {

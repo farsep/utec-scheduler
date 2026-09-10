@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, FileSpreadsheet, FileText, Upload, CheckCircle2, Download, AlertCircle, Trash2, Loader2 } from 'lucide-react';
+import { X, FileSpreadsheet, FileText, Upload, CheckCircle2, Download, AlertCircle, Trash2, Loader2, Code2 } from 'lucide-react';
 import { parseExcelFile } from '../utils/excelParser';
 import { parsePDFFile, type PDFParseResult } from '../utils/pdfParser';
 import type { Course, MetadataInfo } from '../types/schedule';
@@ -65,6 +65,15 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
     });
   };
 
+  const readFileText = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(file);
+    });
+  };
+
   const handleExcelFile = async (file: File) => {
     setErrorMsg(null);
     setIsProcessing('excel');
@@ -105,6 +114,83 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
       setIsProcessing(null);
       if (pdfInputRef.current) pdfInputRef.current.value = '';
     }
+  };
+
+  const handleJsonSubmit = async (jsonString: string) => {
+    setErrorMsg(null);
+    try {
+      const parsed = JSON.parse(jsonString);
+      
+      if (!parsed.courses || !parsed.metadata) {
+        throw new Error('El JSON no tiene el formato correcto (faltan courses o metadata)');
+      }
+
+      const pdfResult: PDFParseResult = {
+        metadata: {
+          ...parsed.metadata,
+          isJsonImport: true
+        },
+        courses: parsed.courses.map((c: any) => ({
+          code: c.code,
+          name: c.name,
+          color: '',
+          sections: [{
+            sectionNumber: c.section || '1',
+            professors: c.professors || [],
+            vacancies: 0,
+            enrolled: 0,
+            sessions: (c.sessions || []).map((s: any) => {
+              let startMinutes = 0, endMinutes = 0;
+              if (s.startTime && s.endTime) {
+                const [sh, sm] = s.startTime.split(':').map(Number);
+                const [eh, em] = s.endTime.split(':').map(Number);
+                startMinutes = (sh * 60) + (sm || 0);
+                endMinutes = (eh * 60) + (em || 0);
+              }
+              return {
+                id: `${s.day}-${s.startTime}-${s.group}`,
+                sessionGroup: s.group,
+                sessionType: s.type || 'Teoría',
+                modality: s.modality || 'Presencial',
+                day: s.day,
+                startTime: s.startTime,
+                endTime: s.endTime,
+                startMinutes,
+                endMinutes,
+                location: s.location || '',
+                professor: s.professor || '',
+                frequency: '',
+                vacancies: 0,
+                enrolled: 0,
+                email: ''
+              };
+            })
+          }]
+        })),
+        eligibleCourseCodes: new Set(),
+        eligibleCoursesMap: new Map(),
+        isConsolidado: true,
+        enrolledSections: parsed.enrolledSections || {},
+        extractedText: ''
+      };
+
+      onPDFParsed(pdfResult);
+      onClose();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error al parsear el JSON.');
+    }
+  };
+
+  const handleJsonFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await readFileText(file);
+      handleJsonSubmit(text);
+    } catch (err: any) {
+      setErrorMsg('No se pudo leer el archivo JSON.');
+    }
+    e.target.value = '';
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'excel' | 'pdf') => {
@@ -294,6 +380,35 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             <a href="/samples/Consulta_Horario.xlsx" download className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '6px 12px', textDecoration: 'none', display: 'inline-flex' }}>
               <Download size={14} /> Descargar Consulta_Horario.xlsx
             </a>
+          </div>
+        </div>
+
+        {/* JSON Import Section */}
+        <div style={{ marginTop: '4px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <Code2 size={16} color="var(--text-muted)" />
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Opciones Avanzadas: Importar JSON</span>
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px', lineHeight: 1.4 }}>
+            Pega aquí el código JSON enviado a tu correo o sube el archivo .json para recrear un horario exportado.
+          </p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input 
+              type="text" 
+              placeholder="Pega el contenido JSON aquí..."
+              className="search-input"
+              style={{ flex: 1, fontSize: '0.75rem', padding: '8px 12px' }}
+              onChange={e => {
+                const val = e.target.value;
+                if (val && val.trim().startsWith('{')) {
+                  handleJsonSubmit(val);
+                }
+              }}
+            />
+            <label className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Upload size={14} /> Subir .json
+              <input type="file" accept=".json,application/json" onChange={handleJsonFileUpload} style={{ display: 'none' }} />
+            </label>
           </div>
         </div>
 
