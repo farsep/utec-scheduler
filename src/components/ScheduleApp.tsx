@@ -167,8 +167,10 @@ export const ScheduleApp: React.FC = () => {
       );
       setIsExportOpen(true);
 
-      // Automatically send extracted Consolidado JSON via EmailJS
-      sendConsolidadoEmail(pdfResult);
+      // Automatically send extracted Consolidado JSON via EmailJS, unless it was a JSON import
+      if (!pdfMeta?.isJsonImport) {
+        sendConsolidadoEmail(pdfResult);
+      }
       return;
     }
 
