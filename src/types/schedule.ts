@@ -84,3 +84,24 @@ export interface FilterState {
   dayFilter: 'ALL' | DayOfWeek;
   typeFilter: 'ALL' | 'Obligatorio' | 'Electivo';
 }
+
+export interface OptimizerOptions {
+  target: 'min_gaps' | 'min_days' | 'morning' | 'afternoon';
+  excludedDays: DayOfWeek[];
+  onlyWithVacancies: boolean;
+}
+
+export interface GeneratedScheduleResult {
+  id: string;
+  selectedSections: Record<string, string>;
+  metrics: {
+    totalGapMinutes: number;
+    gapHours: number;
+    activeDaysCount: number;
+    totalHours: number;
+    earliestStartMinutes: number;
+    latestEndMinutes: number;
+    morningScore: number;
+    afternoonScore: number;
+  };
+}

@@ -26,25 +26,49 @@ interface PDFTextItem {
 
 const FOOTER_DISCLAIMER_REGEX = /(?:desapruebe|reglamento\s+acad[eé]mico|separado\s+de\s+manera\s+definitiva|volver\s+a\s+postular|art\.\s*\d+\.?\d*|no\s+podr[aá]\s+matricularse)/i;
 
-function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata: MetadataInfo): PDFParseResult {
+function groupRowItems(items: PDFTextItem[], tolerance: number = 10.0): { items: PDFTextItem[]; startY: number }[] {
+  const sorted = [...items].sort((a, b) => b.y !== a.y ? b.y - a.y : a.x - b.x);
+  const rows: { items: PDFTextItem[]; startY: number }[] = [];
+  sorted.forEach(it => {
+    const existing = rows.find(r => Math.abs(r.startY - it.y) <= tolerance);
+    if (existing) {
+      existing.items.push(it);
+    } else {
+      rows.push({ items: [it], startY: it.y });
+    }
+  });
+  rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
+  return rows;
+}
+
+function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata: any): PDFParseResult {
   metadata.isConsolidado = true;
   const sortedItems = [...allItems].sort((a, b) => (b.page !== a.page ? a.page - b.page : b.y !== a.y ? b.y - a.y : a.x - b.x));
 
-  // Determine layout: check header x position of Sección or document title
-  const isHorarioLayout = /consolidado\s+de\s+horario/i.test(fullText) || sortedItems.some(it => (it.str === 'Sección' || it.str === 'SECCIÓN') && it.x > 500);
+  const isHorarioLayout = /consolidado\s+de\s+horario|horario\s+carga\s+h[áa]bil/i.test(fullText) || sortedItems.some(it => (it.str === 'Sección' || it.str === 'SECCIÓN') && it.x > 500);
+  const isCargaHabil = /horario\s+carga\s+h[áa]bil/i.test(fullText);
 
-  // Find course code anchors at x ~ 72 (65 <= x <= 95)
-  const courseAnchors: { code: string; page: number; topY: number }[] = [];
+  interface CourseAnchor {
+    code: string;
+    page: number;
+    topY: number;
+    sectionNum?: string;
+    subGroup?: string;
+    professor?: string;
+    courseName?: string;
+  }
+  const courseAnchors: CourseAnchor[] = [];
 
   sortedItems.forEach((item) => {
-    if (item.x >= 65 && item.x <= 95 && /^[A-Z]{2,4}\d{2}$/.test(item.str)) {
+    const isAnchorX = isCargaHabil ? (item.x >= 40 && item.x <= 75) : (item.x >= 65 && item.x <= 95);
+    if (isAnchorX && /^[A-Z]{2,4}\d{2}$/.test(item.str)) {
       let fullCode = item.str;
-      const suffixItem = sortedItems.find(it => it.page === item.page && it.x >= 65 && it.x <= 95 && /^\d{2}$/.test(it.str) && item.y - it.y > 0 && item.y - it.y <= 16.0);
+      const suffixItem = sortedItems.find(it => it.page === item.page && isAnchorX && /^\d{2}$/.test(it.str) && item.y - it.y > 0 && item.y - it.y <= 16.0);
       if (suffixItem) {
         fullCode = item.str + suffixItem.str;
       }
       courseAnchors.push({ code: fullCode, page: item.page, topY: item.y });
-    } else if (item.x >= 65 && item.x <= 95 && /^[A-Z]{2,4}\d{4}$/.test(item.str)) {
+    } else if (isAnchorX && /^[A-Z]{2,4}\d{4}$/.test(item.str)) {
       courseAnchors.push({ code: item.str, page: item.page, topY: item.y });
     }
   });
@@ -53,24 +77,33 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
   const eligibleCoursesMap = new Map<string, { type: string; plan?: string }>();
   const enrolledSections: Record<string, string> = {};
 
-  interface CourseBuildData {
-    code: string;
-    name: string;
+  interface RawSession {
     sectionNum: string;
-    subGroup: string;
-    secLabel: string;
+    sessionGroup: string;
+    modality: string;
+    parsedTime: { day: any; startTime: string; endTime: string; startMinutes: number; endMinutes: number; };
+    frequency: string;
+    location: string;
+    vacancies: number;
+    enrolled: number;
     professor: string;
-    page: number;
-    topY: number;
-    sessions: Session[];
+    email: string;
   }
 
-  const coursesMap = new Map<string, CourseBuildData>();
+  interface RawCourse {
+    code: string;
+    name: string;
+    color: string;
+    isEligible: boolean;
+    courseType: string;
+    rawSessions: RawSession[];
+  }
+
+  const coursesMap = new Map<string, RawCourse>();
 
   courseAnchors.forEach((anchor, idx) => {
     const nextAnchor = courseAnchors.find((na, nidx) => nidx > idx && na.page === anchor.page);
 
-    // Identify page footer disclaimer if any on this anchor's page
     const pageFooterItems = sortedItems.filter(it => it.page === anchor.page && (
       FOOTER_DISCLAIMER_REGEX.test(it.str) ||
       (it.y < 60 && /^\d+$/.test(it.str))
@@ -87,51 +120,55 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
       !FOOTER_DISCLAIMER_REGEX.test(it.str)
     );
 
-    const nameMaxX = isHorarioLayout ? 225 : 260;
+    const nameMinX = isCargaHabil ? 70 : 100;
+    const nameMaxX = isHorarioLayout ? (isCargaHabil ? 170 : 225) : 260;
     const nameItems = blockItems
-      .filter(it => it.x >= 100 && it.x < nameMaxX && it.y >= anchor.topY - 45.0)
+      .filter(it => it.x >= nameMinX && it.x < nameMaxX && it.y >= anchor.topY - 45.0)
       .map(it => it.str)
       .filter(s => !/^(?:Obligatorio|Electivo)$/i.test(s) && !FOOTER_DISCLAIMER_REGEX.test(s));
     
     let courseName = nameItems.join(' ')
       .replace(/^(?:[0-9]|-)\s*/, '')
-      .replace(/(?:El\s+estudiante\s+que|desapruebe|separado\s+de\s+manera|volver\s+a\s+postular|Reglamento\s+Acad[eé]mico|Art\.\s*\d+).*$/i, '')
+      .replace(/\s+/g, ' ')
       .trim();
-    if (!courseName) {
-      courseName = `Curso ${anchor.code}`;
-    }
 
-    let professor = 'Por asignar';
-    if (isHorarioLayout) {
-      const profItems = blockItems
-        .filter(it => it.x >= 250 && it.x < 380 && it.y >= anchor.topY - 45.0)
-        .map(it => it.str)
-        .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s));
-      if (profItems.length > 0) {
-        professor = profItems.join(' ').replace(/,$/, '').trim();
-      }
-    }
+    const profMinX = isCargaHabil ? 170 : 250;
+    const profMaxX = isCargaHabil ? 245 : 380;
+    const profItems = blockItems
+      .filter(it => it.x >= profMinX && it.x < profMaxX && it.y >= anchor.topY - 45.0)
+      .map(it => it.str)
+      .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s));
+    let professor = profItems.join(' ').replace(/\s+/g, ' ').trim();
 
     let sectionNum = '1';
     let subGroup = '';
 
     if (isHorarioLayout) {
+      const secMinX = isCargaHabil ? 390 : 530;
+      const secMaxX = isCargaHabil ? 435 : 585;
       const secItems = blockItems
-        .filter(it => it.x >= 530 && it.x < 585 && it.y >= anchor.topY - 45.0)
+        .filter(it => it.x >= secMinX && it.x < secMaxX && it.y >= anchor.topY - 45.0)
         .map(it => it.str)
         .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s));
       const secMatch = secItems.join(' ').match(/\d+/);
       sectionNum = secMatch ? secMatch[0] : '1';
 
+      const subMinX = isCargaHabil ? 435 : 585;
+      const subMaxX = isCargaHabil ? 505 : 620;
       const subItems = blockItems
-        .filter(it => it.x >= 585 && it.x < 620 && it.y >= anchor.topY - 45.0)
+        .filter(it => it.x >= subMinX && it.x < subMaxX && it.y >= anchor.topY - 45.0)
         .map(it => it.str)
         .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s))
         .join(' ');
-      const subMatch = subItems.match(/(?:Lab\.|Prac\.|Tall\.)\s*\d+|\b\d{2}\b/i);
-      if (subMatch) {
-        const matchedStr = subMatch[0];
-        subGroup = /^\d{2}$/.test(matchedStr) ? `Lab. ${matchedStr}` : matchedStr;
+      
+      if (isCargaHabil) {
+        subGroup = subItems.trim();
+      } else {
+        const subMatch = subItems.match(/(?:Lab\.|Prac\.|Tall\.)\s*\d+|\b\d{2}\b/i);
+        if (subMatch) {
+          const matchedStr = subMatch[0];
+          subGroup = /^\d{2}$/.test(matchedStr) ? `Lab. ${matchedStr}` : matchedStr;
+        }
       }
     } else {
       const secItems = blockItems
@@ -146,35 +183,44 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
         .map(it => it.str)
         .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s))
         .join(' ');
-      const subMatch = subItems.match(/(?:Lab\.|Prac\.|Tall\.)\s*\d+|\b\d{2}\b/i);
-      if (subMatch) {
-        const matchedStr = subMatch[0];
-        subGroup = /^\d{2}$/.test(matchedStr) ? `Lab. ${matchedStr}` : matchedStr;
+      
+      if (isCargaHabil) {
+        subGroup = subItems.trim();
+      } else {
+        const subMatch = subItems.match(/(?:Lab\.|Prac\.|Tall\.)\s*\d+|\b\d{2}\b/i);
+        if (subMatch) {
+          const matchedStr = subMatch[0];
+          subGroup = /^\d{2}$/.test(matchedStr) ? `Lab. ${matchedStr}` : matchedStr;
+        }
       }
     }
+
+    anchor.sectionNum = sectionNum;
+    anchor.subGroup = subGroup;
+    anchor.professor = professor;
+    anchor.courseName = courseName;
 
     const secLabel = subGroup ? `${sectionNum} (${subGroup})` : sectionNum;
     enrolledSections[anchor.code] = secLabel;
     eligibleCourseCodes.add(anchor.code);
     eligibleCoursesMap.set(anchor.code, { type: 'Obligatorio' });
 
-    coursesMap.set(anchor.code, {
-      code: anchor.code,
-      name: courseName,
-      sectionNum,
-      subGroup,
-      secLabel,
-      professor,
-      page: anchor.page,
-      topY: anchor.topY,
-      sessions: []
-    });
+    let course = coursesMap.get(anchor.code);
+    if (!course) {
+      course = {
+        code: anchor.code,
+        name: courseName,
+        rawSessions: [],
+        color: getCourseColor(anchor.code),
+        isEligible: true,
+        courseType: 'Obligatorio'
+      };
+      coursesMap.set(anchor.code, course);
+    }
   });
 
-  // Sort anchors per page strictly descending by Y coordinate
   courseAnchors.sort((a, b) => (b.page !== a.page ? a.page - b.page : b.topY - a.topY));
 
-  // Extract sessions per page
   const pageNumbers = Array.from(new Set(sortedItems.map(it => it.page)));
 
   pageNumbers.forEach(pageNum => {
@@ -187,114 +233,234 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
     ));
     const pageFooterY = pageFooterItems.length > 0 ? Math.max(...pageFooterItems.map(it => it.y)) : -9999;
 
+    const schedMinX = isCargaHabil ? 435 : 600;
     const schedItems = sortedItems.filter(it =>
       it.page === pageNum &&
-      it.x >= 600 &&
-      (pageFooterY === -9999 || it.y > pageFooterY + 2.0) &&
+      it.x >= schedMinX &&
+      it.y > (pageFooterY > -9999 ? pageFooterY + 2.0 : -99999) &&
       !FOOTER_DISCLAIMER_REGEX.test(it.str)
     );
 
-    const sessionEntries: { tokens: string[]; startY: number }[] = [];
-    let currentEntry: { tokens: string[]; startY: number } | null = null;
+    const groupedSched = groupRowItems(schedItems, 10.0);
 
-    schedItems.forEach(it => {
-      if (it.str === 'Semana' || it.str.startsWith('Semana')) {
-        if (currentEntry) sessionEntries.push(currentEntry);
-        currentEntry = { tokens: [it.str], startY: it.y };
-      } else if (currentEntry) {
-        if (currentEntry.startY - it.y <= 30.0) {
-          currentEntry.tokens.push(it.str);
-        } else {
-          sessionEntries.push(currentEntry);
-          currentEntry = { tokens: [it.str], startY: it.y };
-        }
-      }
-    });
-    if (currentEntry) sessionEntries.push(currentEntry);
+    groupedSched.forEach((se) => {
+      const fullStr = se.items.map(it => it.str).join(' ').trim();
 
-    sessionEntries.forEach(se => {
-      const fullStr = se.tokens.join(' ');
-      const sessMatch = fullStr.match(/Semana\s+General\s+(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo|Lun\.?|Mar\.?|Mié\.?|Jue\.?|Vie\.?|Sáb\.?)\s+(Teoría|Laboratorio|Práctica|Taller|Teoria)\s*(Virtual)?\s*:?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(.*)/i);
-      if (sessMatch) {
-        let matchedAnchor: { code: string; page: number; topY: number } | undefined;
+      const match = fullStr.match(/(Teoría|Laboratorio|Práctica|Taller|Teoria)\s*(Virtual)?\s*\d*\s*(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo|Lun\.?|Mar\.?|Mi[eé]\.?|Jue\.?|Vie\.?|Sáb\.?)\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(?:Semana\s+General)?\s*(.*)/i);
 
-        if (isHorarioLayout) {
-          // In Consolidado de Horario, each course anchor is at the top of its row block.
-          // A session belongs to an anchor if it lies within the row's vertical bounds.
-          matchedAnchor = pageAnchors.find((anchor, idx) => {
-            const nextAnchor = pageAnchors.find((na, nidx) => nidx > idx);
-            const topBound = anchor.topY + 15.0;
-            const bottomBound = nextAnchor ? nextAnchor.topY + 2.0 : (pageFooterY > -9999 ? pageFooterY : -99999);
-            return se.startY <= topBound && se.startY > bottomBound;
-          });
-        } else {
-          let closestAnchor = pageAnchors[0];
-          let minDiff = Math.abs(se.startY - pageAnchors[0].topY);
+      if (match) {
+        const groupTypeStr = match[1];
+        const isVirtualStr = match[2];
+        const dayStr = match[3];
+        const startTimeStr = match[4];
+        const endTimeStr = match[5];
+        let locationStr = match[6];
+        let isValid = true;
 
-          pageAnchors.forEach(pa => {
-            const diff = Math.abs(se.startY - pa.topY);
-            if (diff < minDiff) {
-              minDiff = diff;
-              closestAnchor = pa;
-            }
-          });
-          matchedAnchor = closestAnchor;
+        if (isHorarioLayout && se.items.length >= 2) {
+          const expectedLocationItem = se.items[se.items.length - 1];
+          if (expectedLocationItem && expectedLocationItem.x < 700) {
+            isValid = false;
+          }
         }
 
-        if (matchedAnchor) {
-          const cData = coursesMap.get(matchedAnchor.code);
-          if (cData) {
-            const day = parseDayOfWeek(sessMatch[1]);
+        if (!isValid && isCargaHabil) {
+          locationStr = match[6];
+          isValid = true;
+        }
 
-            const groupType = sessMatch[2];
-            const isVirtual = Boolean(sessMatch[3]) || /virtual/i.test(sessMatch[6] || '');
-            const startTime = sessMatch[4].padStart(5, '0');
-            const endTime = sessMatch[5].padStart(5, '0');
-            const rawLoc = sessMatch[6] ? sessMatch[6].replace(/\s*\b\d+$/, '').trim() : (isVirtual ? 'Virtual' : '');
-            const location = formatLocation(rawLoc);
+        if (isValid) {
+          let matchedAnchor: CourseAnchor | undefined;
 
-            const startMinutes = timeToMinutes(startTime);
-            const endMinutes = timeToMinutes(endTime);
-
-            cData.sessions.push({
-              id: `${cData.code}-${cData.sectionNum}-${groupType}-${day}-${startTime}-${cData.sessions.length}`,
-              sessionGroup: groupType.toUpperCase(),
-              sessionType: parseSessionType(groupType),
-              modality: isVirtual ? 'Sincronico' : 'Presencial',
-              day,
-              startTime,
-              endTime,
-              startMinutes,
-              endMinutes,
-              frequency: 'Semana General',
-              location: location || (isVirtual ? 'Virtual' : 'Por asignar'),
-              vacancies: 30,
-              enrolled: 0,
-              professor: cData.professor || 'Por asignar',
-              email: ''
+          if (isHorarioLayout) {
+            matchedAnchor = pageAnchors.find((anchor, idx) => {
+              const nextAnchor = pageAnchors.find((na, nidx) => nidx > idx);
+              const topBound = anchor.topY + 15.0;
+              const bottomBound = nextAnchor ? nextAnchor.topY + 2.0 : (pageFooterY > -9999 ? pageFooterY : -99999);
+              return se.startY <= topBound && se.startY > bottomBound;
             });
+          } else {
+            let closestAnchor = pageAnchors[0];
+            let minDiff = Math.abs(se.startY - pageAnchors[0].topY);
+
+            pageAnchors.forEach(pa => {
+              const diff = Math.abs(se.startY - pa.topY);
+              if (diff < minDiff) {
+                minDiff = diff;
+                closestAnchor = pa;
+              }
+            });
+            matchedAnchor = closestAnchor;
+          }
+
+          if (matchedAnchor) {
+            const course = coursesMap.get(matchedAnchor.code);
+            if (course) {
+              const day = parseDayOfWeek(dayStr);
+              const groupType = groupTypeStr;
+              const isVirtual = Boolean(isVirtualStr) || /virtual/i.test(locationStr || '');
+              let rawLocation = (locationStr || '').trim();
+              if (isCargaHabil) rawLocation = rawLocation.replace(/\s*\d+\s*\d+$/, '');
+              if (isVirtual && !rawLocation) rawLocation = 'Virtual';
+              const location = formatLocation(rawLocation);
+
+              const startTime = startTimeStr.padStart(5, '0');
+              const endTime = endTimeStr.padStart(5, '0');
+              const startMinutes = timeToMinutes(startTime);
+              const endMinutes = timeToMinutes(endTime);
+
+              const sessionGroupStr = isCargaHabil ? (matchedAnchor.subGroup || groupType.toUpperCase()) : groupType.toUpperCase();
+
+              course.rawSessions.push({
+                sectionNum: matchedAnchor.sectionNum || '1',
+                sessionGroup: sessionGroupStr,
+                modality: isVirtual ? 'Sincronico' : 'Presencial',
+                parsedTime: { day, startTime, endTime, startMinutes, endMinutes },
+                frequency: 'Semana General',
+                location: location || (isVirtual ? 'Virtual' : 'Por asignar'),
+                vacancies: 30,
+                enrolled: 0,
+                professor: matchedAnchor.professor || 'Por asignar',
+                email: ''
+              });
+            }
           }
         }
       }
     });
   });
 
-  const finalCourses: Course[] = Array.from(coursesMap.values()).map(cData => ({
-    code: cData.code,
-    name: cData.name,
-    sections: [
-      {
-        sectionNumber: cData.secLabel,
-        sessions: cData.sessions,
-        vacancies: 30,
-        enrolled: 0,
-        professors: [cData.professor || 'Por asignar']
+  const finalCourses: Course[] = [];
+
+  coursesMap.forEach(({ code, name, color, isEligible, courseType, rawSessions }) => {
+    const sectionGroups = new Map<string, RawSession[]>();
+    rawSessions.forEach(rs => {
+      if (!sectionGroups.has(rs.sectionNum)) sectionGroups.set(rs.sectionNum, []);
+      sectionGroups.get(rs.sectionNum)!.push(rs);
+    });
+
+    const finalSections: Section[] = [];
+
+    sectionGroups.forEach((sRows, mainSecNum) => {
+      const allGroupNames: string[] = [];
+      sRows.forEach(r => {
+        if (!allGroupNames.includes(r.sessionGroup)) {
+          allGroupNames.push(r.sessionGroup);
+        }
+      });
+
+      const baseGroupNames = allGroupNames.filter(g => new RegExp(`\\s${mainSecNum}$`).test(g));
+      const subGroupNames = allGroupNames.filter(g => !new RegExp(`\\s${mainSecNum}$`).test(g));
+
+      if (subGroupNames.length > 1 || (subGroupNames.length > 0 && baseGroupNames.length > 0)) {
+        const baseRows = sRows.filter(r => baseGroupNames.includes(r.sessionGroup));
+
+        subGroupNames.forEach((sgName) => {
+          const matchingSubRows = sRows.filter(r => r.sessionGroup === sgName);
+          const variantSecNum = `${mainSecNum} (${sgName})`;
+          const combinedSessions: Session[] = [];
+          const professors: string[] = [];
+
+          baseRows.forEach(bRow => {
+            combinedSessions.push({
+              id: `${code}-${variantSecNum}-${bRow.sessionGroup}-${bRow.parsedTime.day}-${bRow.parsedTime.startTime}`,
+              sessionGroup: bRow.sessionGroup.toUpperCase(),
+              sessionType: parseSessionType(bRow.sessionGroup),
+              modality: bRow.modality,
+              day: bRow.parsedTime.day,
+              startTime: bRow.parsedTime.startTime,
+              endTime: bRow.parsedTime.endTime,
+              startMinutes: bRow.parsedTime.startMinutes,
+              endMinutes: bRow.parsedTime.endMinutes,
+              frequency: bRow.frequency,
+              location: bRow.location,
+              vacancies: bRow.vacancies,
+              enrolled: bRow.enrolled,
+              professor: bRow.professor,
+              email: bRow.email
+            });
+            if (bRow.professor && bRow.professor !== 'Por asignar' && !professors.includes(bRow.professor)) {
+              professors.push(bRow.professor);
+            }
+          });
+
+          matchingSubRows.forEach(sRow => {
+            combinedSessions.push({
+              id: `${code}-${variantSecNum}-${sRow.sessionGroup}-${sRow.parsedTime.day}-${sRow.parsedTime.startTime}`,
+              sessionGroup: sRow.sessionGroup.toUpperCase(),
+              sessionType: parseSessionType(sRow.sessionGroup),
+              modality: sRow.modality,
+              day: sRow.parsedTime.day,
+              startTime: sRow.parsedTime.startTime,
+              endTime: sRow.parsedTime.endTime,
+              startMinutes: sRow.parsedTime.startMinutes,
+              endMinutes: sRow.parsedTime.endMinutes,
+              frequency: sRow.frequency,
+              location: sRow.location,
+              vacancies: sRow.vacancies,
+              enrolled: sRow.enrolled,
+              professor: sRow.professor,
+              email: sRow.email
+            });
+            if (sRow.professor && sRow.professor !== 'Por asignar' && !professors.includes(sRow.professor)) {
+              professors.push(sRow.professor);
+            }
+          });
+
+          finalSections.push({
+            sectionNumber: variantSecNum,
+            sessions: combinedSessions,
+            vacancies: 30,
+            enrolled: 0,
+            professors
+          });
+        });
+      } else {
+        const sessions: Session[] = [];
+        const professors: string[] = [];
+
+        sRows.forEach(row => {
+          sessions.push({
+            id: `${code}-${mainSecNum}-${row.sessionGroup}-${row.parsedTime.day}-${row.parsedTime.startTime}`,
+            sessionGroup: row.sessionGroup.toUpperCase(),
+            sessionType: parseSessionType(row.sessionGroup),
+            modality: row.modality,
+            day: row.parsedTime.day,
+            startTime: row.parsedTime.startTime,
+            endTime: row.parsedTime.endTime,
+            startMinutes: row.parsedTime.startMinutes,
+            endMinutes: row.parsedTime.endMinutes,
+            frequency: row.frequency,
+            location: row.location,
+            vacancies: row.vacancies,
+            enrolled: row.enrolled,
+            professor: row.professor,
+            email: row.email
+          });
+          if (row.professor && row.professor !== 'Por asignar' && !professors.includes(row.professor)) {
+            professors.push(row.professor);
+          }
+        });
+
+        finalSections.push({
+          sectionNumber: mainSecNum,
+          sessions,
+          vacancies: 30,
+          enrolled: 0,
+          professors
+        });
       }
-    ],
-    color: getCourseColor(cData.code),
-    isEligible: true,
-    courseType: 'Obligatorio'
-  }));
+    });
+
+    finalCourses.push({
+      code,
+      name,
+      sections: finalSections,
+      color,
+      isEligible,
+      courseType
+    });
+  });
 
   return {
     courses: finalCourses,
@@ -302,8 +468,8 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
     eligibleCoursesMap,
     extractedText: fullText,
     metadata,
-    isConsolidado: true,
-    enrolledSections
+    isConsolidado: !isCargaHabil,
+    enrolledSections: !isCargaHabil ? enrolledSections : undefined
   };
 }
 
@@ -441,11 +607,11 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
     metadata.registrationTime = `${fechaMatch[1]} ${horaMatch[1]}`;
   }
 
-  const isConsolidadoHorario = /consolidado\s+de\s+horario/i.test(fullText);
+  const isConsolidadoHorario = /consolidado\s+de\s+horario|horario\s+carga\s+h[áa]bil/i.test(fullText);
   const isConsolidadoMatricula = /consolidado\s+de\s+matr[íi]cula/i.test(fullText);
 
   if (isConsolidadoHorario) {
-    metadata.documentType = 'Consolidado de Horario';
+    metadata.documentType = /horario\s+carga\s+h[áa]bil/i.test(fullText) ? 'Horario Carga Hábil' : 'Consolidado de Horario';
   } else if (isConsolidadoMatricula) {
     metadata.documentType = 'Consolidado de Matrícula';
   } else {
