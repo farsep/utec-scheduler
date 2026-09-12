@@ -153,44 +153,61 @@ export function generateOptimalSchedules(
     };
   });
 
-  // Sort based on optimization target
-  results.sort((a, b) => {
-    const target = options.target || 'min_gaps';
-    
-    if (target === 'min_gaps') {
+  // Calculate min and max for normalization
+  if (results.length > 0) {
+    let minGaps = Infinity, maxGaps = -Infinity;
+    let minDays = Infinity, maxDays = -Infinity;
+    let minMorning = Infinity, maxMorning = -Infinity;
+    let minAfternoon = Infinity, maxAfternoon = -Infinity;
+
+    results.forEach(r => {
+      const { totalGapMinutes, activeDaysCount, morningScore, afternoonScore } = r.metrics;
+      if (totalGapMinutes < minGaps) minGaps = totalGapMinutes;
+      if (totalGapMinutes > maxGaps) maxGaps = totalGapMinutes;
+      if (activeDaysCount < minDays) minDays = activeDaysCount;
+      if (activeDaysCount > maxDays) maxDays = activeDaysCount;
+      if (morningScore < minMorning) minMorning = morningScore;
+      if (morningScore > maxMorning) maxMorning = morningScore;
+      if (afternoonScore < minAfternoon) minAfternoon = afternoonScore;
+      if (afternoonScore > maxAfternoon) maxAfternoon = afternoonScore;
+    });
+
+    const normalize = (val: number, min: number, max: number, invert = false) => {
+      if (max === min) return 1; // if all combinations share the same value, it's a perfect score for this metric
+      let n = (val - min) / (max - min);
+      return invert ? 1 - n : n;
+    };
+
+    results.forEach(r => {
+      const targets = options.targets || [];
+      if (targets.length === 0) {
+        // Fallback default score if no targets are selected
+        r.score = normalize(r.metrics.totalGapMinutes, minGaps, maxGaps, true);
+        return;
+      }
+
+      let totalScore = 0;
+      targets.forEach(t => {
+        if (t === 'min_gaps') totalScore += normalize(r.metrics.totalGapMinutes, minGaps, maxGaps, true);
+        else if (t === 'min_days') totalScore += normalize(r.metrics.activeDaysCount, minDays, maxDays, true);
+        else if (t === 'morning') totalScore += normalize(r.metrics.morningScore, minMorning, maxMorning, false);
+        else if (t === 'afternoon') totalScore += normalize(r.metrics.afternoonScore, minAfternoon, maxAfternoon, false);
+      });
+
+      r.score = totalScore / targets.length; // Final score is an average (0 to 1)
+    });
+
+    // Sort by final score descending
+    results.sort((a, b) => {
+      const diff = (b.score || 0) - (a.score || 0);
+      if (diff !== 0) return diff;
+      // Tie breakers
       if (a.metrics.totalGapMinutes !== b.metrics.totalGapMinutes) {
         return a.metrics.totalGapMinutes - b.metrics.totalGapMinutes;
       }
-      // Tie breaker: less days
-      if (a.metrics.activeDaysCount !== b.metrics.activeDaysCount) {
-        return a.metrics.activeDaysCount - b.metrics.activeDaysCount;
-      }
-    } else if (target === 'min_days') {
-      if (a.metrics.activeDaysCount !== b.metrics.activeDaysCount) {
-        return a.metrics.activeDaysCount - b.metrics.activeDaysCount;
-      }
-      // Tie breaker: less gaps
-      if (a.metrics.totalGapMinutes !== b.metrics.totalGapMinutes) {
-        return a.metrics.totalGapMinutes - b.metrics.totalGapMinutes;
-      }
-    } else if (target === 'morning') {
-      if (b.metrics.morningScore !== a.metrics.morningScore) {
-        return b.metrics.morningScore - a.metrics.morningScore;
-      }
-      if (a.metrics.totalGapMinutes !== b.metrics.totalGapMinutes) {
-        return a.metrics.totalGapMinutes - b.metrics.totalGapMinutes;
-      }
-    } else if (target === 'afternoon') {
-      if (b.metrics.afternoonScore !== a.metrics.afternoonScore) {
-        return b.metrics.afternoonScore - a.metrics.afternoonScore;
-      }
-      if (a.metrics.totalGapMinutes !== b.metrics.totalGapMinutes) {
-        return a.metrics.totalGapMinutes - b.metrics.totalGapMinutes;
-      }
-    }
-    
-    return 0;
-  });
+      return a.metrics.activeDaysCount - b.metrics.activeDaysCount;
+    });
+  }
 
   // Take top N if needed, or return all
   return results;

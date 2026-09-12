@@ -146,12 +146,13 @@ export const ScheduleApp: React.FC = () => {
     }
   };
 
-  const handleCreateNewGeneratedOption = (newSections: Record<string, string>) => {
+  const handleCreateNewGeneratedOption = (newSections: Record<string, string>): string => {
     const nextNum = options.length + 1;
     const newId = `opt_${Date.now()}`;
+    const newName = `Opción ${String.fromCharCode(64 + nextNum)} (Auto)`;
     const newOpt: ScheduleOption = {
       id: newId,
-      name: `Opción ${String.fromCharCode(64 + nextNum)} (Auto)`,
+      name: newName,
       selectedSections: newSections
     };
     setOptions([...options, newOpt]);
@@ -161,6 +162,8 @@ export const ScheduleApp: React.FC = () => {
     if (newConflicts.length === 0 && Object.keys(newSections).length >= 3) {
       confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
     }
+    
+    return newName;
   };
 
 
