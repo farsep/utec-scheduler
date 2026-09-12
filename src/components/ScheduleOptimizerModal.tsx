@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { X, Sparkles, CheckSquare, Square, Filter, ChevronRight, CheckCircle2, Clock, Calendar, Check, Search } from 'lucide-react';
 import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
@@ -41,9 +41,11 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   const [lastSavedName, setLastSavedName] = useState<string | null>(null);
   const [savedOptionsRecord, setSavedOptionsRecord] = useState<Record<string, string[]>>({});
 
-  // Reset state when modal opens
+  const prevIsOpen = useRef(false);
+
+  // Reset state ONLY when modal transitions from closed to open
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpen.current) {
       setSelectedCourseCodes(initialSelectedCourseCodes.length > 0 ? initialSelectedCourseCodes : courses.map(c => c.code));
       setResults(null);
       setPreviewSchedule(null);
@@ -51,6 +53,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       setLastSavedName(null);
       setSavedOptionsRecord({});
     }
+    prevIsOpen.current = isOpen;
   }, [isOpen, initialSelectedCourseCodes, courses]);
 
   const toggleCourse = (code: string) => {
@@ -353,9 +356,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
           </div>
 
           {/* Right Panel: Results */}
-          <div style={{ flex: 1, padding: '24px', overflowY: 'auto', background: '#0a0d14' }}>
-            {previewSchedule ? (
-              <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px' }}>
+          <div style={{ flex: 1, background: '#0a0d14', position: 'relative', overflow: 'hidden' }}>
+            {/* PREVIEW VIEW */}
+            {previewSchedule && (
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', background: '#0a0d14', zIndex: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Eye size={20} color="var(--accent-primary)" /> Vista Previa del Horario
@@ -379,8 +383,15 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   />
                 </div>
               </div>
-            ) : (
-              <>
+            )}
+
+            {/* RESULTS VIEW */}
+            <div style={{ 
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
+              padding: '24px', overflowY: 'auto', 
+              visibility: previewSchedule ? 'hidden' : 'visible',
+              opacity: previewSchedule ? 0 : 1
+            }}>
                 {!results && !isGenerating && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', textAlign: 'center' }}>
                     <Sparkles size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
@@ -527,8 +538,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                 </div>
               </div>
             )}
-              </>
-            )}
+            </div>
           </div>
         </div>
       </div>
