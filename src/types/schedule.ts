@@ -85,8 +85,10 @@ export interface FilterState {
   typeFilter: 'ALL' | 'Obligatorio' | 'Electivo';
 }
 
+export type OptimizationTarget = 'min_gaps' | 'min_days' | 'morning' | 'afternoon' | 'lunch_break';
+
 export interface OptimizerOptions {
-  targets: ('min_gaps' | 'min_days' | 'morning' | 'afternoon')[];
+  targets: OptimizationTarget[];
   excludedDays?: string[];
   onlyWithVacancies?: boolean;
   
@@ -96,6 +98,14 @@ export interface OptimizerOptions {
   pinnedCourseCodes?: string[];
   minTimeMinutes?: number; // e.g., 480 for 08:00
   maxTimeMinutes?: number; // e.g., 1080 for 18:00
+  
+  // Lunch Break Feature (Soft Constraint)
+  lunchConfig?: {
+    enabled: boolean;
+    startTime: string; // "12:00"
+    endTime: string; // "15:00"
+    durationMinutes: number; // e.g., 60
+  };
 }
 
 // Web Worker Types
@@ -118,5 +128,6 @@ export interface GeneratedScheduleResult {
     latestEndMinutes: number;
     morningScore: number;
     afternoonScore: number;
+    lunchScore: number;
   };
 }

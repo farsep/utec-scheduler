@@ -1,7 +1,11 @@
 import type { Course, Session, DayOfWeek, OptimizerOptions, GeneratedScheduleResult } from '../types/schedule';
 import { detectConflicts, calculateTotalHours } from './scheduleUtils';
 
-export function calculateScheduleMetrics(selectedSections: Record<string, string>, courses: Course[]): {
+export function calculateScheduleMetrics(
+  selectedSections: Record<string, string>, 
+  courses: Course[],
+  options?: OptimizerOptions
+): {
   totalGapMinutes: number;
   gapHours: number;
   activeDaysCount: number;
@@ -10,6 +14,7 @@ export function calculateScheduleMetrics(selectedSections: Record<string, string
   latestEndMinutes: number;
   morningScore: number;
   afternoonScore: number;
+  lunchScore: number; // 0 to 1, fraction of days meeting lunch criteria
 } {
   // Collect all sessions for the week
   const sessionsByDay: Record<string, Session[]> = {
@@ -47,6 +52,7 @@ export function calculateScheduleMetrics(selectedSections: Record<string, string
 
   let totalGapMinutes = 0;
   let activeDaysCount = 0;
+  let daysMeetingLunch = 0;
 
   Object.keys(sessionsByDay).forEach(day => {
     const sessions = sessionsByDay[day];
@@ -54,6 +60,51 @@ export function calculateScheduleMetrics(selectedSections: Record<string, string
       activeDaysCount++;
       // Sort sessions by start time
       sessions.sort((a, b) => a.startMinutes - b.startMinutes);
+
+      let hasLunchBreak = false;
+      const lunchConfig = options?.lunchConfig;
+
+      // If lunch config is active, check the gaps and bounds
+      if (lunchConfig && lunchConfig.enabled) {
+        const timeToMinutes = (timeStr: string) => {
+          const [h, m] = timeStr.split(':').map(Number);
+          return h * 60 + m;
+        };
+        const lunchStart = timeToMinutes(lunchConfig.startTime);
+        const lunchEnd = timeToMinutes(lunchConfig.endTime);
+        const minDuration = lunchConfig.durationMinutes;
+
+        // The free time could be before the first class, between classes, or after the last class (within the window)
+        // Let's create an array of "occupied" blocks within the lunch window
+        const blocksInWindow = sessions
+          .filter(s => s.endMinutes > lunchStart && s.startMinutes < lunchEnd)
+          .map(s => ({
+            start: Math.max(s.startMinutes, lunchStart),
+            end: Math.min(s.endMinutes, lunchEnd)
+          }));
+
+        if (blocksInWindow.length === 0) {
+          // No classes in the lunch window, full break available!
+          if (lunchEnd - lunchStart >= minDuration) hasLunchBreak = true;
+        } else {
+          // Check gap before the first class in the window
+          if (blocksInWindow[0].start - lunchStart >= minDuration) {
+            hasLunchBreak = true;
+          }
+          // Check gaps between classes in the window
+          for (let i = 0; i < blocksInWindow.length - 1; i++) {
+            if (blocksInWindow[i + 1].start - blocksInWindow[i].end >= minDuration) {
+              hasLunchBreak = true;
+            }
+          }
+          // Check gap after the last class in the window
+          if (!hasLunchBreak && lunchEnd - blocksInWindow[blocksInWindow.length - 1].end >= minDuration) {
+            hasLunchBreak = true;
+          }
+        }
+      }
+
+      if (hasLunchBreak) daysMeetingLunch++;
 
       for (let i = 0; i < sessions.length - 1; i++) {
         const gap = sessions[i + 1].startMinutes - sessions[i].endMinutes;
@@ -64,6 +115,10 @@ export function calculateScheduleMetrics(selectedSections: Record<string, string
     }
   });
 
+  const lunchScore = (options?.lunchConfig?.enabled && activeDaysCount > 0) 
+    ? (daysMeetingLunch / activeDaysCount) 
+    : 0;
+
   return {
     totalGapMinutes,
     gapHours: Number((totalGapMinutes / 60).toFixed(2)),
@@ -72,7 +127,8 @@ export function calculateScheduleMetrics(selectedSections: Record<string, string
     earliestStartMinutes: earliestStartMinutes === 24 * 60 ? 0 : earliestStartMinutes,
     latestEndMinutes,
     morningScore,
-    afternoonScore
+    afternoonScore,
+    lunchScore
   };
 }
 
