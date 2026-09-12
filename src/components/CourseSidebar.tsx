@@ -43,6 +43,8 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
   const [collapsedCourses, setCollapsedCourses] = useState<Set<string>>(new Set());
   const [allExpanded, setAllExpanded] = useState<boolean>(false);
 
+  const hasEligibleFilter = courses.some(c => c.isEligible) && courses.some(c => !c.isEligible);
+
   // Memoized course filtering
   const filteredCourses = useMemo(() => {
     const q = filterState.searchQuery ? normalizeString(filterState.searchQuery) : '';
@@ -267,12 +269,14 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
         {/* Filter Pills */}
         <div className="filter-pills">
-          <button
-            className={`filter-pill-btn ${filterState.onlyEligible ? 'active' : ''}`}
-            onClick={() => setFilterState(prev => ({ ...prev, onlyEligible: !prev.onlyEligible }))}
-          >
-            {filterState.onlyEligible ? '✓ Habilitados PDF' : 'Habilitados PDF'}
-          </button>
+          {hasEligibleFilter && (
+            <button
+              className={`filter-pill-btn ${filterState.onlyEligible ? 'active' : ''}`}
+              onClick={() => setFilterState(prev => ({ ...prev, onlyEligible: !prev.onlyEligible }))}
+            >
+              {filterState.onlyEligible ? '✓ Habilitados PDF' : 'Habilitados PDF'}
+            </button>
+          )}
           <button
             className={`filter-pill-btn ${filterState.typeFilter === 'Obligatorio' ? 'active' : ''}`}
             onClick={() => setFilterState(prev => ({ ...prev, typeFilter: prev.typeFilter === 'Obligatorio' ? 'ALL' : 'Obligatorio' }))}

@@ -96,7 +96,9 @@ body::after {
   display: flex;
   align-items: center;
   gap: 16px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  white-space: nowrap;
   padding: 10px 20px;
   margin: 0 16px 12px 16px;
   background: rgba(18, 26, 43, 0.85);
@@ -104,6 +106,24 @@ body::after {
   border: 1px solid rgba(59, 130, 246, 0.25);
   border-radius: var(--radius-md);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.student-metadata-banner::-webkit-scrollbar {
+  height: 4px;
+}
+
+.student-metadata-banner::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.student-metadata-banner::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+}
+
+.student-metadata-banner::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.5);
 }
 
 .student-meta-item {
@@ -116,6 +136,7 @@ body::after {
   padding: 4px 10px;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
 }
 
 .student-meta-item.student-name {

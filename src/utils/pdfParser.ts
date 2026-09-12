@@ -164,7 +164,7 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
       if (isCargaHabil) {
         subGroup = subItems.trim();
       } else {
-        const subMatch = subItems.match(/(?:Lab\.|Prac\.|Tall\.)\s*\d+|\b\d{2}\b/i);
+        const subMatch = subItems.match(/(?:Lab\w*|Pr[aá]c\w*|Tall\w*)\.?\s*\d+|\b\d{2}\b/i);
         if (subMatch) {
           const matchedStr = subMatch[0];
           subGroup = /^\d{2}$/.test(matchedStr) ? `Lab. ${matchedStr}` : matchedStr;
@@ -187,7 +187,7 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
       if (isCargaHabil) {
         subGroup = subItems.trim();
       } else {
-        const subMatch = subItems.match(/(?:Lab\.|Prac\.|Tall\.)\s*\d+|\b\d{2}\b/i);
+        const subMatch = subItems.match(/(?:Lab\w*|Pr[aá]c\w*|Tall\w*)\.?\s*\d+|\b\d{2}\b/i);
         if (subMatch) {
           const matchedStr = subMatch[0];
           subGroup = /^\d{2}$/.test(matchedStr) ? `Lab. ${matchedStr}` : matchedStr;
@@ -246,7 +246,7 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
     groupedSched.forEach((se) => {
       const fullStr = se.items.map(it => it.str).join(' ').trim();
 
-      const match = fullStr.match(/(Teoría|Laboratorio|Práctica|Taller|Teoria)\s*(Virtual)?\s*\d*\s*(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo|Lun\.?|Mar\.?|Mi[eé]\.?|Jue\.?|Vie\.?|Sáb\.?)\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(?:Semana\s+General)?\s*(.*)/i);
+      const match = fullStr.match(/(Teor[íi]a|Lab\w*|Pr[aá]c\w*|Tall\w*)\s*(Virtual)?\s*\d*\s*(Lun\w*|Mar\w*|Mi[eé]\w*|Jue\w*|Vie\w*|S[aá]b\w*|Dom\w*)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(?:Semana\s+General)?\s*(.*)/i);
 
       if (match) {
         const groupTypeStr = match[1];
@@ -750,7 +750,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
       const rowItems = items.filter(i => i.y > bottomY && i.y <= topY);
 
       const scheduleText = rowItems.filter(i => i.x >= 490 && i.x < 575).map(i => i.str).join(' ');
-      const timeMatch = scheduleText.match(/(Lun|Mar|Mie|Jue|Vie|Sab|Dom)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/i);
+      const timeMatch = scheduleText.match(/(Lun\w*|Mar\w*|Mi[eé]\w*|Jue\w*|Vie\w*|S[aá]b\w*|Dom\w*)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/i);
       if (!timeMatch) return;
 
       const day = parseDayOfWeek(timeMatch[1]);
@@ -790,7 +790,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
 
       // Column 7 (435 <= X < 490): Full Multi-Line Session Group Cell
       const groupText = rowItems.filter(i => i.x >= 435 && i.x < 490).map(i => i.str).join(' ');
-      const groupMatch = groupText.match(/(?:Teoría|Laboratorio|Práctica|Taller|Seminario|Clase|Sesión)[^\d]*\d+/i);
+      const groupMatch = groupText.match(/(?:Teor[íi]a|Lab\w*|Pr[aá]c\w*|Tall\w*|Seminario|Clase|Sesión)[^\d]*\d+/i);
       const sessionGroup = groupMatch ? groupMatch[0] : `TEORÍA ${sectionNum}`;
 
       // Column 8 (340 <= X < 400): Modality Cell
