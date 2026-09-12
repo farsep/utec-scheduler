@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { X, Sparkles, CheckSquare, Square, Filter, ChevronRight, CheckCircle2, Clock, Calendar, Check, Search } from 'lucide-react';
+import { X, Sparkles, CheckSquare, Square, Filter, ChevronRight, CheckCircle2, Clock, Calendar, Check, Search, Coffee } from 'lucide-react';
 import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
 import { formatLocation, getCourseColor, getCoursePrefix, minutesToTime } from '../utils/scheduleUtils';
@@ -47,6 +47,13 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   const [maxCourses, setMaxCourses] = useState(5);
   const [minTime, setMinTime] = useState<string>('07:00');
   const [maxTime, setMaxTime] = useState<string>('22:00');
+  
+  // Lunch Break state
+  const [isLunchEnabled, setIsLunchEnabled] = useState(false);
+  const [lunchStart, setLunchStart] = useState<string>('12:00');
+  const [lunchEnd, setLunchEnd] = useState<string>('15:00');
+  const [lunchDuration, setLunchDuration] = useState<number>(60);
+  
   const [workerProgress, setWorkerProgress] = useState<{ evaluated: number, total: number, validFound: number } | null>(null);
   const workerRef = useRef<Worker | null>(null);
 
@@ -104,6 +111,12 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         pinnedCourseCodes,
         minTimeMinutes: isAdvancedMode ? timeToMinutes(minTime) : undefined,
         maxTimeMinutes: isAdvancedMode ? timeToMinutes(maxTime) : undefined,
+        lunchConfig: {
+          enabled: isLunchEnabled,
+          startTime: lunchStart,
+          endTime: lunchEnd,
+          durationMinutes: lunchDuration
+        }
       };
 
       const worker = new Worker(new URL('../utils/scheduleWorker.ts', import.meta.url), { type: 'module' });
@@ -254,6 +267,65 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                           onChange={setMaxTime} 
                         />
                       </div>
+                    </div>
+                    
+                    <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div 
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', cursor: 'pointer' }}
+                        onClick={() => setIsLunchEnabled(!isLunchEnabled)}
+                      >
+                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                          Garantizar Hora de Almuerzo
+                        </label>
+                        <div style={{ 
+                          width: '36px', height: '20px', background: isLunchEnabled ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
+                          borderRadius: '10px', position: 'relative', transition: 'all 0.3s'
+                        }}>
+                          <div style={{
+                            position: 'absolute', top: '2px', left: isLunchEnabled ? '18px' : '2px',
+                            width: '16px', height: '16px', background: 'white', borderRadius: '50%',
+                            transition: 'all 0.3s'
+                          }} />
+                        </div>
+                      </div>
+                      
+                      {isLunchEnabled && (
+                        <>
+                          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                            <div style={{ flex: 1 }}>
+                              <GlassTimePicker 
+                                label="Inicio Rango" 
+                                value={lunchStart} 
+                                onChange={setLunchStart} 
+                              />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <GlassTimePicker 
+                                label="Fin Rango" 
+                                value={lunchEnd} 
+                                onChange={setLunchEnd} 
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                              Duración mínima
+                            </label>
+                            <select 
+                              className="search-input"
+                              style={{ width: '100%', padding: '6px 10px', fontSize: '0.8rem', WebkitAppearance: 'none', appearance: 'none', background: 'rgba(0,0,0,0.2)' }}
+                              value={lunchDuration}
+                              onChange={(e) => setLunchDuration(Number(e.target.value))}
+                            >
+                              <option value={30}>30 minutos</option>
+                              <option value={45}>45 minutos</option>
+                              <option value={60}>1 hora</option>
+                              <option value={90}>1 hora y media</option>
+                              <option value={120}>2 horas</option>
+                            </select>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -636,6 +708,11 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                               <Calendar size={13} color="var(--text-muted)" /> {res.metrics.activeDaysCount} días de clase
                             </span>
+                            {res.metrics.lunchScore !== undefined && res.metrics.lunchScore > 0 && (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Coffee size={13} color="var(--text-muted)" /> {Math.round(res.metrics.lunchScore * 100)}% almuerzo
+                              </span>
+                            )}
                           </div>
                         </div>
 

@@ -161,7 +161,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
     } as WorkerMessage);
     
     let results: GeneratedScheduleResult[] = validCombinations.map((combo, idx) => {
-      const metrics = calculateScheduleMetrics(combo, courses);
+      const metrics = calculateScheduleMetrics(combo, courses, options);
       return {
         id: `gen_${Date.now()}_${idx}`,
         selectedSections: combo,
@@ -205,6 +205,12 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
         }
         if (options.targets.includes('afternoon')) {
           totalScore += safeNormalize(res.metrics.afternoonScore, minAfternoon, maxAfternoon, false);
+          activeTargets++;
+        }
+        
+        // Lunch Break Soft Constraint
+        if (options.lunchConfig?.enabled) {
+          totalScore += res.metrics.lunchScore;
           activeTargets++;
         }
 
