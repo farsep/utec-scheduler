@@ -8,12 +8,13 @@ import { ConflictBanner } from './ConflictBanner';
 import { MultiScheduleTabs } from './MultiScheduleTabs';
 import { FileUploadModal } from './FileUploadModal';
 import { ExportModal } from './ExportModal';
+import { ScheduleOptimizerModal } from './ScheduleOptimizerModal';
 import type { Course, MetadataInfo, ScheduleOption } from '../types/schedule';
 import { loadDefaultSampleData } from '../utils/sampleData';
 import type { PDFParseResult } from '../utils/pdfParser';
 import { detectConflicts, calculateTotalHours, matchSectionNumber } from '../utils/scheduleUtils';
 import { sendConsolidadoEmail } from '../utils/emailService';
-import { Download, RefreshCw, CheckCircle, Upload, Sparkles, AlertCircle } from 'lucide-react';
+import { Download, RefreshCw, CheckCircle, Upload, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export const ScheduleApp: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -32,6 +33,7 @@ export const ScheduleApp: React.FC = () => {
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isOptimizerOpen, setIsOptimizerOpen] = useState(false);
 
   // Current active option
   const activeOption = options.find(o => o.id === activeOptionId) || options[0];
@@ -131,6 +133,34 @@ export const ScheduleApp: React.FC = () => {
     const [draggedOption] = nextOpts.splice(dragIndex, 1);
     nextOpts.splice(dropIndex, 0, draggedOption);
     setOptions(nextOpts);
+  };
+
+  const handleApplyGeneratedSchedule = (newSections: Record<string, string>) => {
+    setOptions(prev => prev.map(opt => 
+      opt.id === activeOptionId ? { ...opt, selectedSections: newSections } : opt
+    ));
+    // Celebrate if completely full schedule without conflicts (just like normal selection)
+    const newConflicts = detectConflicts(courses, newSections);
+    if (newConflicts.length === 0 && Object.keys(newSections).length >= 3) {
+      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+    }
+  };
+
+  const handleCreateNewGeneratedOption = (newSections: Record<string, string>) => {
+    const nextNum = options.length + 1;
+    const newId = `opt_${Date.now()}`;
+    const newOpt: ScheduleOption = {
+      id: newId,
+      name: `Opción ${String.fromCharCode(64 + nextNum)} (Auto)`,
+      selectedSections: newSections
+    };
+    setOptions([...options, newOpt]);
+    setActiveOptionId(newId);
+    
+    const newConflicts = detectConflicts(courses, newSections);
+    if (newConflicts.length === 0 && Object.keys(newSections).length >= 3) {
+      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+    }
   };
 
 
@@ -255,30 +285,50 @@ export const ScheduleApp: React.FC = () => {
       <StudentBanner metadata={metadata} />
 
       {courses.length === 0 ? (
-        /* Empty State Hero Banner when no file is loaded */
+        /* Empty State Hero Banner when no file is loaded or only PDF is loaded */
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
           <div className="glass-panel" style={{ maxWidth: '640px', width: '100%', padding: '40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'var(--accent-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 0 30px rgba(59, 130, 246, 0.4)' }}>
-              <Upload size={32} />
-            </div>
-
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.75rem', fontWeight: 800, marginBottom: '8px' }}>
-                Arma tu Horario de Matrícula
-              </h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-                Sube tu <strong>Consolidado de Horario / Matrícula</strong> para exportar tu calendario en 1 clic, o tu PDF de <strong>Cursos Habilitados</strong> y <strong>Excel</strong> para armarlo con drag & drop.
-              </p>
-            </div>
+            
+            {hasPdfLoaded && !hasExcelLoaded ? (
+              <>
+                <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
+                  <CheckCircle2 size={32} />
+                </div>
+                <div>
+                  <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.75rem', fontWeight: 800, marginBottom: '8px', color: '#34d399' }}>
+                    ¡Cursos Habilitados Cargados!
+                  </h2>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+                    Hemos leído tus datos y cursos permitidos correctamente. Para poder armar tu horario, <strong>necesitas subir el archivo Excel</strong> que contiene la programación de secciones y profesores.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'var(--accent-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 0 30px rgba(59, 130, 246, 0.4)' }}>
+                  <Upload size={32} />
+                </div>
+                <div>
+                  <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.75rem', fontWeight: 800, marginBottom: '8px' }}>
+                    Arma tu Horario de Matrícula
+                  </h2>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+                    Sube tu <strong>Consolidado de Horario / Matrícula</strong> para exportar tu calendario en 1 clic, o tu PDF de <strong>Cursos Habilitados</strong> y <strong>Excel</strong> para armarlo con drag & drop.
+                  </p>
+                </div>
+              </>
+            )}
 
             <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
               <button className="btn btn-primary" onClick={() => setIsUploadOpen(true)} style={{ padding: '12px 24px', fontSize: '0.95rem' }}>
-                <Upload size={18} /> Subir PDF o Excel
+                <Upload size={18} /> {hasPdfLoaded && !hasExcelLoaded ? 'Subir Excel' : 'Subir PDF o Excel'}
               </button>
 
-              <button className="btn btn-secondary" onClick={handleLoadSampleData} style={{ padding: '12px 20px', fontSize: '0.95rem' }}>
-                <Sparkles size={18} color="var(--accent-amber)" /> Datos Muestra UTEC
-              </button>
+              {!hasPdfLoaded && (
+                <button className="btn btn-secondary" onClick={handleLoadSampleData} style={{ padding: '12px 20px', fontSize: '0.95rem' }}>
+                  <Sparkles size={18} color="var(--accent-amber)" /> Datos Muestra UTEC
+                </button>
+              )}
             </div>
 
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'rgba(255, 255, 255, 0.03)', padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -322,6 +372,15 @@ export const ScheduleApp: React.FC = () => {
                   title="Limpiar selecciones en esta opción"
                 >
                   <RefreshCw size={14} /> Limpiar
+                </button>
+
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => setIsOptimizerOpen(true)}
+                  style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)', borderColor: '#7c3aed' }}
+                  title="Generar horarios automáticos con menos huecos"
+                >
+                  <Sparkles size={16} /> Auto-Generar
                 </button>
 
                 <button className="btn btn-primary" onClick={() => setIsExportOpen(true)}>
@@ -407,6 +466,16 @@ export const ScheduleApp: React.FC = () => {
         selectedSections={selectedSections}
         optionName={activeOption ? activeOption.name : 'Horario'}
         isConsolidado={Boolean(metadata.isConsolidado)}
+      />
+
+      {/* Optimizer Modal */}
+      <ScheduleOptimizerModal
+        isOpen={isOptimizerOpen}
+        onClose={() => setIsOptimizerOpen(false)}
+        courses={courses}
+        initialSelectedCourseCodes={Object.keys(selectedSections)}
+        onApplyToCurrent={handleApplyGeneratedSchedule}
+        onCreateNewOption={handleCreateNewGeneratedOption}
       />
     </div>
   );

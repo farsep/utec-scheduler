@@ -342,6 +342,7 @@ body::after {
   font-size: 0.78rem;
   font-weight: 500;
   cursor: pointer;
+  user-select: none;
   transition: var(--transition-fast);
   flex-shrink: 0;
 }
@@ -748,6 +749,7 @@ body::after {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  user-select: none;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -792,6 +794,7 @@ body::after {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  user-select: none;
   transition: var(--transition-fast);
 }
 
@@ -817,6 +820,7 @@ body::after {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  user-select: none;
   border: 1px solid transparent;
   transition: var(--transition-fast);
 }
@@ -969,6 +973,7 @@ body::after {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.25);
   cursor: pointer;
+  user-select: none;
   overflow: hidden;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
   z-index: 5;
