@@ -3,6 +3,8 @@ import { X, Sparkles, CheckSquare, Square, Filter, ChevronRight, CheckCircle2, C
 import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
 import { formatLocation, getCourseColor, getCoursePrefix, minutesToTime } from '../utils/scheduleUtils';
+import { TimetableGrid } from './TimetableGrid';
+import { Eye } from 'lucide-react';
 
 interface ScheduleOptimizerModalProps {
   isOpen: boolean;
@@ -10,7 +12,7 @@ interface ScheduleOptimizerModalProps {
   courses: Course[];
   initialSelectedCourseCodes: string[];
   onApplyToCurrent: (sections: Record<string, string>) => void;
-  onCreateNewOption: (sections: Record<string, string>) => void;
+  onCreateNewOption: (sections: Record<string, string>) => string;
 }
 
 export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
@@ -26,7 +28,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   const [showOnlyEligible, setShowOnlyEligible] = useState(false);
   
   const [options, setOptions] = useState<OptimizerOptions>({
-    target: 'min_gaps',
+    targets: ['min_gaps'],
     excludedDays: [],
     onlyWithVacancies: false
   });
@@ -34,11 +36,20 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [results, setResults] = useState<GeneratedScheduleResult[] | null>(null);
 
+  const [previewSchedule, setPreviewSchedule] = useState<Record<string, string> | null>(null);
+  const [activeSaveId, setActiveSaveId] = useState<string | null>(null);
+  const [lastSavedName, setLastSavedName] = useState<string | null>(null);
+  const [savedOptionsRecord, setSavedOptionsRecord] = useState<Record<string, string[]>>({});
+
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedCourseCodes(initialSelectedCourseCodes.length > 0 ? initialSelectedCourseCodes : courses.map(c => c.code));
       setResults(null);
+      setPreviewSchedule(null);
+      setActiveSaveId(null);
+      setLastSavedName(null);
+      setSavedOptionsRecord({});
     }
   }, [isOpen, initialSelectedCourseCodes, courses]);
 
@@ -50,6 +61,8 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
 
   const handleGenerate = () => {
     setIsGenerating(true);
+    setPreviewSchedule(null);
+    setSavedOptionsRecord({});
     // Add small timeout to allow UI to update to "generating" state
     setTimeout(() => {
       const generated = generateOptimalSchedules(courses, selectedCourseCodes, options);
@@ -238,22 +251,53 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>2. Preferencias</h4>
                 </div>
 
-                {/* Target */}
+                {/* Targets */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Prioridad de Optimización:</label>
-                  <select 
-                    value={options.target}
-                    onChange={(e) => setOptions({ ...options, target: e.target.value as any })}
-                    style={{
-                      padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', 
-                      background: '#0d131f', color: '#fff', fontSize: '0.85rem', outline: 'none'
-                    }}
-                  >
-                    <option value="min_gaps">⚡ Menor cantidad de huecos (Gaps)</option>
-                    <option value="min_days">📅 Menos días a la semana</option>
-                    <option value="morning">🌅 Preferir Mañanas</option>
-                    <option value="afternoon">🌇 Preferir Tardes/Noches</option>
-                  </select>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Objetivos de Optimización (Selección Múltiple):</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {[
+                      { id: 'min_gaps', label: '⚡ Menos huecos' },
+                      { id: 'min_days', label: '📅 Menos días' },
+                      { id: 'morning', label: '🌅 Mañanas' },
+                      { id: 'afternoon', label: '🌇 Tardes/Noches' }
+                    ].map(target => {
+                      const isActive = options.targets.includes(target.id as any);
+                      return (
+                        <div
+                          key={target.id}
+                          onClick={() => {
+                            setOptions(prev => {
+                              let newTargets = isActive
+                                ? prev.targets.filter(t => t !== target.id)
+                                : [...prev.targets, target.id as any];
+                              
+                              // Mutually exclusive constraints
+                              if (!isActive) {
+                                if (target.id === 'morning') {
+                                  newTargets = newTargets.filter(t => t !== 'afternoon');
+                                } else if (target.id === 'afternoon') {
+                                  newTargets = newTargets.filter(t => t !== 'morning');
+                                }
+                              }
+                              
+                              return { ...prev, targets: newTargets };
+                            });
+                          }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', cursor: 'pointer',
+                            userSelect: 'none', padding: '6px 12px', borderRadius: '8px',
+                            background: isActive ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255,255,255,0.03)',
+                            border: isActive ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid transparent',
+                            color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          {isActive ? <CheckSquare size={14} color="var(--accent-primary)" /> : <Square size={14} color="var(--text-muted)" />}
+                          {target.label}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Filters */}
@@ -310,13 +354,40 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
 
           {/* Right Panel: Results */}
           <div style={{ flex: 1, padding: '24px', overflowY: 'auto', background: '#0a0d14' }}>
-            {!results && !isGenerating && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', textAlign: 'center' }}>
-                <Sparkles size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-                <p style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Listo para Optimizar</p>
-                <p style={{ fontSize: '0.9rem', maxWidth: '300px', lineHeight: 1.5 }}>Selecciona tus cursos y preferencias en el panel izquierdo y presiona "Generar Horarios".</p>
+            {previewSchedule ? (
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Eye size={20} color="var(--accent-primary)" /> Vista Previa del Horario
+                  </h4>
+                  <button 
+                    className="btn btn-secondary"
+                    onClick={() => setPreviewSchedule(null)}
+                    style={{ fontSize: '0.85rem', padding: '6px 12px' }}
+                  >
+                    ← Volver a resultados
+                  </button>
+                </div>
+                <div style={{ flex: 1, minHeight: '500px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                  <TimetableGrid 
+                    courses={courses}
+                    selectedSections={previewSchedule}
+                    conflicts={[]}
+                    draggedSection={null}
+                    onSelectSection={() => {}}
+                    onRemoveSection={() => {}}
+                  />
+                </div>
               </div>
-            )}
+            ) : (
+              <>
+                {!results && !isGenerating && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', textAlign: 'center' }}>
+                    <Sparkles size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                    <p style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Listo para Optimizar</p>
+                    <p style={{ fontSize: '0.9rem', maxWidth: '300px', lineHeight: 1.5 }}>Selecciona tus cursos y preferencias en el panel izquierdo y presiona "Generar Horarios".</p>
+                  </div>
+                )}
 
             {isGenerating && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--accent-primary)' }}>
@@ -359,6 +430,16 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                                 ✨ 0h Huecos
                               </span>
                             )}
+                            {res.score !== undefined && options.targets.length > 0 && (
+                              <span className="glass-pill" style={{ background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-primary)', borderColor: 'rgba(59, 130, 246, 0.4)', fontSize: '0.7rem' }}>
+                                🎯 Score: {Math.round(res.score * 100)}%
+                              </span>
+                            )}
+                            {savedOptionsRecord[res.id] && savedOptionsRecord[res.id].length > 0 && (
+                              <span className="glass-pill" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)', fontSize: '0.7rem' }}>
+                                📌 Guardado en {savedOptionsRecord[res.id].join(', ')}
+                              </span>
+                            )}
                           </div>
                           
                           <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -374,13 +455,35 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button 
                             className="btn btn-secondary" 
-                            style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                            style={{ padding: '6px 10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            onClick={() => setPreviewSchedule(res.selectedSections)}
+                          >
+                            <Eye size={14} /> Preview
+                          </button>
+                          <button 
+                            className="btn btn-secondary" 
+                            style={{ 
+                              padding: '6px 12px', 
+                              fontSize: '0.8rem',
+                              background: activeSaveId === res.id ? 'rgba(16, 185, 129, 0.15)' : undefined,
+                              color: activeSaveId === res.id ? '#10b981' : undefined,
+                              borderColor: activeSaveId === res.id ? '#10b981' : undefined
+                            }}
                             onClick={() => {
-                              onCreateNewOption(res.selectedSections);
-                              onClose();
+                              const newName = onCreateNewOption(res.selectedSections);
+                              setSavedOptionsRecord(prev => ({
+                                ...prev,
+                                [res.id]: [...(prev[res.id] || []), newName]
+                              }));
+                              setActiveSaveId(res.id);
+                              setLastSavedName(newName);
+                              setTimeout(() => {
+                                setActiveSaveId(null);
+                                setLastSavedName(null);
+                              }, 2500);
                             }}
                           >
-                            Crear Nueva Pestaña
+                            {activeSaveId === res.id ? `✅ Guardado en ${lastSavedName}` : 'Crear Nueva Pestaña'}
                           </button>
                           <button 
                             className="btn btn-primary" 
@@ -423,6 +526,8 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   )}
                 </div>
               </div>
+            )}
+              </>
             )}
           </div>
         </div>

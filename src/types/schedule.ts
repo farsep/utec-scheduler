@@ -86,7 +86,7 @@ export interface FilterState {
 }
 
 export interface OptimizerOptions {
-  target: 'min_gaps' | 'min_days' | 'morning' | 'afternoon';
+  targets: Array<'min_gaps' | 'min_days' | 'morning' | 'afternoon'>;
   excludedDays: DayOfWeek[];
   onlyWithVacancies: boolean;
 }
@@ -94,6 +94,7 @@ export interface OptimizerOptions {
 export interface GeneratedScheduleResult {
   id: string;
   selectedSections: Record<string, string>;
+  score?: number;
   metrics: {
     totalGapMinutes: number;
     gapHours: number;
