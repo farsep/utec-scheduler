@@ -86,10 +86,24 @@ export interface FilterState {
 }
 
 export interface OptimizerOptions {
-  targets: Array<'min_gaps' | 'min_days' | 'morning' | 'afternoon'>;
-  excludedDays: DayOfWeek[];
-  onlyWithVacancies: boolean;
+  targets: ('min_gaps' | 'min_days' | 'morning' | 'afternoon')[];
+  excludedDays?: string[];
+  onlyWithVacancies?: boolean;
+  
+  // Advanced Mode Options
+  isAdvancedMode?: boolean;
+  maxCourses?: number;
+  pinnedCourseCodes?: string[];
+  minTimeMinutes?: number; // e.g., 480 for 08:00
+  maxTimeMinutes?: number; // e.g., 1080 for 18:00
 }
+
+// Web Worker Types
+export type WorkerMessage = 
+  | { type: 'START'; courses: Course[]; poolCourseCodes: string[]; options: OptimizerOptions }
+  | { type: 'PROGRESS'; evaluated: number; total: number; validFound: number }
+  | { type: 'COMPLETE'; results: GeneratedScheduleResult[] }
+  | { type: 'ERROR'; message: string };
 
 export interface GeneratedScheduleResult {
   id: string;
