@@ -13,7 +13,8 @@ export const StudentBanner: React.FC<StudentBannerProps> = ({ metadata }) => {
   const isHorario = metadata.documentType === 'Consolidado de Horario';
 
   return (
-    <div className="student-metadata-banner">
+    <div className="student-metadata-banner-container">
+      <div className="student-metadata-scroll">
       {metadata.documentType && metadata.documentType !== 'Horario Carga Hábil' && (
         <div className="student-meta-item" style={{ background: 'rgba(59, 130, 246, 0.12)', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
           <Sparkles size={14} color="var(--accent-primary)" />
@@ -87,6 +88,7 @@ export const StudentBanner: React.FC<StudentBannerProps> = ({ metadata }) => {
           <span className="student-meta-value highlight-turn">{metadata.registrationTime}</span>
         </div>
       )}
+      </div>
     </div>
   );
 };

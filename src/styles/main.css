@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
+  color-scheme: dark;
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 
@@ -42,7 +43,102 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* Firefox Scrollbars */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
+
+/* Custom Text Selection */
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: #ffffff;
+}
+::-moz-selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: #ffffff;
+}
+
+/* Global Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Custom Range Slider */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  background: transparent;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  cursor: pointer;
+  margin-top: -6px;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  transition: transform 0.1s;
+}
+
+input[type=range]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Firefox Range Slider */
+input[type=range]::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  transition: transform 0.1s;
+}
+
+input[type=range]::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+}
+
+input[type=range]::-moz-range-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+input[type=range]:focus {
+  outline: none;
+}
+
 
 html,
 body {
@@ -91,8 +187,46 @@ body::after {
   box-shadow: var(--shadow-subtle);
 }
 
-/* Student Header Metadata Banner */
-.student-metadata-banner {
+.student-metadata-banner-container {
+  margin: 0 16px 12px 16px;
+  background: rgba(18, 26, 43, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+/* El efecto Fade Out a la izquierda */
+.student-metadata-banner-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(to left, transparent, #121a2b);
+  pointer-events: none;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  z-index: 10;
+}
+
+/* El efecto Fade Out a la derecha */
+.student-metadata-banner-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(to right, transparent, #121a2b);
+  pointer-events: none;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  z-index: 10;
+}
+
+.student-metadata-scroll {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -100,31 +234,18 @@ body::after {
   overflow-x: auto;
   white-space: nowrap;
   padding: 10px 20px;
-  margin: 0 16px 12px 16px;
-  background: rgba(18, 26, 43, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  
+  /* Hide scrollbar for Firefox and IE/Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.student-metadata-banner::-webkit-scrollbar {
-  height: 4px;
+/* Hide scrollbar for Chrome/Safari/Webkit */
+.student-metadata-scroll::-webkit-scrollbar {
+  display: none;
 }
 
-.student-metadata-banner::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-}
 
-.student-metadata-banner::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.3);
-  border-radius: 4px;
-}
-
-.student-metadata-banner::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.5);
-}
 
 .student-meta-item {
   display: flex;
@@ -1422,8 +1543,10 @@ body::after {
   }
 
   /* Student Banner — tighter */
-  .student-metadata-banner {
+  .student-metadata-banner-container {
     margin: 0 10px 8px 10px;
+  }
+  .student-metadata-scroll {
     padding: 8px 14px;
     gap: 10px;
   }
@@ -1517,8 +1640,10 @@ body::after {
   }
 
   /* Student Banner — wrap items */
-  .student-metadata-banner {
+  .student-metadata-banner-container {
     margin: 0 8px 8px 8px;
+  }
+  .student-metadata-scroll {
     padding: 8px 10px;
     gap: 6px;
     justify-content: center;
@@ -1679,8 +1804,10 @@ body::after {
   }
 
   /* Student Banner — minimal */
-  .student-metadata-banner {
+  .student-metadata-banner-container {
     margin: 0 6px 6px 6px;
+  }
+  .student-metadata-scroll {
     padding: 6px 8px;
     gap: 4px;
     flex-direction: column;
