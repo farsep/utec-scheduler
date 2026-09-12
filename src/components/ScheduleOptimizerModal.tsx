@@ -67,6 +67,8 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     });
   };
 
+  const hasEligibleFilter = courses.some(c => c.isEligible) && courses.some(c => !c.isEligible);
+
   const filteredCourses = useMemo(() => {
     let result = courses;
     if (showOnlyEligible) {
@@ -167,13 +169,15 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   >
                     Todos
                   </button>
-                  <button 
-                    className="btn btn-secondary" 
-                    style={{ flex: 1, padding: '6px', fontSize: '0.75rem' }}
-                    onClick={() => setSelectedCourseCodes(courses.filter(c => c.isEligible).map(c => c.code))}
-                  >
-                    Solo Habilitados
-                  </button>
+                  {hasEligibleFilter && (
+                    <button 
+                      className="btn btn-secondary" 
+                      style={{ flex: 1, padding: '6px', fontSize: '0.75rem' }}
+                      onClick={() => setSelectedCourseCodes(courses.filter(c => c.isEligible).map(c => c.code))}
+                    >
+                      Solo Habilitados
+                    </button>
+                  )}
                   <button 
                     className="btn btn-secondary" 
                     style={{ flex: 1, padding: '6px', fontSize: '0.75rem' }}
@@ -183,19 +187,21 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   </button>
                 </div>
 
-                <div 
-                  onClick={() => setShowOnlyEligible(!showOnlyEligible)}
-                  style={{ 
-                    display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', cursor: 'pointer',
-                    userSelect: 'none', marginBottom: '8px', padding: '4px 6px',
-                    borderRadius: '6px', transition: 'all 0.2s ease',
-                    background: showOnlyEligible ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
-                    color: showOnlyEligible ? '#34d399' : 'var(--text-muted)'
-                  }}
-                >
-                  {showOnlyEligible ? <CheckSquare size={14} color="#34d399" /> : <Square size={14} color="var(--text-muted)" />}
-                  <span>Mostrar únicamente cursos habilitados en esta lista</span>
-                </div>
+                {hasEligibleFilter && (
+                  <div 
+                    onClick={() => setShowOnlyEligible(!showOnlyEligible)}
+                    style={{ 
+                      display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', cursor: 'pointer',
+                      userSelect: 'none', marginBottom: '8px', padding: '4px 6px',
+                      borderRadius: '6px', transition: 'all 0.2s ease',
+                      background: showOnlyEligible ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
+                      color: showOnlyEligible ? '#34d399' : 'var(--text-muted)'
+                    }}
+                  >
+                    {showOnlyEligible ? <CheckSquare size={14} color="#34d399" /> : <Square size={14} color="var(--text-muted)" />}
+                    <span>Mostrar únicamente cursos habilitados en esta lista</span>
+                  </div>
+                )}
 
                 <div className="course-list-scroll" style={{ maxHeight: '200px', paddingRight: '8px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', padding: '8px', overflowY: 'auto' }}>
                   {filteredCourses.map(course => (
