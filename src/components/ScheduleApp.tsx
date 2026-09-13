@@ -257,6 +257,7 @@ export const ScheduleApp: React.FC = () => {
       setCourses(data.courses);
       setMetadata(data.metadata);
       setHasExcelLoaded(true);
+      setHasPdfLoaded(false);
 
       const initialSelections: Record<string, string> = {};
       const targetCodes = ['CS5352', 'CC1103', 'CS2023', 'HH5101'];

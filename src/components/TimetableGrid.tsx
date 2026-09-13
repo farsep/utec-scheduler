@@ -19,6 +19,7 @@ const abbreviateSession = (session: string) => {
     .replace(/TEORÍA/i, 'TEO')
     .replace(/TEORIA/i, 'TEO')
     .replace(/SEMINARIO/i, 'SEM');
+    // Seminario case just in case...
 };
 
 const MarqueeText: React.FC<{ text: string }> = ({ text }) => {
