@@ -1181,8 +1181,8 @@ body::after {
 }
 
 /* On hover trigger film ticker animation */
-.schedule-block:hover .marquee-film-text,
-.course-card:hover .marquee-film-text {
+.schedule-block:hover .marquee-film-text.is-overflowing,
+.course-card:hover .marquee-film-text.is-overflowing {
   animation: filmMarqueeScroll 6s linear infinite;
 }
 
@@ -2265,3 +2265,4 @@ body::after {
   margin-left: 6px;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.15);
 }
+
