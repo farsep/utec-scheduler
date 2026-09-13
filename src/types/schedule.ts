@@ -112,7 +112,7 @@ export interface OptimizerOptions {
 
 // Web Worker Types
 export type WorkerMessage = 
-  | { type: 'START'; courses: Course[]; poolCourseCodes: string[]; options: OptimizerOptions }
+  | { type: 'START'; courses: Course[]; combinationsChunk: string[][]; options: OptimizerOptions }
   | { type: 'PROGRESS'; evaluated: number; total: number; validFound: number }
   | { type: 'COMPLETE'; results: GeneratedScheduleResult[] }
   | { type: 'ERROR'; message: string };

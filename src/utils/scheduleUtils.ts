@@ -364,3 +364,22 @@ export const REMINDER_OPTIONS: ReminderOption[] = [
   { value: 120, label: '2 horas antes' },
   { value: 1440, label: '1 día antes' },
 ];
+
+export function getCombinations<T>(array: T[], k: number): T[][] {
+  const results: T[][] = [];
+  
+  function helper(start: number, current: T[]) {
+    if (current.length === k) {
+      results.push([...current]);
+      return;
+    }
+    for (let i = start; i < array.length; i++) {
+      current.push(array[i]);
+      helper(i + 1, current);
+      current.pop();
+    }
+  }
+  
+  helper(0, []);
+  return results;
+}
