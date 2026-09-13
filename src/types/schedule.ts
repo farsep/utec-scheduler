@@ -36,6 +36,7 @@ export interface Course {
   isEligible?: boolean; // True if listed in student's PDF
   courseType?: 'Obligatorio' | 'Electivo' | string;
   plan?: string; // e.g. "CD-2021-1"
+  credits?: number; // Added to hold the course credits
 }
 
 export interface MetadataInfo {
