@@ -2322,7 +2322,7 @@ body::after {
 
 .tetris-block {
   position: absolute;
-  width: calc((100% - 48px) / 7);
+  width: calc((100% - 80px) / 7);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(4px);

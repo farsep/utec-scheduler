@@ -120,15 +120,21 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         }
       };
 
-      // Generate combinations on the main thread
-      let combinationsOfCoursesToEvaluate: string[][] = [];
+      // Lazy Generation Setup
+      let chunkTasks: {prefix: string[], startIdx: number}[] = [];
+      let totalCombinations = 0;
+      let poolBase: string[] = [];
+      let neededFromPool = 0;
+      let pinned: string[] = [];
       if (isAdvancedMode) {
-        const pinned = pinnedCourseCodes || [];
+        pinned = pinnedCourseCodes || [];
         const targetCourses = maxCourses || 5;
-        const neededFromPool = targetCourses - pinned.length;
+        neededFromPool = targetCourses - pinned.length;
         
         if (neededFromPool <= 0) {
-          combinationsOfCoursesToEvaluate = [pinned];
+          chunkTasks = [{ prefix: [], startIdx: 0 }];
+          totalCombinations = 1;
+          neededFromPool = 0;
         } else {
           const pool = selectedCourseCodes.filter(c => !pinned.includes(c));
           if (pool.length < neededFromPool) {
@@ -136,18 +142,37 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
             setIsGenerating(false);
             return;
           }
-          const poolCombinations = getCombinations(pool, neededFromPool);
-          combinationsOfCoursesToEvaluate = poolCombinations.map(combo => [...pinned, ...combo]);
+
+          let count = 1;
+          for (let i = 1; i <= neededFromPool; i++) {
+            count = (count * (pool.length - i + 1)) / i;
+          }
+          totalCombinations = count;
+
+          const depth = Math.min(2, neededFromPool);
+          function generateTasks(currentCombo: string[], startIdx: number) {
+            if (currentCombo.length === depth || currentCombo.length === neededFromPool) {
+              chunkTasks.push({ prefix: [...currentCombo], startIdx });
+              return;
+            }
+            for (let i = startIdx; i < pool.length; i++) {
+              currentCombo.push(pool[i]);
+              generateTasks(currentCombo, i + 1);
+              currentCombo.pop();
+            }
+          }
+          generateTasks([], 0);
+          poolBase = pool;
         }
       } else {
-        combinationsOfCoursesToEvaluate = [selectedCourseCodes];
+        chunkTasks = [{ prefix: selectedCourseCodes, startIdx: 0 }];
+        totalCombinations = 1;
+        neededFromPool = selectedCourseCodes.length;
       }
 
-      // Determine number of workers
       const numWorkers = navigator.hardwareConcurrency || 4;
-      const totalCombinations = combinationsOfCoursesToEvaluate.length;
       
-      if (totalCombinations === 0) {
+      if (chunkTasks.length === 0) {
         setResults([]);
         setIsGenerating(false);
         return;
@@ -176,10 +201,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         workerRefs.current.push(worker);
 
         // Calculate chunk for this worker
-        const chunkSize = Math.ceil(totalCombinations / numWorkers);
+        const chunkSize = Math.ceil(chunkTasks.length / numWorkers);
         const startIdx = i * chunkSize;
-        const endIdx = Math.min(startIdx + chunkSize, totalCombinations);
-        const chunk = combinationsOfCoursesToEvaluate.slice(startIdx, endIdx);
+        const endIdx = Math.min(startIdx + chunkSize, chunkTasks.length);
+        const chunk = chunkTasks.slice(startIdx, endIdx);
 
         worker.onmessage = (e: MessageEvent) => {
           const msg = e.data;
@@ -214,7 +239,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         worker.postMessage({
           type: 'START',
           courses,
-          combinationsChunk: chunk,
+          chunkTasks: chunk,
+          poolBase,
+          pinned,
+          neededFromPool,
           options: currentOptions
         });
       }
@@ -778,7 +806,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                     key={i} 
                     className="tetris-block"
                     style={{
-                      left: `${(i % 7) * 14.28}%`,
+                      left: `calc(16px + ${(i % 7)} * (((100% - 80px) / 7) + 8px))`,
                       top: `${Math.random() * 80}%`,
                       height: `${40 + Math.random() * 80}px`,
                       animationDelay: `${Math.random() * 2}s`,
