@@ -336,7 +336,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {isSelected && (
-                      <span className="glass-pill" style={{ color: '#34d399', borderColor: 'rgba(16, 185, 129, 0.4)', background: 'rgba(16, 185, 129, 0.15)' }}>
+                      <span className="glass-pill" style={{ color: '#60a5fa', borderColor: 'rgba(96, 165, 250, 0.4)', background: 'rgba(96, 165, 250, 0.15)' }}>
                         <CheckCircle2 size={12} style={{ display: 'inline', marginRight: '3px' }} />
                         Sec {activeSectionNum}
                       </span>
