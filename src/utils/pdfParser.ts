@@ -43,10 +43,12 @@ function groupRowItems(items: PDFTextItem[], tolerance: number = 10.0): { items:
 
 function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata: any): PDFParseResult {
   metadata.isConsolidado = true;
-  const sortedItems = [...allItems].sort((a, b) => (b.page !== a.page ? a.page - b.page : b.y !== a.y ? b.y - a.y : a.x - b.x));
-
-  const isHorarioLayout = /consolidado\s+de\s+horario|horario\s+carga\s+h[áa]bil/i.test(fullText) || sortedItems.some(it => (it.str === 'Sección' || it.str === 'SECCIÓN') && it.x > 500);
   const isCargaHabil = /horario\s+carga\s+h[áa]bil/i.test(fullText);
+  const isConsolidadoMatricula = /consolidado\s+de\s+matr[íi]cula/i.test(fullText);
+
+  const isHorarioLayout = isConsolidadoMatricula || isCargaHabil || /consolidado\s+de\s+horario/i.test(fullText) || allItems.some(it => (it.str === 'Sección' || it.str === 'SECCIÓN') && it.x > 500);
+
+  const sortedItems = [...allItems].sort((a, b) => (b.page !== a.page ? a.page - b.page : b.y !== a.y ? b.y - a.y : a.x - b.x));
 
   interface CourseAnchor {
     code: string;
@@ -61,10 +63,10 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
   const courseAnchors: CourseAnchor[] = [];
 
   sortedItems.forEach((item) => {
-    const isAnchorX = isCargaHabil ? (item.x >= 40 && item.x <= 75) : (item.x >= 65 && item.x <= 95);
+    const isAnchorX = isConsolidadoMatricula ? (item.x >= 65 && item.x <= 95) : (isCargaHabil ? (item.x >= 40 && item.x <= 75) : (item.x >= 65 && item.x <= 95));
     if (isAnchorX && /^[A-Z]{2,4}\d{2}$/.test(item.str)) {
       let fullCode = item.str;
-      const suffixItem = sortedItems.find(it => it.page === item.page && isAnchorX && /^\d{2}$/.test(it.str) && item.y - it.y > 0 && item.y - it.y <= 16.0);
+      const suffixItem = sortedItems.find(it => it.page === item.page && Math.abs(item.x - it.x) < 20 && /^\d{2}$/.test(it.str) && item.y - it.y > 0 && item.y - it.y <= 16.0);
       if (suffixItem) {
         fullCode = item.str + suffixItem.str;
       }
@@ -73,6 +75,8 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
       courseAnchors.push({ code: item.str, page: item.page, topY: item.y });
     }
   });
+
+  console.log("courseAnchors: ", courseAnchors);
 
   const eligibleCourseCodes = new Set<string>();
   const eligibleCoursesMap = new Map<string, { type: string; plan?: string }>();
@@ -108,10 +112,9 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
     const nextAnchor = courseAnchors.find((na, nidx) => nidx > idx && na.page === anchor.page);
 
     const pageFooterItems = sortedItems.filter(it => it.page === anchor.page && (
-      FOOTER_DISCLAIMER_REGEX.test(it.str) ||
-      (it.y < 60 && /^\d+$/.test(it.str))
+      FOOTER_DISCLAIMER_REGEX.test(it.str)
     ));
-    const pageFooterY = pageFooterItems.length > 0 ? Math.max(...pageFooterItems.map(it => it.y)) : -9999;
+    const pageFooterY = pageFooterItems.length > 0 ? Math.min(...pageFooterItems.map(it => it.y)) : -99999;
 
     const bottomY = nextAnchor ? nextAnchor.topY : (pageFooterY > -9999 ? pageFooterY : anchor.topY - 120.0);
 
@@ -123,8 +126,16 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
       !FOOTER_DISCLAIMER_REGEX.test(it.str)
     );
 
-    const nameMinX = isCargaHabil ? 70 : 100;
-    const nameMaxX = isHorarioLayout ? (isCargaHabil ? 170 : 225) : 260;
+    let nameMinX = 100;
+    let nameMaxX = 260;
+    if (isConsolidadoMatricula) {
+      nameMinX = 100; nameMaxX = 290;
+    } else if (isCargaHabil) {
+      nameMinX = 70; nameMaxX = 170;
+    } else if (isHorarioLayout) {
+      nameMaxX = 225;
+    }
+    
     const nameItems = blockItems
       .filter(it => it.x >= nameMinX && it.x < nameMaxX && it.y >= anchor.topY - 45.0)
       .map(it => it.str)
@@ -141,13 +152,32 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
       .filter(it => it.x >= profMinX && it.x < profMaxX && it.y >= anchor.topY - 45.0)
       .map(it => it.str)
       .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s));
-    let professor = profItems.join(' ').replace(/\s+/g, ' ').trim();
+    let professor = isConsolidadoMatricula ? "Por asignar" : profItems.join(' ').replace(/\s+/g, ' ').trim();
 
     let sectionNum = '1';
     let subGroup = '';
     let credits: number | undefined;
 
-    if (isHorarioLayout) {
+    if (isConsolidadoMatricula) {
+      const secItems = blockItems
+        .filter(it => it.x >= 410 && it.x < 460 && it.y >= anchor.topY - 45.0)
+        .map(it => it.str)
+        .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s));
+      const secMatch = secItems.join(' ').match(/\d+/);
+      sectionNum = secMatch ? secMatch[0] : '1';
+
+      const subItems = blockItems
+        .filter(it => it.x >= 460 && it.x < 550 && it.y >= anchor.topY - 45.0)
+        .map(it => it.str)
+        .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s))
+        .join(' ');
+      
+      const subMatch = subItems.match(/(?:Lab\w*|Pr[aá]c\w*|Tall\w*)\.?\s*\d+|\b\d{2}\b/i);
+      if (subMatch) {
+        const matchedStr = subMatch[0];
+        subGroup = /^\d{2}$/.test(matchedStr) ? `Lab. ${matchedStr}` : matchedStr;
+      }
+    } else if (isHorarioLayout) {
       if (!isCargaHabil) {
         const credItems = blockItems
           .filter(it => it.x >= 380 && it.x < 430 && it.y >= anchor.topY - 15.0)
@@ -247,10 +277,9 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
     if (pageAnchors.length === 0) return;
 
     const pageFooterItems = sortedItems.filter(it => it.page === pageNum && (
-      FOOTER_DISCLAIMER_REGEX.test(it.str) ||
-      (it.y < 60 && /^\d+$/.test(it.str))
+      FOOTER_DISCLAIMER_REGEX.test(it.str)
     ));
-    const pageFooterY = pageFooterItems.length > 0 ? Math.max(...pageFooterItems.map(it => it.y)) : -9999;
+    const pageFooterY = pageFooterItems.length > 0 ? Math.min(...pageFooterItems.map(it => it.y)) : -99999;
 
     const schedMinX = isCargaHabil ? 435 : 600;
     const schedItems = sortedItems.filter(it =>
@@ -319,7 +348,7 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
         if (isValid) {
           let matchedAnchor: CourseAnchor | undefined;
 
-          if (isHorarioLayout) {
+          if (isHorarioLayout && !isConsolidadoMatricula) {
             matchedAnchor = pageAnchors.find((anchor, idx) => {
               const nextAnchor = pageAnchors.find((na, nidx) => nidx > idx);
               const topBound = anchor.topY + 15.0;
@@ -359,7 +388,7 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
               const sessionGroupStr = isCargaHabil ? (matchedAnchor.subGroup || groupType.toUpperCase()) : groupType.toUpperCase();
 
               course.rawSessions.push({
-                sectionNum: matchedAnchor.sectionNum || '1',
+                sectionNum: enrolledSections[matchedAnchor.code] || matchedAnchor.sectionNum || '1',
                 sessionGroup: sessionGroupStr,
                 sessionType: parseSessionType(sessionGroupStr),
                 modality: isVirtual ? 'Sincronico' : 'Presencial',
@@ -659,15 +688,20 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
   }
 
   // Extract Clean Metadata header fields
-  const studentMatch = fullText.match(/Alumno\s*:\s*(.+?)(?=\s*(?:Programa|Carrera|Malla|Periodo|Turno|Código|Nivel|$|\n))/i);
+  // For 'Consolidado de matrícula', the name can be broken across lines with 'Nivel: X' interleaved.
+  const studentMatch = fullText.match(/Alumno\s*:\s*(.+?)(?=\s*Fecha\s*de\s*Matr[ií]cula|Turno|Código|$)/is);
   if (studentMatch) {
-    const fullStudentStr = studentMatch[1].replace(/\s+/g, ' ').trim();
-    if (fullStudentStr.includes(' - ')) {
-      const parts = fullStudentStr.split(' - ');
+    let rawStr = studentMatch[1];
+    // Remove "Nivel: X" from the middle of the string
+    rawStr = rawStr.replace(/Nivel\s*:\s*\d+/i, '');
+    rawStr = rawStr.replace(/\s+/g, ' ').trim();
+
+    if (rawStr.includes(' - ')) {
+      const parts = rawStr.split(' - ');
       metadata.studentCode = parts[0].trim();
       metadata.studentName = parts.slice(1).join(' - ').trim();
     } else {
-      metadata.studentName = fullStudentStr;
+      metadata.studentName = rawStr;
     }
   }
 
