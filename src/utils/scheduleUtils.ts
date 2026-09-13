@@ -182,7 +182,7 @@ export function getCourseGradient(courseCode: string, mode: 'prefix' | 'course' 
  */
 export function formatLocation(loc?: string): string {
   if (!loc) return '';
-  let clean = loc.replace(/UTEC-BA\s*/gi, '').replace(/^-+|-+$/g, '').trim();
+  let clean = loc.replace(/UTEC\s*-\s*BA\s*/gi, '').replace(/^-+|-+$/g, '').trim();
   return clean;
 }
 

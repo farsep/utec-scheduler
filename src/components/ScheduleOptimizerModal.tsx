@@ -607,6 +607,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                     {[
                       { id: 'min_gaps', label: '⚡ Menos huecos' },
                       { id: 'min_days', label: '📅 Menos días' },
+                      { id: 'min_day_gaps', label: '🚫 Sin días puente (huecos)' },
                       { id: 'morning', label: '🌅 Mañanas' },
                       { id: 'afternoon', label: '🌇 Tardes/Noches' }
                     ].map(target => {

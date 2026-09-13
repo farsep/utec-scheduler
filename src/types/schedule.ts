@@ -87,7 +87,7 @@ export interface FilterState {
   typeFilter: 'ALL' | 'Obligatorio' | 'Electivo';
 }
 
-export type OptimizationTarget = 'min_gaps' | 'min_days' | 'morning' | 'afternoon' | 'lunch_break';
+export type OptimizationTarget = 'min_gaps' | 'min_days' | 'morning' | 'afternoon' | 'lunch_break' | 'min_day_gaps';
 
 export interface OptimizerOptions {
   targets: OptimizationTarget[];
@@ -131,5 +131,6 @@ export interface GeneratedScheduleResult {
     morningScore: number;
     afternoonScore: number;
     lunchScore: number;
+    dayGaps: number;
   };
 }

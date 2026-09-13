@@ -116,6 +116,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
           let rawScore = 0;
           if (options.targets.includes('min_gaps')) rawScore -= metrics.totalGapMinutes;
           if (options.targets.includes('min_days')) rawScore -= (metrics.activeDaysCount * 500);
+          if (options.targets.includes('min_day_gaps')) rawScore -= (metrics.dayGaps * 1000); // Heavy penalty for day gaps
           if (options.targets.includes('morning')) rawScore += (metrics.morningScore / 5);
           if (options.targets.includes('afternoon')) rawScore += (metrics.afternoonScore / 5);
           if (options.lunchConfig?.enabled) rawScore += (metrics.lunchScore * 1000);

@@ -14,6 +14,7 @@ export function calculateMetricsFromSessions(
   morningScore: number;
   afternoonScore: number;
   lunchScore: number;
+  dayGaps: number;
 } {
   const sessionsByDay: Record<string, Session[]> = {
     Lun: [], Mar: [], Mie: [], Jue: [], Vie: [], Sab: [], Dom: []
@@ -42,12 +43,16 @@ export function calculateMetricsFromSessions(
   let totalGapMinutes = 0;
   let activeDaysCount = 0;
   let daysMeetingLunch = 0;
+  let firstActiveDayIdx = -1;
+  let lastActiveDayIdx = -1;
 
   const days = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
   for (let d = 0; d < days.length; d++) {
     const day = days[d];
     const sessions = sessionsByDay[day];
     if (sessions.length > 0) {
+      if (firstActiveDayIdx === -1) firstActiveDayIdx = d;
+      lastActiveDayIdx = d;
       activeDaysCount++;
       sessions.sort((a, b) => a.startMinutes - b.startMinutes);
 
@@ -93,6 +98,12 @@ export function calculateMetricsFromSessions(
     }
   }
 
+  let dayGaps = 0;
+  if (firstActiveDayIdx !== -1 && lastActiveDayIdx !== -1) {
+    const span = lastActiveDayIdx - firstActiveDayIdx + 1;
+    dayGaps = span - activeDaysCount;
+  }
+
   return {
     totalGapMinutes,
     gapHours: totalGapMinutes / 60,
@@ -102,7 +113,8 @@ export function calculateMetricsFromSessions(
     latestEndMinutes,
     morningScore,
     afternoonScore,
-    lunchScore: activeDaysCount > 0 ? daysMeetingLunch / activeDaysCount : 0
+    lunchScore: activeDaysCount > 0 ? (daysMeetingLunch / activeDaysCount) : 0,
+    dayGaps
   };
 }
 
@@ -120,6 +132,7 @@ export function calculateScheduleMetrics(
   morningScore: number;
   afternoonScore: number;
   lunchScore: number; // 0 to 1, fraction of days meeting lunch criteria
+  dayGaps: number;
 } {
   // Collect all sessions for the week
   const sessionsByDay: Record<string, Session[]> = {
@@ -233,7 +246,8 @@ export function calculateScheduleMetrics(
     latestEndMinutes,
     morningScore,
     afternoonScore,
-    lunchScore
+    lunchScore,
+    dayGaps: 0
   };
 }
 
