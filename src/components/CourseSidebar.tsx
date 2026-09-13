@@ -34,6 +34,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
   const [filterState, setFilterState] = useState<FilterState>({
     searchQuery: '',
     onlyEligible: false,
+    onlySelected: false,
     modalityFilter: 'ALL',
     dayFilter: 'ALL',
     typeFilter: 'ALL'
@@ -45,7 +46,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
   const hasEligibleFilter = courses.some(c => c.isEligible) && courses.some(c => !c.isEligible);
 
-  // Memoized course filtering
+  // Handle filtering
   const filteredCourses = useMemo(() => {
     const q = filterState.searchQuery ? normalizeString(filterState.searchQuery) : '';
 
@@ -67,13 +68,17 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
         return false;
       }
 
+      if (filterState.onlySelected && !selectedSections[course.code]) {
+        return false;
+      }
+
       if (filterState.typeFilter !== 'ALL' && course.courseType !== filterState.typeFilter) {
         return false;
       }
 
       return true;
     });
-  }, [courses, filterState.searchQuery, filterState.onlyEligible, filterState.typeFilter, hasEligibleFilter]);
+  }, [courses, filterState.searchQuery, filterState.onlyEligible, filterState.onlySelected, filterState.typeFilter, hasEligibleFilter, selectedSections]);
 
   const toggleCourseExpand = (code: string, currentlyExpanded: boolean) => {
     if (currentlyExpanded) {
@@ -269,6 +274,13 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
         {/* Filter Pills */}
         <div className="filter-pills">
+          <button
+            className={`filter-pill-btn ${filterState.onlySelected ? 'active' : ''}`}
+            onClick={() => setFilterState(prev => ({ ...prev, onlySelected: !prev.onlySelected }))}
+            style={filterState.onlySelected ? { background: 'rgba(59, 130, 246, 0.15)', borderColor: 'rgba(59, 130, 246, 0.4)', color: '#60a5fa' } : {}}
+          >
+            {filterState.onlySelected ? '✓ Seleccionados' : 'Seleccionados'}
+          </button>
           {hasEligibleFilter && (
             <button
               className={`filter-pill-btn ${filterState.onlyEligible ? 'active' : ''}`}
@@ -545,7 +557,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
                                       {/* Vacancies & Laboratorio Docente ONLY */}
                                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                                        <span>{subSec.enrolled}/{subSec.vacancies}</span>
+                                        <span>({subSec.enrolled}/{subSec.vacancies} matriculados)</span>
                                         <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{labProfs.join(', ')}</span>
                                       </div>
 

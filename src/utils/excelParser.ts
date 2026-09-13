@@ -132,8 +132,27 @@ export function parseExcelFile(arrayBuffer: ArrayBuffer): ExcelParseResult {
         }
       });
 
-      const baseGroupNames = allGroupNames.filter(g => g.endsWith(` ${mainSecNum}`));
-      const subGroupNames = allGroupNames.filter(g => !g.endsWith(` ${mainSecNum}`));
+      const groupCapacity = new Map<string, number>();
+      allGroupNames.forEach(g => {
+        const capacity = Math.max(
+          ...sRows.filter(r => r.sessionGroup === g).map(r => Math.max(r.vacancies || 0, r.enrolled || 0))
+        );
+        groupCapacity.set(g, capacity);
+      });
+
+      const maxCapacity = Math.max(...Array.from(groupCapacity.values()), 0);
+      let baseGroupNames: string[] = [];
+      let subGroupNames: string[] = [];
+
+      if (maxCapacity > 0) {
+        // Robust logic: base groups are the ones with the largest capacity (Vacancies or Enrolled)
+        baseGroupNames = allGroupNames.filter(g => groupCapacity.get(g) === maxCapacity);
+        subGroupNames = allGroupNames.filter(g => groupCapacity.get(g) !== maxCapacity);
+      } else {
+        // Fallback logic if vacancies data is missing or all zero: use string suffix heuristic
+        baseGroupNames = allGroupNames.filter(g => g.endsWith(` ${mainSecNum}`));
+        subGroupNames = allGroupNames.filter(g => !g.endsWith(` ${mainSecNum}`));
+      }
 
       if (subGroupNames.length > 1) {
         const baseRows = sRows.filter(r => baseGroupNames.includes(r.sessionGroup));

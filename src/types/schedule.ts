@@ -81,6 +81,7 @@ export interface Conflict {
 export interface FilterState {
   searchQuery: string;
   onlyEligible: boolean;
+  onlySelected?: boolean;
   modalityFilter: 'ALL' | 'Presencial' | 'Sincronico';
   dayFilter: 'ALL' | DayOfWeek;
   typeFilter: 'ALL' | 'Obligatorio' | 'Electivo';
