@@ -782,8 +782,8 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                       height: `${40 + Math.random() * 80}px`,
                       animationDelay: `${Math.random() * 2}s`,
                       animationDuration: `${1.5 + Math.random() * 2}s`,
-                      backgroundColor: ['rgba(59, 130, 246, 0.2)', 'rgba(16, 185, 129, 0.2)', 'rgba(244, 63, 94, 0.2)', 'rgba(245, 158, 11, 0.2)'][Math.floor(Math.random() * 4)],
-                      borderColor: ['rgba(59, 130, 246, 0.5)', 'rgba(16, 185, 129, 0.5)', 'rgba(244, 63, 94, 0.5)', 'rgba(245, 158, 11, 0.5)'][Math.floor(Math.random() * 4)]
+                      backgroundColor: `rgba(255, 255, 255, ${0.02 + Math.random() * 0.04})`,
+                      borderColor: `rgba(255, 255, 255, ${0.08 + Math.random() * 0.1})`
                     }}
                   />
                 ))}
