@@ -2173,3 +2173,95 @@ body::after {
     transform: rotate(360deg);
   }
 }
+/* Custom Checkbox for Optimizer */
+.optimizer-course-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 6px;
+}
+
+.optimizer-course-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.optimizer-course-item.selected {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.05);
+}
+
+.optimizer-course-item .check-icon {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.optimizer-course-item:active .check-icon {
+  transform: scale(0.85);
+}
+
+.optimizer-course-item.selected .check-icon {
+  color: #3b82f6 !important;
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.5));
+}
+
+/* Selected Course Pills */
+.selected-course-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+
+.selected-course-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.selected-course-pill-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.selected-course-pill-close:hover {
+  opacity: 1;
+  background: rgba(255, 0, 0, 0.15);
+  color: #ff4757 !important;
+  transform: rotate(90deg);
+}
+
+/* Habilitado Badge */
+.habilitado-badge {
+  font-size: 0.6rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-left: 6px;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.15);
+}
