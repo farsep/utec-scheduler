@@ -719,7 +719,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
 
   // Extract Clean Metadata header fields
   // For 'Consolidado de matrícula', the name can be broken across lines with 'Nivel: X' interleaved.
-  const studentMatch = fullText.match(/Alumno\s*:\s*(.+?)(?=\s*Fecha\s*de\s*Matr[ií]cula|Turno|Código|$)/is);
+  const studentMatch = fullText.match(/Alumno\s*:\s*(.+?)(?=\s*Programa|\s*Carrera|\s*Malla|\s*Fecha\s*de\s*Matr[ií]cula|Turno|Código|$)/is);
   if (studentMatch) {
     let rawStr = studentMatch[1];
     // Remove "Nivel: X" from the middle of the string
