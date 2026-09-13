@@ -29,7 +29,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
   if (data.type === 'START') {
     const { courses, poolCourseCodes, options } = data;
     
-    let validCombinations: Record<string, string>[] = [];
+    let topResults: GeneratedScheduleResult[] = [];
     
     // 1. Determine which courses to process
     let combinationsOfCoursesToEvaluate: string[][] = [];
@@ -100,6 +100,18 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
           }
         }
 
+        // Deduplicate sections with the exact same schedule to avoid combinatorial explosion
+        const uniqueSectionsMap = new Map<string, typeof validSections[0]>();
+        validSections.forEach(sec => {
+          // Sort sessions so order doesn't matter
+          const hash = sec.sessions.map(s => `${s.day}-${s.startTime}-${s.endTime}`).sort().join('|');
+          if (!uniqueSectionsMap.has(hash)) {
+            uniqueSectionsMap.set(hash, sec);
+          }
+        });
+        
+        validSections = Array.from(uniqueSectionsMap.values());
+
         return {
           courseCode: course.code,
           sections: validSections
@@ -119,16 +131,38 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
       // Backtracking for this specific course set
       function backtrack(index: number, currentCombination: Record<string, string>) {
         if (index === courseSections.length) {
-          validCombinations.push({ ...currentCombination });
+          const combo = { ...currentCombination };
+          const metrics = calculateScheduleMetrics(combo, courses, options);
+          
+          let rawScore = 0;
+          if (options.targets.includes('min_gaps')) rawScore -= metrics.totalGapMinutes;
+          if (options.targets.includes('min_days')) rawScore -= (metrics.activeDaysCount * 500);
+          if (options.targets.includes('morning')) rawScore += (metrics.morningScore / 5);
+          if (options.targets.includes('afternoon')) rawScore += (metrics.afternoonScore / 5);
+          if (options.lunchConfig?.enabled) rawScore += (metrics.lunchScore * 1000);
+
+          topResults.push({
+            id: `gen_${Date.now()}_${evaluatedSchedules}`,
+            selectedSections: combo,
+            metrics,
+            score: rawScore
+          });
+
+          // Prune to keep memory flat
+          if (topResults.length >= 2000) {
+            topResults.sort((a: GeneratedScheduleResult, b: GeneratedScheduleResult) => (b.score || 0) - (a.score || 0));
+            topResults = topResults.slice(0, 200);
+          }
+
           evaluatedSchedules++;
           
-          // Report progress every 1000 schedules
-          if (evaluatedSchedules % 1000 === 0) {
+          // Report progress every 2000 schedules
+          if (evaluatedSchedules % 2000 === 0) {
             self.postMessage({ 
               type: 'PROGRESS', 
               evaluated: evaluatedSchedules, 
               total: estimatedTotal,
-              validFound: validCombinations.length
+              validFound: evaluatedSchedules // Now validFound represents total evaluated valid schedules
             } as WorkerMessage);
           }
           return;
@@ -152,23 +186,17 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
       backtrack(0, {});
     }
 
+    // Final prune before normalization
+    topResults.sort((a, b) => (b.score || 0) - (a.score || 0));
+    let results: GeneratedScheduleResult[] = topResults.slice(0, 50);
+
     // Now compute metrics and sort
     self.postMessage({ 
       type: 'PROGRESS', 
       evaluated: Math.max(evaluatedSchedules, estimatedTotal), 
       total: Math.max(evaluatedSchedules, estimatedTotal),
-      validFound: validCombinations.length
+      validFound: evaluatedSchedules
     } as WorkerMessage);
-    
-    let results: GeneratedScheduleResult[] = validCombinations.map((combo, idx) => {
-      const metrics = calculateScheduleMetrics(combo, courses, options);
-      return {
-        id: `gen_${Date.now()}_${idx}`,
-        selectedSections: combo,
-        metrics,
-        score: 0 // Will compute below
-      };
-    });
 
     // Compute normalized scores
     if (results.length > 0 && options.targets.length > 0) {
@@ -217,14 +245,14 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
         res.score = activeTargets > 0 ? totalScore / activeTargets : 0;
       });
 
-      // Sort by score (descending)
+      // Final sort by normalized score (descending)
       results.sort((a, b) => b.score! - a.score!);
     }
     
-    // We only send back top 50
+    // Send back top 50
     self.postMessage({ 
       type: 'COMPLETE', 
-      results: results.slice(0, 50) 
+      results
     } as WorkerMessage);
   }
 };

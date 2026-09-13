@@ -27,6 +27,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   const [selectedCourseCodes, setSelectedCourseCodes] = useState<string[]>(initialSelectedCourseCodes);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyEligible, setShowOnlyEligible] = useState(false);
+  const [courseTypeFilter, setCourseTypeFilter] = useState<'All' | 'Obligatorio' | 'Electivo'>('All');
   
   const [options, setOptions] = useState<OptimizerOptions>({
     targets: ['min_gaps'],
@@ -59,21 +60,22 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
 
   const prevIsOpen = useRef(false);
 
-  // Reset state ONLY when modal transitions from closed to open
+  // Focus trap ref
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // When modal closes, reset preview and selection
   useEffect(() => {
-    if (isOpen && !prevIsOpen.current) {
-      setSelectedCourseCodes(initialSelectedCourseCodes.length > 0 ? initialSelectedCourseCodes : courses.map(c => c.code));
-      setResults(null);
+    if (isOpen) {
+      prevIsOpen.current = true;
       setPreviewSchedule(null);
-      setActiveSaveId(null);
-      setLastSavedName(null);
-      setSavedOptionsRecord({});
-      setIsAdvancedMode(false);
-      setPinnedCourseCodes([]);
-      setWorkerProgress(null);
+      // Try to maintain user selection if possible, otherwise reset to all
+      if (initialSelectedCourseCodes.length > 0) {
+        setSelectedCourseCodes(initialSelectedCourseCodes);
+      }
+    } else if (prevIsOpen.current) {
+      prevIsOpen.current = false;
     }
-    prevIsOpen.current = isOpen;
-  }, [isOpen, initialSelectedCourseCodes, courses]);
+  }, [isOpen, initialSelectedCourseCodes]);
 
   const toggleCourse = (code: string) => {
     setSelectedCourseCodes(prev => 
@@ -159,11 +161,15 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   };
 
   const hasEligibleFilter = courses.some(c => c.isEligible) && courses.some(c => !c.isEligible);
+  const hasCourseTypeFilter = courses.some(c => c.courseType === 'Obligatorio') && courses.some(c => c.courseType === 'Electivo');
 
   const filteredCourses = useMemo(() => {
     let result = courses;
     if (showOnlyEligible) {
       result = result.filter(c => c.isEligible);
+    }
+    if (courseTypeFilter !== 'All') {
+      result = result.filter(c => c.courseType === courseTypeFilter);
     }
     const q = normalizeString(searchQuery);
     if (q) {
@@ -174,7 +180,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       });
     }
     return result;
-  }, [courses, searchQuery, showOnlyEligible]);
+  }, [courses, searchQuery, showOnlyEligible, courseTypeFilter]);
 
   if (!isOpen) return null;
 
@@ -377,7 +383,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   <button 
                     className="btn btn-secondary" 
                     style={{ flex: 1, padding: '6px', fontSize: '0.75rem' }}
-                    onClick={() => setSelectedCourseCodes(courses.map(c => c.code))}
+                    onClick={() => {
+                      const visibleCodes = filteredCourses.map(c => c.code);
+                      setSelectedCourseCodes(prev => Array.from(new Set([...prev, ...visibleCodes])));
+                    }}
                   >
                     Todos
                   </button>
@@ -385,7 +394,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                     <button 
                       className="btn btn-secondary" 
                       style={{ flex: 1, padding: '6px', fontSize: '0.75rem' }}
-                      onClick={() => setSelectedCourseCodes(courses.filter(c => c.isEligible).map(c => c.code))}
+                      onClick={() => {
+                        const eligibleCodes = courses.filter(c => c.isEligible).map(c => c.code);
+                        setSelectedCourseCodes(eligibleCodes);
+                      }}
                     >
                       Solo Habilitados
                     </button>
@@ -393,7 +405,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   <button 
                     className="btn btn-secondary" 
                     style={{ flex: 1, padding: '6px', fontSize: '0.75rem' }}
-                    onClick={() => setSelectedCourseCodes([])}
+                    onClick={() => {
+                      const visibleCodes = new Set(filteredCourses.map(c => c.code));
+                      setSelectedCourseCodes(prev => prev.filter(code => !visibleCodes.has(code)));
+                    }}
                   >
                     Ninguno
                   </button>
@@ -412,6 +427,37 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   >
                     {showOnlyEligible ? <CheckSquare size={14} color="#34d399" /> : <Square size={14} color="var(--text-muted)" />}
                     <span>Mostrar únicamente cursos habilitados en esta lista</span>
+                  </div>
+                )}
+
+                {hasCourseTypeFilter && (
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                    <div 
+                      onClick={() => setCourseTypeFilter(courseTypeFilter === 'Obligatorio' ? 'All' : 'Obligatorio')}
+                      style={{ 
+                        flex: 1, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', cursor: 'pointer',
+                        userSelect: 'none', padding: '6px 8px', borderRadius: '6px', transition: 'all 0.2s ease',
+                        background: courseTypeFilter === 'Obligatorio' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(0,0,0,0.2)',
+                        border: courseTypeFilter === 'Obligatorio' ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid var(--border-color)',
+                        color: courseTypeFilter === 'Obligatorio' ? 'var(--accent-primary)' : 'var(--text-secondary)'
+                      }}
+                    >
+                      {courseTypeFilter === 'Obligatorio' ? <CheckSquare size={14} color="var(--accent-primary)" /> : <Square size={14} color="var(--text-muted)" />}
+                      <span>Solo Obligatorios</span>
+                    </div>
+                    <div 
+                      onClick={() => setCourseTypeFilter(courseTypeFilter === 'Electivo' ? 'All' : 'Electivo')}
+                      style={{ 
+                        flex: 1, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', cursor: 'pointer',
+                        userSelect: 'none', padding: '6px 8px', borderRadius: '6px', transition: 'all 0.2s ease',
+                        background: courseTypeFilter === 'Electivo' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(0,0,0,0.2)',
+                        border: courseTypeFilter === 'Electivo' ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid var(--border-color)',
+                        color: courseTypeFilter === 'Electivo' ? 'var(--accent-primary)' : 'var(--text-secondary)'
+                      }}
+                    >
+                      {courseTypeFilter === 'Electivo' ? <CheckSquare size={14} color="var(--accent-primary)" /> : <Square size={14} color="var(--text-muted)" />}
+                      <span>Solo Electivos</span>
+                    </div>
                   </div>
                 )}
 

@@ -59,6 +59,7 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
     professor?: string;
     courseName?: string;
     credits?: number;
+    courseType?: string;
   }
   const courseAnchors: CourseAnchor[] = [];
 
@@ -154,6 +155,14 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
       .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s));
     let professor = isConsolidadoMatricula ? "Por asignar" : profItems.join(' ').replace(/\s+/g, ' ').trim();
 
+    let courseType = 'Obligatorio';
+    const typeItems = blockItems
+      .filter(it => it.y >= anchor.topY - 45.0)
+      .map(it => it.str);
+    if (typeItems.some(s => /electivo/i.test(s))) {
+      courseType = 'Electivo';
+    }
+
     let sectionNum = '1';
     let subGroup = '';
     let credits: number | undefined;
@@ -245,11 +254,12 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
     anchor.professor = professor;
     anchor.courseName = courseName;
     anchor.credits = credits;
+    anchor.courseType = courseType;
 
     const secLabel = subGroup ? `${sectionNum} (${subGroup})` : sectionNum;
     enrolledSections[anchor.code] = secLabel;
     eligibleCourseCodes.add(anchor.code);
-    eligibleCoursesMap.set(anchor.code, { type: 'Obligatorio' });
+    eligibleCoursesMap.set(anchor.code, { type: courseType });
 
     let course = coursesMap.get(anchor.code);
     if (!course) {
@@ -259,7 +269,7 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
         rawSessions: [],
         color: getCourseColor(anchor.code),
         isEligible: true,
-        courseType: 'Obligatorio'
+        courseType: courseType
       };
       if (anchor.credits !== undefined) {
         course.credits = anchor.credits;
@@ -923,8 +933,8 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
       const planMatch = mallaText.match(/([A-Z]{2,4}-\d{4}-?\s*\d*)/);
       if (planMatch) plan = planMatch[1].replace(/\s+/g, '');
 
-      // Column 5 (290 <= X < 340): Course Type Cell
-      const typeText = rowItems.filter(i => i.x >= 290 && i.x < 340).map(i => i.str).join(' ');
+      // Column 5 (250 <= X < 390): Course Type Cell
+      const typeText = rowItems.filter(i => i.x >= 250 && i.x < 390).map(i => i.str).join(' ');
       let courseType = 'Obligatorio';
       if (typeText.toLowerCase().includes('electivo')) courseType = 'Electivo';
 
