@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { X, Sparkles, CheckSquare, Square, Filter, ChevronRight, CheckCircle2, Clock, Calendar, Check, Search, Coffee } from 'lucide-react';
 import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
-import { formatLocation, getCourseColor, getCoursePrefix, minutesToTime } from '../utils/scheduleUtils';
+import { formatLocation, getCourseColor, getCoursePrefix, minutesToTime, normalizeString } from '../utils/scheduleUtils';
 import { TimetableGrid } from './TimetableGrid';
 import { GlassTimePicker } from './GlassTimePicker';
 import { Eye } from 'lucide-react';
@@ -165,11 +165,13 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     if (showOnlyEligible) {
       result = result.filter(c => c.isEligible);
     }
-    const q = searchQuery.toLowerCase().trim();
+    const q = normalizeString(searchQuery);
     if (q) {
-      result = result.filter(c => 
-        c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q)
-      );
+      result = result.filter(c => {
+        const cCode = normalizeString(c.code);
+        const cName = normalizeString(c.name);
+        return cCode.includes(q) || cName.includes(q);
+      });
     }
     return result;
   }, [courses, searchQuery, showOnlyEligible]);
@@ -338,18 +340,18 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                       return (
                         <div 
                           key={code}
+                          className="selected-course-pill"
                           style={{ 
-                            display: 'flex', alignItems: 'center', gap: '4px', 
-                            padding: '2px 6px', borderRadius: '4px', 
                             background: `rgba(${parseInt(courseColor.slice(1,3),16)}, ${parseInt(courseColor.slice(3,5),16)}, ${parseInt(courseColor.slice(5,7),16)}, 0.15)`,
                             border: `1px solid ${courseColor}40`,
-                            fontSize: '0.7rem', color: courseColor, fontWeight: 600
+                            color: courseColor
                           }}
                         >
                           {code}
                           <button 
+                            className="selected-course-pill-close"
                             onClick={(e) => { e.stopPropagation(); toggleCourse(code); }}
-                            style={{ background: 'transparent', border: 'none', color: courseColor, cursor: 'pointer', padding: '0 2px', display: 'flex', alignItems: 'center' }}
+                            style={{ color: courseColor }}
                             title="Quitar curso"
                           >
                             <X size={10} />
@@ -414,30 +416,47 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                 )}
 
                 <div className="course-list-scroll" style={{ maxHeight: '200px', paddingRight: '8px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', padding: '8px', overflowY: 'auto' }}>
-                  {filteredCourses.map(course => (
+                  {filteredCourses.map(course => {
+                    const isSelected = selectedCourseCodes.includes(course.code);
+                    return (
                     <div 
                       key={course.code} 
                       onClick={() => toggleCourse(course.code)}
-                      style={{ 
-                        display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', 
-                        borderRadius: '6px', cursor: 'pointer', userSelect: 'none',
-                        background: selectedCourseCodes.includes(course.code) ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-                        border: selectedCourseCodes.includes(course.code) ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid transparent',
-                        marginBottom: '4px'
-                      }}
+                      className={`optimizer-course-item ${isSelected ? 'selected' : ''}`}
                     >
-                      {selectedCourseCodes.includes(course.code) ? <CheckSquare size={16} color="var(--accent-primary)" /> : <Square size={16} color="var(--text-muted)" />}
+                      <div className="check-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                        {isSelected ? 
+                          <CheckSquare size={18} color="var(--text-muted)" /> : 
+                          <Square size={18} color="var(--text-muted)" />
+                        }
+                      </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: course.color }}>{course.code}</span>
-                          {course.isEligible && <span className="eligible-badge" style={{ fontSize: '0.65rem', padding: '1px 5px' }}>Habilitado</span>}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ 
+                            fontWeight: 600, 
+                            fontSize: '0.85rem',
+                            color: isSelected ? course.color : 'var(--accent-blue)',
+                            transition: 'color 0.2s ease'
+                          }}>{course.code}</span>
+                          {course.isEligible && (
+                            <span className="habilitado-badge">
+                              HABILITADO
+                            </span>
+                          )}
                         </div>
-                        <div style={{ fontSize: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-secondary)' }}>
+                        <div style={{ 
+                          fontSize: '0.75rem', 
+                          color: isSelected ? 'var(--text-primary)' : 'var(--text-muted)',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          transition: 'color 0.2s ease'
+                        }}>
                           {course.name}
                         </div>
                       </div>
                       
-                      {isAdvancedMode && selectedCourseCodes.includes(course.code) && (
+                      {isAdvancedMode && isSelected && (
                         <button 
                           onClick={(e) => { e.stopPropagation(); togglePin(course.code); }}
                           style={{
@@ -446,13 +465,14 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                             filter: pinnedCourseCodes.includes(course.code) ? 'none' : 'grayscale(100%)',
                             fontSize: '1rem', display: 'flex', alignItems: 'center'
                           }}
-                          title="Fijar curso (Obligatorio)"
+                          title={pinnedCourseCodes.includes(course.code) ? "Desfijar curso" : "Fijar curso (el algoritmo intentará incluirlo)"}
                         >
                           📌
                         </button>
                       )}
                     </div>
-                  ))}
+                  );
+                })}
                 </div>
               </div>
 
