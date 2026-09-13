@@ -63,7 +63,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
         if (!matchesCode && !matchesName && !matchesProf) return false;
       }
 
-      if (filterState.onlyEligible && !course.isEligible) {
+      if (hasEligibleFilter && filterState.onlyEligible && !course.isEligible) {
         return false;
       }
 
@@ -73,7 +73,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
       return true;
     });
-  }, [courses, filterState.searchQuery, filterState.onlyEligible, filterState.typeFilter]);
+  }, [courses, filterState.searchQuery, filterState.onlyEligible, filterState.typeFilter, hasEligibleFilter]);
 
   const toggleCourseExpand = (code: string, currentlyExpanded: boolean) => {
     if (currentlyExpanded) {

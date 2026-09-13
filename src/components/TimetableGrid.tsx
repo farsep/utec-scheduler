@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { DAYS, DAY_NAMES, getCourseGradient, formatLocation } from '../utils/scheduleUtils';
+import { formatLocation, getCourseGradient, DAY_NAMES, DAYS } from '../utils/scheduleUtils';
 import type { Course, DayOfWeek, Conflict, Session } from '../types/schedule';
-import { Trash2, AlertTriangle, Sparkles, MapPin, User } from 'lucide-react';
+import { Trash2, AlertTriangle, Sparkles } from 'lucide-react';
 
 interface TimetableGridProps {
   courses: Course[];
@@ -12,9 +12,38 @@ interface TimetableGridProps {
   onRemoveSection: (courseCode: string) => void;
 }
 
-const START_HOUR = 7; // 07:00
-const END_HOUR = 22; // 22:00
-const TOTAL_MINUTES = (END_HOUR - START_HOUR) * 60; // 15 hours = 900 minutes
+const MarqueeText: React.FC<{ text: string }> = ({ text }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const textRef = React.useRef<HTMLDivElement>(null);
+  const [isOverflowing, setIsOverflowing] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkOverflow = () => {
+      if (containerRef.current && textRef.current) {
+        setIsOverflowing(textRef.current.scrollWidth > containerRef.current.clientWidth);
+      }
+    };
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [text]);
+
+  return (
+    <div 
+      className="marquee-film-container" 
+      ref={containerRef} 
+      style={{ width: 'auto', flex: 1, minWidth: 0, paddingBottom: '2px' }}
+    >
+      <div 
+        className={`marquee-film-text ${isOverflowing ? 'is-overflowing' : ''}`} 
+        ref={textRef}
+        style={{ lineHeight: '1.2' }}
+      >
+        {text}
+      </div>
+    </div>
+  );
+};
 
 export const TimetableGrid: React.FC<TimetableGridProps> = ({
   courses,
@@ -26,13 +55,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
 }) => {
   const [dragOverDay, setDragOverDay] = useState<DayOfWeek | null>(null);
 
-  // Generate hour labels (07:00, 08:00, ..., 21:00)
-  const hours = [];
-  for (let h = START_HOUR; h < END_HOUR; h++) {
-    hours.push(`${h.toString().padStart(2, '0')}:00`);
-  }
-
-  // Find all active scheduled sessions
+  // 1. First, build the scheduledBlocks array so we can calculate dynamic bounds
   const scheduledBlocks: {
     course: Course;
     sectionNumber: string;
@@ -76,6 +99,26 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
       });
     });
   });
+
+  // 2. Calculate dynamic START_HOUR and END_HOUR based on content
+  let dynamicStartHour = 7;
+  let dynamicEndHour = 22;
+
+  if (scheduledBlocks.length > 0) {
+    const earliestMin = Math.min(...scheduledBlocks.map(b => b.startMinutes));
+    const latestMin = Math.max(...scheduledBlocks.map(b => b.endMinutes));
+    // Pad by 1 hour, clamped between 7:00 and 23:00
+    dynamicStartHour = Math.max(7, Math.floor(earliestMin / 60));
+    dynamicEndHour = Math.min(23, Math.ceil(latestMin / 60));
+  }
+
+  const TOTAL_MINUTES = (dynamicEndHour - dynamicStartHour) * 60;
+
+  // Generate hour labels
+  const hours = [];
+  for (let h = dynamicStartHour; h < dynamicEndHour; h++) {
+    hours.push(`${h.toString().padStart(2, '0')}:00`);
+  }
 
   // Calculate Ghost Shadow Preview blocks if draggedSection is active
   const ghostBlocks: {
@@ -155,18 +198,20 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
       </div>
 
       {/* Grid Canvas Body */}
-      <div className="timetable-body timetable-scroll">
-        {/* Time labels column */}
-        <div className="time-labels-column">
-          {hours.map(hour => (
-            <div key={hour} className="time-label-slot">
-              {hour}
-            </div>
-          ))}
-        </div>
+      <div className="timetable-body timetable-scroll" style={{ display: 'block', overflowY: 'auto', height: '100%', minHeight: '300px' }}>
+        <div style={{ position: 'relative', height: `${hours.length * 52}px`, display: 'grid', gridTemplateColumns: '60px 1fr' }}>
+          
+          {/* Time labels column */}
+          <div className="time-labels-column">
+            {hours.map(hour => (
+              <div key={hour} className="time-label-slot" style={{ height: '52px' }}>
+                {hour}
+              </div>
+            ))}
+          </div>
 
-        {/* 6 Day Columns Canvas */}
-        <div className="days-canvas-grid">
+          {/* 6 Day Columns Canvas */}
+          <div className="days-canvas-grid" style={{ height: '100%' }}>
           {DAYS.map(day => {
             const dayBlocks = scheduledBlocks.filter(b => b.day === day);
             const dayGhostBlocks = ghostBlocks.filter(g => g.day === day);
@@ -181,14 +226,16 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
               >
                 {/* Active Scheduled Blocks */}
                 {dayBlocks.map((block, idx) => {
-                  const topPercent = ((block.startMinutes - START_HOUR * 60) / TOTAL_MINUTES) * 100;
+                  const topPercent = ((block.startMinutes - dynamicStartHour * 60) / TOTAL_MINUTES) * 100;
                   const heightPercent = Math.max(((block.endMinutes - block.startMinutes) / TOTAL_MINUTES) * 100, 3.8);
                   const gradient = getCourseGradient(block.course.code);
+
+                  const durationMinutes = block.endMinutes - block.startMinutes;
 
                   return (
                     <div
                       key={idx}
-                      className={`schedule-block ${block.hasConflict ? 'has-conflict' : ''}`}
+                      className={`schedule-block ${block.hasConflict ? 'has-conflict' : ''} ${durationMinutes <= 60 ? 'short-block' : ''}`}
                       style={{
                         top: `${topPercent}%`,
                         height: `${heightPercent}%`,
@@ -196,29 +243,33 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                       }}
                       title={`${block.course.code} ${block.course.name}\nSec ${block.sectionNumber} - ${block.sessionGroup}\n${block.startTime} - ${block.endTime}\nAula: ${formatLocation(block.location)}\nDocente: ${block.professor}`}
                     >
-                      <div className="block-course-code">
-                        <span>{block.course.code} (Sec {block.sectionNumber})</span>
+                      <div className="block-course-code" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '4px', overflow: 'hidden' }}>
+                        <MarqueeText text={block.course.name} />
                         <button
                           onClick={e => {
                             e.stopPropagation();
                             onRemoveSection(block.course.code);
                           }}
-                          style={{ background: 'transparent', border: 'none', color: 'white', opacity: 0.85, cursor: 'pointer' }}
+                          style={{ background: 'transparent', border: 'none', color: 'white', opacity: 0.85, cursor: 'pointer', flexShrink: 0, padding: 0 }}
                         >
                           <Trash2 size={12} />
                         </button>
                       </div>
 
-                      {/* Continuous Film Ticker Marquee Effect on Hover */}
-                      <div className="marquee-film-container">
-                        <div className="marquee-film-text">
-                          {block.course.name}
+                      {/* Course Code and Section - Multi-line enabled */}
+                      {durationMinutes > 60 && (
+                        <div style={{ fontSize: '0.7rem', opacity: 0.9, lineHeight: 1.2, marginTop: '2px', flex: 1, overflow: 'hidden' }}>
+                          {block.course.code} (Sec {block.sectionNumber})
                         </div>
-                      </div>
+                      )}
 
                       <div className="block-footer">
-                        <span style={{ fontWeight: 700 }}>{block.sessionGroup}</span>
-                        <span style={{ fontSize: '0.65rem' }}>{formatLocation(block.location) || `${block.startTime}-${block.endTime}`}</span>
+                        <span style={{ fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0 }}>
+                          {durationMinutes <= 60 ? block.sessionGroup : block.sessionGroup}
+                        </span>
+                        <span style={{ fontSize: '0.65rem', flexShrink: 0 }}>
+                          {formatLocation(block.location) || `${block.startTime}-${block.endTime}`}
+                        </span>
                       </div>
                     </div>
                   );
@@ -226,8 +277,10 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
 
                 {/* GHOST SHADOW PREVIEW BLOCKS FOR DRAGGED SECTION */}
                 {dayGhostBlocks.map((ghost, gIdx) => {
-                  const topPercent = ((ghost.startMinutes - START_HOUR * 60) / TOTAL_MINUTES) * 100;
+                  const topPercent = ((ghost.startMinutes - dynamicStartHour * 60) / TOTAL_MINUTES) * 100;
                   const heightPercent = Math.max(((ghost.endMinutes - ghost.startMinutes) / TOTAL_MINUTES) * 100, 3.8);
+
+                  const durationMinutes = ghost.endMinutes - ghost.startMinutes;
 
                   return (
                     <div
@@ -238,23 +291,22 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                         height: `${heightPercent}%`,
                       }}
                     >
-                      <div className="block-course-code">
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Sparkles size={12} />
-                          PREVIA: {ghost.courseCode}
-                        </span>
+                      <div className="block-course-code" style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', overflow: 'hidden' }}>
+                        <Sparkles size={12} style={{ flexShrink: 0, marginTop: '2px' }} />
+                        <MarqueeText text={`PREVIA: ${ghost.courseName}`} />
                         {ghost.hasGhostConflict && (
-                          <span style={{ color: '#ef4444', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                          <span style={{ color: '#ef4444', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
                             <AlertTriangle size={12} /> CRUCE
                           </span>
                         )}
                       </div>
 
-                      <div className="marquee-film-container">
-                        <div className="marquee-film-text">
-                          {ghost.courseName}
+                      {/* Course Code and Section - Multi-line enabled */}
+                      {durationMinutes > 60 && (
+                        <div style={{ fontSize: '0.7rem', opacity: 0.9, lineHeight: 1.2, marginTop: '2px', flex: 1, overflow: 'hidden' }}>
+                          {ghost.courseCode}
                         </div>
-                      </div>
+                      )}
 
                       <div className="block-footer">
                         <span style={{ fontWeight: 700 }}>{ghost.sessionGroup}</span>
@@ -266,6 +318,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
               </div>
             );
           })}
+        </div>
         </div>
       </div>
     </div>
