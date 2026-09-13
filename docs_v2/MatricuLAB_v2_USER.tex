@@ -1,0 +1,74 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+
+\title{\textbf{MatricuLAB 2.0} \\ \Large Guía para el Usuario}
+\author{Equipo de Desarrollo MatricuLAB}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{¡Bienvenido a la nueva era de MatricuLAB!}
+Esta herramienta ha evolucionado para convertirse en tu asistente definitivo para la organización y optimización de tus horarios en UTEC.
+
+\section{¿Qué hacía la versión anterior? (v1.0)}
+Si ya usabas MatricuLAB, recordarás sus funciones clave iniciales:
+\begin{itemize}[label=\textcolor{blue}{\textbullet}]
+    \item \textbf{Armado Manual de Horario:} Podías agregar cursos a tu grilla utilizando datos de prueba (mock data) para organizar visualmente tu semana.
+    \item \textbf{Integración del PDF de Cursos Habilitados:} Podías subir tu PDF de ``Carga Hábil'' para filtrar rápidamente qué cursos estaban habilitados, cuáles eran electivos o cuáles obligatorios.
+    \item \textbf{Exportación a Google Calendar:} Si subías tu ``Consolidado de Matrícula'' o ``Horario'', la aplicación te permitía exportar toda tu semana de clases automáticamente a Google Calendar con un solo clic.
+\end{itemize}
+
+\section{Novedades Principales en v2.0}
+En esta actualización masiva, hemos introducido algoritmos de optimización avanzada y automatización extrema.
+
+\subsection{¡Nuevo Optimizador Automático! (Generar Horario)}
+Ya no tienes que jugar a las rompecabezas intentando cruzar decenas de cursos. Hemos añadido la función de \textbf{Generar Horario}. Simplemente selecciona los cursos que quieres llevar y MatricuLAB iterará por todas las permutaciones posibles buscando los horarios perfectos que no crucen ninguna clase.
+\begin{itemize}[label=\textcolor{blue}{\textbullet}]
+    \item \textbf{Modo Básico:} Selecciona exactamente los cursos que quieres (ej. 5 cursos) y te armará el horario.
+    \item \textbf{Modo Avanzado:} Selecciona una ``bolsa'' gigante de cursos que estarías dispuesto a llevar (puedes filtrarlos por electivos, habilitados u obligatorios). Luego dile a la aplicación ``Quiero llevar 5 cursos de esta lista''. El algoritmo evaluará \textbf{todas las combinaciones posibles} de cursos de tu bolsa para darte las mejores opciones basadas en tus caprichos (filtros).
+\end{itemize}
+
+\subsection{Filtros y Penalizaciones Avanzadas}
+Ahora tienes el poder de decirle a la máquina cómo quieres tu semana ideal a través de filtros en el Optimizador:
+\begin{itemize}[label=\textcolor{blue}{\textbullet}]
+    \item \textbf{Menos huecos:} Junta tus clases.
+    \item \textbf{Menos días:} Compacta todo en 3 o 4 días.
+    \item \textbf{Mañanas / Tardes:} Prioriza madrugar o dormir más.
+    \item \textbf{Sin días puente (huecos):} Nueva penalidad masiva (-1000 puntos) que elimina los horarios que dejan un día libre sándwich en tu semana (ej. clases Lunes y Miércoles, pero nada el Martes).
+\end{itemize}
+
+\subsection{Velocidad Suprema (Multihilo)}
+El Optimizador utiliza toda la fuerza de tu procesador computacional (todos sus núcleos a la vez). Si hay millones o billones de combinaciones, MatricuLAB despliega ``clones'' paralelos (Web Workers) para explorar el 100\% de la CPU en segundo plano, dándote tus horarios ideales en pocos segundos.
+
+\subsection{El Cerebro detrás de la Velocidad (Evolución del Algoritmo)}
+Antes, de manera experimental, MatricuLAB funcionaba con fuerza bruta: comparaba textos y horas uno por uno para ver si los cursos chocaban. Era muy lento y torpe.
+Ahora, hemos rediseñado el "cerebro" del sistema aplicando técnicas matemáticas avanzadas:
+\begin{itemize}[label=\textcolor{blue}{\textbullet}]
+    \item \textbf{Mapas de Bits (Bitmasks) y Hashes:} Transformamos los horarios de texto a representaciones matemáticas de ceros y unos. Esto permite a la computadora detectar choques en microsegundos.
+    \item \textbf{Jerarquía Inteligente (CSP y MRV):} Antes de probar combinaciones a ciegas, el sistema ordena los cursos de los más difíciles de cuadrar (los que tienen menos secciones) a los más fáciles. Si un curso difícil choca, el algoritmo descarta automáticamente millones de combinaciones inservibles de un solo golpe sin tener que calcularlas.
+\end{itemize}
+
+\subsection{Rediseño Visual de la Grilla}
+El clásico ``Armador de Horario Manual'' tiene un rostro completamente nuevo. Hemos rediseñado las tarjetas (cards) de los cursos en la grilla visual, haciéndolas mucho más modernas, elegantes y fáciles de leer.
+
+\subsection{Lectura Perfecta de tu Carga Hábil (PDF)}
+Mejoramos significativamente cómo el sistema lee el PDF de \textit{Horario Carga Hábil}.
+\begin{itemize}[label=\textcolor{blue}{\textbullet}]
+    \item Tu nombre y datos (Carrera, Malla) ahora se leen impecablemente sin jalar textos sueltos por error.
+    \item Se ha corregido la ubicación de tus clases: ahora verás claramente "A804" o "Virtual" sin el molesto prefijo técnico "UTEC-BA".
+    \item \textbf{Identificación Inteligente de Secciones:} Ahora el sistema utiliza la cantidad de vacantes para agrupar sin errores las sub-secciones complejas. Esto soluciona de raíz los problemas que ocurrían con cursos pesados (como \textit{Álgebra Lineal} o \textit{Química General}) donde las sesiones de Laboratorio y Teoría se mezclaban o separaban mal.
+    \item Puntuación (Pts) exacta y transparente para cada horario que se te ofrece.
+\end{itemize}
+
+\vspace{1cm}
+\noindent \textit{¡Disfruta organizando tu semestre como nunca antes! Si tu computadora suena fuerte al buscar horarios, no te asustes: es MatricuLAB aprovechando cada gota de rendimiento de tu procesador para darte el horario perfecto.}
+
+\end{document}

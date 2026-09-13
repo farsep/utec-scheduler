@@ -748,43 +748,54 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                 )}
 
             {isGenerating && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--accent-primary)' }}>
-                {workerProgress ? (
-                  <>
-                    <div style={{ position: 'relative', width: '80px', height: '80px', marginBottom: '24px' }}>
-                      <div className="spin-icon" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, border: '3px solid transparent', borderTopColor: 'var(--accent-primary)', borderRightColor: 'var(--accent-rose)', borderRadius: '50%' }} />
-                      <div className="spin-icon" style={{ position: 'absolute', top: '10px', left: '10px', right: '10px', bottom: '10px', border: '3px solid transparent', borderLeftColor: 'var(--accent-blue)', borderBottomColor: 'var(--accent-primary)', borderRadius: '50%', animationDirection: 'reverse', animationDuration: '1.5s' }} />
-                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-                        <Sparkles size={24} color="var(--accent-primary)" />
+              <div className="skeleton-grid-container">
+                {/* HUD Overlay */}
+                <div className="hud-overlay">
+                  <h4 className="hud-title">Evaluando Horarios...</h4>
+                  {workerProgress ? (
+                    <>
+                      <div className="hud-stats">
+                        {workerProgress.evaluated.toLocaleString()} / {workerProgress.total.toLocaleString()} combinaciones
+                        <br/>
+                        <span style={{ color: '#10b981' }}>{workerProgress.validFound.toLocaleString()} viables</span>
                       </div>
-                    </div>
-                    <h4 style={{ fontWeight: 800, fontSize: '1.4rem', margin: '0 0 8px 0', background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                      Evaluando Horarios...
-                    </h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '16px 24px', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                      <div style={{ fontSize: '1.8rem', fontWeight: 900, fontFamily: 'monospace', color: '#fff' }}>
-                        {workerProgress.evaluated.toLocaleString()} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/ {workerProgress.total.toLocaleString()}</span>
+                      <div className="hud-progress-bar">
+                        <div 
+                          className="hud-progress-fill" 
+                          style={{ width: `${Math.min(100, (workerProgress.evaluated / Math.max(1, workerProgress.total)) * 100)}%` }}
+                        />
                       </div>
-                      <div style={{ display: 'flex', gap: '16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                        <span><strong style={{ color: '#10b981' }}>{workerProgress.validFound.toLocaleString()}</strong> viables</span>
-                        <span>{Math.round((workerProgress.evaluated / Math.max(1, workerProgress.total)) * 100)}% completado</span>
-                      </div>
-                      <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden', marginTop: '8px' }}>
-                        <div style={{ 
-                          height: '100%', 
-                          width: `${Math.min(100, (workerProgress.evaluated / Math.max(1, workerProgress.total)) * 100)}%`, 
-                          background: 'var(--accent-gradient)',
-                          transition: 'width 0.2s ease-out'
-                        }} />
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="spin-icon" style={{ marginBottom: '16px' }}><Clock size={32} /></div>
-                    <p style={{ fontWeight: 600 }}>Iniciando Motor Cuántico...</p>
-                  </>
-                )}
+                    </>
+                  ) : (
+                    <div className="hud-stats">Iniciando Motor Cuántico...</div>
+                  )}
+                </div>
+
+                {/* Tetris Blocks */}
+                {Array.from({ length: 15 }).map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="tetris-block"
+                    style={{
+                      left: `${(i % 7) * 14.28}%`,
+                      top: `${Math.random() * 80}%`,
+                      height: `${40 + Math.random() * 80}px`,
+                      animationDelay: `${Math.random() * 2}s`,
+                      animationDuration: `${1.5 + Math.random() * 2}s`,
+                      backgroundColor: ['rgba(59, 130, 246, 0.2)', 'rgba(16, 185, 129, 0.2)', 'rgba(244, 63, 94, 0.2)', 'rgba(245, 158, 11, 0.2)'][Math.floor(Math.random() * 4)],
+                      borderColor: ['rgba(59, 130, 246, 0.5)', 'rgba(16, 185, 129, 0.5)', 'rgba(244, 63, 94, 0.5)', 'rgba(245, 158, 11, 0.5)'][Math.floor(Math.random() * 4)]
+                    }}
+                  />
+                ))}
+
+                {/* Grid Skeleton */}
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div key={`row-${i}`} className="skeleton-row">
+                    {Array.from({ length: 7 }).map((_, j) => (
+                      <div key={`cell-${i}-${j}`} className="skeleton-cell" />
+                    ))}
+                  </div>
+                ))}
               </div>
             )}
 

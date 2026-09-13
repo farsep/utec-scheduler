@@ -84,7 +84,7 @@ export function calculateMetricsFromSessions(
            hasLunchBreak = true;
         }
       } else {
-        hasLunchBreak = true;
+        hasLunchBreak = false;
       }
 
       if (hasLunchBreak) daysMeetingLunch++;
