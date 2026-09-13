@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { formatLocation, getCourseGradient, DAY_NAMES, DAYS } from '../utils/scheduleUtils';
 import type { Course, DayOfWeek, Conflict, Session } from '../types/schedule';
-import { Trash2, AlertTriangle, Sparkles } from 'lucide-react';
+import { Trash2, AlertTriangle, Sparkles, MapPin } from 'lucide-react';
 
 interface TimetableGridProps {
   courses: Course[];
@@ -11,6 +11,15 @@ interface TimetableGridProps {
   onSelectSection: (courseCode: string, sectionNumber: string) => void;
   onRemoveSection: (courseCode: string) => void;
 }
+
+const abbreviateSession = (session: string) => {
+  if (!session) return '';
+  return session
+    .replace(/LABORATORIO/i, 'LAB')
+    .replace(/TEORÍA/i, 'TEO')
+    .replace(/TEORIA/i, 'TEO')
+    .replace(/SEMINARIO/i, 'SEM');
+};
 
 const MarqueeText: React.FC<{ text: string }> = ({ text }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -256,18 +265,19 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                         </button>
                       </div>
 
-                      {/* Course Code and Section - Multi-line enabled */}
+                      {/* Course Code and Section - Multi-line enabled and vertically centered */}
                       {durationMinutes > 60 && (
-                        <div style={{ fontSize: '0.7rem', opacity: 0.9, lineHeight: 1.2, marginTop: '2px', flex: 1, overflow: 'hidden' }}>
-                          {block.course.code} (Sec {block.sectionNumber})
+                        <div style={{ fontSize: '0.7rem', opacity: 0.9, lineHeight: 1.2, margin: 'auto 0', flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                          <span>{block.course.code} (Sec {block.sectionNumber})</span>
                         </div>
                       )}
 
-                      <div className="block-footer">
-                        <span style={{ fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0 }}>
-                          {durationMinutes <= 60 ? block.sessionGroup : block.sessionGroup}
+                      <div className="block-footer" style={{ alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, letterSpacing: '0.5px' }}>
+                          {abbreviateSession(block.sessionGroup)}
                         </span>
-                        <span style={{ fontSize: '0.65rem', flexShrink: 0 }}>
+                        <span style={{ fontSize: '0.65rem', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                          <MapPin size={10} />
                           {formatLocation(block.location) || `${block.startTime}-${block.endTime}`}
                         </span>
                       </div>
@@ -301,16 +311,21 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                         )}
                       </div>
 
-                      {/* Course Code and Section - Multi-line enabled */}
+                      {/* Course Code and Section - Multi-line enabled and vertically centered */}
                       {durationMinutes > 60 && (
-                        <div style={{ fontSize: '0.7rem', opacity: 0.9, lineHeight: 1.2, marginTop: '2px', flex: 1, overflow: 'hidden' }}>
-                          {ghost.courseCode}
+                        <div style={{ fontSize: '0.7rem', opacity: 0.9, lineHeight: 1.2, margin: 'auto 0', flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                          <span>{ghost.courseCode}</span>
                         </div>
                       )}
 
-                      <div className="block-footer">
-                        <span style={{ fontWeight: 700 }}>{ghost.sessionGroup}</span>
-                        <span>{ghost.startTime}-{ghost.endTime}</span>
+                      <div className="block-footer" style={{ alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, letterSpacing: '0.5px' }}>
+                          {abbreviateSession(ghost.sessionGroup)}
+                        </span>
+                        <span style={{ fontSize: '0.65rem', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                          <MapPin size={10} />
+                          {formatLocation(ghost.location) || `${ghost.startTime}-${ghost.endTime}`}
+                        </span>
                       </div>
                     </div>
                   );
