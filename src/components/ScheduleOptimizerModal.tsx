@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { X, Sparkles, CheckSquare, Square, Filter, ChevronRight, CheckCircle2, Clock, Calendar, Check, Search, Coffee } from 'lucide-react';
 import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
-import { formatLocation, getCourseColor, getCoursePrefix, minutesToTime, normalizeString } from '../utils/scheduleUtils';
+import { formatLocation, getCourseColor, getCoursePrefix, minutesToTime, normalizeString, getCombinations } from '../utils/scheduleUtils';
 import { TimetableGrid } from './TimetableGrid';
 import { GlassTimePicker } from './GlassTimePicker';
 import { Eye } from 'lucide-react';
@@ -56,7 +56,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   const [lunchDuration, setLunchDuration] = useState<number>(60);
   
   const [workerProgress, setWorkerProgress] = useState<{ evaluated: number, total: number, validFound: number } | null>(null);
-  const workerRef = useRef<Worker | null>(null);
+  const workerRefs = useRef<Worker[]>([]);
 
   const prevIsOpen = useRef(false);
 
@@ -94,11 +94,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     setPreviewSchedule(null);
     setSavedOptionsRecord({});
     setWorkerProgress(null);
+    setResults(null);
     
-    if (workerRef.current) {
-      workerRef.current.terminate();
-      workerRef.current = null;
-    }
+    workerRefs.current.forEach(w => w.terminate());
+    workerRefs.current = [];
 
     setTimeout(() => {
       const timeToMinutes = (timeStr: string) => {
@@ -121,32 +120,104 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         }
       };
 
-      const worker = new Worker(new URL('../utils/scheduleWorker.ts', import.meta.url), { type: 'module' });
-      workerRef.current = worker;
-
-      worker.onmessage = (e: MessageEvent) => {
-        const msg = e.data;
-        if (msg.type === 'PROGRESS') {
-          setWorkerProgress({ evaluated: msg.evaluated, total: msg.total, validFound: msg.validFound });
-        } else if (msg.type === 'COMPLETE') {
-          setResults(msg.results);
-          setIsGenerating(false);
-          worker.terminate();
-          workerRef.current = null;
-        } else if (msg.type === 'ERROR') {
-          alert(msg.message);
-          setIsGenerating(false);
-          worker.terminate();
-          workerRef.current = null;
+      // Generate combinations on the main thread
+      let combinationsOfCoursesToEvaluate: string[][] = [];
+      if (isAdvancedMode) {
+        const pinned = pinnedCourseCodes || [];
+        const targetCourses = maxCourses || 5;
+        const neededFromPool = targetCourses - pinned.length;
+        
+        if (neededFromPool <= 0) {
+          combinationsOfCoursesToEvaluate = [pinned];
+        } else {
+          const pool = selectedCourseCodes.filter(c => !pinned.includes(c));
+          if (pool.length < neededFromPool) {
+            alert('No hay suficientes cursos habilitados para alcanzar la cantidad deseada.');
+            setIsGenerating(false);
+            return;
+          }
+          const poolCombinations = getCombinations(pool, neededFromPool);
+          combinationsOfCoursesToEvaluate = poolCombinations.map(combo => [...pinned, ...combo]);
         }
+      } else {
+        combinationsOfCoursesToEvaluate = [selectedCourseCodes];
+      }
+
+      // Determine number of workers
+      const numWorkers = navigator.hardwareConcurrency || 4;
+      const totalCombinations = combinationsOfCoursesToEvaluate.length;
+      
+      if (totalCombinations === 0) {
+        setResults([]);
+        setIsGenerating(false);
+        return;
+      }
+
+      // Arrays to track progress and results per worker
+      const allResults: GeneratedScheduleResult[][] = Array(numWorkers).fill([]);
+      const workersProgress = Array(numWorkers).fill({ evaluated: 0, total: 0, validFound: 0 });
+      let completedWorkers = 0;
+      let hasError = false;
+
+      const updateGlobalProgress = () => {
+        let globalEvaluated = 0;
+        let globalTotal = 0;
+        let globalValid = 0;
+        for (const wp of workersProgress) {
+          globalEvaluated += wp.evaluated;
+          globalTotal += wp.total;
+          globalValid += wp.validFound;
+        }
+        setWorkerProgress({ evaluated: globalEvaluated, total: globalTotal, validFound: globalValid });
       };
 
-      worker.postMessage({
-        type: 'START',
-        courses,
-        poolCourseCodes: selectedCourseCodes,
-        options: currentOptions
-      });
+      for (let i = 0; i < numWorkers; i++) {
+        const worker = new Worker(new URL('../utils/scheduleWorker.ts', import.meta.url), { type: 'module' });
+        workerRefs.current.push(worker);
+
+        // Calculate chunk for this worker
+        const chunkSize = Math.ceil(totalCombinations / numWorkers);
+        const startIdx = i * chunkSize;
+        const endIdx = Math.min(startIdx + chunkSize, totalCombinations);
+        const chunk = combinationsOfCoursesToEvaluate.slice(startIdx, endIdx);
+
+        worker.onmessage = (e: MessageEvent) => {
+          const msg = e.data;
+          if (msg.type === 'PROGRESS') {
+            workersProgress[i] = { evaluated: msg.evaluated, total: msg.total, validFound: msg.validFound };
+            updateGlobalProgress();
+          } else if (msg.type === 'COMPLETE') {
+            allResults[i] = msg.results;
+            completedWorkers++;
+            worker.terminate();
+
+            if (completedWorkers === numWorkers && !hasError) {
+              // Merge all results
+              const mergedResults = allResults.flat();
+              // Sort by score descending and take top 200
+              mergedResults.sort((a, b) => (b.score || 0) - (a.score || 0));
+              setResults(mergedResults.slice(0, 200));
+              setIsGenerating(false);
+              workerRefs.current = [];
+            }
+          } else if (msg.type === 'ERROR') {
+            if (!hasError) {
+              hasError = true;
+              alert(msg.message);
+              setIsGenerating(false);
+              workerRefs.current.forEach(w => w.terminate());
+              workerRefs.current = [];
+            }
+          }
+        };
+
+        worker.postMessage({
+          type: 'START',
+          courses,
+          combinationsChunk: chunk,
+          options: currentOptions
+        });
+      }
     }, 100);
   };
 
@@ -752,12 +823,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                             )}
                             {res.score !== undefined && options.targets.length > 0 && (
                               <span className="glass-pill" style={{ background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-primary)', borderColor: 'rgba(59, 130, 246, 0.4)', fontSize: '0.7rem' }}>
-                                🎯 Score: {Math.round(res.score * 100)}%
-                              </span>
-                            )}
-                            {res.score !== undefined && options.targets.length > 0 && (
-                              <span className="glass-pill" style={{ background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-primary)', borderColor: 'rgba(59, 130, 246, 0.4)', fontSize: '0.7rem' }}>
-                                🎯 Score: {Math.round(res.score * 100)}%
+                                🎯 Score: {Math.round(res.score || 0)} pts
                               </span>
                             )}
                             {savedOptionsRecord[res.id] && savedOptionsRecord[res.id].length > 0 && (

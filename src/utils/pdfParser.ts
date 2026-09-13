@@ -327,17 +327,17 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
       let groupTypeStr = '', isVirtualStr = '', dayStr = '', startTimeStr = '', endTimeStr = '', locationStr = '';
 
       if (isCargaHabil) {
-        match = fullStr.match(/(Teor[íi]a|Lab\w*|Pr[aá]c\w*|Tall\w*)\s*(Virtual)?\s*\d*\s*(Lun\w*|Mar\w*|Mi[eé]\w*|Jue\w*|Vie\w*|S[aá]b\w*|Dom\w*)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(?:Semana\s+General)?\s*(.*)/i);
+        match = fullStr.match(/(Teor[íi]a|Lab\w*|Pr[aá]c\w*|Tall\w*)\s*(Virtual)?\s*(\d*)\s*(Lun\w*|Mar\w*|Mi[eé]\w*|Jue\w*|Vie\w*|S[aá]b\w*|Dom\w*)\.?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(?:Semana\s+General)?\s*(.*)/i);
         if (match) {
-          groupTypeStr = match[1];
+          groupTypeStr = match[1] + (match[3] ? ' ' + match[3] : '');
           isVirtualStr = match[2];
-          dayStr = match[3];
-          startTimeStr = match[4];
-          endTimeStr = match[5];
-          locationStr = match[6];
+          dayStr = match[4];
+          startTimeStr = match[5];
+          endTimeStr = match[6];
+          locationStr = match[7];
         }
       } else {
-        match = fullStr.match(/Semana\s+General\s+(Lun\w*|Mar\w*|Mi[eé]\w*|Jue\w*|Vie\w*|S[aá]b\w*|Dom\w*)\.?\s+(Teor[íi]a|Lab\w*|Pr[aá]c\w*|Tall\w*)\s*(Virtual)?\s*:?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(.*)/i);
+        match = fullStr.match(/(?:Semana\s+General|Semana\s+\d+\s*-\s*\d+)?\s*(Lun\w*|Mar\w*|Mi[eé]\w*|Jue\w*|Vie\w*|S[aá]b\w*|Dom\w*)\.?\s+(Teor[íi]a|Lab\w*|Pr[aá]c\w*|Tall\w*)\s*(Virtual)?\s*:?\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*(.*)/i);
         if (match) {
           dayStr = match[1];
           groupTypeStr = match[2];
@@ -395,10 +395,12 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
               const startMinutes = timeToMinutes(startTime);
               const endMinutes = timeToMinutes(endTime);
 
-              const sessionGroupStr = isCargaHabil ? (matchedAnchor.subGroup || groupType.toUpperCase()) : groupType.toUpperCase();
+              const sessionGroupStr = groupTypeStr.toUpperCase();
+
+              const finalSectionNum = isCargaHabil ? (matchedAnchor.sectionNum || '1') : (enrolledSections[matchedAnchor.code] || matchedAnchor.sectionNum || '1');
 
               course.rawSessions.push({
-                sectionNum: enrolledSections[matchedAnchor.code] || matchedAnchor.sectionNum || '1',
+                sectionNum: finalSectionNum,
                 sessionGroup: sessionGroupStr,
                 sessionType: parseSessionType(sessionGroupStr),
                 modality: isVirtual ? 'Sincronico' : 'Presencial',

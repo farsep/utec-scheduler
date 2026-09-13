@@ -1,5 +1,110 @@
-import type { Course, Session, DayOfWeek, OptimizerOptions, GeneratedScheduleResult } from '../types/schedule';
+import type { Course, Session, DayOfWeek, OptimizerOptions, GeneratedScheduleResult, Section } from '../types/schedule';
 import { detectConflicts, calculateTotalHours } from './scheduleUtils';
+
+export function calculateMetricsFromSessions(
+  allSessions: Session[],
+  options?: OptimizerOptions
+): {
+  totalGapMinutes: number;
+  gapHours: number;
+  activeDaysCount: number;
+  totalHours: number;
+  earliestStartMinutes: number;
+  latestEndMinutes: number;
+  morningScore: number;
+  afternoonScore: number;
+  lunchScore: number;
+} {
+  const sessionsByDay: Record<string, Session[]> = {
+    Lun: [], Mar: [], Mie: [], Jue: [], Vie: [], Sab: [], Dom: []
+  };
+
+  let totalHours = 0;
+  let morningScore = 0;
+  let afternoonScore = 0;
+  let earliestStartMinutes = 24 * 60;
+  let latestEndMinutes = 0;
+
+  for (let i = 0; i < allSessions.length; i++) {
+    const sess = allSessions[i];
+    sessionsByDay[sess.day].push(sess);
+    
+    const duration = sess.endMinutes - sess.startMinutes;
+    totalHours += duration / 60;
+
+    if (sess.startMinutes < earliestStartMinutes) earliestStartMinutes = sess.startMinutes;
+    if (sess.endMinutes > latestEndMinutes) latestEndMinutes = sess.endMinutes;
+
+    morningScore += Math.max(0, 1080 - sess.startMinutes);
+    afternoonScore += Math.max(0, sess.startMinutes - 480);
+  }
+
+  let totalGapMinutes = 0;
+  let activeDaysCount = 0;
+  let daysMeetingLunch = 0;
+
+  const days = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
+  for (let d = 0; d < days.length; d++) {
+    const day = days[d];
+    const sessions = sessionsByDay[day];
+    if (sessions.length > 0) {
+      activeDaysCount++;
+      sessions.sort((a, b) => a.startMinutes - b.startMinutes);
+
+      let hasLunchBreak = false;
+      const lunchConfig = options?.lunchConfig;
+
+      if (lunchConfig && lunchConfig.enabled) {
+        const [lh, lm] = lunchConfig.startTime.split(':');
+        const lunchStart = parseInt(lh) * 60 + parseInt(lm);
+        const [eh, em] = lunchConfig.endTime.split(':');
+        const lunchEnd = parseInt(eh) * 60 + parseInt(em);
+        const minDuration = lunchConfig.durationMinutes;
+
+        let lastEnd = lunchStart;
+        for (let i = 0; i < sessions.length; i++) {
+           const s = sessions[i];
+           if (s.startMinutes >= lunchEnd) break;
+           if (s.endMinutes <= lunchStart) continue;
+
+           const blockStart = Math.max(s.startMinutes, lunchStart);
+           const blockEnd = Math.min(s.endMinutes, lunchEnd);
+
+           if (blockStart - lastEnd >= minDuration) {
+             hasLunchBreak = true;
+           }
+           lastEnd = Math.max(lastEnd, blockEnd);
+        }
+        if (lunchEnd - lastEnd >= minDuration) {
+           hasLunchBreak = true;
+        }
+      } else {
+        hasLunchBreak = true;
+      }
+
+      if (hasLunchBreak) daysMeetingLunch++;
+
+      for (let i = 0; i < sessions.length - 1; i++) {
+        const gap = sessions[i + 1].startMinutes - sessions[i].endMinutes;
+        if (gap > 0) {
+          totalGapMinutes += gap;
+        }
+      }
+    }
+  }
+
+  return {
+    totalGapMinutes,
+    gapHours: totalGapMinutes / 60,
+    activeDaysCount,
+    totalHours,
+    earliestStartMinutes: earliestStartMinutes === 24 * 60 ? 0 : earliestStartMinutes,
+    latestEndMinutes,
+    morningScore,
+    afternoonScore,
+    lunchScore: activeDaysCount > 0 ? daysMeetingLunch / activeDaysCount : 0
+  };
+}
 
 export function calculateScheduleMetrics(
   selectedSections: Record<string, string>, 
