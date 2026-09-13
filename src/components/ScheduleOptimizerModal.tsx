@@ -727,6 +727,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                     draggedSection={null}
                     onSelectSection={() => {}}
                     onRemoveSection={() => {}}
+                    compressView={true}
                   />
                 </div>
               </div>

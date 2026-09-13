@@ -10,6 +10,7 @@ interface TimetableGridProps {
   draggedSection: { courseCode: string; sectionNumber: string } | null;
   onSelectSection: (courseCode: string, sectionNumber: string) => void;
   onRemoveSection: (courseCode: string) => void;
+  compressView?: boolean;
 }
 
 const abbreviateSession = (session: string) => {
@@ -64,7 +65,8 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
   conflicts,
   draggedSection,
   onSelectSection,
-  onRemoveSection
+  onRemoveSection,
+  compressView = false,
 }) => {
   const [dragOverDay, setDragOverDay] = useState<DayOfWeek | null>(null);
 
@@ -113,11 +115,10 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
     });
   });
 
-  // 2. Calculate dynamic START_HOUR and END_HOUR based on content
   let dynamicStartHour = 7;
-  let dynamicEndHour = 22;
+  let dynamicEndHour = 22; // Fixed to 22 (10 PM) for full view
 
-  if (scheduledBlocks.length > 0) {
+  if (compressView && scheduledBlocks.length > 0) {
     const earliestMin = Math.min(...scheduledBlocks.map(b => b.startMinutes));
     const latestMin = Math.max(...scheduledBlocks.map(b => b.endMinutes));
     // Pad by 1 extra hour at the bottom, clamped between 7:00 and 23:00
