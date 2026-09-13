@@ -28,6 +28,3 @@ pnpm-debug.log*
 CoursesLists/
 
 scratch/
-
-src/utils/test_fullText.ts
-src/utils/test_parser2.ts

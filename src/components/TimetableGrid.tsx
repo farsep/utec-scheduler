@@ -26,11 +26,14 @@ const MarqueeText: React.FC<{ text: string }> = ({ text }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const textRef = React.useRef<HTMLDivElement>(null);
   const [isOverflowing, setIsOverflowing] = React.useState(false);
+  const [scrollDistance, setScrollDistance] = React.useState(0);
 
   React.useEffect(() => {
     const checkOverflow = () => {
       if (containerRef.current && textRef.current) {
-        setIsOverflowing(textRef.current.scrollWidth > containerRef.current.clientWidth);
+        const overflowAmount = textRef.current.scrollWidth - containerRef.current.clientWidth;
+        setIsOverflowing(overflowAmount > 0);
+        setScrollDistance(overflowAmount > 0 ? overflowAmount : 0);
       }
     };
     checkOverflow();
@@ -47,7 +50,7 @@ const MarqueeText: React.FC<{ text: string }> = ({ text }) => {
       <div 
         className={`marquee-film-text ${isOverflowing ? 'is-overflowing' : ''}`} 
         ref={textRef}
-        style={{ lineHeight: '1.2' }}
+        style={{ lineHeight: '1.2', ...(isOverflowing ? { '--scroll-distance': `-${scrollDistance}px` } as React.CSSProperties : {}) }}
       >
         {text}
       </div>
