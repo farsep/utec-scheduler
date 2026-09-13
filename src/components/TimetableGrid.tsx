@@ -117,9 +117,9 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
   if (scheduledBlocks.length > 0) {
     const earliestMin = Math.min(...scheduledBlocks.map(b => b.startMinutes));
     const latestMin = Math.max(...scheduledBlocks.map(b => b.endMinutes));
-    // Pad by 1 hour, clamped between 7:00 and 23:00
+    // Pad by 1 extra hour at the bottom, clamped between 7:00 and 23:00
     dynamicStartHour = Math.max(7, Math.floor(earliestMin / 60));
-    dynamicEndHour = Math.min(23, Math.ceil(latestMin / 60));
+    dynamicEndHour = Math.min(23, Math.ceil(latestMin / 60) + 1);
   }
 
   const TOTAL_MINUTES = (dynamicEndHour - dynamicStartHour) * 60;
@@ -196,7 +196,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
   };
 
   return (
-    <div className="timetable-grid-wrapper">
+    <div className="timetable-grid-wrapper" style={{ height: '100%' }}>
       {/* Header Days Row */}
       <div className="timetable-header">
         <div className="time-col-header">Hora</div>
@@ -248,7 +248,8 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                       className={`schedule-block ${block.hasConflict ? 'has-conflict' : ''} ${durationMinutes <= 60 ? 'short-block' : ''}`}
                       style={{
                         top: `${topPercent}%`,
-                        height: `${heightPercent}%`,
+                        height: `calc(${heightPercent}% - 2px)`,
+                        marginTop: '1px',
                         background: gradient,
                       }}
                       title={`${block.course.code} ${block.course.name}\nSec ${block.sectionNumber} - ${block.sessionGroup}\n${block.startTime} - ${block.endTime}\nAula: ${formatLocation(block.location)}\nDocente: ${block.professor}`}
@@ -299,7 +300,8 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
                       className={`schedule-ghost-block ${ghost.hasGhostConflict ? 'ghost-conflict' : ''}`}
                       style={{
                         top: `${topPercent}%`,
-                        height: `${heightPercent}%`,
+                        height: `calc(${heightPercent}% - 2px)`,
+                        marginTop: '1px',
                       }}
                     >
                       <div className="block-course-code" style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', overflow: 'hidden' }}>
