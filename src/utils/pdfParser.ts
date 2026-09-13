@@ -1,7 +1,7 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.js?url';
 import type { Course, Section, Session, MetadataInfo, DayOfWeek } from '../types/schedule';
-import { parseSessionType, getCourseColor, timeToMinutes, formatLocation, parseDayOfWeek } from './scheduleUtils';
+import { parseSessionType, getCourseColor, timeToMinutes, formatLocation, parseDayOfWeek, DAYS } from './scheduleUtils';
 
 if (typeof window !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
@@ -424,10 +424,28 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
         const professors: string[] = [];
 
         sRows.forEach(row => {
+          let suffix = mainSecNum.split(' (')[0];
+          
+          if (parseSessionType(row.sessionGroup) === 'Laboratorio' && mainSecNum.includes('(')) {
+            // Extract the number from '3 (Lab. 31)'
+            const subGroupMatch = mainSecNum.match(/\((\w+)\.\s*(\d+)\)/);
+            if (subGroupMatch) {
+              suffix = subGroupMatch[2];
+            } else {
+               const anyNumMatch = mainSecNum.match(/\(\D*(\d+)\)/);
+               if (anyNumMatch) {
+                  suffix = anyNumMatch[1];
+               }
+            }
+          }
+          
+          // Append the correct suffix (e.g. TEORÍA 9 or LABORATORIO 31)
+          const numberedGroup = `${row.sessionGroup} ${suffix}`;
+
           sessions.push({
-            id: `${code}-${mainSecNum}-${row.sessionGroup}-${row.parsedTime.day}-${row.parsedTime.startTime}`,
-            sessionGroup: row.sessionGroup.toUpperCase(),
-            sessionType: parseSessionType(row.sessionGroup),
+            id: `${code}-${mainSecNum}-${numberedGroup}-${row.parsedTime.day}-${row.parsedTime.startTime}`,
+            sessionGroup: numberedGroup.toUpperCase(),
+            sessionType: parseSessionType(numberedGroup),
             modality: row.modality,
             day: row.parsedTime.day,
             startTime: row.parsedTime.startTime,
