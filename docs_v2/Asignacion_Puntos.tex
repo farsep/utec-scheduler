@@ -1,0 +1,105 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+\title{\textbf{Sistema de Puntuación de Horarios (MatricuLAB v2)}}
+\author{Documentación Técnica}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+La asignación de puntos para determinar cuáles son los mejores horarios y qué porcentaje de ``perfección'' alcanzan se divide en dos procesos técnicos distintos: \textbf{Fase 1: Filtrado Heurístico (Web Worker)} y \textbf{Fase 2: Recálculo y Normalización Relativa (Frontend)}.
+
+\section{Fase 1: Filtrado Heurístico Masivo (Web Worker)}
+
+Cuando el usuario solicita generar horarios, el sistema evalúa millones de permutaciones mediante operaciones a nivel de bits (Bitwise). Durante este proceso en segundo plano, se genera un \textbf{Puntaje Bruto Absoluto (\texttt{rawScore})} para cada combinación válida. 
+
+El único propósito de este puntaje bruto es alimentar una estructura de datos de cola de prioridad (\texttt{MinMaxHeap}) que retendrá únicamente los \textbf{50 mejores horarios en memoria RAM}, descartando el resto. Las reglas matemáticas aplicadas en esta fase son rígidas y priorizan la velocidad extrema de cálculo:
+
+\begin{enumerate}
+    \item \textbf{Menos Huecos (\texttt{min\_gaps}):}
+    \begin{itemize}
+        \item Se calculan todos los "slots" (bloques de 15 minutos) vacíos entre la primera y última clase de cada día.
+        \item Penalización: Se resta el total de minutos de hueco de la semana ($\texttt{rawScore} \mathrel{-}= \text{totalGapMinutes}$).
+    \end{itemize}
+    
+    \item \textbf{Menos Días (\texttt{min\_days}):}
+    \begin{itemize}
+        \item Se cuenta la cantidad de días en la semana con al menos una clase (\texttt{activeDaysCount}).
+        \item Penalización: Se resta un peso muy alto por cada día físico requerido ($\texttt{rawScore} \mathrel{-}= \text{activeDaysCount} \times 500$).
+    \end{itemize}
+
+    \item \textbf{Evitar Días Huecos (\texttt{min\_day\_gaps}):}
+    \begin{itemize}
+        \item Se detectan los "días puente", es decir, días libres que están atrapados entre dos días de clases (por ejemplo, martes libre, pero lunes y miércoles con clases).
+        \item Penalización: Castigo masivo por cada día puente detectado ($\texttt{rawScore} \mathrel{-}= \text{bridgeDays} \times 1000$).
+    \end{itemize}
+
+    \item \textbf{Preferir Mañana (\texttt{morning}):}
+    \begin{itemize}
+        \item Cada bloque de 15 minutos de clase que ocurra \textbf{estrictamente antes de las 12:00 PM} suma 1 a \texttt{morningSlots}.
+        \item Bonificación: Se suman los minutos totales matutinos escalados ($\texttt{rawScore} \mathrel{+}= (\text{morningSlots} \times 15) / 5$).
+    \end{itemize}
+
+    \item \textbf{Preferir Tarde (\texttt{afternoon}):}
+    \begin{itemize}
+        \item Cada bloque de 15 minutos de clase que ocurra \textbf{a partir de las 12:00 PM en adelante} suma 1 a \texttt{afternoonSlots}.
+        \item Bonificación: Se suman los minutos totales vespertinos escalados ($\texttt{rawScore} \mathrel{+}= (\text{afternoonSlots} \times 15) / 5$).
+    \end{itemize}
+
+    \item \textbf{Garantizar Almuerzo (\texttt{lunch}):}
+    \begin{itemize}
+        \item Se revisa si dentro de la ventana de almuerzo elegida existe un bloque libre consecutivo $\ge$ a la duración solicitada.
+        \item Bonificación: Se saca la fracción de días que cumplen el requisito sobre el total de días activos y se premia fuertemente ($\texttt{rawScore} \mathrel{+}= \text{fracción} \times 1000$).
+    \end{itemize}
+\end{enumerate}
+
+\section{Fase 2: Recálculo y Normalización Relativa (Frontend)}
+
+Una vez que el Web Worker finaliza su ejecución masiva, envía el Top 50 de horarios al hilo principal (Frontend). En este punto, los puntajes brutos (\texttt{rawScore}) son descartados, ya que carecen de contexto humano intuitivo. El Frontend aplica su propia matemática refinada para calcular el \textbf{Porcentaje de Afinidad (0\% a 100\%)} final.
+
+\subsection{2.1. Recálculo Elástico de Mañana y Tarde}
+Para brindar mayor precisión y castigar severamente las clases que invadan el turno contrario, el frontend recalcula las métricas de mañana y tarde evaluando independientemente la hora de inicio de cada sesión (\texttt{startMinutes}):
+
+\begin{itemize}
+    \item \textbf{Métrica Mañana (\texttt{morningScore}):} \\
+    Fórmula: $\max(0, 720 - \texttt{startMinutes})$. \\
+    \textit{Significado:} Solo otorgan puntos las clases que inician antes de las 12:00 PM (720 min). Mientras más temprano inician (ej. 7:00 AM / 420 min), mayor es el puntaje ($720 - 420 = 300 \text{ pts}$). Cualquier clase desde el mediodía en adelante aporta $0$ puntos matutinos.
+    
+    \item \textbf{Métrica Tarde (\texttt{afternoonScore}):} \\
+    Fórmula: $\max(0, \texttt{startMinutes} - 720)$. \\
+    \textit{Significado:} Solo otorgan puntos las clases que inician a partir de las 12:00 PM. Mientras más tarde inician, mayor es el puntaje. Las clases matutinas aportan $0$ puntos vespertinos.
+\end{itemize}
+
+\subsection{2.2. Cálculo de Interpolación Lineal (Relativo al Top 50)}
+Para determinar el porcentaje final de un horario, el sistema lo evalúa de forma \textbf{relativa frente a los otros 49 competidores} del lote:
+
+\begin{enumerate}
+    \item \textbf{Obtención de Límites:} Por cada filtro activado por el usuario, el algoritmo escanea el Top 50 en memoria y encuentra el \textbf{valor mínimo} y \textbf{máximo} absoluto de esa métrica.
+    \item \textbf{Normalización por Métrica ($0$ a $1$):} Utilizando interpolación lineal, se ubica cada horario dentro de esos límites absolutos:
+    \begin{equation}
+        n = \frac{\text{valor\_horario} - \text{mínimo}}{\text{máximo} - \text{mínimo}}
+    \end{equation}
+    \begin{itemize}
+        \item \textit{Filtros de Reducción (Huecos, Días):} Como se busca que el valor numérico sea lo menor posible, el cálculo se invierte ($1 - n$). El horario con menos huecos de todo el grupo recibe $1$ (100\%), y el que tiene más recibe $0$ (0\%).
+        \item \textit{Filtros de Maximización (Mañana, Tarde):} El cálculo es directo. El horario con más horas acumuladas según la fórmula elástica recibe $1$ (100\%).
+        \item \textit{Empate Global Matemático:} Si en todo el Top 50 el mínimo es idéntico al máximo (ej. todos los horarios tienen exactamente 2 días de clase), el divisor se anula. El sistema infiere perfección total en esa métrica y asigna $1$ (100\%) a todos.
+    \end{itemize}
+    \item \textbf{Porcentaje Final (\texttt{score}):} El sistema calcula el \textbf{promedio aritmético exacto} de las puntuaciones (de 0 a 1) obtenidas en todas las métricas objetivo, transformando el resultado en un porcentaje global final visual.
+\end{enumerate}
+
+\subsection{2.3. Jerarquía de Desempate (Tie-Breakers)}
+Si tras la normalización, dos o más horarios empatan con un porcentaje final matemático exacto (ej. 85.00\%), el sistema interviene ordenándolos visualmente en la interfaz mediante reglas de desempate duro:
+\begin{enumerate}
+    \item Menor cantidad de minutos de hueco en total en la semana.
+    \item Menor cantidad de días de asistencia requeridos.
+    \item El horario cuya última sesión de clase termine más temprano a nivel semanal (\texttt{latestEndMinutes}).
+\end{enumerate}
+
+\end{document}
