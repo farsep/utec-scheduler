@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { X, Sparkles, CheckSquare, Square, Filter, ChevronRight, CheckCircle2, Clock, Calendar, Check, Search, Coffee } from 'lucide-react';
 import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
-import { formatLocation, getCourseColor, getCoursePrefix, minutesToTime, normalizeString, getCombinations } from '../utils/scheduleUtils';
+import { formatLocation, getCourseColor, getCoursePrefix, minutesToTime, normalizeString, getCombinations, sessionToBitmask } from '../utils/scheduleUtils';
 import { TimetableGrid } from './TimetableGrid';
 import { GlassTimePicker } from './GlassTimePicker';
 import { Eye } from 'lucide-react';
@@ -27,7 +27,6 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   const [selectedCourseCodes, setSelectedCourseCodes] = useState<string[]>(initialSelectedCourseCodes);
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyEligible, setShowOnlyEligible] = useState(false);
-  const [courseTypeFilter, setCourseTypeFilter] = useState<'All' | 'Obligatorio' | 'Electivo'>('All');
   
   const [options, setOptions] = useState<OptimizerOptions>({
     targets: ['min_gaps'],
@@ -57,6 +56,13 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   
   const [workerProgress, setWorkerProgress] = useState<{ evaluated: number, total: number, validFound: number } | null>(null);
   const workerRefs = useRef<Worker[]>([]);
+  
+  const cancelGeneration = () => {
+    workerRefs.current.forEach(w => w.terminate());
+    workerRefs.current = [];
+    setIsGenerating(false);
+    setWorkerProgress(null);
+  };
 
   const prevIsOpen = useRef(false);
 
@@ -143,6 +149,35 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
             return;
           }
 
+          // Build lightweight static conflict graph to prune chunkTasks
+          const courseConflicts = new Map<string, Set<string>>();
+          for (let i = 0; i < pool.length; i++) {
+            for (let j = i + 1; j < pool.length; j++) {
+              const c1 = courses.find(c => c.code === pool[i]);
+              const c2 = courses.find(c => c.code === pool[j]);
+              if (!c1 || !c2) continue;
+              
+              let possible = false;
+              for (const s1 of c1.sections) {
+                const b1 = sessionToBitmask(s1.sessions);
+                for (const s2 of c2.sections) {
+                  const b2 = sessionToBitmask(s2.sessions);
+                  if ((b1 & b2) === 0n) {
+                    possible = true;
+                    break;
+                  }
+                }
+                if (possible) break;
+              }
+              if (!possible) {
+                if (!courseConflicts.has(pool[i])) courseConflicts.set(pool[i], new Set());
+                if (!courseConflicts.has(pool[j])) courseConflicts.set(pool[j], new Set());
+                courseConflicts.get(pool[i])!.add(pool[j]);
+                courseConflicts.get(pool[j])!.add(pool[i]);
+              }
+            }
+          }
+
           let count = 1;
           for (let i = 1; i <= neededFromPool; i++) {
             count = (count * (pool.length - i + 1)) / i;
@@ -156,7 +191,20 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
               return;
             }
             for (let i = startIdx; i < pool.length; i++) {
-              currentCombo.push(pool[i]);
+              const candidate = pool[i];
+              let conflict = false;
+              const conflicts = courseConflicts.get(candidate);
+              if (conflicts) {
+                for (const existing of currentCombo) {
+                  if (conflicts.has(existing)) {
+                    conflict = true;
+                    break;
+                  }
+                }
+              }
+              if (conflict) continue;
+
+              currentCombo.push(candidate);
               generateTasks(currentCombo, i + 1);
               currentCombo.pop();
             }
@@ -267,9 +315,6 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     if (showOnlyEligible) {
       result = result.filter(c => c.isEligible);
     }
-    if (courseTypeFilter !== 'All') {
-      result = result.filter(c => c.courseType === courseTypeFilter);
-    }
     const q = normalizeString(searchQuery);
     if (q) {
       result = result.filter(c => {
@@ -279,7 +324,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       });
     }
     return result;
-  }, [courses, searchQuery, showOnlyEligible, courseTypeFilter]);
+  }, [courses, searchQuery, showOnlyEligible]);
 
   if (!isOpen) return null;
 
@@ -529,36 +574,6 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   </div>
                 )}
 
-                {hasCourseTypeFilter && (
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                    <div 
-                      onClick={() => setCourseTypeFilter(courseTypeFilter === 'Obligatorio' ? 'All' : 'Obligatorio')}
-                      style={{ 
-                        flex: 1, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', cursor: 'pointer',
-                        userSelect: 'none', padding: '6px 8px', borderRadius: '6px', transition: 'all 0.2s ease',
-                        background: courseTypeFilter === 'Obligatorio' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(0,0,0,0.2)',
-                        border: courseTypeFilter === 'Obligatorio' ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid var(--border-color)',
-                        color: courseTypeFilter === 'Obligatorio' ? 'var(--accent-primary)' : 'var(--text-secondary)'
-                      }}
-                    >
-                      {courseTypeFilter === 'Obligatorio' ? <CheckSquare size={14} color="var(--accent-primary)" /> : <Square size={14} color="var(--text-muted)" />}
-                      <span>Solo Obligatorios</span>
-                    </div>
-                    <div 
-                      onClick={() => setCourseTypeFilter(courseTypeFilter === 'Electivo' ? 'All' : 'Electivo')}
-                      style={{ 
-                        flex: 1, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', cursor: 'pointer',
-                        userSelect: 'none', padding: '6px 8px', borderRadius: '6px', transition: 'all 0.2s ease',
-                        background: courseTypeFilter === 'Electivo' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(0,0,0,0.2)',
-                        border: courseTypeFilter === 'Electivo' ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid var(--border-color)',
-                        color: courseTypeFilter === 'Electivo' ? 'var(--accent-primary)' : 'var(--text-secondary)'
-                      }}
-                    >
-                      {courseTypeFilter === 'Electivo' ? <CheckSquare size={14} color="var(--accent-primary)" /> : <Square size={14} color="var(--text-muted)" />}
-                      <span>Solo Electivos</span>
-                    </div>
-                  </div>
-                )}
 
                 <div className="course-list-scroll" style={{ maxHeight: '200px', paddingRight: '8px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', padding: '8px', overflowY: 'auto' }}>
                   {filteredCourses.map(course => {
@@ -717,16 +732,40 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
               </div>
             </div>
 
-            {/* Action */}
             <div style={{ padding: '20px', borderTop: '1px solid var(--border-color)', marginTop: 'auto', flexShrink: 0, background: 'rgba(0,0,0,0.2)' }}>
-              <button 
-                className="btn btn-primary" 
-                style={{ width: '100%', padding: '12px', fontSize: '0.95rem', background: 'var(--accent-gradient)', border: 'none' }}
-                onClick={handleGenerate}
-                disabled={isGenerating || selectedCourseCodes.length === 0}
-              >
-                {isGenerating ? 'Generando...' : 'Generar Horarios'}
-              </button>
+              {!isGenerating ? (
+                <button 
+                  className="btn btn-primary" 
+                  style={{ 
+                    width: '100%', padding: '12px', fontSize: '0.95rem', 
+                    background: (selectedCourseCodes.length === 0) ? 'var(--surface-light)' : 'var(--accent-gradient)', 
+                    border: 'none',
+                    opacity: (selectedCourseCodes.length === 0) ? 0.5 : 1,
+                    cursor: (selectedCourseCodes.length === 0) ? 'not-allowed' : 'pointer',
+                    pointerEvents: (selectedCourseCodes.length === 0) ? 'none' : 'auto'
+                  }}
+                  onClick={handleGenerate}
+                  disabled={selectedCourseCodes.length === 0}
+                >
+                  Generar Horarios
+                </button>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button 
+                    className="btn btn-secondary" 
+                    style={{ 
+                      width: '100%', padding: '12px', fontSize: '0.95rem', 
+                      borderColor: 'var(--accent-rose)', color: 'var(--accent-rose)' 
+                    }}
+                    onClick={cancelGeneration}
+                  >
+                    Detener Búsqueda
+                  </button>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                    Si cierras esta ventana, la búsqueda continuará en segundo plano.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

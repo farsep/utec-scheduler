@@ -84,7 +84,7 @@ export interface FilterState {
   onlySelected?: boolean;
   modalityFilter: 'ALL' | 'Presencial' | 'Sincronico';
   dayFilter: 'ALL' | DayOfWeek;
-  typeFilter: 'ALL' | 'Obligatorio' | 'Electivo';
+  typeFilter: 'ALL' | 'Obligatorio' | 'Electivo' | 'Otros (Malla Nueva)';
 }
 
 export type OptimizationTarget = 'min_gaps' | 'min_days' | 'morning' | 'afternoon' | 'lunch_break' | 'min_day_gaps';

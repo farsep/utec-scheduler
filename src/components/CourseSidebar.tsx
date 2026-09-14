@@ -45,6 +45,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
   const [allExpanded, setAllExpanded] = useState<boolean>(false);
 
   const hasEligibleFilter = courses.some(c => c.isEligible) && courses.some(c => !c.isEligible);
+  const hasCourseTypeData = courses.some(c => c.courseType !== undefined);
 
   // Handle filtering
   const filteredCourses = useMemo(() => {
@@ -289,18 +290,29 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
               {filterState.onlyEligible ? '✓ Habilitados PDF' : 'Habilitados PDF'}
             </button>
           )}
-          <button
-            className={`filter-pill-btn ${filterState.typeFilter === 'Obligatorio' ? 'active' : ''}`}
-            onClick={() => setFilterState(prev => ({ ...prev, typeFilter: prev.typeFilter === 'Obligatorio' ? 'ALL' : 'Obligatorio' }))}
-          >
-            Obligatorios
-          </button>
-          <button
-            className={`filter-pill-btn ${filterState.typeFilter === 'Electivo' ? 'active' : ''}`}
-            onClick={() => setFilterState(prev => ({ ...prev, typeFilter: prev.typeFilter === 'Electivo' ? 'ALL' : 'Electivo' }))}
-          >
-            Electivos
-          </button>
+          
+          {hasCourseTypeData && (
+            <>
+              <button
+                className={`filter-pill-btn ${filterState.typeFilter === 'Obligatorio' ? 'active' : ''}`}
+                onClick={() => setFilterState(prev => ({ ...prev, typeFilter: prev.typeFilter === 'Obligatorio' ? 'ALL' : 'Obligatorio' }))}
+              >
+                Obligatorios
+              </button>
+              <button
+                className={`filter-pill-btn ${filterState.typeFilter === 'Electivo' ? 'active' : ''}`}
+                onClick={() => setFilterState(prev => ({ ...prev, typeFilter: prev.typeFilter === 'Electivo' ? 'ALL' : 'Electivo' }))}
+              >
+                Electivos
+              </button>
+              <button
+                className={`filter-pill-btn ${filterState.typeFilter === 'Otros (Malla Nueva)' ? 'active' : ''}`}
+                onClick={() => setFilterState(prev => ({ ...prev, typeFilter: prev.typeFilter === 'Otros (Malla Nueva)' ? 'ALL' : 'Otros (Malla Nueva)' }))}
+              >
+                Malla Nueva
+              </button>
+            </>
+          )}
         </div>
       </div>
 
