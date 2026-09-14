@@ -47,6 +47,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   const [maxCourses, setMaxCourses] = useState(5);
   const [minTime, setMinTime] = useState<string>('07:00');
   const [maxTime, setMaxTime] = useState<string>('22:00');
+  const [typeFilter, setTypeFilter] = useState<'ALL' | 'Obligatorio' | 'Electivo'>('ALL');
   
   // Lunch Break state
   const [isLunchEnabled, setIsLunchEnabled] = useState(false);
@@ -315,6 +316,9 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     if (showOnlyEligible) {
       result = result.filter(c => c.isEligible);
     }
+    if (typeFilter !== 'ALL') {
+      result = result.filter(c => c.courseType === typeFilter);
+    }
     const q = normalizeString(searchQuery);
     if (q) {
       result = result.filter(c => {
@@ -324,7 +328,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       });
     }
     return result;
-  }, [courses, searchQuery, showOnlyEligible]);
+  }, [courses, searchQuery, showOnlyEligible, typeFilter]);
 
   if (!isOpen) return null;
 
@@ -523,38 +527,83 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   />
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                {hasCourseTypeFilter && (
+                  <div style={{ 
+                    display: 'flex', 
+                    background: 'rgba(0,0,0,0.25)', 
+                    borderRadius: '8px', 
+                    padding: '4px', 
+                    marginBottom: '12px',
+                    border: '1px solid var(--border-color)',
+                    position: 'relative'
+                  }}>
+                    {['ALL', 'Obligatorio', 'Electivo'].map((type) => (
+                      <div 
+                        key={type}
+                        onClick={() => setTypeFilter(type as any)}
+                        style={{
+                          flex: 1,
+                          textAlign: 'center',
+                          padding: '6px 0',
+                          fontSize: '0.7rem',
+                          fontWeight: typeFilter === type ? 600 : 400,
+                          color: typeFilter === type ? '#fff' : 'var(--text-muted)',
+                          background: typeFilter === type ? 'rgba(255,255,255,0.1)' : 'transparent',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease-in-out',
+                          boxShadow: typeFilter === type ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                          border: typeFilter === type ? '1px solid rgba(255,255,255,0.05)' : '1px solid transparent'
+                        }}
+                      >
+                        {type === 'ALL' ? 'Todos' : type}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div style={{ 
+                  display: 'flex', 
+                  background: 'rgba(0,0,0,0.15)', 
+                  borderRadius: '8px', 
+                  padding: '4px', 
+                  marginBottom: '12px',
+                  border: '1px solid rgba(255,255,255,0.05)',
+                }}>
                   <button 
-                    className="btn btn-secondary" 
-                    style={{ flex: 1, padding: '6px', fontSize: '0.75rem' }}
+                    style={{ flex: 1, padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                    onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff'; }}
+                    onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                     onClick={() => {
                       const visibleCodes = filteredCourses.map(c => c.code);
                       setSelectedCourseCodes(prev => Array.from(new Set([...prev, ...visibleCodes])));
                     }}
                   >
-                    Todos
+                    <CheckSquare size={12} /> Seleccionar
                   </button>
                   {hasEligibleFilter && (
                     <button 
-                      className="btn btn-secondary" 
-                      style={{ flex: 1, padding: '6px', fontSize: '0.75rem' }}
+                      style={{ flex: 1, padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.2s', borderLeft: '1px solid rgba(255,255,255,0.05)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                      onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff'; }}
+                      onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                       onClick={() => {
                         const eligibleCodes = courses.filter(c => c.isEligible).map(c => c.code);
                         setSelectedCourseCodes(eligibleCodes);
                       }}
                     >
-                      Solo Habilitados
+                      <Filter size={12} /> Habilitados
                     </button>
                   )}
                   <button 
-                    className="btn btn-secondary" 
-                    style={{ flex: 1, padding: '6px', fontSize: '0.75rem' }}
+                    style={{ flex: 1, padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                    onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff'; }}
+                    onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                     onClick={() => {
                       const visibleCodes = new Set(filteredCourses.map(c => c.code));
                       setSelectedCourseCodes(prev => prev.filter(code => !visibleCodes.has(code)));
                     }}
                   >
-                    Ninguno
+                    <Square size={12} /> Limpiar
                   </button>
                 </div>
 

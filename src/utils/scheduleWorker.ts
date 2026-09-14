@@ -41,6 +41,30 @@ const evaluateCombination = (courseSet: string[]) => {
   });
   estimatedTotal += setCombinations;
 
+  let currentThreshold = -Infinity;
+  const suffixMaxBonus = new Float64Array(courseSections.length);
+  
+  for (let i = courseSections.length - 1; i >= 0; i--) {
+    let maxBonusForCourse = 0;
+    for (const sec of courseSections[i].sections) {
+      let mSlots = 0;
+      let aSlots = 0;
+      for (let day = 0n; day < 7n; day++) {
+        for (let slot = 0n; slot < 60n; slot++) {
+          if ((sec.bitmask & (1n << (day * 60n + slot))) !== 0n) {
+            if (slot < 20n) mSlots++;
+            else aSlots++;
+          }
+        }
+      }
+      let secBonus = 0;
+      if (workerOptions.targets.includes('morning')) secBonus += (mSlots * 15) / 5;
+      if (workerOptions.targets.includes('afternoon')) secBonus += (aSlots * 15) / 5;
+      if (secBonus > maxBonusForCourse) maxBonusForCourse = secBonus;
+    }
+    suffixMaxBonus[i] = maxBonusForCourse + (i < courseSections.length - 1 ? suffixMaxBonus[i + 1] : 0);
+  }
+
   function backtrack(index: number, currentMask: bigint, currentCombination: Record<string, string[]>, currentDomains: typeof courseSections) {
     if (index === courseSections.length) {
       let totalGapSlots = 0;
@@ -177,9 +201,16 @@ const evaluateCombination = (courseSet: string[]) => {
 
       expandHelper(0, {});
 
+      // Update currentThreshold periodically
+      if (topResults.length >= 50 && topResults.length % 50 === 0) {
+        topResults.sort((a: GeneratedScheduleResult, b: GeneratedScheduleResult) => (b.score || 0) - (a.score || 0));
+        currentThreshold = topResults[49].score || -Infinity;
+      }
+
       if (topResults.length >= 2000) {
         topResults.sort((a: GeneratedScheduleResult, b: GeneratedScheduleResult) => (b.score || 0) - (a.score || 0));
         topResults = topResults.slice(0, 200);
+        currentThreshold = topResults.length >= 50 ? (topResults[49].score || -Infinity) : -Infinity;
       }
       return;
     }
@@ -189,8 +220,26 @@ const evaluateCombination = (courseSet: string[]) => {
     for (const section of sections) {
       if ((currentMask & section.bitmask) !== 0n) continue;
       
-      currentCombination[courseCode] = section.homochronousSections;
       const nextMask = currentMask | section.bitmask;
+      
+      // Branch & Bound Score Pruning
+      let days = 0;
+      let tempMask = nextMask;
+      for (let d = 0; d < 7; d++) {
+        if ((tempMask & 0x0FFFFFFFFFFFFFFFn) !== 0n) days++;
+        tempMask >>= 60n;
+      }
+      let inevitablePenalty = 0;
+      if (workerOptions.targets.includes('min_days')) inevitablePenalty -= days * 500;
+      
+      const maxFutureBonus = (index + 1 < currentDomains.length) ? suffixMaxBonus[index + 1] : 0;
+      const upperBoundScore = inevitablePenalty + maxFutureBonus + (workerOptions.lunchConfig?.enabled ? 1000 : 0);
+      
+      if (upperBoundScore < currentThreshold) {
+        continue;
+      }
+
+      currentCombination[courseCode] = section.homochronousSections;
       
       let isViable = true;
       for (let i = index + 1; i < currentDomains.length; i++) {
