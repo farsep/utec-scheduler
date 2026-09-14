@@ -178,7 +178,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         return;
       }
 
-      // Arrays to track progress and results per worker
+      const tasksQueue = [...chunkTasks];
       const allResults: GeneratedScheduleResult[][] = Array(numWorkers).fill([]);
       const workersProgress = Array(numWorkers).fill({ evaluated: 0, total: 0, validFound: 0 });
       let completedWorkers = 0;
@@ -200,15 +200,16 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         const worker = new Worker(new URL('../utils/scheduleWorker.ts', import.meta.url), { type: 'module' });
         workerRefs.current.push(worker);
 
-        // Calculate chunk for this worker
-        const chunkSize = Math.ceil(chunkTasks.length / numWorkers);
-        const startIdx = i * chunkSize;
-        const endIdx = Math.min(startIdx + chunkSize, chunkTasks.length);
-        const chunk = chunkTasks.slice(startIdx, endIdx);
-
         worker.onmessage = (e: MessageEvent) => {
           const msg = e.data;
-          if (msg.type === 'PROGRESS') {
+          if (msg.type === 'READY') {
+            if (tasksQueue.length > 0) {
+              const nextTask = tasksQueue.shift()!;
+              worker.postMessage({ type: 'TASK', task: nextTask });
+            } else {
+              worker.postMessage({ type: 'FINISH' });
+            }
+          } else if (msg.type === 'PROGRESS') {
             workersProgress[i] = { evaluated: msg.evaluated, total: msg.total, validFound: msg.validFound };
             updateGlobalProgress();
           } else if (msg.type === 'COMPLETE') {
@@ -237,9 +238,8 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         };
 
         worker.postMessage({
-          type: 'START',
+          type: 'INIT',
           courses,
-          chunkTasks: chunk,
           poolBase,
           pinned,
           neededFromPool,
