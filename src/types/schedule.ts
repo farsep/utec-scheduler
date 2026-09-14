@@ -112,10 +112,14 @@ export interface OptimizerOptions {
 
 // Web Worker Types
 export type WorkerMessage = 
-  | { type: 'START'; courses: Course[]; chunkTasks: {prefix: string[], startIdx: number}[]; poolBase: string[]; pinned: string[]; neededFromPool: number; options: OptimizerOptions }
+  | { type: 'INIT'; courses: Course[]; poolBase: string[]; pinned: string[]; neededFromPool: number; options: OptimizerOptions }
+  | { type: 'TASK'; task: {prefix: string[], startIdx: number} }
+  | { type: 'FINISH' }
+  | { type: 'READY' }
   | { type: 'PROGRESS'; evaluated: number; total: number; validFound: number }
   | { type: 'COMPLETE'; results: GeneratedScheduleResult[] }
   | { type: 'ERROR'; message: string };
+
 
 export interface GeneratedScheduleResult {
   id: string;
