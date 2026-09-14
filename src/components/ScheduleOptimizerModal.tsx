@@ -57,6 +57,8 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   
   const [workerProgress, setWorkerProgress] = useState<{ evaluated: number, total: number, validFound: number } | null>(null);
   const workerRefs = useRef<Worker[]>([]);
+  const workersReadyRef = useRef<boolean[]>([]);
+  const lastInitHashRef = useRef<string>('');
   
   const cancelGeneration = () => {
     workerRefs.current.forEach(w => w.terminate());
@@ -81,8 +83,83 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       }
     } else if (prevIsOpen.current) {
       prevIsOpen.current = false;
+      // Terminate workers on close to save RAM
+      workerRefs.current.forEach(w => w.terminate());
+      workerRefs.current = [];
+      workersReadyRef.current = [];
+      lastInitHashRef.current = '';
     }
   }, [isOpen, initialSelectedCourseCodes]);
+
+  // Warm-up Effect
+  useEffect(() => {
+    if (!isOpen || !isAdvancedMode) return;
+
+    const timeToMinutes = (timeStr: string) => {
+      const [h, m] = timeStr.split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    const currentOptions: OptimizerOptions = {
+      ...options,
+      isAdvancedMode,
+      maxCourses,
+      pinnedCourseCodes,
+      minTimeMinutes: isAdvancedMode ? timeToMinutes(minTime) : undefined,
+      maxTimeMinutes: isAdvancedMode ? timeToMinutes(maxTime) : undefined,
+      lunchConfig: {
+        enabled: isLunchEnabled,
+        startTime: lunchStart,
+        endTime: lunchEnd,
+        durationMinutes: lunchDuration
+      }
+    };
+
+    const pinned = pinnedCourseCodes || [];
+    const targetCourses = maxCourses || 5;
+    const neededFromPool = targetCourses - pinned.length;
+    const pool = selectedCourseCodes.filter(c => !pinned.includes(c));
+    const poolBase = neededFromPool <= 0 ? [] : pool;
+
+    const currentHash = JSON.stringify({ poolBase, pinned, neededFromPool, options: currentOptions });
+
+    const timer = setTimeout(() => {
+      const numWorkers = navigator.hardwareConcurrency || 4;
+      if (workerRefs.current.length === 0) {
+        for (let i = 0; i < numWorkers; i++) {
+          workerRefs.current.push(new Worker(new URL('../utils/scheduleWorker.ts', import.meta.url), { type: 'module' }));
+          workersReadyRef.current.push(false);
+        }
+      }
+
+      if (lastInitHashRef.current !== currentHash) {
+        lastInitHashRef.current = currentHash;
+        workersReadyRef.current.fill(false);
+        
+        workerRefs.current.forEach((worker, i) => {
+          worker.onmessage = (e) => {
+            if (e.data.type === 'READY') {
+              workersReadyRef.current[i] = true;
+            }
+          };
+          worker.postMessage({
+            type: 'INIT',
+            courses,
+            poolBase,
+            pinned,
+            neededFromPool,
+            options: currentOptions
+          });
+        });
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [
+    isOpen, isAdvancedMode, courses, options, maxCourses, 
+    pinnedCourseCodes, minTime, maxTime, isLunchEnabled, 
+    lunchStart, lunchEnd, lunchDuration, selectedCourseCodes
+  ]);
 
   const toggleCourse = (code: string) => {
     setSelectedCourseCodes(prev => 
@@ -102,9 +179,6 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     setSavedOptionsRecord({});
     setWorkerProgress(null);
     setResults(null);
-    
-    workerRefs.current.forEach(w => w.terminate());
-    workerRefs.current = [];
 
     setTimeout(() => {
       const timeToMinutes = (timeStr: string) => {
@@ -227,6 +301,13 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         return;
       }
 
+      if (workerRefs.current.length === 0) {
+        for (let i = 0; i < numWorkers; i++) {
+          workerRefs.current.push(new Worker(new URL('../utils/scheduleWorker.ts', import.meta.url), { type: 'module' }));
+          workersReadyRef.current.push(false);
+        }
+      }
+
       const tasksQueue = [...chunkTasks];
       const allResults: GeneratedScheduleResult[][] = Array(numWorkers).fill([]);
       const workersProgress = Array(numWorkers).fill({ evaluated: 0, total: 0, validFound: 0 });
@@ -245,13 +326,20 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         setWorkerProgress({ evaluated: globalEvaluated, total: globalTotal, validFound: globalValid });
       };
 
+      const currentHash = JSON.stringify({ poolBase, pinned, neededFromPool, options: currentOptions });
+      const needsInit = lastInitHashRef.current !== currentHash;
+      if (needsInit) {
+        lastInitHashRef.current = currentHash;
+        workersReadyRef.current.fill(false);
+      }
+
       for (let i = 0; i < numWorkers; i++) {
-        const worker = new Worker(new URL('../utils/scheduleWorker.ts', import.meta.url), { type: 'module' });
-        workerRefs.current.push(worker);
+        const worker = workerRefs.current[i];
 
         worker.onmessage = (e: MessageEvent) => {
           const msg = e.data;
           if (msg.type === 'READY') {
+            workersReadyRef.current[i] = true;
             if (tasksQueue.length > 0) {
               const nextTask = tasksQueue.shift()!;
               worker.postMessage({ type: 'TASK', task: nextTask });
@@ -264,38 +352,48 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
           } else if (msg.type === 'COMPLETE') {
             allResults[i] = msg.results;
             completedWorkers++;
-            worker.terminate();
+            // We DO NOT terminate the worker anymore! It stays alive for subsequent generations.
 
             if (completedWorkers === numWorkers && !hasError) {
-              // Merge all results
               const mergedResults = allResults.flat();
-              // Sort by score descending and take top 200
               mergedResults.sort((a, b) => (b.score || 0) - (a.score || 0));
               setResults(mergedResults.slice(0, 200));
               setIsGenerating(false);
-              workerRefs.current = [];
             }
           } else if (msg.type === 'ERROR') {
             if (!hasError) {
               hasError = true;
               alert(msg.message);
               setIsGenerating(false);
+              // Only on error we reset the workers to ensure a clean state
               workerRefs.current.forEach(w => w.terminate());
               workerRefs.current = [];
+              workersReadyRef.current = [];
+              lastInitHashRef.current = '';
             }
           }
         };
 
-        worker.postMessage({
-          type: 'INIT',
-          courses,
-          poolBase,
-          pinned,
-          neededFromPool,
-          options: currentOptions
-        });
+        if (needsInit) {
+          worker.postMessage({
+            type: 'INIT',
+            courses,
+            poolBase,
+            pinned,
+            neededFromPool,
+            options: currentOptions
+          });
+        } else if (workersReadyRef.current[i]) {
+          // Worker is already warmed up, start TASK immediately
+          if (tasksQueue.length > 0) {
+            const nextTask = tasksQueue.shift()!;
+            worker.postMessage({ type: 'TASK', task: nextTask });
+          } else {
+            worker.postMessage({ type: 'FINISH' });
+          }
+        }
       }
-    }, 100);
+    }, 10);
   };
 
   const toggleExcludedDay = (day: DayOfWeek) => {
