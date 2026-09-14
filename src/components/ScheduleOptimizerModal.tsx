@@ -259,7 +259,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
           }
           totalCombinations = count;
 
-          const depth = Math.min(2, neededFromPool);
+          const depth = 1; // Limit prefix chunks to depth 1 (O(N) chunks) instead of O(N^2)
           function generateTasks(currentCombo: string[], startIdx: number) {
             if (currentCombo.length === depth || currentCombo.length === neededFromPool) {
               chunkTasks.push({ prefix: [...currentCombo], startIdx });
