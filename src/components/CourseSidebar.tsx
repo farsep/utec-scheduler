@@ -42,7 +42,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
     typeFilter: 'ALL'
   });
 
-  const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set(['CC1103', 'CS5352', 'CS2023']));
+  const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
   const [collapsedCourses, setCollapsedCourses] = useState<Set<string>>(new Set());
 
   const hasEligibleFilter = courses.some(c => c.isEligible) && courses.some(c => !c.isEligible);
