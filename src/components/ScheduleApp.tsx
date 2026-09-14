@@ -353,6 +353,7 @@ export const ScheduleApp: React.FC = () => {
             onRemoveSection={handleRemoveSection}
             onDragStartSection={info => setDraggedSection(info)}
             onDragEndSection={() => setDraggedSection(null)}
+            metadata={metadata}
           />
 
           {/* Right Timetable Area */}
