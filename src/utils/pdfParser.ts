@@ -10,7 +10,7 @@ if (typeof window !== 'undefined') {
 export interface PDFParseResult {
   courses: Course[];
   eligibleCourseCodes: Set<string>;
-  eligibleCoursesMap: Map<string, { type: 'Obligatorio' | 'Electivo' | string; plan?: string }>;
+  eligibleCoursesMap: Map<string, { type?: 'Obligatorio' | 'Electivo' | string; plan?: string }>;
   extractedText: string;
   metadata: MetadataInfo;
   isConsolidado?: boolean;
@@ -80,7 +80,7 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
   console.log("courseAnchors: ", courseAnchors);
 
   const eligibleCourseCodes = new Set<string>();
-  const eligibleCoursesMap = new Map<string, { type: string; plan?: string }>();
+  const eligibleCoursesMap = new Map<string, { type?: string; plan?: string }>();
   const enrolledSections: Record<string, string> = {};
 
   interface RawSession {
@@ -103,7 +103,7 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
     rawSessions: RawSession[];
     color: string;
     isEligible: boolean;
-    courseType: string;
+    courseType?: string;
     credits?: number;
   }
 
@@ -155,12 +155,21 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
       .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s));
     let professor = isConsolidadoMatricula ? "Por asignar" : profItems.join(' ').replace(/\s+/g, ' ').trim();
 
-    let courseType = 'Obligatorio';
-    const typeItems = blockItems
-      .filter(it => it.y >= anchor.topY - 45.0)
-      .map(it => it.str);
-    if (typeItems.some(s => /electivo/i.test(s))) {
-      courseType = 'Electivo';
+    let courseType: string | undefined = undefined;
+    if (!isConsolidadoMatricula) {
+      courseType = 'Otros (Malla Nueva)';
+      const typeMinX = isCargaHabil ? 290 : 200;
+      const typeMaxX = isCargaHabil ? 350 : 245;
+      
+      const typeItems = blockItems
+        .filter(it => it.x >= typeMinX && it.x < typeMaxX && it.y >= anchor.topY - 45.0)
+        .map(it => it.str);
+        
+      if (typeItems.some(s => /obligatorio/i.test(s))) {
+        courseType = 'Obligatorio';
+      } else if (typeItems.some(s => /electivo/i.test(s))) {
+        courseType = 'Electivo';
+      }
     }
 
     let sectionNum = '1';
@@ -888,7 +897,7 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
   });
 
   const eligibleCourseCodes = new Set<string>();
-  const eligibleCoursesMap = new Map<string, { type: string; plan?: string }>();
+  const eligibleCoursesMap = new Map<string, { type?: string; plan?: string }>();
   const rawCoursesMap = new Map<string, { code: string; name: string; courseType: string; plan?: string; rawSessions: any[] }>();
 
   // Pass 2: Extract section sessions and full multi-line cells strictly from PDF column bounds

@@ -227,6 +227,8 @@ export const ScheduleApp: React.FC = () => {
     if (!hasPdfLoaded) {
       setCourses([]);
       setMetadata({});
+    } else {
+      setCourses(prev => prev.filter(c => c.isEligible));
     }
   };
 

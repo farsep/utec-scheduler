@@ -236,6 +236,26 @@ export function minutesToTime(minutes: number): string {
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 }
 
+export function sessionToBitmask(sessions: {day: string, startMinutes: number, endMinutes: number}[]): bigint {
+  const dayOffsets: Record<string, bigint> = {
+    'Lun': 0n, 'Mar': 60n, 'Mie': 120n, 'Jue': 180n, 'Vie': 240n, 'Sab': 300n, 'Dom': 360n
+  };
+  let mask = 0n;
+  for (const s of sessions) {
+    const dayOffset = dayOffsets[s.day];
+    if (dayOffset === undefined) continue;
+    
+    // Each slot is 15 mins. 07:00 = 420.
+    const startSlot = Math.max(0, Math.floor((s.startMinutes - 420) / 15));
+    const endSlot = Math.max(0, Math.ceil((s.endMinutes - 420) / 15));
+    
+    for (let i = startSlot; i < endSlot; i++) {
+       mask |= (1n << (dayOffset + BigInt(i)));
+    }
+  }
+  return mask;
+}
+
 export function parseSessionType(groupStr: string): SessionType {
   const upper = groupStr.toUpperCase();
   if (upper.includes('TEORÍA') || upper.includes('TEORIA')) return 'Teoría';

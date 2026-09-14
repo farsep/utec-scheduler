@@ -1,28 +1,6 @@
 import type { Course, OptimizerOptions, GeneratedScheduleResult, WorkerMessage, Session } from '../types/schedule';
 import { calculateMetricsFromSessions } from './scheduleOptimizer';
-
-// Convert minutes (e.g. 7:30 = 450) to a slot index. Assuming 30 min slots starting at 07:00 (420)
-// To be safe and precise, let's use 15-minute slots starting from 07:00 (420).
-// 15 hours * 4 = 60 slots per day. 7 days = 420 bits. Fits easily in BigInt.
-function sessionToBitmask(sessions: {day: string, startMinutes: number, endMinutes: number}[]): bigint {
-  const dayOffsets: Record<string, bigint> = {
-    'Lun': 0n, 'Mar': 60n, 'Mie': 120n, 'Jue': 180n, 'Vie': 240n, 'Sab': 300n, 'Dom': 360n
-  };
-  let mask = 0n;
-  for (const s of sessions) {
-    const dayOffset = dayOffsets[s.day];
-    if (dayOffset === undefined) continue;
-    
-    // Each slot is 15 mins. 07:00 = 420.
-    const startSlot = Math.max(0, Math.floor((s.startMinutes - 420) / 15));
-    const endSlot = Math.max(0, Math.ceil((s.endMinutes - 420) / 15));
-    
-    for (let i = startSlot; i < endSlot; i++) {
-       mask |= (1n << (dayOffset + BigInt(i)));
-    }
-  }
-  return mask;
-}
+import { sessionToBitmask, timeToMinutes } from './scheduleUtils';
 
 
 
@@ -33,6 +11,9 @@ let workerOptions: OptimizerOptions;
 let workerPoolBase: string[];
 let workerPinned: string[];
 let workerNeededFromPool: number;
+let lastProgressTime = 0;
+let validSchedulesCount = 0;
+let processedSchedules = 0;
 
 interface PreprocessedCourse {
   courseCode: string;
@@ -45,6 +26,7 @@ interface PreprocessedCourse {
   }[];
 }
 const preprocessedCourses = new Map<string, PreprocessedCourse>();
+const courseConflicts = new Map<string, Set<string>>();
 
 const evaluateCombination = (courseSet: string[]) => {
   const courseSections = courseSet.map(code => preprocessedCourses.get(code)).filter(Boolean) as PreprocessedCourse[];
@@ -59,37 +41,131 @@ const evaluateCombination = (courseSet: string[]) => {
   });
   estimatedTotal += setCombinations;
 
-  function backtrack(index: number, currentMask: bigint, currentCombination: Record<string, string[]>, currentSessions: Session[], currentDomains: typeof courseSections) {
+  function backtrack(index: number, currentMask: bigint, currentCombination: Record<string, string[]>, currentDomains: typeof courseSections) {
     if (index === courseSections.length) {
-      const metrics = calculateMetricsFromSessions(currentSessions, workerOptions);
+      let totalGapSlots = 0;
+      let activeDaysCount = 0;
+      let morningSlots = 0;
+      let afternoonSlots = 0;
+      let lunchScore = 0;
+      let activeSlots = 0;
+      let globalEarliestSlot = 60;
+      let globalLatestSlot = -1;
+
+      const hasLunchTarget = workerOptions.lunchConfig?.enabled;
+      let lunchStartSlot = 0;
+      let lunchEndSlot = 0;
+      let lunchDurationSlots = 0;
+      if (hasLunchTarget && workerOptions.lunchConfig) {
+         lunchStartSlot = Math.max(0, Math.floor((timeToMinutes(workerOptions.lunchConfig.startTime) - 420) / 15));
+         lunchEndSlot = Math.max(0, Math.ceil((timeToMinutes(workerOptions.lunchConfig.endTime) - 420) / 15));
+         lunchDurationSlots = Math.floor(workerOptions.lunchConfig.durationMinutes / 15);
+      }
+
+      for (let d = 0; d < 7; d++) {
+         const dayMask = (currentMask >> BigInt(d * 60)) & 0x0FFFFFFFFFFFFFFFn;
+         if (dayMask === 0n) continue;
+         activeDaysCount++;
+         
+         let temp = dayMask;
+         let firstSlot = -1;
+         let lastSlot = -1;
+         let slotsCount = 0;
+         
+         let lunchFreeSlots = 0;
+         let maxLunchFree = 0;
+
+         for (let i = 0n; i < 60n; i++) {
+             const bit = (temp & (1n << i)) !== 0n;
+             if (bit) {
+                 if (firstSlot === -1) firstSlot = Number(i);
+                 lastSlot = Number(i);
+                 slotsCount++;
+                 
+                 if (i < 20n) morningSlots++; 
+                 else afternoonSlots++;
+
+                 if (hasLunchTarget) lunchFreeSlots = 0;
+             } else {
+                 if (hasLunchTarget && i >= BigInt(lunchStartSlot) && i < BigInt(lunchEndSlot)) {
+                     lunchFreeSlots++;
+                     if (lunchFreeSlots > maxLunchFree) maxLunchFree = lunchFreeSlots;
+                 }
+             }
+         }
+         
+         const gaps = (lastSlot - firstSlot + 1) - slotsCount;
+         if (gaps > 0) {
+            totalGapSlots += gaps;
+         }
+
+         if (hasLunchTarget && maxLunchFree >= lunchDurationSlots) {
+             lunchScore++;
+         }
+
+         activeSlots += slotsCount;
+         if (firstSlot !== -1 && firstSlot < globalEarliestSlot) globalEarliestSlot = firstSlot;
+         if (lastSlot !== -1 && lastSlot > globalLatestSlot) globalLatestSlot = lastSlot;
+      }
+
+      let bridgeDays = 0;
+      let firstActiveDay = -1;
+      let lastActiveDay = -1;
+      for (let d = 0; d < 6; d++) { // Only Lun to Sab
+         const dayMask = (currentMask >> BigInt(d * 60)) & 0x0FFFFFFFFFFFFFFFn;
+         if (dayMask !== 0n) {
+             if (firstActiveDay === -1) firstActiveDay = d;
+             lastActiveDay = d;
+         }
+      }
+      if (firstActiveDay !== -1 && lastActiveDay !== -1) {
+          for (let d = firstActiveDay + 1; d < lastActiveDay; d++) {
+             const dayMask = (currentMask >> BigInt(d * 60)) & 0x0FFFFFFFFFFFFFFFn;
+             if (dayMask === 0n) {
+                 bridgeDays++;
+             }
+          }
+      }
+
+      const totalGapMinutes = totalGapSlots * 15;
+      const gapHours = Number((totalGapMinutes / 60).toFixed(2));
+      const totalHours = Number(((activeSlots * 15) / 60).toFixed(1));
+      const earliestStartMinutes = globalEarliestSlot === 60 ? 0 : 420 + (globalEarliestSlot * 15);
+      const latestEndMinutes = globalLatestSlot === -1 ? 0 : 420 + ((globalLatestSlot + 1) * 15);
       
+      const morningScoreMin = morningSlots * 15;
+      const afternoonScoreMin = afternoonSlots * 15;
+      const normalizedLunchScore = activeDaysCount > 0 ? lunchScore / activeDaysCount : 0;
+
       let rawScore = 0;
-      if (workerOptions.targets.includes('min_gaps')) rawScore -= metrics.totalGapMinutes;
-      if (workerOptions.targets.includes('min_days')) rawScore -= (metrics.activeDaysCount * 500);
-      if (workerOptions.targets.includes('min_day_gaps')) rawScore -= (metrics.dayGaps * 1000); 
-      if (workerOptions.targets.includes('morning')) rawScore += (metrics.morningScore / 5);
-      if (workerOptions.targets.includes('afternoon')) rawScore += (metrics.afternoonScore / 5);
-      if (workerOptions.lunchConfig?.enabled) rawScore += (metrics.lunchScore * 1000);
+      if (workerOptions.targets.includes('min_gaps')) rawScore -= totalGapMinutes;
+      if (workerOptions.targets.includes('min_days')) rawScore -= (activeDaysCount * 500);
+      if (workerOptions.targets.includes('min_day_gaps')) rawScore -= (bridgeDays * 1000); 
+      if (workerOptions.targets.includes('morning')) rawScore += (morningScoreMin / 5);
+      if (workerOptions.targets.includes('afternoon')) rawScore += (afternoonScoreMin / 5);
+      if (hasLunchTarget) rawScore += (normalizedLunchScore * 1000);
 
       const keys = Object.keys(currentCombination);
       const expandHelper = (idx: number, currentCombo: Record<string, string>) => {
         if (idx === keys.length) {
           topResults.push({
-            id: `gen_${Date.now()}_${evaluatedSchedules}`,
+            id: `gen_${Date.now()}_${validSchedulesCount}`,
             selectedSections: { ...currentCombo },
-            metrics,
+            metrics: {
+               totalGapMinutes,
+               gapHours,
+               activeDaysCount,
+               totalHours,
+               earliestStartMinutes,
+               latestEndMinutes,
+               morningScore: morningScoreMin,
+               afternoonScore: afternoonScoreMin,
+               lunchScore: normalizedLunchScore,
+               dayGaps: bridgeDays
+            },
             score: rawScore
           });
-          evaluatedSchedules++;
-          
-          if (evaluatedSchedules % 5000 === 0) {
-            self.postMessage({ 
-              type: 'PROGRESS', 
-              evaluated: evaluatedSchedules, 
-              total: estimatedTotal,
-              validFound: evaluatedSchedules
-            } as WorkerMessage);
-          }
+          validSchedulesCount++;
           return;
         }
         const key = keys[idx];
@@ -133,14 +209,24 @@ const evaluateCombination = (courseSet: string[]) => {
       }
       
       if (isViable) {
-        currentSessions.push(...section.sessions);
-        backtrack(index + 1, nextMask, currentCombination, currentSessions, currentDomains);
-        for (let i = 0; i < section.sessions.length; i++) currentSessions.pop();
+        backtrack(index + 1, nextMask, currentCombination, currentDomains);
       }
     }
   }
 
-  backtrack(0, 0n, {}, [], courseSections);
+  backtrack(0, 0n, {}, courseSections);
+  
+  processedSchedules += setCombinations;
+  const now = Date.now();
+  if (now - lastProgressTime > 100) {
+     lastProgressTime = now;
+     self.postMessage({ 
+       type: 'PROGRESS', 
+       evaluated: processedSchedules, 
+       total: estimatedTotal,
+       validFound: validSchedulesCount
+     } as WorkerMessage);
+  }
 };
 
 const generateCombinations = (currentCombo: string[], startIdx: number) => {
@@ -149,7 +235,28 @@ const generateCombinations = (currentCombo: string[], startIdx: number) => {
       return;
    }
    for (let i = startIdx; i < workerPoolBase.length; i++) {
-      currentCombo.push(workerPoolBase[i]);
+      const candidate = workerPoolBase[i];
+      let conflict = false;
+      const candidateConflicts = courseConflicts.get(candidate);
+      if (candidateConflicts) {
+         for (const existing of currentCombo) {
+            if (candidateConflicts.has(existing)) {
+               conflict = true;
+               break;
+            }
+         }
+         if (!conflict) {
+            for (const existing of workerPinned) {
+               if (candidateConflicts.has(existing)) {
+                  conflict = true;
+                  break;
+               }
+            }
+         }
+      }
+      if (conflict) continue;
+
+      currentCombo.push(candidate);
       generateCombinations(currentCombo, i + 1);
       currentCombo.pop();
    }
@@ -162,6 +269,8 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
     const { courses, poolBase, pinned, neededFromPool, options } = data;
     
     topResults = [];
+    validSchedulesCount = 0;
+    processedSchedules = 0;
     evaluatedSchedules = 0;
     estimatedTotal = 0;
     workerOptions = options;
@@ -217,6 +326,35 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
         }))
       });
     }
+
+    // Build Static Conflict Graph
+    courseConflicts.clear();
+    const codes = Array.from(preprocessedCourses.keys());
+    for (let i = 0; i < codes.length; i++) {
+      for (let j = i + 1; j < codes.length; j++) {
+        const courseA = preprocessedCourses.get(codes[i])!;
+        const courseB = preprocessedCourses.get(codes[j])!;
+        
+        let possible = false;
+        for (const secA of courseA.sections) {
+          for (const secB of courseB.sections) {
+            if ((secA.bitmask & secB.bitmask) === 0n) {
+              possible = true;
+              break;
+            }
+          }
+          if (possible) break;
+        }
+        
+        if (!possible) {
+          if (!courseConflicts.has(codes[i])) courseConflicts.set(codes[i], new Set());
+          courseConflicts.get(codes[i])!.add(codes[j]);
+          
+          if (!courseConflicts.has(codes[j])) courseConflicts.set(codes[j], new Set());
+          courseConflicts.get(codes[j])!.add(codes[i]);
+        }
+      }
+    }
     
     self.postMessage({ type: 'READY' } as WorkerMessage);
   } else if (data.type === 'TASK') {
@@ -233,9 +371,9 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
     
     self.postMessage({ 
       type: 'PROGRESS', 
-      evaluated: evaluatedSchedules, 
+      evaluated: processedSchedules, 
       total: estimatedTotal,
-      validFound: evaluatedSchedules
+      validFound: validSchedulesCount
     } as WorkerMessage);
 
     self.postMessage({ 
