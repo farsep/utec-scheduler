@@ -31,7 +31,10 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "rollup": "^4.63.3",
     "tsx": "^4.23.13",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.6.0",
     "xlsx": "^0.18.5"
   }
 }

@@ -1,8 +1,10 @@
 import type { Course, OptimizerOptions, GeneratedScheduleResult, WorkerMessage, Session } from '../types/schedule';
 import { calculateMetricsFromSessions } from './scheduleOptimizer';
 import { sessionToBitmask, timeToMinutes } from './scheduleUtils';
+import init, { QuantumEngine } from '../../wasm-engine/pkg/wasm_engine.js';
 
-
+let wasmEngine: QuantumEngine | null = null;
+let isWasmInitialized = false;
 
 let topResults: GeneratedScheduleResult[] = [];
 let evaluatedSchedules = 0;
@@ -311,10 +313,19 @@ const generateCombinations = (currentCombo: string[], startIdx: number) => {
    }
 };
 
-self.onmessage = (e: MessageEvent<WorkerMessage>) => {
+self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   const data = e.data;
   
   if (data.type === 'INIT') {
+    if (!isWasmInitialized) {
+      try {
+        await init();
+        isWasmInitialized = true;
+      } catch (err) {
+        self.postMessage({ type: 'ERROR', message: 'Failed to init WASM' });
+        return;
+      }
+    }
     const { courses, poolBase, pinned, neededFromPool, options } = data;
     
     topResults = [];
@@ -326,6 +337,22 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
     workerPoolBase = poolBase;
     workerPinned = pinned;
     workerNeededFromPool = neededFromPool;
+    workerPoolBase = poolBase;
+    
+    const getCombinationsCount = (n: number, r: number) => {
+      if (r > n) return 0;
+      let count = 1;
+      for (let i = 1; i <= r; i++) {
+        count = (count * (n - i + 1)) / i;
+      }
+      return count;
+    };
+    
+    // In advanced mode, the worker evaluates nCr course combinations.
+    // In normal mode, workerNeededFromPool is the exact number of selected courses (r=n, combinations=1)
+    estimatedTotal = getCombinationsCount(workerPoolBase.length, workerNeededFromPool);
+    if (estimatedTotal === 0) estimatedTotal = 1; // Fallback
+
     preprocessedCourses.clear();
     
     for (const course of courses) {
@@ -404,14 +431,100 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
         }
       }
     }
+          
+    // Format all courses for Rust once!
+    const rustCourses = Array.from(preprocessedCourses.values()).map(course => {
+      return {
+        course_code: course.courseCode,
+        sections: course.sections.map(sec => {
+          const maskArray = [];
+          let temp = sec.bitmask;
+          for (let d = 0; d < 7; d++) {
+            maskArray.push(temp & 0x0FFFFFFFFFFFFFFFn);
+            temp >>= 60n;
+          }
+          return {
+            homochronous_sections: sec.homochronousSections,
+            mask: maskArray
+          };
+        })
+      };
+    });
+    
+    try {
+      wasmEngine = new QuantumEngine(rustCourses, options);
+    } catch (e) {
+      console.error("Failed to create engine", e);
+      self.postMessage({ type: 'ERROR', message: 'Failed to create WASM Engine. See console.' });
+      return;
+    }
     
     self.postMessage({ type: 'READY' } as WorkerMessage);
   } else if (data.type === 'TASK') {
     const { task } = data;
-    if (workerNeededFromPool === 0 || workerNeededFromPool === task.prefix.length) {
-      evaluateCombination([...workerPinned, ...task.prefix]);
-    } else {
-      generateCombinations([...task.prefix], task.startIdx);
+    
+    try {
+      if (!wasmEngine) return;
+      
+      const rustResults = wasmEngine.compute_chunk(
+          workerPinned,
+          workerPoolBase,
+          workerNeededFromPool,
+          task.prefix,
+          task.startIdx
+      );
+      
+      if (rustResults && rustResults.length > 0) {
+         rustResults.forEach((r: any) => {
+            const keys = Object.keys(r.selectedSections);
+            const expandHelper = (idx: number, currentSelections: Record<string, string>) => {
+              if (idx === keys.length) {
+                 topResults.push({
+                   id: `gen_${Date.now()}_${topResults.length}`,
+                   selectedSections: { ...currentSelections },
+                   metrics: r.metrics,
+                   score: r.score
+                 });
+                 
+                 if (topResults.length >= 2000) {
+                   topResults.sort((a, b) => (b.score || 0) - (a.score || 0));
+                   topResults = topResults.slice(0, 200);
+                 }
+                 return;
+              }
+              const courseCode = keys[idx];
+              const sectionArray = r.selectedSections[courseCode] as string[];
+              for (const sec of sectionArray) {
+                currentSelections[courseCode] = sec;
+                expandHelper(idx + 1, currentSelections);
+              }
+            };
+            expandHelper(0, {});
+         });
+      }
+      
+      
+      const getCombinationsCount = (n: number, r: number) => {
+        if (r > n) return 0;
+        let count = 1;
+        for (let i = 1; i <= r; i++) {
+          count = (count * (n - i + 1)) / i;
+        }
+        return count;
+      };
+      
+      const chunkCombinations = getCombinationsCount(workerPoolBase.length - task.startIdx, workerNeededFromPool - task.prefix.length);
+      processedSchedules += chunkCombinations;
+      
+      self.postMessage({ 
+        type: 'PROGRESS', 
+        evaluated: processedSchedules, 
+        total: estimatedTotal,
+        validFound: topResults.length
+      } as WorkerMessage);
+
+    } catch (e) {
+      console.error("Error in compute_chunk", e);
     }
     
     self.postMessage({ type: 'READY' } as WorkerMessage);
