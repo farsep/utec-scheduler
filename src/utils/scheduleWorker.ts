@@ -117,25 +117,24 @@ const evaluateCombination = (courseSet: string[]) => {
       const nextMask = currentMask | section.bitmask;
       
       let isViable = true;
-      const nextDomains = [];
-      
-      for (let i = 0; i < currentDomains.length; i++) {
-        if (i <= index) {
-          nextDomains.push(currentDomains[i]); 
-        } else {
-          const futureCourse = currentDomains[i];
-          const validFutureSections = futureCourse.sections.filter(s => (s.bitmask & nextMask) === 0n);
-          if (validFutureSections.length === 0) {
-            isViable = false;
+      for (let i = index + 1; i < currentDomains.length; i++) {
+        let hasValidSection = false;
+        const futureSections = currentDomains[i].sections;
+        for (let j = 0; j < futureSections.length; j++) {
+          if ((futureSections[j].bitmask & nextMask) === 0n) {
+            hasValidSection = true;
             break;
           }
-          nextDomains.push({ courseCode: futureCourse.courseCode, sections: validFutureSections });
+        }
+        if (!hasValidSection) {
+          isViable = false;
+          break;
         }
       }
       
       if (isViable) {
         currentSessions.push(...section.sessions);
-        backtrack(index + 1, nextMask, currentCombination, currentSessions, nextDomains);
+        backtrack(index + 1, nextMask, currentCombination, currentSessions, currentDomains);
         for (let i = 0; i < section.sessions.length; i++) currentSessions.pop();
       }
     }
