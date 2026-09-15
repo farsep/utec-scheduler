@@ -576,7 +576,14 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       const course = courses.find(c => c.code === code);
       if (!course || course.sections.length === 0) return;
 
-      const pinnedSecName = pinnedSections[code];
+      const isCoursePinned  = pinnedCourseCodes.includes(code);
+      const pinnedSecName   = pinnedSections[code];
+
+      // Ghost blocks + protection only when the user has explicitly fixed the course
+      // (thumbtack pin) or locked a specific section (candado).
+      // Merely selecting a course for the pool does NOT show ghost blocks.
+      if (!isCoursePinned && !pinnedSecName) return;
+
       const uniqueSecNames = [...new Set(course.sections.map(s => s.sectionNumber))];
       const totalSections  = uniqueSecNames.length;
 
@@ -639,7 +646,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     });
 
     return { pinnedBlocksForGrid: blocks, pinnedTimeMask: protectedMask, courseViabilityMasks: viabilityMasks };
-  }, [selectedCourseCodes, pinnedSections, courses]);
+  }, [selectedCourseCodes, pinnedSections, pinnedCourseCodes, courses]);
 
   // Viability-aware mask setter: after each drag, ensure at least one complete section
   // per course remains unblocked. If not, restore the least-blocked section.
