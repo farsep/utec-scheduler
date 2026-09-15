@@ -1,0 +1,74 @@
+Testing consolidado_horario_april_rueda.pdf...
+fullStr: Semana General Lun. Teoría Virtual:11:00-12:00 Virtual 101
+match: true
+match: true
+fullStr: Semana General Mar. Laboratorio:15:00-17:00 M802 1
+match: true
+match: true
+fullStr: Semana General Lun. Teoría Virtual:10:00-11:00 Virtual
+match: true
+match: true
+fullStr: Semana General Mié. Teoría:14:00-16:00 A704 1
+match: true
+match: true
+fullStr: Semana General Mar. Teoría:11:00-13:00 AULAMAGNA
+match: true
+match: true
+fullStr: Semana General Vie. Teoría:20:00-22:00 A702 1
+match: true
+match: true
+fullStr: Semana General Lun. Teoría:19:00-22:00 M803
+match: true
+match: true
+fullStr: Semana General Mié. Laboratorio Virtual:20:00-22:00 Virtual 2
+match: true
+match: true
+fullStr: Semana General Mar. Teoría:07:00-09:00 AULAMAGNA
+match: true
+match: true
+fullStr: Semana General Jue. Laboratorio:11:00-13:00 M801 1
+match: true
+match: true
+fullStr: Semana General Lun. Teoría Virtual:07:00-09:00 Virtual 1
+match: true
+match: true
+fullStr: Semana General Mié. Laboratorio:07:00-09:00 M604
+match: true
+match: true
+fullStr: Semana General Jue. Laboratorio:17:00-19:00 M1001
+match: true
+match: true
+Extracted courses for Horario: [
+  'Álgebra Lineal',
+  'Cálculo Vectorial',
+  'Óptica y Ondas',
+  'Estadística y Probabilidades I',
+  'Introducción a Ciencia de la Computación',
+  'Programación II'
+]
+Sessions for Algebra: [
+  {
+    "id": "CC1103-1-TEORÍA-Lun-11:00",
+    "sessionGroup": "TEORÍA",
+    "sessionType": "Teoría",
+    "modality": "Sincronico",
+    "day": "Lun",
+    "startTime": "11:00",
+    "endTime": "12:00",
+    "startMinutes": 660,
+    "endMinutes": 720,
+    "frequency": "Semana General",
+    "location": "Virtual 101",
+    "vacancies": 30,
+    "enrolled": 0,
+    "professor": "Anco Blas, Edith Chavely",
+    "email": ""
+  }
+]
+
+Testing consolidado de matricula 2026-2 copy.pdf...
+fullStr: Semana General Lunes Teoría Virtual 11:00-12:00 Virtual
+match: true
+match: true
+Extracted courses for Matricula: [ '', '', '', '', '', '' ]
+Sessions for Algebra: undefined

@@ -1,0 +1,4 @@
+- [ ] Implement bitmask conversion for sessions
+- [ ] Implement CSP solver with MRV and Forward Checking
+- [ ] Replace simple backtracking with CSP solver in scheduleWorker.ts
+- [ ] Test the solver

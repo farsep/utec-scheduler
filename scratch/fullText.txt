@@ -1,0 +1,61 @@
+Consolidado de matrícula
+Programa: Carreras de Pregrado Periodo: 2026 - 2
+Ciencia de Datos - CD-2021-1 Carrera: Créditos 20
+Académicos:
+Alumno: 202520128 - Espinoza Pachas, Arnie Nivel: 2
+Farid
+Fecha de Matrícula: 31/07/2026 15:04 Fecha de Matrícula No aplica
+Extracurricular:
+CRÉDITOS CRÉDITOS
+NIVE CRÉDITOS NRO.
+CÓDIGO CURSO ACADÉMIC PRESENCI SECCIÓN GRUPOS HORARIO
+L VIRTUALES VEZ
+OS ALES
+Semana General Martes Teoría 10:00-
+11:00 A803
+HH51
+9 Ética y Tecnología 3 0 3 9 1
+01
+Semana General Jueves Teoría 15:00-
+17:00 A907
+Semana General Lunes Teoría Virtual
+07:00-09:00 Virtual
+CS30 Semana General Miércoles Laboratorio
+6 Machine Learning 4 4 0 3 Lab. 31 1
+61 Virtual 17:00-19:00 Virtual
+Semana General Jueves Laboratorio Virtual
+07:00-09:00 Virtual
+Semana General Lunes Teoría Virtual
+11:00-12:00 Virtual
+CC11
+2 Álgebra Lineal 2 1 1 1 Lab. 11 1
+03
+Semana General Martes Laboratorio 11:00-
+13:00 M401
+Semana General Lunes Teoría 14:00-15:00
+A902
+HH21 Perú: Temas de la sociedad
+5 3 0 3 11 1
+01 contemporánea
+Semana General Jueves Teoría 09:00-
+11:00 A902
+Semana General Miércoles Teoría 13:00-
+16:00 M301
+CC21
+4 Estadística y Probabilidades II 4 0 4 1 Lab. 11 1
+02
+Semana General Viernes Laboratorio
+13:00-15:00 M301
+Semana General Lunes Teoría 12:00-14:00
+A902
+CS60 Semana General Jueves Laboratorio 11:00-
+- Matemáticas Discretas II 4 0 4 6 Lab. 61 2
+06 13:00 A904
+Semana General Sábado Laboratorio
+09:00-11:00 A803
+E : Corresponde a un curso electivo.
+- : Corresponde a un curso de otra carrera.
+* El estudiante que desapruebe por tercera vez 1 (una) o más asignaturas o su equivalente, será separado de manera definitiva y
+automática de UTEC. En consecuencia, no podrá matricularse ni tampoco podrá volver a postular a UTEC.(Art. 5.10 del Reglamento
+Académico)
+

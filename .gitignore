@@ -12,19 +12,45 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-
 # environment variables
 .env
 .env.production
+.env.local
+.env.*.local
 
 # macOS-specific files
 .DS_Store
+.AppleDouble
+.LSOverride
 
-# jetbrains setting folder
+# Linux trash / thumbnails
+.Trash-*
+.nfs*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# editors
 .idea/
+.vscode/settings.json
+.vscode/launch.json
+*.swp
+*.swo
+*~
+
+# Rust / WASM build artifacts
+wasm-engine/target/
+wasm-engine/pkg/
 
 
+# one-off test/utility scripts at root
+test.js
+testPdf.js
+test_rust.js
+replay.py
 
-CoursesLists/
+# lock files (optional — remove these lines if you want to commit them)
+# pnpm-lock.yaml
 
-scratch/

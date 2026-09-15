@@ -1,0 +1,80 @@
+Testing consolidado_horario_april_rueda.pdf...
+Checking anchor: CC1103 topY: 396.285859 se.startY: 396.285859 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1103 topY: 396.285859 se.startY: 375.879609 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1103 topY: 396.285859 se.startY: 350.973359 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1104 topY: 350.973359 se.startY: 350.973359 topBound: 365.973359 bottomBound: 307.660859
+Checking anchor: CC1103 topY: 396.285859 se.startY: 330.567109 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1104 topY: 350.973359 se.startY: 330.567109 topBound: 365.973359 bottomBound: 307.660859
+Checking anchor: CC1103 topY: 396.285859 se.startY: 305.660859 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1104 topY: 350.973359 se.startY: 305.660859 topBound: 365.973359 bottomBound: 307.660859
+Checking anchor: CC1123 topY: 305.660859 se.startY: 305.660859 topBound: 320.660859 bottomBound: 262.348359
+Checking anchor: CC1103 topY: 396.285859 se.startY: 285.254609 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1104 topY: 350.973359 se.startY: 285.254609 topBound: 365.973359 bottomBound: 307.660859
+Checking anchor: CC1123 topY: 305.660859 se.startY: 285.254609 topBound: 320.660859 bottomBound: 262.348359
+Checking anchor: CC1103 topY: 396.285859 se.startY: 260.348359 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1104 topY: 350.973359 se.startY: 260.348359 topBound: 365.973359 bottomBound: 307.660859
+Checking anchor: CC1123 topY: 305.660859 se.startY: 260.348359 topBound: 320.660859 bottomBound: 262.348359
+Checking anchor: CC1105 topY: 260.348359 se.startY: 260.348359 topBound: 275.348359 bottomBound: 217.035859
+Checking anchor: CC1103 topY: 396.285859 se.startY: 239.942109 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1104 topY: 350.973359 se.startY: 239.942109 topBound: 365.973359 bottomBound: 307.660859
+Checking anchor: CC1123 topY: 305.660859 se.startY: 239.942109 topBound: 320.660859 bottomBound: 262.348359
+Checking anchor: CC1105 topY: 260.348359 se.startY: 239.942109 topBound: 275.348359 bottomBound: 217.035859
+Checking anchor: CC1103 topY: 396.285859 se.startY: 215.035859 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1104 topY: 350.973359 se.startY: 215.035859 topBound: 365.973359 bottomBound: 307.660859
+Checking anchor: CC1123 topY: 305.660859 se.startY: 215.035859 topBound: 320.660859 bottomBound: 262.348359
+Checking anchor: CC1105 topY: 260.348359 se.startY: 215.035859 topBound: 275.348359 bottomBound: 217.035859
+Checking anchor: CS6001 topY: 215.035859 se.startY: 215.035859 topBound: 230.035859 bottomBound: 171.723359
+Checking anchor: CC1103 topY: 396.285859 se.startY: 194.629609 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1104 topY: 350.973359 se.startY: 194.629609 topBound: 365.973359 bottomBound: 307.660859
+Checking anchor: CC1123 topY: 305.660859 se.startY: 194.629609 topBound: 320.660859 bottomBound: 262.348359
+Checking anchor: CC1105 topY: 260.348359 se.startY: 194.629609 topBound: 275.348359 bottomBound: 217.035859
+Checking anchor: CS6001 topY: 215.035859 se.startY: 194.629609 topBound: 230.035859 bottomBound: 171.723359
+Checking anchor: CC1103 topY: 396.285859 se.startY: 169.723359 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1104 topY: 350.973359 se.startY: 169.723359 topBound: 365.973359 bottomBound: 307.660859
+Checking anchor: CC1123 topY: 305.660859 se.startY: 169.723359 topBound: 320.660859 bottomBound: 262.348359
+Checking anchor: CC1105 topY: 260.348359 se.startY: 169.723359 topBound: 275.348359 bottomBound: 217.035859
+Checking anchor: CS6001 topY: 215.035859 se.startY: 169.723359 topBound: 230.035859 bottomBound: 171.723359
+Checking anchor: CS6003 topY: 169.723359 se.startY: 169.723359 topBound: 184.723359 bottomBound: 104.149141
+Checking anchor: CC1103 topY: 396.285859 se.startY: 149.317109 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1104 topY: 350.973359 se.startY: 149.317109 topBound: 365.973359 bottomBound: 307.660859
+Checking anchor: CC1123 topY: 305.660859 se.startY: 149.317109 topBound: 320.660859 bottomBound: 262.348359
+Checking anchor: CC1105 topY: 260.348359 se.startY: 149.317109 topBound: 275.348359 bottomBound: 217.035859
+Checking anchor: CS6001 topY: 215.035859 se.startY: 149.317109 topBound: 230.035859 bottomBound: 171.723359
+Checking anchor: CS6003 topY: 169.723359 se.startY: 149.317109 topBound: 184.723359 bottomBound: 104.149141
+Checking anchor: CC1103 topY: 396.285859 se.startY: 128.910859 topBound: 411.285859 bottomBound: 352.973359
+Checking anchor: CC1104 topY: 350.973359 se.startY: 128.910859 topBound: 365.973359 bottomBound: 307.660859
+Checking anchor: CC1123 topY: 305.660859 se.startY: 128.910859 topBound: 320.660859 bottomBound: 262.348359
+Checking anchor: CC1105 topY: 260.348359 se.startY: 128.910859 topBound: 275.348359 bottomBound: 217.035859
+Checking anchor: CS6001 topY: 215.035859 se.startY: 128.910859 topBound: 230.035859 bottomBound: 171.723359
+Checking anchor: CS6003 topY: 169.723359 se.startY: 128.910859 topBound: 184.723359 bottomBound: 104.149141
+Extracted courses for Horario: [
+  'Álgebra Lineal',
+  'Cálculo Vectorial',
+  'Óptica y Ondas',
+  'Estadística y Probabilidades I',
+  'Introducción a Ciencia de la Computación',
+  'Programación II'
+]
+Sessions for Algebra: [
+  {
+    "id": "CC1103-1 (TEORÍA)-TEORÍA-Lun-11:00",
+    "sessionGroup": "TEORÍA",
+    "sessionType": "Teoría",
+    "modality": "Sincronico",
+    "day": "Lun",
+    "startTime": "11:00",
+    "endTime": "12:00",
+    "startMinutes": 660,
+    "endMinutes": 720,
+    "frequency": "Semana General",
+    "location": "Virtual 101",
+    "vacancies": 30,
+    "enrolled": 0,
+    "professor": "Anco Blas, Edith Chavely",
+    "email": ""
+  }
+]
+
+Testing consolidado de matricula 2026-2 copy.pdf...
+Extracted courses for Matricula: [ '', '', '', '', '', '' ]
+Sessions for Algebra: undefined

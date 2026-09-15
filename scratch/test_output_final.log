@@ -1,0 +1,75 @@
+Testing consolidado_horario_april_rueda.pdf...
+Metadata: {
+  studentName: 'Abril Rueda Huanca',
+  program: 'Pregrado',
+  registrationTime: '20/08/2026 05:02 PM',
+  documentType: 'Consolidado de Horario',
+  isConsolidado: true,
+  academicCredits: '20'
+}
+Extracted courses for Horario: [
+  'Álgebra Lineal',
+  'Cálculo Vectorial',
+  'Óptica y Ondas',
+  'Estadística y Probabilidades I',
+  'Introducción a Ciencia de la Computación',
+  'Programación II'
+]
+Sessions for Algebra: [
+  {
+    "id": "CC1103-1-TEORÍA-Lun-11:00",
+    "sessionGroup": "TEORÍA",
+    "sessionType": "Teoría",
+    "modality": "Sincronico",
+    "day": "Lun",
+    "startTime": "11:00",
+    "endTime": "12:00",
+    "startMinutes": 660,
+    "endMinutes": 720,
+    "frequency": "Semana General",
+    "location": "Virtual",
+    "vacancies": 30,
+    "enrolled": 0,
+    "professor": "Anco Blas, Edith Chavely",
+    "email": ""
+  },
+  {
+    "id": "CC1103-1-LABORATORIO-Mar-15:00",
+    "sessionGroup": "LABORATORIO",
+    "sessionType": "Laboratorio",
+    "modality": "Presencial",
+    "day": "Mar",
+    "startTime": "15:00",
+    "endTime": "17:00",
+    "startMinutes": 900,
+    "endMinutes": 1020,
+    "frequency": "Semana General",
+    "location": "M802",
+    "vacancies": 30,
+    "enrolled": 0,
+    "professor": "Anco Blas, Edith Chavely",
+    "email": ""
+  }
+]
+
+Testing consolidado de matricula 2026-2 copy.pdf...
+Extracted courses for Matricula: [ '', '', '', '', '', '' ]
+Sessions for Algebra: [
+  {
+    "id": "CC1103-1-TEORÍA-Lun-11:00",
+    "sessionGroup": "TEORÍA",
+    "sessionType": "Teoría",
+    "modality": "Sincronico",
+    "day": "Lun",
+    "startTime": "11:00",
+    "endTime": "12:00",
+    "startMinutes": 660,
+    "endMinutes": 720,
+    "frequency": "Semana General",
+    "location": "Virtual",
+    "vacancies": 30,
+    "enrolled": 0,
+    "professor": "Por asignar",
+    "email": ""
+  }
+]

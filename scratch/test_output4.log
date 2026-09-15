@@ -1,0 +1,32 @@
+Testing consolidado_horario_april_rueda.pdf...
+Extracted courses for Horario: [
+  'Álgebra Lineal',
+  'Cálculo Vectorial',
+  'Óptica y Ondas',
+  'Estadística y Probabilidades I',
+  'Introducción a Ciencia de la Computación',
+  'Programación II'
+]
+Sessions for Algebra: [
+  {
+    "id": "CC1103-1 (TEORÍA)-TEORÍA-Lun-11:00",
+    "sessionGroup": "TEORÍA",
+    "sessionType": "Teoría",
+    "modality": "Sincronico",
+    "day": "Lun",
+    "startTime": "11:00",
+    "endTime": "12:00",
+    "startMinutes": 660,
+    "endMinutes": 720,
+    "frequency": "Semana General",
+    "location": "Virtual 101",
+    "vacancies": 30,
+    "enrolled": 0,
+    "professor": "Anco Blas, Edith Chavely",
+    "email": ""
+  }
+]
+
+Testing consolidado de matricula 2026-2 copy.pdf...
+Extracted courses for Matricula: [ '', '', '', '', '', '' ]
+Sessions for Algebra: undefined
