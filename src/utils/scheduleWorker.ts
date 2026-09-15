@@ -466,12 +466,32 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     try {
       if (!wasmEngine) return;
       
-      const rustResults = wasmEngine.compute_chunk(
+      const progressCallback = (nodes: number) => {
+          const getCombinationsCount = (n: number, r: number) => {
+            if (r > n) return 0;
+            let count = 1;
+            for (let i = 1; i <= r; i++) {
+              count = (count * (n - i + 1)) / i;
+            }
+            return count;
+          };
+          const totalChunkNodes = getCombinationsCount(workerPoolBase.length - task.startIdx, workerNeededFromPool - task.prefix.length);
+          // Yield progressive updates to UI without finishing the chunk
+          self.postMessage({ 
+            type: 'PROGRESS', 
+            evaluated: processedSchedules + nodes, 
+            total: estimatedTotal, 
+            validFound: topResults.length 
+          } as WorkerMessage);
+      };
+
+      const rustResults = await wasmEngine.compute_chunk(
           workerPinned,
           workerPoolBase,
           workerNeededFromPool,
           task.prefix,
-          task.startIdx
+          task.startIdx,
+          progressCallback
       );
       
       if (rustResults && rustResults.length > 0) {

@@ -1,3 +1,5 @@
+use gloo_timers::future::sleep;
+use std::time::Duration;
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -154,13 +156,14 @@ impl QuantumEngine {
         }
     }
 
-    pub fn compute_chunk(
+    pub async fn compute_chunk(
         &self,
         pinned_codes_js: JsValue,
         pool_codes_js: JsValue,
         needed_from_pool: usize,
         prefix_codes_js: JsValue,
         start_idx: usize,
+        progress_callback: js_sys::Function,
     ) -> Result<JsValue, JsValue> {
         let pinned_codes: Vec<String> = serde_wasm_bindgen::from_value(pinned_codes_js)?;
         let pool_codes: Vec<String> = serde_wasm_bindgen::from_value(pool_codes_js)?;
@@ -227,8 +230,8 @@ impl QuantumEngine {
         }
         let max_nodes_limit = max_combos_100 / std::cmp::max(1, pool_courses.len());
         
-        self.generate_course_combinations(
-            &mut current_combo,
+        self.generate_course_combinations_async(
+            current_combo,
             start_idx,
             &pool_courses,
             needed_from_pool,
@@ -236,56 +239,81 @@ impl QuantumEngine {
             &pinned_courses,
             &mut top_results,
             &mut current_threshold,
-            &mut nodes_evaluated,
             max_nodes_limit,
-        );
+            progress_callback,
+        ).await;
 
         let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
         top_results.serialize(&serializer).map_err(|e| e.into())
     }
 
-    fn generate_course_combinations<'a>(
+    async fn generate_course_combinations_async<'a>(
         &self,
-        current_combo: &mut Vec<&'a PreprocessedCourseRust>,
-        start_idx: usize,
+        initial_combo: Vec<&'a PreprocessedCourseRust>,
+        initial_start_idx: usize,
         pool_courses: &Vec<&'a PreprocessedCourseRust>,
         needed_from_pool: usize,
         pool_conflicts: &Vec<Vec<bool>>,
         pinned_courses: &Vec<&'a PreprocessedCourseRust>,
         top_results: &mut Vec<GeneratedScheduleResultRust>,
         current_threshold: &mut f64,
-        nodes_evaluated: &mut usize,
         max_nodes_limit: usize,
+        progress_callback: js_sys::Function,
     ) {
-        *nodes_evaluated += 1;
-        if *nodes_evaluated > max_nodes_limit {
-            return; // Hard limit to prevent freezing on massive pools
-        }
+        let mut stack = Vec::new();
+        stack.push((initial_combo, initial_start_idx));
+        
+        let mut nodes_evaluated = 0;
+        let mut last_yield_nodes = 0;
 
-        if current_combo.len() == needed_from_pool {
-            let mut final_course_set = pinned_courses.clone();
-            final_course_set.extend(current_combo.iter().copied());
-            self.compute_sections_for_courses(&final_course_set, top_results, current_threshold, nodes_evaluated);
-            return;
-        }
-
-        for i in start_idx..pool_courses.len() {
-            let candidate = pool_courses[i];
-            let mut conflict = false;
+        while let Some((mut current_combo, start_idx)) = stack.pop() {
+            nodes_evaluated += 1;
             
-            for prev in current_combo.iter() {
-                if let Some(prev_idx) = pool_courses.iter().position(|&p| p.course_code == prev.course_code) {
-                    if pool_conflicts[prev_idx][i] {
-                        conflict = true;
-                        break;
+            // Yield to browser event loop every 10,000 nodes to keep UI responsive at 60 FPS
+            if nodes_evaluated - last_yield_nodes >= 10_000 {
+                last_yield_nodes = nodes_evaluated;
+                let _ = progress_callback.call1(&JsValue::NULL, &JsValue::from_f64(nodes_evaluated as f64));
+                sleep(Duration::from_millis(0)).await;
+            }
+
+            if nodes_evaluated > max_nodes_limit {
+                break; // Hard limit to prevent freezing on massive pools
+            }
+
+            if current_combo.len() == needed_from_pool {
+                let mut final_course_set = pinned_courses.clone();
+                for c in &current_combo {
+                    final_course_set.push(*c);
+                }
+                
+                self.compute_sections_for_courses(&final_course_set, top_results, current_threshold, &mut nodes_evaluated);
+                continue;
+            }
+
+            // We must push in reverse order so that start_idx is evaluated first (LIFO)
+            // But since we want to explore lexicographically (or whatever order), 
+            // pushing i from start_idx..len in reverse ensures 'start_idx' is popped first.
+            let mut i = pool_courses.len() as i32 - 1;
+            while i >= start_idx as i32 {
+                let idx = i as usize;
+                i -= 1;
+
+                let candidate = pool_courses[idx];
+                let mut conflict = false;
+                for prev in current_combo.iter() {
+                    if let Some(prev_idx) = pool_courses.iter().position(|&p| p.course_code == prev.course_code) {
+                        if pool_conflicts[prev_idx][idx] {
+                            conflict = true;
+                            break;
+                        }
                     }
                 }
-            }
-            if conflict { continue; }
+                if conflict { continue; }
 
-            current_combo.push(candidate);
-            self.generate_course_combinations(current_combo, i + 1, pool_courses, needed_from_pool, pool_conflicts, pinned_courses, top_results, current_threshold, nodes_evaluated, max_nodes_limit);
-            current_combo.pop();
+                let mut next_combo = current_combo.clone();
+                next_combo.push(candidate);
+                stack.push((next_combo, idx + 1));
+            }
         }
     }
 
