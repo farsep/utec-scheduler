@@ -17,6 +17,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.10",
     "@astrojs/react": "^6.0.1",
     "@emailjs/browser": "^4.4.1",
     "@types/canvas-confetti": "^1.9.0",
@@ -28,7 +29,8 @@
     "lucide-react": "^1.27.0",
     "pdfjs-dist": "^3.11.174",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "typescript": "^7.0.2"
   },
   "devDependencies": {
     "rollup": "^4.63.3",

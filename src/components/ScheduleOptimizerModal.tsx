@@ -1,11 +1,20 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { X, Sparkles, CheckSquare, Square, Filter, ChevronRight, CheckCircle2, Clock, Calendar, Check, Search, Coffee } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { X, Calendar, Clock, Coffee, Eye, Pin, Info, Sparkles, Filter, ShieldAlert, CheckCircle2, Search, ArrowLeft, Lock, Unlock, CheckSquare, Square, ChevronRight, Check } from 'lucide-react';
 import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
 import { formatLocation, getCourseColor, getCoursePrefix, minutesToTime, normalizeString, getCombinations, sessionToBitmask } from '../utils/scheduleUtils';
 import { TimetableGrid } from './TimetableGrid';
 import { GlassTimePicker } from './GlassTimePicker';
-import { Eye } from 'lucide-react';
+import { TimeBlockerGrid } from './TimeBlockerGrid';
+import { ErrorBoundary } from './ErrorBoundary';
+
+// Patch BigInt to be serializable by JSON.stringify
+// This prevents React DevTools from crashing the entire app when inspecting state that contains BigInts
+if (typeof BigInt !== 'undefined' && !(BigInt.prototype as any).toJSON) {
+  (BigInt.prototype as any).toJSON = function () {
+    return this.toString() + 'n';
+  };
+}
 
 interface ScheduleOptimizerModalProps {
   isOpen: boolean;
@@ -60,6 +69,46 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   const workersReadyRef = useRef<boolean[]>([]);
   const lastInitHashRef = useRef<string>('');
   
+  // Advanced Constraints State
+  const [pinnedSections, setPinnedSections] = useState<Record<string, string>>({});
+  const [blockedTimeMask, setBlockedTimeMask] = useState<bigint[]>([0n, 0n, 0n, 0n, 0n, 0n, 0n]);
+  const [blockedSectionsForTime, setBlockedSectionsForTime] = useState<Array<{courseCode: string, sectionName: string}>>([]);
+  const [isConstraintStrict, setIsConstraintStrict] = useState(false);
+  const [hoveredSectionForPreview, setHoveredSectionForPreview] = useState<{ courseCode: string; sectionName: string } | null>(null);
+
+  const computedHoveredMask = useMemo(() => {
+    if (!hoveredSectionForPreview) return null;
+    const course = courses.find(c => c.code === hoveredSectionForPreview.courseCode);
+    if (!course) return null;
+    const sec = course.sections.find(s => s.sectionNumber === hoveredSectionForPreview.sectionName);
+    if (!sec) return null;
+    const mask = [0n, 0n, 0n, 0n, 0n, 0n, 0n];
+    let temp = sessionToBitmask(sec.sessions);
+    for (let d = 0; d < 7; d++) {
+      mask[d] = temp & 0x0FFFFFFFFFFFFFFFn;
+      temp >>= 60n;
+    }
+    return mask;
+  }, [hoveredSectionForPreview, courses]);
+
+  const mergedBlockedTimeMask = useMemo(() => {
+    const newMask = [...blockedTimeMask];
+    blockedSectionsForTime.forEach(bs => {
+      const course = courses.find(c => c.code === bs.courseCode);
+      if (course) {
+        const sec = course.sections.find(s => s.sectionNumber === bs.sectionName);
+        if (sec) {
+          let temp = sessionToBitmask(sec.sessions);
+          for (let d = 0; d < 7; d++) {
+            newMask[d] |= (temp & 0x0FFFFFFFFFFFFFFFn);
+            temp >>= 60n;
+          }
+        }
+      }
+    });
+    return newMask;
+  }, [blockedTimeMask, blockedSectionsForTime, courses]);
+
   const cancelGeneration = () => {
     workerRefs.current.forEach(w => w.terminate());
     workerRefs.current = [];
@@ -121,7 +170,15 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     const pool = selectedCourseCodes.filter(c => !pinned.includes(c));
     const poolBase = neededFromPool <= 0 ? [] : pool;
 
-    const currentHash = JSON.stringify({ poolBase, pinned, neededFromPool, options: currentOptions });
+    const currentHash = JSON.stringify({ 
+      poolBase, 
+      pinned, 
+      neededFromPool, 
+      options: currentOptions,
+      pinnedSections,
+      blockedTimeMask: mergedBlockedTimeMask.map(b => b.toString()),
+      isConstraintStrict 
+    });
 
     const timer = setTimeout(() => {
       const numWorkers = navigator.hardwareConcurrency || 4;
@@ -148,7 +205,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
             poolBase,
             pinned,
             neededFromPool,
-            options: currentOptions
+            options: currentOptions,
+            pinnedSections,
+            blockedTimeMask: mergedBlockedTimeMask,
+            isConstraintStrict
           });
         });
       }
@@ -158,7 +218,8 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   }, [
     isOpen, isAdvancedMode, courses, options, maxCourses, 
     pinnedCourseCodes, minTime, maxTime, isLunchEnabled, 
-    lunchStart, lunchEnd, lunchDuration, selectedCourseCodes
+    lunchStart, lunchEnd, lunchDuration, selectedCourseCodes,
+    pinnedSections, mergedBlockedTimeMask, isConstraintStrict
   ]);
 
   const toggleCourse = (code: string) => {
@@ -172,6 +233,27 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
     );
   };
+
+  const handleTogglePinSection = useCallback((courseCode: string, secName: string, currentlyPinned: boolean) => {
+    console.log("Toggle Pin Section:", courseCode, secName, "Currently Pinned:", currentlyPinned);
+    setPinnedSections(prev => {
+      if (currentlyPinned) {
+        const { [courseCode]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [courseCode]: secName };
+    });
+  }, []);
+
+  const handleBlockSection = useCallback((courseCode: string, sectionName: string) => {
+    setBlockedSectionsForTime(prev => {
+      const exists = prev.find(p => p.courseCode === courseCode && p.sectionName === sectionName);
+      if (exists) {
+        return prev.filter(p => !(p.courseCode === courseCode && p.sectionName === sectionName));
+      }
+      return [...prev, { courseCode, sectionName }];
+    });
+  }, []);
 
   const handleGenerate = () => {
     setIsGenerating(true);
@@ -381,7 +463,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
             poolBase,
             pinned,
             neededFromPool,
-            options: currentOptions
+            options: currentOptions,
+            pinnedSections,
+            blockedTimeMask: mergedBlockedTimeMask,
+            isConstraintStrict
           });
         } else if (workersReadyRef.current[i]) {
           // Worker is already warmed up, start TASK immediately
@@ -428,6 +513,161 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     return result;
   }, [courses, searchQuery, showOnlyEligible, typeFilter]);
 
+  const courseBlocksForGrid = useMemo(() => {
+    const blocks: { dayIdx: number; startSlot: number; endSlot: number; color: string; title: string; subtitle: string; }[] = [];
+    blockedSectionsForTime.forEach(bs => {
+      const course = courses.find(c => c.code === bs.courseCode);
+      if (!course) return;
+      const sec = course.sections.find(s => s.sectionNumber === bs.sectionName);
+      if (!sec) return;
+      
+      const dayOffsets: Record<string, number> = { 'Lun': 0, 'Mar': 1, 'Mie': 2, 'Jue': 3, 'Vie': 4, 'Sab': 5, 'Dom': 6 };
+      sec.sessions.forEach(session => {
+        const dayIdx = dayOffsets[session.day];
+        if (dayIdx !== undefined) {
+          const startSlot = Math.max(0, Math.floor((session.startMinutes - 420) / 15));
+          const endSlot = Math.max(0, Math.ceil((session.endMinutes - 420) / 15)) - 1;
+          if (startSlot <= endSlot) {
+            blocks.push({
+              dayIdx,
+              startSlot,
+              endSlot,
+              color: course.color,
+              title: course.code,
+              subtitle: `Sec ${sec.sectionNumber}`
+            });
+          }
+        }
+      });
+    });
+    return blocks;
+  }, [blockedSectionsForTime, courses]);
+
+  // Ghost blocks for selected courses + viability enforcement
+  // Visual  : one block per unique session TIME RANGE (deduplicated), labeled with density
+  // Protect : hard-protect intersection; soft-correct via handleBlockedMaskChange
+  const { pinnedBlocksForGrid, pinnedTimeMask, courseViabilityMasks } = useMemo(() => {
+    const dayOffsets: Record<string, number> = { 'Lun': 0, 'Mar': 1, 'Mie': 2, 'Jue': 3, 'Vie': 4, 'Sab': 5, 'Dom': 6 };
+
+    type GhostBlock = {
+      dayIdx: number; startSlot: number; endSlot: number;
+      color: string; title: string; subtitle: string;
+      density: number; // fraction of sections sharing this slot (0-1)
+      isParent: boolean; // shared by most/all sections
+    };
+
+    const blocks: GhostBlock[] = [];
+    const protectedMask = [0n, 0n, 0n, 0n, 0n, 0n, 0n];
+    const viabilityMasks: Record<string, bigint[][]> = {};
+
+    const sessionMask = (sessions: any[]): bigint[] => {
+      const m = [0n, 0n, 0n, 0n, 0n, 0n, 0n];
+      sessions.forEach(s => {
+        const d = dayOffsets[s.day];
+        if (d === undefined) return;
+        const start = Math.max(0, Math.floor((s.startMinutes - 420) / 15));
+        const end   = Math.max(0, Math.ceil ((s.endMinutes   - 420) / 15)) - 1;
+        for (let i = start; i <= end; i++) m[d] |= (1n << BigInt(i));
+      });
+      return m;
+    };
+
+    selectedCourseCodes.forEach(code => {
+      const course = courses.find(c => c.code === code);
+      if (!course || course.sections.length === 0) return;
+
+      const pinnedSecName = pinnedSections[code];
+      const uniqueSecNames = [...new Set(course.sections.map(s => s.sectionNumber))];
+      const totalSections  = uniqueSecNames.length;
+
+      // Per-section masks for viability validation
+      const secMasks = uniqueSecNames
+        .map(n => course.sections.find(s => s.sectionNumber === n))
+        .filter(Boolean)
+        .map(sec => sessionMask(sec!.sessions));
+      viabilityMasks[code] = secMasks;
+
+      if (pinnedSecName) {
+        // Specific section candado-pinned: show only it, protect its slots fully
+        const sec = course.sections.find(s => s.sectionNumber === pinnedSecName);
+        if (!sec) return;
+        const m = sessionMask(sec.sessions);
+        sec.sessions.forEach(s => {
+          const d = dayOffsets[s.day];
+          if (d === undefined) return;
+          const start = Math.max(0, Math.floor((s.startMinutes - 420) / 15));
+          const end   = Math.max(0, Math.ceil ((s.endMinutes   - 420) / 15)) - 1;
+          if (start <= end) blocks.push({ dayIdx: d, startSlot: start, endSlot: end, color: course.color, title: course.code, subtitle: `🔒 ${pinnedSecName}`, density: 1, isParent: true });
+        });
+        for (let d = 0; d < 7; d++) protectedMask[d] |= m[d];
+      } else {
+        // Group sessions by exact time range to avoid duplicate blocks
+        const groups = new Map<string, { dayIdx: number; startSlot: number; endSlot: number; sections: Set<string> }>();
+        uniqueSecNames.forEach(secName => {
+          const sec = course.sections.find(s => s.sectionNumber === secName);
+          if (!sec) return;
+          sec.sessions.forEach(s => {
+            const d = dayOffsets[s.day];
+            if (d === undefined) return;
+            const start = Math.max(0, Math.floor((s.startMinutes - 420) / 15));
+            const end   = Math.max(0, Math.ceil ((s.endMinutes   - 420) / 15)) - 1;
+            if (start > end) return;
+            const key = `${d}-${start}-${end}`;
+            if (!groups.has(key)) groups.set(key, { dayIdx: d, startSlot: start, endSlot: end, sections: new Set() });
+            groups.get(key)!.sections.add(secName);
+          });
+        });
+
+        groups.forEach(g => {
+          const shared  = g.sections.size;
+          const density = shared / totalSections;
+          const isParent = density >= 0.75;
+          let subtitle: string;
+          if (shared === totalSections)    subtitle = `Todas (${totalSections})`;
+          else if (shared === 1)           subtitle = `Sec ${[...g.sections][0]}`;
+          else                             subtitle = `${shared}/​${totalSections} secs`;
+          blocks.push({ dayIdx: g.dayIdx, startSlot: g.startSlot, endSlot: g.endSlot, color: course.color, title: course.code, subtitle, density, isParent });
+        });
+
+        // Hard-protect intersection (slots ALL sections share)
+        if (secMasks.length > 0) {
+          const intersect = Array.from({ length: 7 }, () => (1n << 60n) - 1n);
+          secMasks.forEach(m => { for (let d = 0; d < 7; d++) intersect[d] &= m[d]; });
+          for (let d = 0; d < 7; d++) protectedMask[d] |= intersect[d];
+        }
+      }
+    });
+
+    return { pinnedBlocksForGrid: blocks, pinnedTimeMask: protectedMask, courseViabilityMasks: viabilityMasks };
+  }, [selectedCourseCodes, pinnedSections, courses]);
+
+  // Viability-aware mask setter: after each drag, ensure at least one complete section
+  // per course remains unblocked. If not, restore the least-blocked section.
+  const handleBlockedMaskChange = useCallback((newMask: bigint[]) => {
+    let validated = [...newMask] as bigint[];
+    Object.entries(courseViabilityMasks).forEach(([, sectionMasks]) => {
+      if (sectionMasks.length === 0) return;
+      const hasViable = sectionMasks.some(secMask =>
+        secMask.every((dayMask, d) => (validated[d] & dayMask) === 0n)
+      );
+      if (!hasViable) {
+        // Find the section with the fewest currently-blocked slots and restore it
+        let minBlocked = Infinity;
+        let bestMask = sectionMasks[0];
+        sectionMasks.forEach(secMask => {
+          let n = 0;
+          for (let d = 0; d < 7; d++) {
+            let bits = validated[d] & secMask[d];
+            while (bits !== 0n) { n++; bits &= bits - 1n; }
+          }
+          if (n < minBlocked) { minBlocked = n; bestMask = secMask; }
+        });
+        for (let d = 0; d < 7; d++) validated[d] &= ~bestMask[d];
+      }
+    });
+    setBlockedTimeMask(validated);
+  }, [courseViabilityMasks]);
+
   if (!isOpen) return null;
 
   return (
@@ -448,6 +688,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
           <button className="close-btn" onClick={onClose}><X size={20} /></button>
         </div>
 
+        <ErrorBoundary>
         {/* Content Body - Split View */}
         <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
           
@@ -533,7 +774,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                         </label>
                         <div style={{ 
                           width: '36px', height: '20px', background: isLunchEnabled ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
-                          borderRadius: '10px', position: 'relative', transition: 'all 0.3s'
+                          borderRadius: '10px', position: 'relative', transition: 'all 0.3s', flexShrink: 0
                         }}>
                           <div style={{
                             position: 'absolute', top: '2px', left: isLunchEnabled ? '18px' : '2px',
@@ -581,6 +822,34 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                         </>
                       )}
                     </div>
+                  </div>
+                )}
+
+                {isAdvancedMode && (
+                  <div style={{ padding: '12px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                        Calendario de Bloqueos (Restricciones Temporales)
+                      </label>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Modo Estricto:</label>
+                        <div 
+                          onClick={() => setIsConstraintStrict(!isConstraintStrict)}
+                          style={{ 
+                            width: '36px', height: '20px', background: isConstraintStrict ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
+                            borderRadius: '10px', position: 'relative', transition: 'all 0.3s', cursor: 'pointer', flexShrink: 0
+                          }}>
+                          <div style={{
+                            position: 'absolute', top: '2px', left: isConstraintStrict ? '18px' : '2px',
+                            width: '16px', height: '16px', background: 'white', borderRadius: '50%',
+                            transition: 'all 0.3s'
+                          }} />
+                        </div>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0' }}>
+                      {isConstraintStrict ? 'Modo Estricto: Se descartan los cruces rojos.' : 'Modo Flexible: Se penalizan los cruces rojos.'} Configura los bloqueos en el gran panel derecho.
+                    </p>
                   </div>
                 )}
 
@@ -726,59 +995,154 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   {filteredCourses.map(course => {
                     const isSelected = selectedCourseCodes.includes(course.code);
                     return (
-                    <div 
-                      key={course.code} 
-                      onClick={() => toggleCourse(course.code)}
-                      className={`optimizer-course-item ${isSelected ? 'selected' : ''}`}
-                    >
-                      <div className="check-icon" style={{ display: 'flex', alignItems: 'center' }}>
-                        {isSelected ? 
-                          <CheckSquare size={18} color="var(--text-muted)" /> : 
-                          <Square size={18} color="var(--text-muted)" />
-                        }
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ 
-                            fontWeight: 600, 
-                            fontSize: '0.85rem',
-                            color: isSelected ? course.color : 'var(--accent-blue)',
-                            transition: 'color 0.2s ease'
-                          }}>{course.code}</span>
-                          {course.isEligible && (
-                            <span className="habilitado-badge">
-                              HABILITADO
-                            </span>
+                      <React.Fragment key={course.code}>
+                        <div 
+                          onClick={() => toggleCourse(course.code)}
+                          className={`optimizer-course-item ${isSelected ? 'selected' : ''}`}
+                        >
+                          <div className="check-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                            {isSelected ? 
+                              <CheckSquare size={18} color="var(--text-muted)" /> : 
+                              <Square size={18} color="var(--text-muted)" />
+                            }
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ 
+                                fontWeight: 600, 
+                                fontSize: '0.85rem',
+                                color: isSelected ? course.color : 'var(--accent-blue)',
+                                transition: 'color 0.2s ease'
+                              }}>{course.code}</span>
+                              {course.isEligible && (
+                                <span className="habilitado-badge">
+                                  HABILITADO
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ 
+                              fontSize: '0.75rem', 
+                              color: isSelected ? 'var(--text-primary)' : 'var(--text-muted)',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              transition: 'color 0.2s ease'
+                            }}>
+                              {course.name}
+                            </div>
+                          </div>
+                          
+                          {isAdvancedMode && isSelected && (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); togglePin(course.code); }}
+                              style={{
+                                background: 'transparent', border: 'none', cursor: 'pointer',
+                                opacity: pinnedCourseCodes.includes(course.code) ? 1 : 0.3,
+                                filter: pinnedCourseCodes.includes(course.code) ? 'none' : 'grayscale(100%)',
+                                fontSize: '1rem', display: 'flex', alignItems: 'center'
+                              }}
+                              title={pinnedCourseCodes.includes(course.code) ? "Desfijar curso" : "Fijar curso (el algoritmo intentará incluirlo)"}
+                            >
+                              📌
+                            </button>
                           )}
                         </div>
-                        <div style={{ 
-                          fontSize: '0.75rem', 
-                          color: isSelected ? 'var(--text-primary)' : 'var(--text-muted)',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          transition: 'color 0.2s ease'
-                        }}>
-                          {course.name}
-                        </div>
-                      </div>
-                      
-                      {isAdvancedMode && isSelected && (
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); togglePin(course.code); }}
-                          style={{
-                            background: 'transparent', border: 'none', cursor: 'pointer',
-                            opacity: pinnedCourseCodes.includes(course.code) ? 1 : 0.3,
-                            filter: pinnedCourseCodes.includes(course.code) ? 'none' : 'grayscale(100%)',
-                            fontSize: '1rem', display: 'flex', alignItems: 'center'
-                          }}
-                          title={pinnedCourseCodes.includes(course.code) ? "Desfijar curso" : "Fijar curso (el algoritmo intentará incluirlo)"}
-                        >
-                          📌
-                        </button>
-                      )}
-                    </div>
-                  );
+                        {isAdvancedMode && isSelected && pinnedCourseCodes.includes(course.code) && (
+                          <div style={{ padding: '4px 8px 8px 32px', background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Fijar sección específica (Opcional):</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '8px' }}>
+                              {course.sections.map(sec => {
+                                const secName = sec.sectionNumber;
+                                const isPinned = pinnedSections[course.code] === secName;
+                                const profs = sec.professors.length > 0 ? sec.professors.join(', ') : 'Sin profesor asignado';
+                                const full = sec.enrolled >= sec.vacancies && sec.vacancies > 0;
+                                
+                                // Check if section is blocked
+                                const isSectionBlocked = blockedSectionsForTime.some(bs => bs.courseCode === course.code && bs.sectionName === secName);
+
+                                return (
+                                  <div 
+                                    key={secName}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleTogglePinSection(course.code, secName, isPinned);
+                                    }}
+                                    onMouseEnter={() => setHoveredSectionForPreview({ courseCode: course.code, sectionName: secName })}
+                                    onMouseLeave={() => setHoveredSectionForPreview(null)}
+                                    style={{
+                                      padding: '8px 12px',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      border: isPinned ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.05)',
+                                      background: isPinned ? 'rgba(59,130,246,0.1)' : 'rgba(0,0,0,0.3)',
+                                      color: isPinned ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      gap: '4px',
+                                      transition: 'all 0.2s',
+                                      position: 'relative',
+                                      overflow: 'hidden'
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, fontSize: '0.8rem' }}>
+                                        {isPinned ? <Lock size={12} color="var(--accent-primary)" /> : <Unlock size={12} color="var(--text-muted)" />}
+                                        Sección {secName}
+                                      </div>
+                                      <div style={{ 
+                                        fontSize: '0.7rem', 
+                                        padding: '2px 6px', 
+                                        borderRadius: '4px', 
+                                        background: full ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                                        color: full ? '#ef4444' : '#10b981',
+                                        fontWeight: 600
+                                      }}>
+                                        {sec.enrolled} / {sec.vacancies}
+                                      </div>
+                                    </div>
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                      👨‍🏫 {profs}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '4px', marginTop: '4px', alignItems: 'center', justifyContent: 'space-between' }}>
+                                      <div style={{ display: 'flex', gap: '4px' }}>
+                                        {Array.from(new Set(sec.sessions.map(s => s.sessionType))).map((type, i) => (
+                                          <span key={i} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-muted)' }}>
+                                            {type}
+                                          </span>
+                                        ))}
+                                      </div>
+                                      <button 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleBlockSection(course.code, secName);
+                                        }}
+                                        style={{ 
+                                          background: isSectionBlocked ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                                          border: isSectionBlocked ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)', 
+                                          borderRadius: '4px', color: isSectionBlocked ? '#10b981' : '#ef4444', fontSize: '0.65rem', padding: '3px 8px', 
+                                          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, transition: 'all 0.2s' 
+                                        }}
+                                        title={isSectionBlocked ? "Desbloquear el horario de esta sección en el calendario" : "Bloquear el horario de esta sección en el calendario"}
+                                        onMouseEnter={(e) => { 
+                                          e.currentTarget.style.background = isSectionBlocked ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'; 
+                                          e.currentTarget.style.borderColor = isSectionBlocked ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)'; 
+                                        }}
+                                        onMouseLeave={(e) => { 
+                                          e.currentTarget.style.background = isSectionBlocked ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'; 
+                                          e.currentTarget.style.borderColor = isSectionBlocked ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'; 
+                                        }}
+                                      >
+                                        {isSectionBlocked ? '✅ Desbloquear' : '🚫 Bloquear'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </React.Fragment>
+                    );
                 })}
                 </div>
               </div>
@@ -955,11 +1319,40 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
               opacity: previewSchedule ? 0 : 1
             }}>
                 {!results && !isGenerating && (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', textAlign: 'center' }}>
-                    <Sparkles size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-                    <p style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Listo para Optimizar</p>
-                    <p style={{ fontSize: '0.9rem', maxWidth: '300px', lineHeight: 1.5 }}>Selecciona tus cursos y preferencias en el panel izquierdo y presiona "Generar Horarios".</p>
-                  </div>
+                  isAdvancedMode ? (
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                        <div>
+                          <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, color: 'var(--text-secondary)' }}>Calendario de Bloqueos</h4>
+                          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                            Haz clic y arrastra para bloquear horarios que deseas evitar.
+                          </p>
+                        </div>
+                        {isConstraintStrict && (
+                          <span className="glass-pill" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.4)' }}>
+                            Modo Estricto Activo
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ flex: 1, minHeight: 0 }}>
+                        <TimeBlockerGrid 
+                          blockedMask={blockedTimeMask}
+                          onChange={handleBlockedMaskChange}
+                          hoveredMask={computedHoveredMask}
+                          courseBlocks={courseBlocksForGrid}
+                          pinnedBlocks={pinnedBlocksForGrid}
+                          pinnedMask={pinnedTimeMask}
+                          courseViabilityMasks={courseViabilityMasks}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', textAlign: 'center' }}>
+                      <Sparkles size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                      <p style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Listo para Optimizar</p>
+                      <p style={{ fontSize: '0.9rem', maxWidth: '300px', lineHeight: 1.5 }}>Selecciona tus cursos y preferencias en el panel izquierdo y presiona "Generar Horarios".</p>
+                    </div>
+                  )
                 )}
 
             {isGenerating && (
@@ -1018,18 +1411,47 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', textAlign: 'center' }}>
                 <X size={48} style={{ color: 'var(--accent-rose)', opacity: 0.5, marginBottom: '16px' }} />
                 <p style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--accent-rose)' }}>No se encontraron combinaciones</p>
-                <p style={{ fontSize: '0.9rem', maxWidth: '400px', lineHeight: 1.5 }}>
+                <p style={{ fontSize: '0.9rem', maxWidth: '400px', lineHeight: 1.5, marginBottom: '24px' }}>
                   Es probable que haya cruces de horario inevitables entre los cursos seleccionados, o las restricciones (días libres/vacantes) son muy estrictas.
                 </p>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => setResults(null)}
+                  style={{ padding: '10px 24px' }}
+                >
+                  Volver a Configurar
+                </button>
               </div>
             )}
 
             {results && results.length > 0 && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                  <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    Resultados <span className="glass-pill" style={{ color: 'var(--accent-primary)', borderColor: 'rgba(59, 130, 246, 0.4)' }}>{results.length} opciones</span>
-                  </h4>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <button 
+                      onClick={() => setResults(null)}
+                      style={{ 
+                        background: 'rgba(255,255,255,0.05)', 
+                        border: '1px solid rgba(255,255,255,0.1)', 
+                        borderRadius: '8px', 
+                        padding: '6px', 
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                      onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                      title="Volver a Configurar"
+                    >
+                      <ArrowLeft size={18} />
+                    </button>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      Resultados <span className="glass-pill" style={{ color: 'var(--accent-primary)', borderColor: 'rgba(59, 130, 246, 0.4)' }}>{results.length} opciones</span>
+                    </h4>
+                  </div>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mostrando los mejores resultados ordenados</span>
                 </div>
 
@@ -1153,6 +1575,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
             </div>
           </div>
         </div>
+        </ErrorBoundary>
       </div>
     </div>
   );

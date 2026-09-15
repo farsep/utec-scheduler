@@ -164,10 +164,19 @@ impl QuantumEngine {
         prefix_codes_js: JsValue,
         start_idx: usize,
         progress_callback: js_sys::Function,
+        pinned_sections_js: JsValue,
+        blocked_times_js: JsValue,
+        is_strict_mode: bool,
     ) -> Result<JsValue, JsValue> {
         let pinned_codes: Vec<String> = serde_wasm_bindgen::from_value(pinned_codes_js)?;
         let pool_codes: Vec<String> = serde_wasm_bindgen::from_value(pool_codes_js)?;
         let prefix_codes: Vec<String> = serde_wasm_bindgen::from_value(prefix_codes_js)?;
+        let pinned_sections_map: std::collections::HashMap<String, String> = serde_wasm_bindgen::from_value(pinned_sections_js).unwrap_or_default();
+        let blocked_times: Vec<u64> = serde_wasm_bindgen::from_value(blocked_times_js).unwrap_or_default();
+        let mut blocked_mask = [0u64; 7];
+        for (i, &v) in blocked_times.iter().take(7).enumerate() {
+            blocked_mask[i] = v;
+        }
 
         let mut pinned_courses = Vec::new();
         for code in &pinned_codes {
@@ -196,7 +205,25 @@ impl QuantumEngine {
                 let course_b = pool_courses[j];
                 let mut possible = false;
                 for sec_a in &course_a.sections {
+                    if let Some(pinned) = pinned_sections_map.get(&course_a.course_code) {
+                        if !sec_a.homochronous_sections.contains(pinned) { continue; }
+                    }
+                    if is_strict_mode {
+                        let mut conflict = false;
+                        for d in 0..7 { if (sec_a.mask[d] & blocked_mask[d]) != 0 { conflict = true; break; } }
+                        if conflict { continue; }
+                    }
+                    
                     for sec_b in &course_b.sections {
+                        if let Some(pinned) = pinned_sections_map.get(&course_b.course_code) {
+                            if !sec_b.homochronous_sections.contains(pinned) { continue; }
+                        }
+                        if is_strict_mode {
+                            let mut conflict = false;
+                            for d in 0..7 { if (sec_b.mask[d] & blocked_mask[d]) != 0 { conflict = true; break; } }
+                            if conflict { continue; }
+                        }
+                        
                         let mut no_overlap = true;
                         for d in 0..7 {
                             if (sec_a.mask[d] & sec_b.mask[d]) != 0 {
@@ -241,6 +268,9 @@ impl QuantumEngine {
             &mut current_threshold,
             max_nodes_limit,
             progress_callback,
+            &pinned_sections_map,
+            &blocked_mask,
+            is_strict_mode,
         ).await;
 
         let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
@@ -259,6 +289,9 @@ impl QuantumEngine {
         current_threshold: &mut f64,
         max_nodes_limit: usize,
         progress_callback: js_sys::Function,
+        pinned_sections_map: &std::collections::HashMap<String, String>,
+        blocked_mask: &[u64; 7],
+        is_strict_mode: bool,
     ) {
         let mut stack = Vec::new();
         stack.push((initial_combo, initial_start_idx));
@@ -286,7 +319,15 @@ impl QuantumEngine {
                     final_course_set.push(*c);
                 }
                 
-                self.compute_sections_for_courses(&final_course_set, top_results, current_threshold, &mut nodes_evaluated);
+                self.compute_sections_for_courses(
+                    &final_course_set, 
+                    top_results, 
+                    current_threshold, 
+                    &mut nodes_evaluated,
+                    pinned_sections_map,
+                    blocked_mask,
+                    is_strict_mode,
+                );
                 continue;
             }
 
@@ -323,6 +364,9 @@ impl QuantumEngine {
         top_results: &mut Vec<GeneratedScheduleResultRust>,
         current_threshold: &mut f64,
         nodes_evaluated: &mut usize,
+        pinned_sections_map: &std::collections::HashMap<String, String>,
+        blocked_mask: &[u64; 7],
+        is_strict_mode: bool,
     ) {
         let mut sorted_courses = selected_courses.clone();
         sorted_courses.sort_by(|a, b| a.sections.len().cmp(&b.sections.len()));
@@ -334,6 +378,14 @@ impl QuantumEngine {
             let mut max_bonus_for_course = 0.0;
             
             for sec in &sorted_courses[idx].sections {
+                if let Some(pinned) = pinned_sections_map.get(&sorted_courses[idx].course_code) {
+                    if !sec.homochronous_sections.contains(pinned) { continue; }
+                }
+                if is_strict_mode {
+                    let mut conflict = false;
+                    for d in 0..7 { if (sec.mask[d] & blocked_mask[d]) != 0 { conflict = true; break; } }
+                    if conflict { continue; }
+                }
                 let mut m_slots = 0;
                 let mut a_slots = 0;
                 for day in 0..7 {
@@ -368,6 +420,9 @@ impl QuantumEngine {
             top_results,
             current_threshold,
             nodes_evaluated,
+            pinned_sections_map,
+            blocked_mask,
+            is_strict_mode,
         );
     }
 
@@ -381,6 +436,9 @@ impl QuantumEngine {
         top_results: &mut Vec<GeneratedScheduleResultRust>,
         current_threshold: &mut f64,
         nodes_evaluated: &mut usize,
+        pinned_sections_map: &std::collections::HashMap<String, String>,
+        blocked_mask: &[u64; 7],
+        is_strict_mode: bool,
     ) {
         if index == selected_courses.len() {
             let mut total_gap_slots = 0;
@@ -462,6 +520,16 @@ impl QuantumEngine {
             if self.target_morning { raw_score += morning_score_min / 5.0; }
             if self.target_afternoon { raw_score += afternoon_score_min / 5.0; }
             if self.has_lunch_target { raw_score += normalized_lunch_score * 1000.0; }
+            
+            // Soft Constraint penalty
+            if !is_strict_mode {
+                let mut overlap_blocks = 0;
+                for d in 0..7 {
+                    let overlap = current_mask[d] & blocked_mask[d];
+                    overlap_blocks += overlap.count_ones();
+                }
+                raw_score -= (overlap_blocks as f64) * 100.0;
+            }
 
             let metrics = ScheduleMetricsRust {
                 totalGapMinutes: total_gap_minutes,
@@ -502,11 +570,19 @@ impl QuantumEngine {
             return;
         }
 
-        let course = &selected_courses[index];
-        for (sec_idx, section) in course.sections.iter().enumerate() {
+        let course = selected_courses[index];
+        for (i, sec) in course.sections.iter().enumerate() {
+            if let Some(pinned) = pinned_sections_map.get(&course.course_code) {
+                if !sec.homochronous_sections.contains(pinned) { continue; }
+            }
+            if is_strict_mode {
+                let mut conflict = false;
+                for d in 0..7 { if (sec.mask[d] & blocked_mask[d]) != 0 { conflict = true; break; } }
+                if conflict { continue; }
+            }
             let mut conflict = false;
             for d in 0..7 {
-                if (current_mask[d] & section.mask[d]) != 0 {
+                if (current_mask[d] & sec.mask[d]) != 0 {
                     conflict = true;
                     break;
                 }
@@ -516,7 +592,7 @@ impl QuantumEngine {
             let mut next_mask = [0; 7];
             let mut days = 0;
             for d in 0..7 {
-                next_mask[d] = current_mask[d] | section.mask[d];
+                next_mask[d] = current_mask[d] | sec.mask[d];
                 if next_mask[d] != 0 { days += 1; }
             }
             
@@ -552,8 +628,20 @@ impl QuantumEngine {
             }
             if !is_viable { continue; }
             
-            current_combo[index] = sec_idx;
-            self.backtrack(index + 1, &next_mask, current_combo, selected_courses, suffix_max_bonus, top_results, current_threshold, nodes_evaluated);
+            current_combo[index] = i;
+            self.backtrack(
+                index + 1, 
+                &next_mask, 
+                current_combo, 
+                selected_courses, 
+                suffix_max_bonus, 
+                top_results, 
+                current_threshold, 
+                nodes_evaluated,
+                pinned_sections_map,
+                blocked_mask,
+                is_strict_mode,
+            );
         }
     }
 }

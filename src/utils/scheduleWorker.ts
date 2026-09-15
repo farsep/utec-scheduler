@@ -16,6 +16,9 @@ let workerNeededFromPool: number;
 let lastProgressTime = 0;
 let validSchedulesCount = 0;
 let processedSchedules = 0;
+let workerPinnedSections: Record<string, string> = {};
+let workerBlockedTimeMask: bigint[] = [0n, 0n, 0n, 0n, 0n, 0n, 0n];
+let workerIsConstraintStrict: boolean = false;
 
 interface PreprocessedCourse {
   courseCode: string;
@@ -485,13 +488,22 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           } as WorkerMessage);
       };
 
+      // Convert BigInt mask array to u64 array (number[]) for WASM boundary
+      // In JS, numbers are double precision floats, but they perfectly represent integers up to 2^53 - 1.
+      // Since our mask uses 60 bits max, we can't safely pass them as plain numbers if they exceed 53 bits.
+      // Serde wasm-bindgen handles BigInt to u64 seamlessly! We can pass BigInt[] directly if configured,
+      // but to be perfectly safe, we can pass BigInt[].
+      
       const rustResults = await wasmEngine.compute_chunk(
           workerPinned,
           workerPoolBase,
           workerNeededFromPool,
           task.prefix,
           task.startIdx,
-          progressCallback
+          progressCallback,
+          workerPinnedSections,
+          workerBlockedTimeMask,
+          workerIsConstraintStrict
       );
       
       if (rustResults && rustResults.length > 0) {

@@ -112,7 +112,7 @@ export interface OptimizerOptions {
 
 // Web Worker Types
 export type WorkerMessage = 
-  | { type: 'INIT'; courses: Course[]; poolBase: string[]; pinned: string[]; neededFromPool: number; options: OptimizerOptions }
+  | { type: 'INIT'; courses: Course[]; poolBase: string[]; pinned: string[]; neededFromPool: number; options: OptimizerOptions; pinnedSections?: Record<string, string>; blockedTimeMask?: bigint[]; isConstraintStrict?: boolean; }
   | { type: 'TASK'; task: {prefix: string[], startIdx: number} }
   | { type: 'FINISH' }
   | { type: 'READY' }
