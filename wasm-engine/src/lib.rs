@@ -118,8 +118,8 @@ impl QuantumEngine {
                     }
                 }
                 let mut sec_bonus = 0.0;
-                if target_morning { sec_bonus += (m_slots as f64 * 15.0) / 5.0; }
-                if target_afternoon { sec_bonus += (a_slots as f64 * 15.0) / 5.0; }
+                if target_morning { sec_bonus += m_slots as f64 * 20.0; }
+                if target_afternoon { sec_bonus += a_slots as f64 * 20.0; }
                 
                 if sec_bonus > max_bonus_for_course { max_bonus_for_course = sec_bonus; }
             }
@@ -398,8 +398,8 @@ impl QuantumEngine {
                     }
                 }
                 let mut sec_bonus = 0.0;
-                if self.target_morning { sec_bonus += (m_slots as f64 * 15.0) / 5.0; }
-                if self.target_afternoon { sec_bonus += (a_slots as f64 * 15.0) / 5.0; }
+                if self.target_morning { sec_bonus += m_slots as f64 * 20.0; }
+                if self.target_afternoon { sec_bonus += a_slots as f64 * 20.0; }
                 
                 if sec_bonus > max_bonus_for_course { max_bonus_for_course = sec_bonus; }
             }
@@ -509,16 +509,16 @@ impl QuantumEngine {
             let earliest_start_minutes = if global_earliest_slot == 60 { 0 } else { 420 + (global_earliest_slot as u32 * 15) };
             let latest_end_minutes = if global_latest_slot == -1 { 0 } else { 420 + ((global_latest_slot as u32 + 1) * 15) };
             
-            let morning_score_min = morning_slots as f64 * 15.0;
-            let afternoon_score_min = afternoon_slots as f64 * 15.0;
+            let morning_score_bonus = morning_slots as f64 * 20.0;
+            let afternoon_score_bonus = afternoon_slots as f64 * 20.0;
             let normalized_lunch_score = if active_days_count > 0 { lunch_score as f64 / active_days_count as f64 } else { 0.0 };
 
             let mut raw_score = 0.0;
             if self.target_min_gaps { raw_score -= total_gap_minutes as f64; }
             if self.target_min_days { raw_score -= (active_days_count * 500) as f64; }
             if self.target_min_day_gaps { raw_score -= (bridge_days * 1000) as f64; }
-            if self.target_morning { raw_score += morning_score_min / 5.0; }
-            if self.target_afternoon { raw_score += afternoon_score_min / 5.0; }
+            if self.target_morning { raw_score += morning_score_bonus; }
+            if self.target_afternoon { raw_score += afternoon_score_bonus; }
             if self.has_lunch_target { raw_score += normalized_lunch_score * 1000.0; }
             
             // Soft Constraint penalty
@@ -538,8 +538,8 @@ impl QuantumEngine {
                 totalHours: total_hours,
                 earliestStartMinutes: earliest_start_minutes,
                 latestEndMinutes: latest_end_minutes,
-                morningScore: morning_score_min,
-                afternoonScore: afternoon_score_min,
+                morningScore: morning_score_bonus,
+                afternoonScore: afternoon_score_bonus,
                 lunchScore: normalized_lunch_score,
                 dayGaps: bridge_days as u32,
             };
