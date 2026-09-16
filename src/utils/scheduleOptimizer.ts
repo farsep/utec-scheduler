@@ -36,8 +36,16 @@ export function calculateMetricsFromSessions(
     if (sess.startMinutes < earliestStartMinutes) earliestStartMinutes = sess.startMinutes;
     if (sess.endMinutes > latestEndMinutes) latestEndMinutes = sess.endMinutes;
 
-    morningScore += Math.max(0, 720 - sess.startMinutes);
-    afternoonScore += Math.max(0, sess.startMinutes - 720);
+    const startSlot = Math.max(0, Math.floor((sess.startMinutes - 420) / 15));
+    const endSlot = Math.min(59, Math.ceil((sess.endMinutes - 420) / 15) - 1);
+    
+    for (let slot = startSlot; slot <= endSlot; slot++) {
+      if (slot < 20) {
+        morningScore += 1;
+      } else {
+        afternoonScore += 1;
+      }
+    }
   }
 
   let totalGapMinutes = 0;

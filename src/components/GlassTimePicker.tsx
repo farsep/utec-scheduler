@@ -12,7 +12,7 @@ export const GlassTimePicker: React.FC<GlassTimePickerProps> = ({ value, onChang
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Generate hours from 07:00 to 23:00
-  const timeOptions = Array.from({ length: 17 }, (_, i) => {
+  const timeOptions = Array.from({ length: 16 }, (_, i) => {
     const hour = i + 7;
     return `${hour.toString().padStart(2, '0')}:00`;
   });
