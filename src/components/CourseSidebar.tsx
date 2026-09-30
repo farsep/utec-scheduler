@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, ChevronDown, ChevronRight, Plus, Trash2, GripVertical, CheckCircle2, MapPin, User, Users, Check } from 'lucide-react';
 import type { Course, Section, Session, FilterState } from '../types/schedule';
 import { normalizeString, formatLocation } from '../utils/scheduleUtils';
@@ -12,6 +12,100 @@ interface CourseSidebarProps {
   onDragEndSection: () => void;
   metadata?: import('../types/schedule').MetadataInfo;
 }
+
+const CustomSelect = ({ value, options, onChange, placeholder }: { value: string, options: string[], onChange: (val: string) => void, placeholder: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          background: 'rgba(0,0,0,0.3)',
+          border: isOpen ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)',
+          color: 'var(--text-primary)',
+          padding: '6px 10px',
+          borderRadius: '6px',
+          fontSize: '0.85rem',
+          cursor: 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          transition: 'all 0.2s',
+          boxShadow: isOpen ? '0 0 0 2px rgba(59, 130, 246, 0.2)' : 'none'
+        }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {value === 'ALL' ? placeholder : value}
+        </span>
+        <ChevronDown size={14} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+      </div>
+
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          marginTop: '4px',
+          background: 'var(--bg-secondary)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '6px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
+          zIndex: 100,
+          maxHeight: '220px',
+          overflowY: 'auto'
+        }}>
+          <div 
+            onClick={() => { onChange('ALL'); setIsOpen(false); }}
+            style={{
+              padding: '10px 12px',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              background: value === 'ALL' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+              color: value === 'ALL' ? 'var(--accent-primary)' : 'var(--text-primary)',
+              transition: 'background 0.15s'
+            }}
+            onMouseEnter={e => { if(value !== 'ALL') e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+            onMouseLeave={e => { if(value !== 'ALL') e.currentTarget.style.background = 'transparent' }}
+          >
+            {placeholder}
+          </div>
+          {options.map((opt: string) => (
+            <div 
+              key={opt}
+              onClick={() => { onChange(opt); setIsOpen(false); }}
+              style={{
+                padding: '10px 12px',
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                background: value === opt ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                color: value === opt ? 'var(--accent-primary)' : 'var(--text-primary)',
+                borderTop: '1px solid rgba(255,255,255,0.04)',
+                transition: 'background 0.15s'
+              }}
+              onMouseEnter={e => { if(value !== opt) e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+              onMouseLeave={e => { if(value !== opt) e.currentTarget.style.background = 'transparent' }}
+            >
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export interface MainSectionGroup {
   mainSecNum: string;
@@ -44,6 +138,7 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
   const [collapsedCourses, setCollapsedCourses] = useState<Set<string>>(new Set());
+  const [professorFilters, setProfessorFilters] = useState<Record<string, string>>({});
 
   const hasEligibleFilter = courses.some(c => c.isEligible) && courses.some(c => !c.isEligible);
   const hasCourseTypeData = courses.some(c => c.courseType !== undefined);
@@ -364,6 +459,26 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
             const mainSectionGroups = getCourseMainSectionGroups(course);
 
+            const courseProfessors = Array.from(new Set(
+              course.sections.flatMap(sec => sec.professors)
+                .filter(p => p && p !== 'Por asignar')
+            )).sort();
+
+            const currentProfFilter = professorFilters[course.code];
+            let displayMainGroups = mainSectionGroups;
+            
+            if (currentProfFilter && currentProfFilter !== 'ALL') {
+              displayMainGroups = mainSectionGroups.map(group => {
+                const matchingSubsections = group.subsections.filter(sub => 
+                  sub.professors.includes(currentProfFilter)
+                );
+                if (matchingSubsections.length > 0) {
+                  return { ...group, subsections: matchingSubsections };
+                }
+                return null;
+              }).filter(Boolean) as MainSectionGroup[];
+            }
+
             return (
               <div key={course.code} className="course-card">
                 {/* Course Header Row */}
@@ -397,7 +512,25 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                 {/* Expanded Sections Breakdown */}
                 {isExpanded && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px', background: 'rgba(0, 0, 0, 0.25)' }}>
-                    {mainSectionGroups.map(mainGroup => {
+                    {courseProfessors.length > 1 && (
+                      <div className="course-prof-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <User size={16} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
+                        <CustomSelect 
+                          value={currentProfFilter || 'ALL'}
+                          options={courseProfessors}
+                          placeholder={`Todos los docentes (${courseProfessors.length})`}
+                          onChange={val => setProfessorFilters(prev => ({ ...prev, [course.code]: val }))}
+                        />
+                      </div>
+                    )}
+                    
+                    {displayMainGroups.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '10px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                        No hay secciones con este docente.
+                      </div>
+                    )}
+
+                    {displayMainGroups.map(mainGroup => {
                       const singleSubSec = mainGroup.subsections[0];
                       const isSingleSelected = activeSectionNum === singleSubSec?.sectionNumber;
 
@@ -472,35 +605,71 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                             <span style={{ color: 'var(--text-muted)' }}>({mainGroup.totalEnrolled}/{mainGroup.totalVacancies} matriculados)</span>
                           </div>
 
-                          {/* Docente / Teoría Professor ONLY */}
-                          {mainGroup.teoriaProfessors.length > 0 && (
-                            <div style={{ fontSize: '0.84rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+                          {/* Docente / Teoría Professor ONLY (For sections with subsections) */}
+                          {mainGroup.hasSubsections && mainGroup.teoriaProfessors.length > 0 && (
+                            <div style={{ fontSize: '0.84rem', color: 'var(--text-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <User size={13} color="var(--accent-primary)" />
                               {mainGroup.teoriaProfessors.join(', ')}
                             </div>
                           )}
 
                           {/* CASE A: Single Section - Render clean session breakdown list directly */}
                           {!mainGroup.hasSubsections && singleSubSec && (
-                            <div className="session-tag-list" style={{ marginTop: '4px' }}>
-                              {singleSubSec.sessions.map((sess, idx) => (
-                                <div key={idx} className="session-tag">
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <span className="session-tag-type">{sess.sessionGroup}</span>
-                                    {sess.modality && (
-                                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                        ({sess.modality})
-                                      </span>
-                                    )}
-                                    <span><strong>{sess.day}</strong> {sess.startTime}-{sess.endTime}</span>
+                            <>
+                              {/* Single Section Professors Formatted */}
+                              {(() => {
+                                const profMap = new Map<string, string[]>(); // professor -> sessionTypes
+                                singleSubSec.sessions.forEach(sess => {
+                                  if (sess.professor && sess.professor !== 'Por asignar') {
+                                    const type = sess.sessionType || sess.sessionGroup.split(' ')[0] || 'Docente';
+                                    const prof = sess.professor;
+                                    if (!profMap.has(prof)) profMap.set(prof, []);
+                                    if (!profMap.get(prof)!.includes(type)) profMap.get(prof)!.push(type);
+                                  }
+                                });
+                                
+                                if (profMap.size === 0) return null;
+                                
+                                return (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', marginBottom: '8px' }}>
+                                    {Array.from(profMap.keys()).map((prof, idx) => (
+                                      <div key={idx} style={{ fontSize: '0.84rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <User size={13} color="var(--accent-primary)" />
+                                        <span style={{ fontWeight: 600 }}>{prof}</span>
+                                      </div>
+                                    ))}
                                   </div>
-                                  {sess.location && (
-                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                      <MapPin size={11} /> {formatLocation(sess.location)}
-                                    </span>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
+                                );
+                              })()}
+
+                              <div className="session-tag-list">
+                                {singleSubSec.sessions.map((sess, idx) => (
+                                  <div key={idx} className="session-tag" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span className="session-tag-type">{sess.sessionGroup}</span>
+                                        {sess.modality && (
+                                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                            ({sess.modality})
+                                          </span>
+                                        )}
+                                        <span><strong>{sess.day}</strong> {sess.startTime}-{sess.endTime}</span>
+                                      </div>
+                                      {sess.location && (
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                          <MapPin size={11} /> {formatLocation(sess.location)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {sess.professor && sess.professor !== 'Por asignar' && (
+                                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <User size={12} opacity={0.7} /> {sess.professor}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </>
                           )}
 
                           {/* CASE B: Multi-Subsecciones - Render Obligatorio & Subsecciones breakdown */}
@@ -511,14 +680,21 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
                                   <div className="obligatorio-label">OBLIGATORIO:</div>
                                   {mainGroup.sharedSessions.map((sSess, sIdx) => (
-                                    <div key={sIdx} className="obligatorio-session-pill">
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span>{sSess.sessionGroup}</span>
-                                        {sSess.modality && (
-                                          <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>({sSess.modality})</span>
-                                        )}
+                                    <div key={sIdx} className="obligatorio-session-pill" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                          <span>{sSess.sessionGroup}</span>
+                                          {sSess.modality && (
+                                            <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>({sSess.modality})</span>
+                                          )}
+                                        </div>
+                                        <span><strong>{sSess.day}</strong> {sSess.startTime}-{sSess.endTime}</span>
                                       </div>
-                                      <span><strong>{sSess.day}</strong> {sSess.startTime}-{sSess.endTime}</span>
+                                      {sSess.professor && sSess.professor !== 'Por asignar' && (
+                                        <div style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.9 }}>
+                                          <User size={12} /> {sSess.professor}
+                                        </div>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
@@ -584,18 +760,24 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
                                       {/* Specific Session Time, Modality & Location */}
                                       {specificSessions.map((spSess, spIdx) => (
-                                        <div key={spIdx} style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                          <span><strong>{spSess.day}</strong> {spSess.startTime}-{spSess.endTime}</span>
-                                          {spSess.modality && (
-                                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>({spSess.modality})</span>
+                                        <div key={spIdx} style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '2px' }}>
+                                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <span><strong>{spSess.day}</strong> {spSess.startTime}-{spSess.endTime}</span>
+                                            {spSess.modality && (
+                                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>({spSess.modality})</span>
+                                            )}
+                                          </div>
+                                          {spSess.professor && spSess.professor !== 'Por asignar' && (
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                              <User size={12} opacity={0.7} /> {spSess.professor}
+                                            </div>
                                           )}
                                         </div>
                                       ))}
 
-                                      {/* Vacancies & Laboratorio Docente ONLY */}
+                                      {/* Vacancies */}
                                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                                         <span>({subSec.enrolled}/{subSec.vacancies} matriculados)</span>
-                                        <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{labProfs.join(', ')}</span>
                                       </div>
 
                                       {/* Action Button */}
