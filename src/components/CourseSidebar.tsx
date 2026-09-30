@@ -398,7 +398,9 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
             onClick={() => setFilterState(prev => ({ ...prev, onlySelected: !prev.onlySelected }))}
             style={filterState.onlySelected ? { background: 'rgba(59, 130, 246, 0.15)', borderColor: 'rgba(59, 130, 246, 0.4)', color: '#60a5fa' } : {}}
           >
-            {filterState.onlySelected ? '✓ Seleccionados' : 'Seleccionados'}
+            {filterState.onlySelected 
+              ? `✓ Seleccionados (${Object.keys(selectedSections).length})` 
+              : `Seleccionados ${Object.keys(selectedSections).length > 0 ? `(${Object.keys(selectedSections).length})` : ''}`}
           </button>
           {hasEligibleFilter && (
             <button
