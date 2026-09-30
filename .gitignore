@@ -54,3 +54,4 @@ replay.py
 # lock files (optional — remove these lines if you want to commit them)
 # pnpm-lock.yaml
 
+scratch/
