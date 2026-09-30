@@ -628,47 +628,51 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                                   }
                                 });
                                 
-                                if (profMap.size === 0) return null;
+                                const hasMultipleProfs = profMap.size > 1;
                                 
                                 return (
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', marginBottom: '8px' }}>
-                                    {Array.from(profMap.keys()).map((prof, idx) => (
-                                      <div key={idx} style={{ fontSize: '0.84rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <User size={13} color="var(--accent-primary)" />
-                                        <span style={{ fontWeight: 600 }}>{prof}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                );
-                              })()}
-
-                              <div className="session-tag-list">
-                                {singleSubSec.sessions.map((sess, idx) => (
-                                  <div key={idx} className="session-tag" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span className="session-tag-type">{sess.sessionGroup}</span>
-                                        {sess.modality && (
-                                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                            ({sess.modality})
-                                          </span>
-                                        )}
-                                        <span><strong>{sess.day}</strong> {sess.startTime}-{sess.endTime}</span>
-                                      </div>
-                                      {sess.location && (
-                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                          <MapPin size={11} /> {formatLocation(sess.location)}
-                                        </span>
-                                      )}
-                                    </div>
-                                    {sess.professor && sess.professor !== 'Por asignar' && (
-                                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <User size={12} opacity={0.7} /> {sess.professor}
+                                  <>
+                                    {profMap.size > 0 && (
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', marginBottom: '8px' }}>
+                                        {Array.from(profMap.keys()).map((prof, idx) => (
+                                          <div key={idx} style={{ fontSize: '0.84rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <User size={13} color="var(--accent-primary)" />
+                                            <span style={{ fontWeight: 600 }}>{prof}</span>
+                                          </div>
+                                        ))}
                                       </div>
                                     )}
-                                  </div>
-                                ))}
-                              </div>
+
+                                    <div className="session-tag-list">
+                                      {singleSubSec.sessions.map((sess, idx) => (
+                                        <div key={idx} className="session-tag" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
+                                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                              <span className="session-tag-type">{sess.sessionGroup}</span>
+                                              {sess.modality && (
+                                                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                                  ({sess.modality})
+                                                </span>
+                                              )}
+                                              <span><strong>{sess.day}</strong> {sess.startTime}-{sess.endTime}</span>
+                                            </div>
+                                            {sess.location && (
+                                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                                <MapPin size={11} /> {formatLocation(sess.location)}
+                                              </span>
+                                            )}
+                                          </div>
+                                          {hasMultipleProfs && sess.professor && sess.professor !== 'Por asignar' && (
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                              <User size={12} opacity={0.7} /> {sess.professor}
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </>
+                                );
+                              })()}
                             </>
                           )}
 
