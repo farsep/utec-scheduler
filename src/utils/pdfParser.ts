@@ -149,10 +149,11 @@ function parseConsolidadoPDF(allItems: PDFTextItem[], fullText: string, metadata
 
     const profMinX = isCargaHabil ? 170 : 250;
     const profMaxX = isCargaHabil ? 245 : 380;
+    const planRegex = /^[A-Z]{2,4}-\d{4}(?:-\d+)?$/;
     const profItems = blockItems
       .filter(it => it.x >= profMinX && it.x < profMaxX && it.y >= anchor.topY - 45.0)
       .map(it => it.str)
-      .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s));
+      .filter(s => !FOOTER_DISCLAIMER_REGEX.test(s) && !planRegex.test(s.trim()));
     let professor = isConsolidadoMatricula ? "Por asignar" : profItems.join(' ').replace(/\s+/g, ' ').trim();
 
     let courseType: string | undefined = undefined;
@@ -929,7 +930,13 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
       const endMinutes = timeToMinutes(endTime);
 
       // Column 3 (172 <= X < 242): Full Multi-Line Professor Name Cell
-      const profItems = rowItems.filter(i => i.x >= 172 && i.x < 242).map(i => i.str);
+      // We also filter out any plan code (e.g., CIA-2026-1) that might leak into the professor column due to varying X coordinates.
+      const planRegex = /^[A-Z]{2,4}-\d{4}(?:-\d+)?$/;
+      const profItems = rowItems
+        .filter(i => i.x >= 172 && i.x < 242)
+        .map(i => i.str)
+        .filter(str => !planRegex.test(str.trim()));
+        
       let professor = 'Por asignar';
       if (profItems.length > 0) {
         const rawProf = profItems.join(' ').replace(/,$/, '').trim();
@@ -939,9 +946,10 @@ export async function parsePDFFile(arrayBuffer: ArrayBuffer): Promise<PDFParseRe
       }
 
       // Column 4 (242 <= X < 290): Full Multi-Line Malla / Plan Code Cell
-      const mallaText = rowItems.filter(i => i.x >= 242 && i.x < 290).map(i => i.str).join(' ');
+      // We expand the search leftward (to 172) in case the plan code was pushed into the professor column.
+      const mallaText = rowItems.filter(i => i.x >= 172 && i.x < 290).map(i => i.str).join(' ');
       let plan = undefined;
-      const planMatch = mallaText.match(/([A-Z]{2,4}-\d{4}-?\s*\d*)/);
+      const planMatch = mallaText.match(/([A-Z]{2,4}-\d{4}(?:-\d+)?)/);
       if (planMatch) plan = planMatch[1].replace(/\s+/g, '');
 
       // Column 5 (250 <= X < 390): Course Type Cell

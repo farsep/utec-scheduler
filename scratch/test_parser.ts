@@ -1,22 +1,33 @@
 import fs from 'fs';
-import { parsePDFFile } from './pdfParserLocal';
+import { parsePDFFile } from '../src/utils/pdfParser';
 
-async function test() {
-  try {
-    console.log("Testing consolidado_horario_april_rueda.pdf...");
-    const data1 = fs.readFileSync('CoursesLists/consolidado_horario_april_rueda.pdf');
-    const res1 = await parsePDFFile(data1.buffer.slice(data1.byteOffset, data1.byteOffset + data1.byteLength) as ArrayBuffer);
-    console.log("Metadata:", res1.metadata); console.log("Extracted courses for Horario:", res1.courses.map(c => c.name));
-    console.log("Sessions for Algebra:", JSON.stringify(res1.courses.find(c => c.code === "CC1103")?.sections[0]?.sessions, null, 2));
-    
-    console.log("\nTesting consolidado de matricula 2026-2 copy.pdf...");
-    const data2 = fs.readFileSync('CoursesLists/consolidado de matricula 2026-2 copy.pdf');
-    const res2 = await parsePDFFile(data2.buffer.slice(data2.byteOffset, data2.byteOffset + data2.byteLength) as ArrayBuffer);
-    console.log("Metadata Matricula:", res2.metadata);
-    console.log("Extracted courses for Matricula:", JSON.stringify(res2.courses, null, 2));
-  } catch (e) {
-    console.error("ERROR CAUGHT:");
-    console.error(e);
+async function main() {
+  const files = [
+    'CoursesLists/cursos_habilitados.pdf',
+    'CoursesLists/cursos habilitados keith salas.pdf',
+    'CoursesLists/consolidado_horario_april_rueda.pdf'
+  ];
+
+  for (const f of files) {
+    if (!fs.existsSync(f)) {
+      console.log(`Skipping missing file: ${f}`);
+      continue;
+    }
+    console.log(`\nTesting file: ${f}`);
+    try {
+      const buffer = fs.readFileSync(f);
+      const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+      const result = await parsePDFFile(arrayBuffer);
+      console.log(`✅ Success! Found ${result.courses.length} courses.`);
+      console.log(`  Document Type: ${result.metadata.documentType}`);
+      if (result.courses.length > 0) {
+        console.log(`  Sample course: ${result.courses[0].code} - ${result.courses[0].name}`);
+        console.log(`  Professor: ${result.courses[0].sections[0].professors}`);
+      }
+    } catch (err) {
+      console.error(`❌ Error parsing ${f}:`, err);
+    }
   }
 }
-test();
+
+main();
