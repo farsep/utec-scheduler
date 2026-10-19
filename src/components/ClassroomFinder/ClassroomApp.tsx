@@ -8,6 +8,7 @@ import {
   ALL_DAYS,
   ROOM_TYPE_LABELS
 } from '../../utils/classroomUtils';
+import { minutesToTime } from '../../utils/scheduleUtils';
 import { parseExcelFile } from '../../utils/excelParser';
 import { ClassroomNavbar } from './ClassroomNavbar';
 import { ClassroomFilterBar } from './ClassroomFilterBar';
@@ -33,10 +34,12 @@ export const ClassroomApp: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // System real-time clock
-  const [systemDay, setSystemDay] = useState<DayOfWeek>(initialTime.day);
-  const [systemMinutes, setSystemMinutes] = useState<number>(initialTime.minutes);
-  const [systemTimeStr, setSystemTimeStr] = useState<string>(initialTime.timeStr);
+  // System real-time clock that ticks every second
+  const [realTime, setRealTime] = useState<{ day: DayOfWeek; minutes: number; timeStr: string }>(initialTime);
+
+  // Live simulation mode
+  const [isSimulatedTime, setIsSimulatedTime] = useState<boolean>(false);
+  const [simulatedMinutes, setSimulatedMinutes] = useState<number>(initialTime.minutes);
 
   // Filter State
   const [filter, setFilter] = useState<ClassroomFilterState>({
@@ -59,17 +62,40 @@ export const ClassroomApp: React.FC = () => {
   // Toggle to show occupied rooms as well (default: show free first, with toggle)
   const [showOccupiedRooms, setShowOccupiedRooms] = useState<boolean>(false);
 
-  // Keep clock updated every 30 seconds
+  // Real-time 1-second clock ticker
   useEffect(() => {
     const interval = setInterval(() => {
       const current = getCurrentDayAndMinutes();
-      setSystemDay(current.day);
-      setSystemMinutes(current.minutes);
-      setSystemTimeStr(current.timeStr);
-    }, 30000);
+      setRealTime(current);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
+
+  // Effective minutes for live mode (real or simulated)
+  const effectiveLiveMinutes = isSimulatedTime ? simulatedMinutes : realTime.minutes;
+  const effectiveLiveTimeStr = minutesToTime(effectiveLiveMinutes);
+
+  // Handlers for real-time live clock changes
+  const handleStepLiveTime = (deltaMinutes: number) => {
+    setIsSimulatedTime(true);
+    setSimulatedMinutes(prev => {
+      const base = isSimulatedTime ? prev : realTime.minutes;
+      return Math.max(420, Math.min(1320, base + deltaMinutes));
+    });
+  };
+
+  const handleSetLiveTime = (timeStr: string) => {
+    if (!timeStr) return;
+    const [h, m] = timeStr.split(':').map(Number);
+    setIsSimulatedTime(true);
+    setSimulatedMinutes(h * 60 + m);
+  };
+
+  const handleResetRealTime = () => {
+    setIsSimulatedTime(false);
+    setSimulatedMinutes(realTime.minutes);
+  };
 
   // Load default master schedule on mount
   const loadMasterSchedule = useCallback(async () => {
@@ -120,6 +146,8 @@ export const ClassroomApp: React.FC = () => {
 
   const handleResetFilters = () => {
     const current = getCurrentDayAndMinutes();
+    setIsSimulatedTime(false);
+    setSimulatedMinutes(current.minutes);
     setFilter({
       searchQuery: '',
       selectedDay: current.day,
@@ -137,8 +165,9 @@ export const ClassroomApp: React.FC = () => {
 
   // Evaluate all classrooms for current filter state
   const evaluatedClassrooms: ClassroomAvailability[] = useMemo(() => {
-    return classrooms.map(c => evaluateClassroom(c, filter, systemMinutes));
-  }, [classrooms, filter, systemMinutes]);
+    const nowForEvaluation = filter.mode === 'live_now' ? effectiveLiveMinutes : filter.startMinutes;
+    return classrooms.map(c => evaluateClassroom(c, filter, nowForEvaluation));
+  }, [classrooms, filter, effectiveLiveMinutes]);
 
   // Count available rooms per floor
   const floorCounts = useMemo(() => {
@@ -221,7 +250,7 @@ export const ClassroomApp: React.FC = () => {
   }, [evaluatedClassrooms, filter]);
 
   const totalAvailable = availableRoomsList.length;
-  const isToday = filter.selectedDay === systemDay;
+  const isToday = filter.selectedDay === realTime.day;
 
   return (
     <div className="classroom-finder-root">
@@ -282,8 +311,13 @@ export const ClassroomApp: React.FC = () => {
         <ClassroomFilterBar
           filter={filter}
           onChangeFilter={handleFilterChange}
-          systemDay={systemDay}
-          systemTimeStr={systemTimeStr}
+          systemDay={realTime.day}
+          systemTimeStr={realTime.timeStr}
+          isSimulatedTime={isSimulatedTime}
+          activeLiveTimeStr={effectiveLiveTimeStr}
+          onStepLiveTime={handleStepLiveTime}
+          onSetLiveTime={handleSetLiveTime}
+          onResetRealTime={handleResetRealTime}
           floorCounts={floorCounts}
           totalAvailable={totalAvailable}
           totalRooms={classrooms.length}
@@ -309,7 +343,7 @@ export const ClassroomApp: React.FC = () => {
               </div>
               <span className="section-subtitle">
                 {filter.mode === 'live_now'
-                  ? `Desocupadas ahora (${systemTimeStr}) en el día ${filter.selectedDay}`
+                  ? `Desocupadas en este momento (${effectiveLiveTimeStr}) en el día ${filter.selectedDay}`
                   : `Totalmente libres de ${filter.startTime} a ${filter.endTime}`}
               </span>
             </div>
@@ -332,7 +366,7 @@ export const ClassroomApp: React.FC = () => {
                     key={item.classroom.id}
                     availability={item}
                     filter={filter}
-                    nowMinutes={systemMinutes}
+                    nowMinutes={effectiveLiveMinutes}
                     isToday={isToday}
                     onOpenDetail={(cls) => setSelectedRoom(cls)}
                   />
@@ -367,7 +401,7 @@ export const ClassroomApp: React.FC = () => {
                         key={item.classroom.id}
                         availability={item}
                         filter={filter}
-                        nowMinutes={systemMinutes}
+                        nowMinutes={effectiveLiveMinutes}
                         isToday={isToday}
                         onOpenDetail={(cls) => setSelectedRoom(cls)}
                       />
@@ -380,7 +414,7 @@ export const ClassroomApp: React.FC = () => {
         )}
       </main>
 
-      {/* Classroom Weekly Schedule Detail Modal */}
+      {/* Classroom Weekly Schedule Detail Modal (Fixed Viewport Centered Modal) */}
       {selectedRoom && (
         <ClassroomDetailModal
           classroom={selectedRoom}

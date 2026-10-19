@@ -57,7 +57,7 @@ export const ClassroomTimeline: React.FC<ClassroomTimelineProps> = ({
               style={{ left: `${left}%`, width: `${width}%` }}
               title={`En clase: ${block.session.courseCode} - ${block.session.courseName} (${block.startTime} - ${block.endTime}) • ${block.session.professor || 'Docente'}`}
             >
-              {width > 12 && (
+              {width >= 6.5 && (
                 <span className="timeline-block-label">
                   {block.session.courseCode}
                 </span>

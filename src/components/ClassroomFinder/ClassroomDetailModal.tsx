@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { ClassroomInfo, ClassroomSession } from '../../types/classroom';
 import type { DayOfWeek } from '../../types/schedule';
 import { ALL_DAYS, DAY_LABELS, ROOM_TYPE_LABELS, calculateFreeBlocks, formatDurationHuman } from '../../utils/classroomUtils';
@@ -12,7 +12,6 @@ import {
   Clock,
   User,
   Mail,
-  Users2,
   BookOpen,
   Info
 } from 'lucide-react';
@@ -33,6 +32,22 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
   const [activeTabDay, setActiveTabDay] = useState<DayOfWeek>(systemDay);
   const [selectedSession, setSelectedSession] = useState<ClassroomSession | null>(null);
 
+  // Lock body scroll and listen for Escape key to close
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
+
   const typeMeta = ROOM_TYPE_LABELS[classroom.type] || ROOM_TYPE_LABELS.otro;
 
   // Calculate weekly stats
@@ -49,12 +64,9 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
   const activeDaySessions = classroom.sessionsByDay[activeTabDay] || [];
   const { freeBlocks, occupiedBlocks, totalFreeMinutes } = calculateFreeBlocks(activeDaySessions);
 
-  // Time slots for timetable matrix (07:00 to 21:00, hourly)
-  const hours = Array.from({ length: 15 }, (_, i) => 7 + i); // 7 to 21
-
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content classroom-modal glass-card" onClick={(e) => e.stopPropagation()}>
+    <div className="classroom-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="classroom-modal glass-card" onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
         <div className="classroom-modal-header">
           <div className="classroom-modal-title-group">
@@ -74,7 +86,7 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
             </div>
           </div>
 
-          <button className="modal-close-btn" onClick={onClose} title="Cerrar modal">
+          <button className="modal-close-btn" onClick={onClose} title="Cerrar modal (Esc)">
             <X size={20} />
           </button>
         </div>
@@ -135,7 +147,6 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
               <div className="agenda-timeline-list">
                 {/* Interleaved occupied and free blocks */}
                 {(() => {
-                  // Combine and sort by startMinutes
                   const events: Array<{ type: 'free' | 'occupied'; start: number; end: number; item: any }> = [
                     ...freeBlocks.map(f => ({ type: 'free' as const, start: f.startMinutes, end: f.endMinutes, item: f })),
                     ...occupiedBlocks.map(o => ({ type: 'occupied' as const, start: o.startMinutes, end: o.endMinutes, item: o.session }))
@@ -182,18 +193,14 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                             <span className="agenda-sec-num">Sec. {session.sectionNumber}</span>
                           </div>
                           <h5 className="agenda-course-name">{session.courseName}</h5>
-                          <div className="agenda-occ-meta">
-                            {session.professor && (
+                          {session.professor && (
+                            <div className="agenda-occ-meta">
                               <span className="agenda-prof">
                                 <User size={13} />
                                 <span>{session.professor}</span>
                               </span>
-                            )}
-                            <span className="agenda-enrolled">
-                              <Users2 size={13} />
-                              <span>{session.enrolled} matriculados</span>
-                            </span>
-                          </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -213,6 +220,7 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                   type="button"
                   className="inspector-close-btn"
                   onClick={() => setSelectedSession(null)}
+                  title="Cerrar panel"
                 >
                   <X size={14} />
                 </button>
@@ -222,6 +230,7 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                 <div className="inspector-course-id">
                   <span className="course-code-pill">{selectedSession.courseCode}</span>
                   <span className="group-pill">{selectedSession.sessionGroup}</span>
+                  <span className="group-pill">Sec. {selectedSession.sectionNumber}</span>
                 </div>
                 <h4 className="inspector-course-name">{selectedSession.courseName}</h4>
 
@@ -243,11 +252,6 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                     </a>
                   </div>
                 )}
-
-                <div className="inspector-detail-row">
-                  <Users2 size={15} />
-                  <span>{selectedSession.enrolled} matriculados ({selectedSession.vacancies} vacantes)</span>
-                </div>
               </div>
             </div>
           )}

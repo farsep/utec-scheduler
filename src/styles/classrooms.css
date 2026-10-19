@@ -298,6 +298,135 @@
   color: var(--text-secondary);
 }
 
+/* Live Time Real-Time Controller */
+.live-time-controller {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-md);
+  margin-top: -6px;
+  margin-bottom: 2px;
+}
+
+.live-time-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.live-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.live-status-dot--pulse {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulse-dot 1.5s infinite;
+}
+
+.live-status-dot--simulated {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.live-time-title {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.live-time-badge {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: -0.2px;
+}
+
+.live-day-tag {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.live-time-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-time-step {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-time-step:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.live-time-input-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.live-time-picker {
+  background: rgba(22, 30, 46, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #ffffff;
+  padding: 3px 8px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+}
+
+.live-time-picker:focus {
+  border-color: var(--accent-emerald);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.btn-reset-realtime {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-reset-realtime:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ffffff;
+}
+
 /* Controls Grid */
 .filter-controls-row {
   display: flex;
@@ -960,14 +1089,20 @@
 }
 
 .timeline-block--occupied {
-  background: rgba(239, 68, 68, 0.35);
-  border: 1px solid rgba(239, 68, 68, 0.6);
+  background: rgba(225, 29, 72, 0.65);
+  border: 1px solid rgba(244, 63, 94, 0.9);
   color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 .timeline-block-label {
-  padding: 0 4px;
+  padding: 0 3px;
+  font-size: 0.68rem;
+  font-weight: 800;
   letter-spacing: -0.2px;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
 }
 
 .timeline-search-window {
@@ -1177,22 +1312,51 @@
 }
 
 /* ==========================================================================
-   CLASSROOM DETAIL MODAL STYLES
+   CLASSROOM DETAIL MODAL STYLES (FIXED VIEWPORT MODAL)
    ========================================================================== */
 
+.classroom-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: modalOverlayFade 0.2s ease-out;
+}
+
+@keyframes modalOverlayFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .classroom-modal {
-  max-width: 920px;
+  position: relative;
+  max-width: 900px;
   width: 95%;
-  max-height: 90vh;
+  max-height: 88vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
   padding: 28px;
   border-radius: var(--radius-xl);
-  background: rgba(15, 21, 35, 0.95);
+  background: rgba(15, 21, 35, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+  margin: auto;
+  animation: modalScaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleUp {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .classroom-modal-header {
