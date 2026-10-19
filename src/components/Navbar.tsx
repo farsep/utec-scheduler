@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Upload, Sparkles, Trash2 } from 'lucide-react';
+import { Calendar, Upload, Sparkles, Trash2, Building2 } from 'lucide-react';
 import type { MetadataInfo } from '../types/schedule';
 
 interface NavbarProps {
@@ -21,14 +21,28 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   return (
     <header className={`app-header ${coursesCount === 0 ? 'app-header--empty' : ''}`}>
-      <div className="brand-title">
-        <div className="brand-logo">
-          <Calendar size={20} />
-        </div>
-        <div>
-          <span>Matrícu<strong style={{ color: 'var(--accent-primary)' }}>LAB</strong></span>
-          <span className="brand-badge">Astro + TS</span>
-        </div>
+      <div className="classroom-brand-section">
+        <a href="/" className="brand-title brand-title--link" title="MatrícuLAB - Armador de Horarios">
+          <div className="brand-logo">
+            <Calendar size={20} />
+          </div>
+          <div>
+            <span>Matrícu<strong style={{ color: 'var(--accent-primary)' }}>LAB</strong></span>
+            <span className="brand-badge">UTEC</span>
+          </div>
+        </a>
+
+        <nav className="nav-switch-tabs">
+          <a href="/" className="nav-tab-item nav-tab-item--active" title="Armador de Horarios">
+            <Calendar size={15} />
+            <span>Horarios</span>
+          </a>
+          <a href="/aulas" className="nav-tab-item" title="Buscador de Aulas Libres">
+            <Building2 size={15} />
+            <span>Aulas Libres</span>
+            <span className="nav-live-dot" />
+          </a>
+        </nav>
       </div>
 
       <div className="meta-info-strip">
