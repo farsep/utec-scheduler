@@ -67,6 +67,9 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
   return (
     <div className="classroom-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="classroom-modal glass-card" onClick={(e) => e.stopPropagation()}>
+        {/* Mobile Bottom Sheet Grab Indicator */}
+        <div className="mobile-sheet-drag-handle" aria-hidden="true" />
+
         {/* Modal Header */}
         <div className="classroom-modal-header">
           <div className="classroom-modal-title-group">
@@ -122,8 +125,12 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                   setSelectedSession(null);
                 }}
               >
-                <span>{DAY_LABELS[day]}</span>
-                <span className="modal-day-count-badge">{count} {count === 1 ? 'clase' : 'clases'}</span>
+                <span className="modal-day-label-full">{DAY_LABELS[day]}</span>
+                <span className="modal-day-label-short">{day}</span>
+                <span className="modal-day-count-badge">
+                  <span className="count-full">{count} {count === 1 ? 'clase' : 'clases'}</span>
+                  <span className="count-short">{count}</span>
+                </span>
               </button>
             );
           })}
