@@ -23,6 +23,11 @@ interface ClassroomFilterBarProps {
   onChangeFilter: (updates: Partial<ClassroomFilterState>) => void;
   systemDay: DayOfWeek;
   systemTimeStr: string;
+  isSimulatedTime: boolean;
+  activeLiveTimeStr: string;
+  onStepLiveTime: (deltaMinutes: number) => void;
+  onSetLiveTime: (timeStr: string) => void;
+  onResetRealTime: () => void;
   floorCounts: Record<number | string, number>;
   totalAvailable: number;
   totalRooms: number;
@@ -34,6 +39,11 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
   onChangeFilter,
   systemDay,
   systemTimeStr,
+  isSimulatedTime,
+  activeLiveTimeStr,
+  onStepLiveTime,
+  onSetLiveTime,
+  onResetRealTime,
   floorCounts,
   totalAvailable,
   totalRooms,
@@ -112,7 +122,9 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
           >
             <Zap size={16} />
             <span>Libres Ahora</span>
-            <span className="live-pulse-badge">En vivo ({systemTimeStr})</span>
+            <span className="live-pulse-badge">
+              {isSimulatedTime ? `Simulando (${activeLiveTimeStr})` : `En vivo (${activeLiveTimeStr})`}
+            </span>
           </button>
 
           <button
@@ -131,6 +143,61 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
           <span className="summary-count-label">de {totalRooms} aulas disponibles</span>
         </div>
       </div>
+
+      {/* Live Time Controller (Active when in "Libres Ahora") */}
+      {!isCustomTime && (
+        <div className="live-time-controller">
+          <div className="live-time-info">
+            <span className={`live-status-dot ${isSimulatedTime ? 'live-status-dot--simulated' : 'live-status-dot--pulse'}`} />
+            <span className="live-time-title">
+              {isSimulatedTime ? 'Simulando Horario en Vivo:' : 'Hora Actual del Campus (En Vivo):'}
+            </span>
+            <span className="live-time-badge">{activeLiveTimeStr}</span>
+            <span className="live-day-tag">{DAY_LABELS[filter.selectedDay]}</span>
+          </div>
+
+          <div className="live-time-actions">
+            <button
+              type="button"
+              className="btn-time-step"
+              onClick={() => onStepLiveTime(-15)}
+              title="Retroceder 15 minutos en tiempo real"
+            >
+              -15m
+            </button>
+            <div className="live-time-input-wrap">
+              <input
+                type="time"
+                step="900"
+                value={activeLiveTimeStr}
+                onChange={(e) => onSetLiveTime(e.target.value)}
+                className="live-time-picker"
+                title="Cambiar hora en tiempo real para ver qué aulas estarán libres"
+              />
+            </div>
+            <button
+              type="button"
+              className="btn-time-step"
+              onClick={() => onStepLiveTime(15)}
+              title="Avanzar 15 minutos en tiempo real"
+            >
+              +15m
+            </button>
+
+            {isSimulatedTime && (
+              <button
+                type="button"
+                className="btn-reset-realtime"
+                onClick={onResetRealTime}
+                title="Restablecer a la hora exacta en vivo de tu dispositivo"
+              >
+                <RotateCcw size={13} />
+                <span>Volver a Hora Real</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Primary Filter Grid */}
       <div className="filter-controls-row">
@@ -156,7 +223,7 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
           </div>
         </div>
 
-        {/* Time Settings (Shown if Custom Mode OR customizable) */}
+        {/* Time Settings (Shown if Custom Mode) */}
         {isCustomTime && (
           <div className="filter-control-group filter-control-group--time">
             <label className="filter-group-label">Bloque Horario:</label>
