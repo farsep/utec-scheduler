@@ -24,7 +24,8 @@ import {
   HelpCircle,
   Clock,
   Layers,
-  ChevronDown
+  ChevronDown,
+  ArrowUp
 } from 'lucide-react';
 
 export const ClassroomApp: React.FC = () => {
@@ -61,6 +62,21 @@ export const ClassroomApp: React.FC = () => {
 
   // Toggle to show occupied rooms as well (default: show free first, with toggle)
   const [showOccupiedRooms, setShowOccupiedRooms] = useState<boolean>(false);
+
+  // Floating back to top button visibility for mobile
+  const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 380);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Real-time 1-second clock ticker
   useEffect(() => {
@@ -119,26 +135,6 @@ export const ClassroomApp: React.FC = () => {
   useEffect(() => {
     loadMasterSchedule();
   }, [loadMasterSchedule]);
-
-  // Handle custom excel upload
-  const handleUploadExcel = async (file: File) => {
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const buffer = await file.arrayBuffer();
-      const parseResult = parseExcelFile(buffer);
-      const extractedRooms = extractClassroomsFromCourses(parseResult.courses);
-      if (extractedRooms.length === 0) {
-        throw new Error('No se encontraron aulas con ubicación física en el archivo subido.');
-      }
-      setClassrooms(extractedRooms);
-    } catch (err: any) {
-      console.error('Error al procesar archivo:', err);
-      setLoadError(err?.message || 'Error al procesar el archivo Excel.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleFilterChange = (updates: Partial<ClassroomFilterState>) => {
     setFilter(prev => ({ ...prev, ...updates }));
@@ -258,9 +254,6 @@ export const ClassroomApp: React.FC = () => {
       <ClassroomNavbar
         totalRooms={classrooms.length}
         availableRooms={totalAvailable}
-        onUploadExcel={handleUploadExcel}
-        onReloadSample={loadMasterSchedule}
-        isLoading={isLoading}
       />
 
       <main className="classroom-finder-main">
@@ -414,7 +407,20 @@ export const ClassroomApp: React.FC = () => {
         )}
       </main>
 
-      {/* Classroom Weekly Schedule Detail Modal (Fixed Viewport Centered Modal) */}
+      {/* Mobile Floating Back to Top / Quick Floor Button */}
+      {showScrollTop && (
+        <button
+          type="button"
+          className="mobile-floating-top-btn"
+          onClick={scrollToTop}
+          title="Subir a filtros y selección de pisos"
+        >
+          <ArrowUp size={15} />
+          <span>Filtros y Pisos</span>
+        </button>
+      )}
+
+      {/* Classroom Weekly Schedule Detail Modal (Fixed Viewport Centered Modal / Mobile Bottom Sheet) */}
       {selectedRoom && (
         <ClassroomDetailModal
           classroom={selectedRoom}
