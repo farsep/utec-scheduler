@@ -118,7 +118,7 @@ En lugar de iterar por fuerza bruta ($O(n^2)$), los cursos se ordenan según la 
 ### 2. Detección de Colisiones por Mapas de Bits (Bitmasks en $O(1)$)
 Los horarios de la semana se traducen a enteros de 64 bits (`BigInt`). Cada bloque de 15/30 minutos es un bit en la máscara. La detección de cruces entre dos clases o con el bloqueador de tiempo se resuelve en un solo ciclo de CPU evaluando la conjunción a nivel de bits ($\land$):
 
-$$\text{hay\_colision} = (\mathbf{mask}_A \land \mathbf{mask}_B) \neq 0$$
+$$\text{colision} = (\mathbf{mask}_A \land \mathbf{mask}_B) \neq 0$$
 
 Equivalente a nivel de implementación en TypeScript:
 ```typescript
