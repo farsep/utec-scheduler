@@ -116,8 +116,14 @@ flowchart TD
 En lugar de iterar por fuerza bruta ($O(n^2)$), los cursos se ordenan según la heurística **Minimum Remaining Values (MRV)**: se colocan primero los cursos con menor cantidad de secciones disponibles (más restrictivos). Si una sección genera conflicto, el algoritmo **poda toda la rama de búsqueda**, evitando calcular millones de combinaciones inviables.
 
 ### 2. Detección de Colisiones por Mapas de Bits (Bitmasks en $O(1)$)
-Los horarios de la semana se traducen a enteros de 64 bits (`BigInt`). Cada bloque de 15/30 minutos es un bit en la máscara. La detección de cruces entre dos clases o con el bloqueador de tiempo se resuelve en un solo ciclo de CPU mediante una operación binaria:
-$$\text{colisión} = (\text{mask}_A \ \& \ \text{mask}_B) \neq 0$$
+Los horarios de la semana se traducen a enteros de 64 bits (`BigInt`). Cada bloque de 15/30 minutos es un bit en la máscara. La detección de cruces entre dos clases o con el bloqueador de tiempo se resuelve en un solo ciclo de CPU evaluando la conjunción a nivel de bits ($\land$):
+
+$$\text{hay\_colision} = (\mathbf{mask}_A \land \mathbf{mask}_B) \neq 0$$
+
+Equivalente a nivel de implementación en TypeScript:
+```typescript
+const hayColision = (maskA & maskB) !== 0n;
+```
 
 ### 3. Enjambre Paralelo (Web Worker Swarm + Rust WASM)
 * **Web Workers:** Se distribuye la carga entre tantos hilos paralelos como núcleos físicos posea el dispositivo (`navigator.hardwareConcurrency`).
