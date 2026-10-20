@@ -34,8 +34,7 @@ Desktop.ini
 
 # editors
 .idea/
-.vscode/settings.json
-.vscode/launch.json
+.vscode/
 *.swp
 *.swo
 *~
