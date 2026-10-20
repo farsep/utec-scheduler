@@ -11,7 +11,7 @@
 
 **La plataforma definitiva para planificar, optimizar algorítmicamente y exportar tus horarios en la Universidad de Ingeniería y Tecnología (UTEC).**
 
-[Características](#-características-principales) • [Arquitectura Algorítmica](#-arquitectura-y-motor-de-optimización) • [Buscador de Aulas](#-buscador-de-aulas-libres-aulas) • [Instalación](#-instalación-y-desarrollo) • [Privacidad](#-privacidad-y-seguridad)
+[Características](#-características-principales) • [Arquitectura Algorítmica](#-arquitectura-y-motor-de-optimización) • [Buscador de Aulas](#-buscador-de-aulas-libres-aulas) • [Instalación](#-instalación-y-desarrollo-local) • [CI/CD](#-pipeline-de-cicd-gitlab-pages) • [Privacidad](#-privacidad-y-seguridad)
 
 </div>
 
@@ -234,6 +234,43 @@ Matricula/
    ```bash
    pnpm build
    ```
+
+---
+
+## 🔄 Pipeline de CI/CD (GitLab Pages)
+
+El proyecto cuenta con un flujo de integración y despliegue continuo completamente automatizado definido en [`.gitlab-ci.yml`](.gitlab-ci.yml), configurado para desplegar la aplicación en **GitLab Pages** cada vez que se realizan cambios en la rama principal (`main`).
+
+```mermaid
+flowchart LR
+    A["Push / Merge a 'main'"] --> B["Runner: node:22-bookworm"]
+    B --> C["Caché: .pnpm-store"]
+    C --> D["Setup: Rustup + wasm-pack + pnpm"]
+    D --> E["Compilar Rust a WASM\n(wasm-pack en wasm-engine/)"]
+    E --> F["Build Astro SSG\n(pnpm run build -> dist/)"]
+    F --> G["Mover dist/ a public/"]
+    G --> H["Despliegue en GitLab Pages"]
+```
+
+### Detalles del Pipeline:
+
+* **Entorno de Ejecución:** Imagen Docker oficial `node:22-bookworm` (Debian Bookworm con Node.js 22 LTS).
+* **Caché Persistente:** 
+  - Indexado mediante la clave del archivo `pnpm-lock.yaml`.
+  - Preserva el directorio `.pnpm-store` entre ejecuciones sucesivas para acelerar drásticamente la instalación de paquetes.
+* **Fase de Preparación (`before_script`):**
+  1. **Instalación de Rust:** Descarga el compilador oficial mediante `rustup` y carga las variables de entorno de Cargo.
+  2. **Instalación de `wasm-pack`:** Herramienta CLI para compilar Rust hacia binarios WebAssembly (`.wasm`) optimizados para navegadores web.
+  3. **Activación de `pnpm 9`:** Utiliza `corepack` nativo de Node.js (`corepack enable && corepack prepare pnpm@9 --activate`) y fija el almacén en `.pnpm-store`.
+* **Fase de Compilación y Ensamblado (`script`):**
+  1. **Compilación de WASM:** Accede al directorio `wasm-engine/` y ejecuta `wasm-pack build --target web`, generando el módulo compilado y sus bindings TypeScript en `wasm-engine/pkg/`.
+  2. **Instalación de Dependencias Web:** Ejecuta `pnpm install` para resolver todos los paquetes de Node y enlazar el motor WASM.
+  3. **Generación del Sitio Estático:** Ejecuta `pnpm run build`, procesando los componentes React, estilos y rutas de Astro para emitir el bundle de producción en `dist/`.
+  4. **Adaptación para GitLab Pages:** Como GitLab Pages publica exclusivamente los archivos situados en el directorio `public/`, el pipeline reemplaza la carpeta `public` estática con los artefactos compilados (`rm -rf public && mv dist public`).
+* **Artefactos Publicados (`artifacts`):**
+  - Publica la carpeta `public/` completa para su distribución a través del CDN de GitLab Pages.
+* **Condiciones de Ejecución (`rules`):**
+  - El despliegue (`pages`) se ejecuta de manera automática **únicamente ante commits o merges en la rama `main`**, protegiendo el entorno público de cambios en ramas de desarrollo o experimentales.
 
 ---
 
