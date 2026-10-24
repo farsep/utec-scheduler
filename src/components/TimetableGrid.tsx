@@ -59,7 +59,7 @@ const MarqueeText: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-export const TimetableGrid: React.FC<TimetableGridProps> = ({
+export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(({
   courses,
   selectedSections,
   conflicts,
@@ -345,4 +345,6 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({
       </div>
     </div>
   );
-};
+});
+
+TimetableGrid.displayName = 'TimetableGrid';

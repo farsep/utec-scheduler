@@ -9,7 +9,7 @@ interface ClassroomTimelineProps {
   selectedRange?: { startMinutes: number; endMinutes: number } | null;
 }
 
-export const ClassroomTimeline: React.FC<ClassroomTimelineProps> = ({
+export const ClassroomTimeline: React.FC<ClassroomTimelineProps> = React.memo(({
   availability,
   nowMinutes,
   isToday,
@@ -102,4 +102,6 @@ export const ClassroomTimeline: React.FC<ClassroomTimelineProps> = ({
       </div>
     </div>
   );
-};
+});
+
+ClassroomTimeline.displayName = 'ClassroomTimeline';

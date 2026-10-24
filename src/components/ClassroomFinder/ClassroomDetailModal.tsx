@@ -39,8 +39,48 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
   const currentTranslateY = useRef<number>(0);
   const isDragging = useRef<boolean>(false);
   const isClosing = useRef<boolean>(false);
+  const rafId = useRef<number | null>(null);
+  const hapticTriggered = useRef<boolean>(false);
 
-  // Gesture handling for native-app mobile swipe-down to close
+  // Tactile haptic feedback for supported mobile devices
+  const triggerHaptic = (duration = 10) => {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(duration);
+      } catch {
+        // Safe fallback
+      }
+    }
+  };
+
+  // Smooth unified exit animation for desktop, tablet, and mobile
+  const triggerClose = () => {
+    if (isClosing.current) return;
+    isClosing.current = true;
+
+    const isMobileSheet = typeof window !== 'undefined' && window.innerWidth <= 768;
+
+    if (modalRef.current) {
+      if (isMobileSheet) {
+        modalRef.current.style.transition = 'transform 0.24s cubic-bezier(0.32, 1, 0.23, 1)';
+        modalRef.current.style.transform = 'translate3d(0, 100%, 0)';
+      } else {
+        modalRef.current.style.transition = 'transform 0.18s cubic-bezier(0.4, 0, 1, 1), opacity 0.18s ease-in';
+        modalRef.current.style.transform = 'scale(0.96) translate3d(0, 12px, 0)';
+        modalRef.current.style.opacity = '0';
+      }
+    }
+    if (overlayRef.current) {
+      overlayRef.current.style.transition = 'opacity 0.2s ease-out';
+      overlayRef.current.style.opacity = '0';
+    }
+
+    setTimeout(() => {
+      onClose();
+    }, 200);
+  };
+
+  // Gesture handling for native-app mobile swipe-down to close (120 FPS RAF loop)
   const startDrag = (clientY: number, target?: EventTarget | null) => {
     if (isClosing.current) return;
     if (target instanceof Element && (target.closest('button') || target.closest('a'))) {
@@ -50,12 +90,15 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
     touchStartTime.current = Date.now();
     isDragging.current = true;
     currentTranslateY.current = 0;
+    hapticTriggered.current = false;
 
     if (modalRef.current) {
       modalRef.current.style.transition = 'none';
+      modalRef.current.style.willChange = 'transform';
     }
     if (overlayRef.current) {
       overlayRef.current.style.transition = 'none';
+      overlayRef.current.style.willChange = 'opacity';
     }
   };
 
@@ -63,28 +106,39 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
     if (!isDragging.current || isClosing.current) return;
     const deltaY = clientY - touchStartY.current;
 
-    if (deltaY > 0) {
-      currentTranslateY.current = deltaY;
-      if (modalRef.current) {
-        modalRef.current.style.transform = `translateY(${deltaY}px)`;
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    rafId.current = requestAnimationFrame(() => {
+      if (deltaY > 0) {
+        currentTranslateY.current = deltaY;
+        if (modalRef.current) {
+          modalRef.current.style.transform = `translate3d(0, ${deltaY}px, 0)`;
+        }
+        if (overlayRef.current) {
+          const progress = Math.min(1, deltaY / 320);
+          overlayRef.current.style.opacity = `${Math.max(0.2, 1 - progress * 0.7)}`;
+        }
+        // Haptic feedback once upon reaching dismissal threshold
+        if (deltaY > 85 && !hapticTriggered.current) {
+          hapticTriggered.current = true;
+          triggerHaptic(12);
+        } else if (deltaY <= 85 && hapticTriggered.current) {
+          hapticTriggered.current = false;
+        }
+      } else {
+        // Gentle rubber-band resistance when pulling up
+        const damped = deltaY * 0.15;
+        currentTranslateY.current = damped;
+        if (modalRef.current) {
+          modalRef.current.style.transform = `translate3d(0, ${damped}px, 0)`;
+        }
       }
-      if (overlayRef.current) {
-        const progress = Math.min(1, deltaY / 320);
-        overlayRef.current.style.opacity = `${Math.max(0.2, 1 - progress * 0.7)}`;
-      }
-    } else {
-      // Gentle rubber-band resistance when pulling up
-      const damped = deltaY * 0.15;
-      currentTranslateY.current = damped;
-      if (modalRef.current) {
-        modalRef.current.style.transform = `translateY(${damped}px)`;
-      }
-    }
+    });
   };
 
   const endDrag = () => {
     if (!isDragging.current || isClosing.current) return;
     isDragging.current = false;
+    if (rafId.current) cancelAnimationFrame(rafId.current);
 
     const deltaY = currentTranslateY.current;
     const elapsed = Date.now() - touchStartTime.current;
@@ -94,23 +148,14 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
     const shouldClose = deltaY > 85 || (velocity > 0.35 && deltaY > 25);
 
     if (shouldClose) {
-      isClosing.current = true;
-      if (modalRef.current) {
-        modalRef.current.style.transition = 'transform 0.22s cubic-bezier(0.32, 1, 0.23, 1)';
-        modalRef.current.style.transform = 'translateY(100%)';
-      }
-      if (overlayRef.current) {
-        overlayRef.current.style.transition = 'opacity 0.22s ease-out';
-        overlayRef.current.style.opacity = '0';
-      }
-      setTimeout(() => {
-        onClose();
-      }, 220);
+      triggerHaptic(14);
+      triggerClose();
     } else {
+      hapticTriggered.current = false;
       // Snap back to open position with an iOS spring-like curve
       if (modalRef.current) {
         modalRef.current.style.transition = 'transform 0.26s cubic-bezier(0.175, 0.885, 0.32, 1.15)';
-        modalRef.current.style.transform = 'translateY(0)';
+        modalRef.current.style.transform = 'translate3d(0, 0, 0)';
       }
       if (overlayRef.current) {
         overlayRef.current.style.transition = 'opacity 0.2s ease-out';
@@ -162,11 +207,12 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
     document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') triggerClose();
     };
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
       document.body.style.overflow = originalOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
@@ -192,7 +238,7 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
     <div
       ref={overlayRef}
       className="classroom-modal-overlay"
-      onClick={onClose}
+      onClick={triggerClose}
       role="dialog"
       aria-modal="true"
     >
@@ -242,7 +288,7 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
             </div>
           </div>
 
-          <button className="modal-close-btn" onClick={onClose} title="Cerrar modal (Esc)">
+          <button className="modal-close-btn" onClick={triggerClose} title="Cerrar modal (Esc)">
             <X size={20} />
           </button>
         </div>
@@ -274,6 +320,7 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                 type="button"
                 className={`modal-day-tab ${isSelected ? 'active' : ''}`}
                 onClick={() => {
+                  triggerHaptic(6);
                   setActiveTabDay(day);
                   setSelectedSession(null);
                 }}
@@ -291,7 +338,7 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
 
         {/* Selected Day Agenda View */}
         <div className={`classroom-day-agenda-container ${selectedSession ? 'has-inspector' : ''}`}>
-          <div className="agenda-column-sessions">
+          <div key={activeTabDay} className="agenda-column-sessions">
             <h4 className="agenda-column-title">
               <Calendar size={16} />
               <span>Cronograma de {DAY_LABELS[activeTabDay]}</span>
@@ -339,7 +386,10 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                       <div
                         key={`agenda-occ-${idx}`}
                         className={`agenda-item agenda-item--occupied ${isSelected ? 'selected' : ''}`}
-                        onClick={() => setSelectedSession(session)}
+                        onClick={() => {
+                          triggerHaptic(6);
+                          setSelectedSession(session);
+                        }}
                       >
                         <div className="agenda-time-column">
                           <span className="time-start">{session.startTime}</span>
