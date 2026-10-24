@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Building2 } from 'lucide-react';
+import { Calendar, Building2, GraduationCap } from 'lucide-react';
 
 interface ClassroomNavbarProps {
   totalRooms: number;
@@ -34,6 +34,10 @@ export const ClassroomNavbar: React.FC<ClassroomNavbarProps> = ({
             <Building2 size={15} />
             <span>Aulas Libres</span>
             <span className="nav-live-dot" />
+          </a>
+          <a href="/profesores" className="nav-tab-item" title="Directorio de Docentes">
+            <GraduationCap size={16} />
+            <span>Docentes</span>
           </a>
         </nav>
       </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Upload, Sparkles, Trash2, Building2 } from 'lucide-react';
+import { Calendar, Upload, Sparkles, Trash2, Building2, GraduationCap } from 'lucide-react';
 import type { MetadataInfo } from '../types/schedule';
 
 interface NavbarProps {
@@ -40,7 +40,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           <a href="/aulas" className="nav-tab-item" title="Buscador de Aulas Libres">
             <Building2 size={15} />
             <span>Aulas Libres</span>
-            <span className="nav-live-dot" />
+          </a>
+          <a href="/profesores" className="nav-tab-item" title="Directorio de Docentes">
+            <GraduationCap size={16} />
+            <span>Docentes</span>
           </a>
         </nav>
       </div>
