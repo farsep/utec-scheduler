@@ -60,6 +60,10 @@ export const ClassroomApp: React.FC = () => {
   // Selected room for detailed view modal
   const [selectedRoom, setSelectedRoom] = useState<ClassroomInfo | null>(null);
 
+  const handleOpenDetail = useCallback((cls: ClassroomInfo) => {
+    setSelectedRoom(cls);
+  }, []);
+
   // Toggle to show occupied rooms as well (default: show free first, with toggle)
   const [showOccupiedRooms, setShowOccupiedRooms] = useState<boolean>(false);
 
@@ -78,11 +82,16 @@ export const ClassroomApp: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Real-time 1-second clock ticker
+  // Real-time ticker: only triggers React re-render when the minute actually ticks
   useEffect(() => {
     const interval = setInterval(() => {
       const current = getCurrentDayAndMinutes();
-      setRealTime(current);
+      setRealTime(prev => {
+        if (prev.minutes === current.minutes && prev.day === current.day) {
+          return prev;
+        }
+        return current;
+      });
     }, 1000);
 
     return () => clearInterval(interval);
@@ -361,7 +370,7 @@ export const ClassroomApp: React.FC = () => {
                     filter={filter}
                     nowMinutes={effectiveLiveMinutes}
                     isToday={isToday}
-                    onOpenDetail={(cls) => setSelectedRoom(cls)}
+                    onOpenDetail={handleOpenDetail}
                   />
                 ))}
               </div>
@@ -396,7 +405,7 @@ export const ClassroomApp: React.FC = () => {
                         filter={filter}
                         nowMinutes={effectiveLiveMinutes}
                         isToday={isToday}
-                        onOpenDetail={(cls) => setSelectedRoom(cls)}
+                        onOpenDetail={handleOpenDetail}
                       />
                     ))}
                   </div>

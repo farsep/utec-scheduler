@@ -25,7 +25,7 @@ interface ClassroomCardProps {
   onOpenDetail: (classroom: ClassroomAvailability['classroom']) => void;
 }
 
-export const ClassroomCard: React.FC<ClassroomCardProps> = ({
+export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
   availability,
   filter,
   nowMinutes,
@@ -205,4 +205,6 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = ({
       </div>
     </div>
   );
-};
+});
+
+ClassroomCard.displayName = 'ClassroomCard';
