@@ -1352,6 +1352,31 @@
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
   margin: auto;
   animation: modalScaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.45) rgba(255, 255, 255, 0.03);
+}
+
+/* Custom Sleek Scrollbar for Classroom Modal */
+.classroom-modal::-webkit-scrollbar {
+  width: 7px;
+}
+
+.classroom-modal::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 999px;
+  margin: 16px 0;
+}
+
+.classroom-modal::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.55) 0%, rgba(99, 102, 241, 0.55) 100%);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.classroom-modal::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #3b82f6 0%, #6366f1 100%);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
 }
 
 @keyframes modalScaleUp {
@@ -1364,6 +1389,43 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 14px;
+  flex-shrink: 0;
+}
+
+/* Modal Close Button */
+.modal-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  backdrop-filter: blur(8px);
+}
+
+.modal-close-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+  transform: rotate(90deg) scale(1.05);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.25);
+}
+
+.modal-close-btn:active {
+  transform: rotate(90deg) scale(0.94);
+}
+
+.modal-close-btn:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 
 .classroom-modal-title-group {
@@ -1390,6 +1452,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
+  flex-shrink: 0;
 }
 
 .modal-kpi-card {
@@ -1431,46 +1494,62 @@
   color: var(--accent-rose);
 }
 
-/* Day tabs in modal */
+/* Day tabs in modal: 6-column grid matching the 3 KPI cards above */
 .classroom-modal-day-tabs {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 8px;
+  padding-bottom: 12px;
+  flex-shrink: 0;
+  overflow: visible;
+  width: 100%;
 }
 
 .modal-day-tab {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: transparent;
-  border: 1px solid transparent;
+  justify-content: center;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   color: var(--text-secondary);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
+  min-height: 50px;
+  flex-shrink: 0;
 }
 
 .modal-day-tab:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
   color: var(--text-primary);
 }
 
 .modal-day-tab.active {
-  background: rgba(59, 130, 246, 0.2);
-  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.55);
   color: #60a5fa;
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.22);
 }
 
 .modal-day-count-badge {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.modal-day-tab.active .modal-day-count-badge {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.22);
 }
 
 .modal-day-label-full {
@@ -1492,13 +1571,19 @@
 /* Agenda View */
 .classroom-day-agenda-container {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr;
   gap: 20px;
   align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.classroom-day-agenda-container.has-inspector {
+  grid-template-columns: 1fr 300px;
 }
 
 @media (max-width: 820px) {
-  .classroom-day-agenda-container {
+  .classroom-day-agenda-container,
+  .classroom-day-agenda-container.has-inspector {
     grid-template-columns: 1fr;
   }
 }
@@ -1672,10 +1757,24 @@
 
 .inspector-close-btn {
   margin-left: auto;
-  background: transparent;
-  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-muted);
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.inspector-close-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  transform: scale(1.08);
 }
 
 .inspector-course-id {
@@ -1751,7 +1850,8 @@
   max-width: 320px;
 }
 
-/* Mobile Sheet Drag Handle */
+/* Mobile Sheet Drag Handle & Zone */
+.mobile-sheet-drag-zone,
 .mobile-sheet-drag-handle {
   display: none;
 }
@@ -2274,20 +2374,48 @@
     to { transform: translateY(0); }
   }
 
+  /* Mobile Sheet Drag Zone (Active Gesture Area) */
+  .mobile-sheet-drag-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 6px 0 10px;
+    margin: -4px 0 4px;
+    cursor: grab;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .mobile-sheet-drag-zone:active {
+    cursor: grabbing;
+  }
+
   .mobile-sheet-drag-handle {
     display: block;
     width: 44px;
     height: 5px;
-    background: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.4);
     border-radius: 999px;
-    margin: -2px auto 8px;
-    flex-shrink: 0;
+    transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, transform 0.2s ease;
+  }
+
+  .mobile-sheet-drag-zone:active .mobile-sheet-drag-handle {
+    width: 52px;
+    background: rgba(255, 255, 255, 0.85);
+    transform: scaleY(1.15);
   }
 
   .classroom-modal-header {
     gap: 10px;
     align-items: center;
     flex-shrink: 0;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
   }
 
   .classroom-modal-title {
@@ -2296,16 +2424,11 @@
   }
 
   .modal-close-btn {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
   }
 
   /* Compact KPI Bar on Mobile */
@@ -2351,6 +2474,7 @@
     padding: 6px 2px;
     font-size: 0.76rem;
     min-width: 0;
+    min-height: unset;
     border-radius: 8px;
     flex-direction: column;
     gap: 2px;
