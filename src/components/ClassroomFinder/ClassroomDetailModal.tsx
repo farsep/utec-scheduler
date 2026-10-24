@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { ClassroomInfo, ClassroomSession } from '../../types/classroom';
 import type { DayOfWeek } from '../../types/schedule';
 import { ALL_DAYS, DAY_LABELS, ROOM_TYPE_LABELS, calculateFreeBlocks, formatDurationHuman } from '../../utils/classroomUtils';
@@ -31,6 +31,130 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
 
   const [activeTabDay, setActiveTabDay] = useState<DayOfWeek>(systemDay);
   const [selectedSession, setSelectedSession] = useState<ClassroomSession | null>(null);
+
+  const modalRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef<number>(0);
+  const touchStartTime = useRef<number>(0);
+  const currentTranslateY = useRef<number>(0);
+  const isDragging = useRef<boolean>(false);
+  const isClosing = useRef<boolean>(false);
+
+  // Gesture handling for native-app mobile swipe-down to close
+  const startDrag = (clientY: number, target?: EventTarget | null) => {
+    if (isClosing.current) return;
+    if (target instanceof Element && (target.closest('button') || target.closest('a'))) {
+      return;
+    }
+    touchStartY.current = clientY;
+    touchStartTime.current = Date.now();
+    isDragging.current = true;
+    currentTranslateY.current = 0;
+
+    if (modalRef.current) {
+      modalRef.current.style.transition = 'none';
+    }
+    if (overlayRef.current) {
+      overlayRef.current.style.transition = 'none';
+    }
+  };
+
+  const updateDrag = (clientY: number) => {
+    if (!isDragging.current || isClosing.current) return;
+    const deltaY = clientY - touchStartY.current;
+
+    if (deltaY > 0) {
+      currentTranslateY.current = deltaY;
+      if (modalRef.current) {
+        modalRef.current.style.transform = `translateY(${deltaY}px)`;
+      }
+      if (overlayRef.current) {
+        const progress = Math.min(1, deltaY / 320);
+        overlayRef.current.style.opacity = `${Math.max(0.2, 1 - progress * 0.7)}`;
+      }
+    } else {
+      // Gentle rubber-band resistance when pulling up
+      const damped = deltaY * 0.15;
+      currentTranslateY.current = damped;
+      if (modalRef.current) {
+        modalRef.current.style.transform = `translateY(${damped}px)`;
+      }
+    }
+  };
+
+  const endDrag = () => {
+    if (!isDragging.current || isClosing.current) return;
+    isDragging.current = false;
+
+    const deltaY = currentTranslateY.current;
+    const elapsed = Date.now() - touchStartTime.current;
+    const velocity = deltaY / (elapsed || 1); // px per ms
+
+    // Thresholds: dragged down more than 85px OR flicked fast downwards (velocity > 0.35 and moved > 25px)
+    const shouldClose = deltaY > 85 || (velocity > 0.35 && deltaY > 25);
+
+    if (shouldClose) {
+      isClosing.current = true;
+      if (modalRef.current) {
+        modalRef.current.style.transition = 'transform 0.22s cubic-bezier(0.32, 1, 0.23, 1)';
+        modalRef.current.style.transform = 'translateY(100%)';
+      }
+      if (overlayRef.current) {
+        overlayRef.current.style.transition = 'opacity 0.22s ease-out';
+        overlayRef.current.style.opacity = '0';
+      }
+      setTimeout(() => {
+        onClose();
+      }, 220);
+    } else {
+      // Snap back to open position with an iOS spring-like curve
+      if (modalRef.current) {
+        modalRef.current.style.transition = 'transform 0.26s cubic-bezier(0.175, 0.885, 0.32, 1.15)';
+        modalRef.current.style.transform = 'translateY(0)';
+      }
+      if (overlayRef.current) {
+        overlayRef.current.style.transition = 'opacity 0.2s ease-out';
+        overlayRef.current.style.opacity = '1';
+      }
+      currentTranslateY.current = 0;
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      startDrag(e.touches[0].clientY, e.target);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      updateDrag(e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    endDrag();
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    if ((e.target as HTMLElement).closest('button')) return;
+
+    startDrag(e.clientY, e.target);
+
+    const onMouseMove = (moveEvt: MouseEvent) => {
+      updateDrag(moveEvt.clientY);
+    };
+
+    const onMouseUp = () => {
+      endDrag();
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
 
   // Lock body scroll and listen for Escape key to close
   useEffect(() => {
@@ -65,13 +189,42 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
   const { freeBlocks, occupiedBlocks, totalFreeMinutes } = calculateFreeBlocks(activeDaySessions);
 
   return (
-    <div className="classroom-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="classroom-modal glass-card" onClick={(e) => e.stopPropagation()}>
-        {/* Mobile Bottom Sheet Grab Indicator */}
-        <div className="mobile-sheet-drag-handle" aria-hidden="true" />
+    <div
+      ref={overlayRef}
+      className="classroom-modal-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        ref={modalRef}
+        className="classroom-modal glass-card"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Mobile Bottom Sheet Grab Indicator with Generous Hit Target */}
+        <div
+          className="mobile-sheet-drag-zone"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          role="button"
+          tabIndex={0}
+          aria-label="Deslizar hacia abajo para cerrar"
+        >
+          <div className="mobile-sheet-drag-handle" aria-hidden="true" />
+        </div>
 
-        {/* Modal Header */}
-        <div className="classroom-modal-header">
+        {/* Modal Header (Also Swipeable) */}
+        <div
+          className="classroom-modal-header"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+        >
           <div className="classroom-modal-title-group">
             <div className="classroom-type-icon classroom-type-icon--large" style={{ color: typeMeta.color, background: `${typeMeta.color}20` }}>
               {classroom.type === 'laboratorio' ? <Laptop size={24} /> :
@@ -137,7 +290,7 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
         </div>
 
         {/* Selected Day Agenda View */}
-        <div className="classroom-day-agenda-container">
+        <div className={`classroom-day-agenda-container ${selectedSession ? 'has-inspector' : ''}`}>
           <div className="agenda-column-sessions">
             <h4 className="agenda-column-title">
               <Calendar size={16} />

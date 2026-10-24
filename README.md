@@ -68,7 +68,6 @@ Olvídate de cuadrar secciones a mano. El optimizador evalúa todas las permutac
 * **📅 Google Calendar:** Sincronización nativa directa mediante **Google OAuth 2.0**. Crea eventos recurrentes durante todo el semestre académico con ubicación, aula, nombre del docente y paleta de colores oficial de Google Calendar.
 * **📆 Archivo iCalendar (`.ics`):** Exporta un archivo estándar compatible con Apple Calendar, Microsoft Outlook y Google Calendar móvil.
 * **🖼️ Imagen PNG en Alta Resolución:** Descarga tu horario semanal renderizado limpiamente para compartir o usar como fondo de pantalla.
-* **✉️ Respaldo por Correo:** Envío directo del resumen del consolidado vía EmailJS.
 
 ---
 
@@ -179,8 +178,7 @@ Matricula/
         ├── scheduleWorker.ts   # Web Worker para cómputo multihilo
         ├── googleCalendarService.ts # API Client de Google Calendar
         ├── icsExporter.ts      # Generador de archivos .ics estándar
-        ├── classroomUtils.ts   # Cálculo de disponibilidad de aulas
-        └── emailService.ts     # Integración de correo vía EmailJS
+        └── classroomUtils.ts   # Cálculo de disponibilidad de aulas
 ```
 
 ---
@@ -194,7 +192,7 @@ Matricula/
 | **Motor de Cómputo** | [Rust](https://www.rust-lang.org/) + [WebAssembly](https://webassembly.org/) | Algoritmo QuantumEngine para resolución CSP a nivel nativo |
 | **Paralelismo** | Web Workers API | Arquitectura Map-Reduce distribuida en la CPU del cliente |
 | **Procesamiento de Datos** | [PDF.js](https://mozilla.github.io/pdf.js/) & [SheetJS (XLSX)](https://sheetjs.com/) | Lectura y extracción de datos desde PDFs y Excels de UTEC |
-| **Integraciones** | Google Calendar API (OAuth 2.0) & EmailJS | Sincronización de eventos y envío de horarios por correo |
+| **Integraciones** | Google Calendar API (OAuth 2.0) | Sincronización de eventos y envío de horarios por correo |
 | **Diseño y Estilos** | CSS Moderno (Vanilla) & Lucide Icons | Estética glassmorphic oscura, responsiva y de alta fidelidad |
 
 ---
