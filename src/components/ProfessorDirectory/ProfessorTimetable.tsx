@@ -331,6 +331,8 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
 
                     const durationMinutes = session.endMinutes - session.startMinutes;
                     const isShortBlock = durationMinutes <= 75; // 1-hour or 75-min short session
+                    const isLongBlock = durationMinutes >= 150; // 2.5h, 3h, 4h+ long session
+                    const isNarrowBlock = totalCols > 1;
 
                     const colWidthPercent = 100 / totalCols;
                     const leftPercent = colIndex * colWidthPercent;
@@ -338,7 +340,7 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                     return (
                       <div
                         key={session.id}
-                        className={`prof-session-block ${isShortBlock ? 'prof-session-block--short' : ''} ${isSelected ? 'prof-session-block--selected' : ''} ${isLive ? 'prof-session-block--live' : ''}`}
+                        className={`prof-session-block ${isShortBlock ? 'prof-session-block--short' : ''} ${isLongBlock ? 'prof-session-block--long' : ''} ${isNarrowBlock ? 'prof-session-block--narrow' : ''} ${isSelected ? 'prof-session-block--selected' : ''} ${isLive ? 'prof-session-block--live' : ''}`}
                         style={{
                           top: `${top}%`,
                           height: `calc(${height}% - 2px)`,
@@ -391,8 +393,8 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                             </div>
                           </div>
                         ) : (
-                          /* Full 3-tier spacious layout for 2h+ sessions */
-                          <>
+                          /* Structured cohesive layout for 2h - 4h+ sessions */
+                          <div className="prof-session-block-inner">
                             <div className="prof-session-block-header">
                               <span
                                 className="prof-session-code"
@@ -405,16 +407,29 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                               </span>
                             </div>
 
-                            <div className="prof-session-name" title={session.courseName}>
+                            <div className={`prof-session-name ${isLongBlock ? 'prof-session-name--long' : ''}`} title={session.courseName}>
                               {session.courseName}
                             </div>
 
+                            {isLongBlock && (
+                              <div className="prof-session-long-badge-row">
+                                <span className="prof-session-duration-tag">
+                                  {session.durationHours}h de clase
+                                </span>
+                                {session.modality && (
+                                  <span className="prof-session-modality-tag">
+                                    {session.modality}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
                             <div className="prof-session-footer">
-                              <span className="prof-session-group-tag">
-                                {session.sessionGroup}
+                              <span className="prof-session-group-tag" title={session.sessionGroup}>
+                                {isNarrowBlock ? abbreviateSessionGroup(session.sessionGroup) : session.sessionGroup}
                               </span>
 
-                              <span className="prof-session-room-tag">
+                              <span className="prof-session-room-tag" title={session.roomDisplayName}>
                                 <MapPin size={11} />
                                 {session.roomCode}
                               </span>
@@ -425,7 +440,7 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                                 </span>
                               )}
                             </div>
-                          </>
+                          </div>
                         )}
                       </div>
                     );

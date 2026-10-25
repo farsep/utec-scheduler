@@ -159,6 +159,35 @@ export function extractProfessorsFromCourses(courses: Course[]): ProfessorInfo[]
         const roomDisplayName = parsedLoc ? parsedLoc.displayName : (session.location || 'Aula Asignada');
         const floor = parsedLoc ? parsedLoc.floor : 1;
 
+        // Check if there is already an existing session for the same professor, course, section, day, time range, and room.
+        // (E.g. when multiple lab sub-groups like Lab 11 and Lab 12 are taught by the same professor in the same room simultaneously)
+        const sameSlotSession = profAcc.sessions.find(
+          s =>
+            s.courseCode === course.code &&
+            s.sectionNumber === mainSecNum &&
+            s.day === session.day &&
+            s.startMinutes === session.startMinutes &&
+            s.endMinutes === session.endMinutes &&
+            s.roomCode === roomCode
+        );
+
+        if (sameSlotSession) {
+          // Merge with existing session: unify sessionGroup name e.g. "LABORATORIO 11 / 12"
+          const curGroup = sameSlotSession.sessionGroup;
+          const newGroup = session.sessionGroup;
+          if (!curGroup.includes(newGroup)) {
+            const numMatch = newGroup.match(/\d+$/);
+            if (numMatch && curGroup.includes(parseSessionType(newGroup).toUpperCase())) {
+              sameSlotSession.sessionGroup = `${curGroup} / ${numMatch[0]}`;
+            } else {
+              sameSlotSession.sessionGroup = `${curGroup} / ${newGroup}`;
+            }
+          }
+          sameSlotSession.vacancies += (session.vacancies || 0);
+          sameSlotSession.enrolled += (session.enrolled || 0);
+          continue;
+        }
+
         profAcc.courseCodes.add(course.code);
         if (roomCode && roomCode !== 'Virtual') profAcc.rooms.add(roomCode);
 
