@@ -18,6 +18,7 @@ import {
   type SyncResult
 } from '../utils/googleCalendarService';
 import { getCourseColor, getCoursePrefix, getScheduleColorMap, REMINDER_OPTIONS } from '../utils/scheduleUtils';
+import { CustomSelect } from './common/CustomSelect';
 
 interface GoogleCalendarModalProps {
   isOpen: boolean;
@@ -452,31 +453,21 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
                 <Bell size={14} color="#10b981" />
                 <span>Tiempo de recordatorio:</span>
               </label>
-              <select
+              <CustomSelect
+                size="sm"
                 value={reminderMinutes}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setReminderMinutes(val);
-                  localStorage.setItem('utec_reminder_minutes', String(val));
+                onChange={(val) => {
+                  const num = Number(val);
+                  setReminderMinutes(num);
+                  localStorage.setItem('utec_reminder_minutes', String(num));
                 }}
-                style={{
-                  padding: '5px 10px',
-                  fontSize: '0.76rem',
-                  borderRadius: '7px',
-                  border: '1px solid rgba(16, 185, 129, 0.35)',
-                  background: '#0d131f',
-                  color: '#ffffff',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                {REMINDER_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value} style={{ background: '#0d131f', color: '#ffffff' }}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                options={REMINDER_OPTIONS.map(opt => ({
+                  value: opt.value,
+                  label: opt.label
+                }))}
+                align="right"
+                ariaLabel="Tiempo de recordatorio"
+              />
             </div>
             <div style={{ fontSize: '0.72rem', color: reminderMinutes === 0 ? 'var(--text-muted)' : '#10b981' }}>
               {reminderMinutes === 0

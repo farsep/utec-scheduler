@@ -3,6 +3,7 @@ import { X, Calendar, Image, FileSpreadsheet, Download, RefreshCw, Sparkles, Bel
 import { generateICS, downloadFile } from '../utils/icsExporter';
 import { formatLocation, getCourseColor, getCoursePrefix, getScheduleColorMap, REMINDER_OPTIONS } from '../utils/scheduleUtils';
 import { GoogleCalendarModal } from './GoogleCalendarModal';
+import { CustomSelect } from './common/CustomSelect';
 import type { Course } from '../types/schedule';
 
 interface ExportModalProps {
@@ -320,31 +321,21 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       <Bell size={13} color="var(--accent-emerald)" />
                       <span>Alarma previa (.ics):</span>
                     </label>
-                    <select
+                    <CustomSelect
+                      size="sm"
                       value={reminderMinutes}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setReminderMinutes(val);
-                        localStorage.setItem('utec_reminder_minutes', String(val));
+                      onChange={(val) => {
+                        const num = Number(val);
+                        setReminderMinutes(num);
+                        localStorage.setItem('utec_reminder_minutes', String(num));
                       }}
-                      style={{
-                        padding: '4px 9px',
-                        fontSize: '0.74rem',
-                        borderRadius: '6px',
-                        border: '1px solid rgba(16, 185, 129, 0.35)',
-                        background: '#0d131f',
-                        color: '#ffffff',
-                        outline: 'none',
-                        cursor: 'pointer',
-                        fontWeight: 600
-                      }}
-                    >
-                      {REMINDER_OPTIONS.map(opt => (
-                        <option key={opt.value} value={opt.value} style={{ background: '#0d131f', color: '#ffffff' }}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
+                      options={REMINDER_OPTIONS.map(opt => ({
+                        value: opt.value,
+                        label: opt.label
+                      }))}
+                      align="right"
+                      ariaLabel="Alarma previa (.ics)"
+                    />
                   </div>
                   <div style={{ fontSize: '0.71rem', color: reminderMinutes === 0 ? 'var(--text-muted)' : 'var(--accent-emerald)' }}>
                     {reminderMinutes === 0

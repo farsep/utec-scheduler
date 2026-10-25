@@ -2,6 +2,8 @@ import React from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { ClassroomFilterState, RoomType } from '../../types/classroom';
 import { ALL_DAYS, DAY_LABELS, ROOM_TYPE_LABELS } from '../../utils/classroomUtils';
+import { CustomSelect } from '../common/CustomSelect';
+import { CustomTimePicker } from '../common/CustomTimePicker';
 import {
   Zap,
   Clock,
@@ -166,13 +168,10 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
               -15m
             </button>
             <div className="live-time-input-wrap">
-              <input
-                type="time"
-                step="900"
+              <CustomTimePicker
+                size="sm"
                 value={activeLiveTimeStr}
-                onChange={(e) => onSetLiveTime(e.target.value)}
-                className="live-time-picker"
-                title="Cambiar hora en tiempo real para ver qué aulas estarán libres"
+                onChange={(val) => onSetLiveTime(val)}
               />
             </div>
             <button
@@ -228,33 +227,23 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
           <div className="filter-control-group filter-control-group--time">
             <label className="filter-group-label">Bloque Horario:</label>
             <div className="time-inputs-container">
-              <div className="time-input-box">
-                <span className="time-input-prefix">De:</span>
-                <input
-                  type="time"
-                  step="900"
-                  min="07:00"
-                  max="22:00"
-                  value={filter.startTime}
-                  onChange={(e) => handleTimeChange('start', e.target.value)}
-                  className="time-picker-input"
-                />
-              </div>
+              <CustomTimePicker
+                prefix="De:"
+                value={filter.startTime}
+                onChange={(val) => handleTimeChange('start', val)}
+                minHour={7}
+                maxHour={22}
+              />
 
               <span className="time-separator">—</span>
 
-              <div className="time-input-box">
-                <span className="time-input-prefix">A:</span>
-                <input
-                  type="time"
-                  step="900"
-                  min="07:00"
-                  max="22:00"
-                  value={filter.endTime}
-                  onChange={(e) => handleTimeChange('end', e.target.value)}
-                  className="time-picker-input"
-                />
-              </div>
+              <CustomTimePicker
+                prefix="A:"
+                value={filter.endTime}
+                onChange={(val) => handleTimeChange('end', val)}
+                minHour={7}
+                maxHour={22}
+              />
             </div>
 
             {/* Quick Presets */}
@@ -395,19 +384,20 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
         </div>
 
         {/* Sort Select */}
-        <div className="sort-dropdown-wrap">
-          <SlidersHorizontal size={14} className="sort-icon" />
-          <select
-            value={filter.sortBy}
-            onChange={(e) => onChangeFilter({ sortBy: e.target.value as any })}
-            className="sort-select-field"
-          >
-            <option value="floor_asc">Piso (Menor a Mayor)</option>
-            <option value="floor_desc">Piso (Mayor a Menor)</option>
-            <option value="free_time">Mayor tiempo libre</option>
-            <option value="name">Código de aula</option>
-          </select>
-        </div>
+        <CustomSelect
+          size="sm"
+          value={filter.sortBy}
+          onChange={(val) => onChangeFilter({ sortBy: val })}
+          options={[
+            { value: 'floor_asc', label: 'Piso (Menor a Mayor)' },
+            { value: 'floor_desc', label: 'Piso (Mayor a Menor)' },
+            { value: 'free_time', label: 'Mayor tiempo libre' },
+            { value: 'name', label: 'Código de aula' }
+          ]}
+          icon={<SlidersHorizontal size={14} />}
+          align="right"
+          ariaLabel="Ordenar aulas"
+        />
 
         {/* Reset button */}
         <button
