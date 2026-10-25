@@ -144,8 +144,12 @@ export function extractProfessorsFromCourses(courses: Course[]): ProfessorInfo[]
           profAcc.email = session.email;
         }
 
+        const mainSecNum = section.sectionNumber.split(' (')[0].trim();
+
         // Deduplication key to prevent repeated sessions from student sub-group variants
-        const dedupeKey = `${course.code}-${session.sessionGroup}-${session.day}-${session.startMinutes}-${session.endMinutes}`;
+        // In UTEC's master schedule, multi-subgroup variants share the same Theory session.
+        // We deduplicate by courseCode, mainSecNum, sessionGroup, day, and time range.
+        const dedupeKey = `${course.code}-${mainSecNum}-${session.sessionGroup}-${session.day}-${session.startMinutes}-${session.endMinutes}`;
         if (profAcc.sessionKeys.has(dedupeKey)) continue;
         profAcc.sessionKeys.add(dedupeKey);
 
@@ -159,11 +163,11 @@ export function extractProfessorsFromCourses(courses: Course[]): ProfessorInfo[]
         if (roomCode && roomCode !== 'Virtual') profAcc.rooms.add(roomCode);
 
         profAcc.sessions.push({
-          id: `${course.code}-${session.sessionGroup}-${session.day}-${session.startMinutes}`,
+          id: `${course.code}-${mainSecNum}-${session.sessionGroup}-${session.day}-${session.startMinutes}`,
           courseCode: course.code,
           courseName: course.name,
           courseColor,
-          sectionNumber: section.sectionNumber,
+          sectionNumber: mainSecNum,
           sessionGroup: session.sessionGroup,
           sessionType: parseSessionType(session.sessionGroup),
           day: session.day,
@@ -250,6 +254,7 @@ export function extractProfessorsFromCourses(courses: Course[]): ProfessorInfo[]
           color: sess.courseColor,
           sectionsCount: 0,
           sections: [],
+          sectionGroups: [],
           totalWeeklyHours: 0,
           roomCodes: []
         });
@@ -260,9 +265,45 @@ export function extractProfessorsFromCourses(courses: Course[]): ProfessorInfo[]
         cSummary.sections.push(sess.sectionNumber);
         cSummary.sectionsCount++;
       }
-      if (sess.roomCode && !cSummary.roomCodes.includes(sess.roomCode)) {
+      if (sess.roomCode && sess.roomCode !== 'Virtual' && !cSummary.roomCodes.includes(sess.roomCode)) {
         cSummary.roomCodes.push(sess.roomCode);
       }
+    });
+
+    // Build structured section groups for each course
+    courseMap.forEach(cSummary => {
+      cSummary.sections.sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+      );
+
+      cSummary.sectionGroups = cSummary.sections.map(secNum => {
+        const secSessions = acc.sessions.filter(
+          s => s.courseCode === cSummary.code && s.sectionNumber === secNum
+        );
+        secSessions.sort((a, b) => {
+          const dayOrder = ALL_DAYS.indexOf(a.day) - ALL_DAYS.indexOf(b.day);
+          if (dayOrder !== 0) return dayOrder;
+          return a.startMinutes - b.startMinutes;
+        });
+
+        const vacancies = Math.max(...secSessions.map(s => s.vacancies), 0);
+        const enrolled = Math.max(...secSessions.map(s => s.enrolled), 0);
+        const secHours = secSessions.reduce((sum, s) => sum + s.durationHours, 0);
+        const modalities = Array.from(new Set(secSessions.map(s => s.modality))).filter(Boolean);
+        const roomCodes = Array.from(new Set(secSessions.map(s => s.roomCode))).filter(r => r && r !== 'Virtual');
+
+        return {
+          sectionNumber: secNum,
+          sessions: secSessions,
+          vacancies,
+          enrolled,
+          totalWeeklyHours: Math.round(secHours * 10) / 10,
+          modalities: modalities.length > 0 ? modalities : ['Presencial'],
+          roomCodes
+        };
+      });
+
+      cSummary.totalWeeklyHours = Math.round(cSummary.totalWeeklyHours * 10) / 10;
     });
 
     const coursesSummaryList = Array.from(courseMap.values()).sort((a, b) => b.totalWeeklyHours - a.totalWeeklyHours);

@@ -307,7 +307,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
             onClick={() => setActiveTab('cursos')}
           >
             <BookOpen size={16} />
-            <span>Cursos y Secciones ({professor.uniqueCoursesCount})</span>
+            <span>Cursos ({professor.uniqueCoursesCount}) • Secciones ({professor.uniqueSectionsCount})</span>
           </button>
 
           <button
@@ -407,64 +407,115 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
           {activeTab === 'cursos' && (
             <div className="prof-tab-pane prof-tab-pane--courses">
               <div className="prof-courses-list">
-                {professor.courses.map(course => {
-                  const courseSessions = professor.sessions.filter(s => s.courseCode === course.code);
-
-                  return (
-                    <div key={course.code} className="prof-course-detail-card glass-card">
-                      <div className="prof-course-detail-header">
-                        <div className="prof-course-header-left">
-                          <span
-                            className="prof-course-code-pill"
-                            style={{
-                              backgroundColor: `${course.color}22`,
-                              color: course.color,
-                              borderColor: `${course.color}55`
-                            }}
-                          >
-                            {course.code}
-                          </span>
+                {professor.courses.map(course => (
+                  <div key={course.code} className="prof-course-detail-card glass-card">
+                    {/* Course Header Banner */}
+                    <div className="prof-course-detail-header">
+                      <div className="prof-course-header-left">
+                        <span
+                          className="prof-course-code-pill"
+                          style={{
+                            backgroundColor: `${course.color}22`,
+                            color: course.color,
+                            borderColor: `${course.color}55`
+                          }}
+                        >
+                          {course.code}
+                        </span>
+                        <div className="prof-course-title-col">
                           <h4 className="prof-course-name">{course.name}</h4>
-                        </div>
-
-                        <div className="prof-course-header-right">
-                          <span className="prof-course-hours-badge">
-                            {course.totalWeeklyHours}h semanales
+                          <span className="prof-course-meta-sub">
+                            {course.sectionsCount} {course.sectionsCount === 1 ? 'sección a cargo' : 'secciones a cargo'}
+                            {course.sections.length > 0 && ` (Sección ${course.sections.join(', ')})`}
                           </span>
                         </div>
                       </div>
 
-                      {/* Sessions table for this course */}
-                      <div className="prof-course-sessions-table">
-                        {courseSessions.map(sess => (
-                          <div key={sess.id} className="prof-course-session-row">
-                            <div className="prof-sess-col-group">
-                              <span className="prof-sess-badge-group">{sess.sessionGroup}</span>
-                              <span className="prof-sess-sec">Sec. {sess.sectionNumber}</span>
-                            </div>
-
-                            <div className="prof-sess-col-time">
-                              <Calendar size={13} className="text-muted" />
-                              <span>{DAY_LABELS[sess.day]}</span>
-                              <strong>{sess.startTime} - {sess.endTime}</strong>
-                            </div>
-
-                            <div className="prof-sess-col-room">
-                              <MapPin size={13} className="text-muted" />
-                              <span>{sess.roomCode}</span>
-                              <span className="prof-sess-floor">P{sess.floor}</span>
-                            </div>
-
-                            <div className="prof-sess-col-enrolled">
-                              <Users size={13} className="text-muted" />
-                              <span>{sess.enrolled}/{sess.vacancies} alum.</span>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="prof-course-header-right">
+                        <span className="prof-course-hours-badge">
+                          {course.totalWeeklyHours}h semanales
+                        </span>
                       </div>
                     </div>
-                  );
-                })}
+
+                    {/* Section Groups Cards (Treatment validated with Timetable app) */}
+                    <div className="prof-course-sections-grid">
+                      {course.sectionGroups && course.sectionGroups.length > 0 ? (
+                        course.sectionGroups.map(sec => (
+                          <div key={sec.sectionNumber} className="prof-section-card">
+                            <div className="prof-section-card-header">
+                              <div className="prof-section-title-group">
+                                <span className="prof-section-badge">Sección {sec.sectionNumber}</span>
+                                <span className="prof-section-modality-badge">{sec.modalities.join(', ')}</span>
+                              </div>
+                              <div className="prof-section-meta-group">
+                                <span className="prof-section-enrolled">
+                                  ({sec.enrolled}/{sec.vacancies} matriculados)
+                                </span>
+                                <span className="prof-section-hours">{sec.totalWeeklyHours}h semanales</span>
+                              </div>
+                            </div>
+
+                            <div className="prof-section-sessions-list">
+                              {sec.sessions.map(sess => (
+                                <div key={sess.id} className="prof-section-session-item">
+                                  <div className="prof-sess-type-col">
+                                    <span className={`prof-sess-badge-group prof-sess-badge-group--${sess.sessionType.toLowerCase()}`}>
+                                      {sess.sessionGroup}
+                                    </span>
+                                  </div>
+
+                                  <div className="prof-sess-col-time">
+                                    <Calendar size={13} className="text-muted" />
+                                    <span>{DAY_LABELS[sess.day]}</span>
+                                    <strong>{sess.startTime} - {sess.endTime}</strong>
+                                  </div>
+
+                                  <div className="prof-sess-col-room">
+                                    <MapPin size={13} className="text-muted" />
+                                    <span className="prof-sess-room-code">{sess.roomCode}</span>
+                                    <span className="prof-sess-floor">P{sess.floor}</span>
+                                  </div>
+
+                                  <div className="prof-sess-col-enrolled">
+                                    <Users size={13} className="text-muted" />
+                                    <span>{sess.enrolled}/{sess.vacancies} alum.</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        /* Fallback if sectionGroups not populated */
+                        <div className="prof-course-sessions-table">
+                          {professor.sessions.filter(s => s.courseCode === course.code).map(sess => (
+                            <div key={sess.id} className="prof-course-session-row">
+                              <div className="prof-sess-col-group">
+                                <span className="prof-sess-badge-group">{sess.sessionGroup}</span>
+                                <span className="prof-sess-sec">Sec. {sess.sectionNumber}</span>
+                              </div>
+                              <div className="prof-sess-col-time">
+                                <Calendar size={13} className="text-muted" />
+                                <span>{DAY_LABELS[sess.day]}</span>
+                                <strong>{sess.startTime} - {sess.endTime}</strong>
+                              </div>
+                              <div className="prof-sess-col-room">
+                                <MapPin size={13} className="text-muted" />
+                                <span>{sess.roomCode}</span>
+                                <span className="prof-sess-floor">P{sess.floor}</span>
+                              </div>
+                              <div className="prof-sess-col-enrolled">
+                                <Users size={13} className="text-muted" />
+                                <span>{sess.enrolled}/{sess.vacancies} alum.</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
