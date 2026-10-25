@@ -24,12 +24,23 @@ export interface ProfessorSession {
   enrolled: number;
 }
 
+export interface ProfessorCourseSection {
+  sectionNumber: string;
+  sessions: ProfessorSession[];
+  vacancies: number;
+  enrolled: number;
+  totalWeeklyHours: number;
+  modalities: string[];
+  roomCodes: string[];
+}
+
 export interface ProfessorCourseSummary {
   code: string;
   name: string;
   color: string;
   sectionsCount: number;
   sections: string[];
+  sectionGroups: ProfessorCourseSection[];
   totalWeeklyHours: number;
   roomCodes: string[];
 }

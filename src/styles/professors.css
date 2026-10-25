@@ -1566,32 +1566,215 @@
 .prof-course-header-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .prof-course-code-pill {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 6px;
+  padding: 5px 12px;
+  border-radius: 8px;
   border: 1px solid;
+  letter-spacing: 0.3px;
+}
+
+.prof-course-title-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .prof-course-name {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 700;
   margin: 0;
   color: var(--text-primary);
 }
 
+.prof-course-meta-sub {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
 .prof-course-hours-badge {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #93c5fd;
   background: rgba(59, 130, 246, 0.14);
-  padding: 4px 10px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  white-space: nowrap;
+}
+
+/* Section Groups Grid */
+.prof-course-sections-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 14px;
+}
+
+.prof-section-card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(12, 17, 28, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.prof-section-card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(14, 21, 35, 0.7);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.prof-section-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.025);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.prof-section-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prof-section-badge {
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.16);
+  padding: 3px 9px;
   border-radius: 6px;
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.prof-section-modality-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.prof-section-meta-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.76rem;
+}
+
+.prof-section-enrolled {
+  color: var(--text-muted);
+}
+
+.prof-section-hours {
+  color: #34d399;
+  font-weight: 700;
+}
+
+.prof-section-sessions-list {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  gap: 4px;
+}
+
+.prof-section-session-item {
+  display: grid;
+  grid-template-columns: 160px 1fr 140px 140px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.015);
+  font-size: 0.82rem;
+  transition: background 0.15s ease;
+}
+
+.prof-section-session-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.prof-sess-type-col {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.prof-sess-badge-group {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+}
+
+.prof-sess-badge-group--teoría {
+  color: #93c5fd;
+}
+
+.prof-sess-badge-group--laboratorio {
+  color: #6ee7b7;
+}
+
+.prof-sess-badge-group--práctica {
+  color: #fcd34d;
+}
+
+.prof-sess-col-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+}
+
+.prof-sess-col-time strong {
+  color: var(--text-primary);
+}
+
+.prof-sess-col-room {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+.prof-sess-floor {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.prof-sess-col-enrolled {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 768px) {
+  .prof-section-session-item {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
 }
 
 .prof-course-sessions-table {
@@ -1619,49 +1802,9 @@
   gap: 6px;
 }
 
-.prof-sess-badge-group {
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
 .prof-sess-sec {
   font-size: 0.72rem;
   color: var(--text-muted);
-}
-
-.prof-sess-col-time {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-secondary);
-}
-
-.prof-sess-col-time strong {
-  color: var(--text-primary);
-}
-
-.prof-sess-col-room {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #60a5fa;
-  font-weight: 700;
-}
-
-.prof-sess-floor {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1px 5px;
-  border-radius: 3px;
-}
-
-.prof-sess-col-enrolled {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-muted);
-  font-size: 0.78rem;
 }
 
 /* --------------------------------------------------------------------------
