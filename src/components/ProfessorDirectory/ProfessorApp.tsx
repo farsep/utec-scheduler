@@ -22,7 +22,8 @@ import {
   ArrowUp,
   AlertCircle,
   HelpCircle,
-  Layers
+  Layers,
+  Radio
 } from 'lucide-react';
 
 export const ProfessorApp: React.FC = () => {
@@ -151,23 +152,49 @@ export const ProfessorApp: React.FC = () => {
             <p className="hero-subtitle">
               Consulta el horario completo, cursos que dictan, aulas asignadas, correo institucional y disponibilidad en tiempo real de toda la plana docente.
             </p>
+          </div>
 
-            {/* Quick Hero Stats Row */}
-            <div className="hero-stats-row">
-              <div className="hero-stat-item">
-                <span className="hero-stat-val text-accent">{professors.length}</span>
-                <span className="hero-stat-lbl">Docentes</span>
+          {/* Hero KPI Badges on the right side - matching Aulas premium impression */}
+          <div className="hero-kpi-badges prof-hero-kpi-badges">
+            <div className="hero-kpi-badge prof-hero-kpi-card">
+              <div className="prof-kpi-card-header">
+                <div className="prof-kpi-icon-wrap prof-kpi-icon-wrap--blue">
+                  <Users size={16} />
+                </div>
+                <span className="prof-kpi-badge-pill">Plana UTEC</span>
               </div>
-              <div className="hero-stat-sep" />
-              <div className="hero-stat-item">
-                <span className="hero-stat-val text-emerald">{totalUniqueCourses}</span>
-                <span className="hero-stat-lbl">Cursos Únicos</span>
+              <span className="kpi-num text-accent">{professors.length}</span>
+              <span className="kpi-txt">Docentes</span>
+            </div>
+
+            <div className="hero-kpi-badge prof-hero-kpi-card">
+              <div className="prof-kpi-card-header">
+                <div className="prof-kpi-icon-wrap prof-kpi-icon-wrap--emerald">
+                  <BookOpen size={16} />
+                </div>
+                <span className="prof-kpi-badge-pill prof-kpi-badge-pill--emerald">2026 - 2</span>
               </div>
-              <div className="hero-stat-sep" />
-              <div className="hero-stat-item">
-                <span className="hero-stat-val text-purple">{teachingNowCount}</span>
-                <span className="hero-stat-lbl">En Clase Ahora</span>
+              <span className="kpi-num text-emerald">{totalUniqueCourses}</span>
+              <span className="kpi-txt">Cursos Únicos</span>
+            </div>
+
+            <div className={`hero-kpi-badge prof-hero-kpi-card ${teachingNowCount > 0 ? 'prof-hero-kpi-card--live' : ''}`}>
+              <div className="prof-kpi-card-header">
+                <div className="prof-kpi-icon-wrap prof-kpi-icon-wrap--purple">
+                  <Radio size={16} />
+                </div>
+                <span className={`prof-kpi-badge-pill ${teachingNowCount > 0 ? 'prof-kpi-badge-pill--live' : ''}`}>
+                  {teachingNowCount > 0 ? (
+                    <>
+                      <span className="live-dot-mini" /> En Vivo
+                    </>
+                  ) : (
+                    'En Vivo'
+                  )}
+                </span>
               </div>
+              <span className="kpi-num text-purple">{teachingNowCount}</span>
+              <span className="kpi-txt">En Clase Ahora</span>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import type { DayOfWeek } from '../../types/schedule';
 import type { ProfessorFilterState, ProfessorSortOption } from '../../types/professor';
 import { ALL_DAYS, DAY_LABELS } from '../../utils/classroomUtils';
 import { DEPARTMENT_CONFIG } from '../../utils/professorUtils';
+import { CustomSelect, type SelectOption } from '../common/CustomSelect';
 import {
   Search,
   X,
@@ -106,22 +107,21 @@ export const ProfessorFilterBar: React.FC<ProfessorFilterBarProps> = ({
         </div>
 
         {/* Sort Selector Dropdown */}
-        <div className="prof-sort-wrapper">
-          <ArrowUpDown size={15} className="prof-sort-icon" />
-          <select
-            className="prof-sort-select"
-            value={filter.sortBy}
-            onChange={e => onFilterChange({ sortBy: e.target.value as ProfessorSortOption })}
-            aria-label="Ordenar docentes"
-          >
-            <option value="name_asc">Nombre: A → Z</option>
-            <option value="name_desc">Nombre: Z → A</option>
-            <option value="hours_desc">Más horas semanales</option>
-            <option value="courses_desc">Más cursos a cargo</option>
-            <option value="sessions_desc">Más sesiones semanales</option>
-            <option value="students_desc">Más alumnos / vacantes</option>
-          </select>
-        </div>
+        <CustomSelect
+          value={filter.sortBy}
+          onChange={(val) => onFilterChange({ sortBy: val as ProfessorSortOption })}
+          options={[
+            { value: 'name_asc', label: 'Nombre: A → Z' },
+            { value: 'name_desc', label: 'Nombre: Z → A' },
+            { value: 'hours_desc', label: 'Más horas semanales' },
+            { value: 'courses_desc', label: 'Más cursos a cargo' },
+            { value: 'sessions_desc', label: 'Más sesiones semanales' },
+            { value: 'students_desc', label: 'Más alumnos / vacantes' }
+          ]}
+          icon={<ArrowUpDown size={15} />}
+          align="right"
+          ariaLabel="Ordenar docentes"
+        />
       </div>
 
       {/* Filter Chips & Controls Row */}
@@ -155,22 +155,22 @@ export const ProfessorFilterBar: React.FC<ProfessorFilterBarProps> = ({
         </div>
 
         {/* Department / Carrera Selector */}
-        <div className="prof-dept-select-wrap">
-          <GraduationCap size={15} className="prof-dept-icon" />
-          <select
-            className="prof-dept-select"
-            value={filter.selectedDepartment}
-            onChange={e => onFilterChange({ selectedDepartment: e.target.value })}
-            aria-label="Filtrar por departamento"
-          >
-            <option value="ALL">Todas las carreras / áreas</option>
-            {Object.entries(DEPARTMENT_CONFIG).map(([code, config]) => (
-              <option key={code} value={code}>
-                {code !== 'OTRO' ? `${code} - ${config.label}` : config.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <CustomSelect
+          value={filter.selectedDepartment}
+          onChange={(val) => onFilterChange({ selectedDepartment: val })}
+          options={[
+            { value: 'ALL', label: 'Todas las carreras / áreas' },
+            ...Object.entries(DEPARTMENT_CONFIG).map(([code, config]) => ({
+              value: code,
+              label: config.label,
+              badge: code !== 'OTRO' ? code : undefined,
+              badgeColor: config.color
+            }))
+          ]}
+          icon={<GraduationCap size={15} />}
+          searchPlaceholder="Buscar carrera o área..."
+          ariaLabel="Filtrar por departamento"
+        />
 
         {/* Quick Toggle Beacon Buttons */}
         <div className="prof-toggles-group">

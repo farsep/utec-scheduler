@@ -144,8 +144,8 @@ export function extractProfessorsFromCourses(courses: Course[]): ProfessorInfo[]
           profAcc.email = session.email;
         }
 
-        // Deduplication key to prevent repeated sessions from sub-group variants
-        const dedupeKey = `${course.code}-${section.sectionNumber}-${session.sessionGroup}-${session.day}-${session.startMinutes}-${session.endMinutes}-${session.location}`;
+        // Deduplication key to prevent repeated sessions from student sub-group variants
+        const dedupeKey = `${course.code}-${session.sessionGroup}-${session.day}-${session.startMinutes}-${session.endMinutes}`;
         if (profAcc.sessionKeys.has(dedupeKey)) continue;
         profAcc.sessionKeys.add(dedupeKey);
 
@@ -159,7 +159,7 @@ export function extractProfessorsFromCourses(courses: Course[]): ProfessorInfo[]
         if (roomCode && roomCode !== 'Virtual') profAcc.rooms.add(roomCode);
 
         profAcc.sessions.push({
-          id: `${course.code}-${section.sectionNumber}-${session.sessionGroup}-${session.day}-${session.startMinutes}`,
+          id: `${course.code}-${session.sessionGroup}-${session.day}-${session.startMinutes}`,
           courseCode: course.code,
           courseName: course.name,
           courseColor,

@@ -5,6 +5,7 @@ import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
 import { formatLocation, getCourseColor, getCoursePrefix, minutesToTime, normalizeString, getCombinations, sessionToBitmask } from '../utils/scheduleUtils';
 import { TimetableGrid } from './TimetableGrid';
 import { GlassTimePicker } from './GlassTimePicker';
+import { CustomSelect } from './common/CustomSelect';
 import { TimeBlockerGrid } from './TimeBlockerGrid';
 import { ErrorBoundary } from './ErrorBoundary';
 
@@ -813,18 +814,19 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                             <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
                               Duración mínima
                             </label>
-                            <select 
-                              className="search-input"
-                              style={{ width: '100%', padding: '6px 10px', fontSize: '0.8rem', WebkitAppearance: 'none', appearance: 'none', background: 'rgba(0,0,0,0.2)' }}
+                            <CustomSelect
+                              size="sm"
                               value={lunchDuration}
-                              onChange={(e) => setLunchDuration(Number(e.target.value))}
-                            >
-                              <option value={30}>30 minutos</option>
-                              <option value={45}>45 minutos</option>
-                              <option value={60}>1 hora</option>
-                              <option value={90}>1 hora y media</option>
-                              <option value={120}>2 horas</option>
-                            </select>
+                              onChange={(val) => setLunchDuration(Number(val))}
+                              options={[
+                                { value: 30, label: '30 minutos' },
+                                { value: 45, label: '45 minutos' },
+                                { value: 60, label: '1 hora' },
+                                { value: 90, label: '1 hora y media' },
+                                { value: 120, label: '2 horas' }
+                              ]}
+                              ariaLabel="Duración mínima de almuerzo"
+                            />
                           </div>
                         </>
                       )}

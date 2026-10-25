@@ -1,0 +1,605 @@
+/* ==========================================================================
+   CUSTOM PICKERS & SELECTS DESIGN SYSTEM
+   Replaces default browser selects, time pickers, and wheels with custom
+   glassmorphism UI matching the visual language of UTEC Matricula.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Global Reset for Native Selects & Time Inputs
+   -------------------------------------------------------------------------- */
+select,
+input[type="time"],
+input[type="date"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Custom Select Component
+   -------------------------------------------------------------------------- */
+.custom-select-container {
+  position: relative;
+  display: inline-block;
+  min-width: 140px;
+  user-select: none;
+}
+
+.custom-select-container--sm {
+  min-width: 120px;
+}
+
+.custom-select-container--disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Trigger Button */
+.custom-select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  background: rgba(18, 26, 44, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.custom-select-container--sm .custom-select-trigger {
+  padding: 5px 10px;
+  font-size: 0.76rem;
+  border-radius: 7px;
+}
+
+.custom-select-trigger:hover {
+  background: rgba(26, 38, 64, 0.85);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), 0 0 10px rgba(59, 130, 246, 0.15);
+}
+
+.custom-select-trigger--open {
+  border-color: #3b82f6;
+  background: rgba(26, 38, 64, 0.95);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25), 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.custom-select-trigger-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.custom-select-trigger-icon {
+  display: flex;
+  align-items: center;
+  color: #60a5fa;
+  flex-shrink: 0;
+}
+
+.custom-select-trigger-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.custom-select-chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s;
+}
+
+.custom-select-chevron--open {
+  transform: rotate(180deg);
+  color: #60a5fa;
+}
+
+/* Badge in Select */
+.custom-select-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+
+/* Popover Menu */
+.custom-select-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 100%;
+  max-width: 320px;
+  background: rgba(13, 20, 36, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 11px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 24px rgba(59, 130, 246, 0.15);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  animation: customSelectFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top left;
+}
+
+.custom-select-menu--upwards {
+  top: auto;
+  bottom: calc(100% + 6px);
+  transform-origin: bottom left;
+}
+
+.custom-select-menu--right {
+  left: auto;
+  right: 0;
+  transform-origin: top right;
+}
+
+.custom-select-menu--upwards.custom-select-menu--right {
+  transform-origin: bottom right;
+}
+
+@keyframes customSelectFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Search input in select */
+.custom-select-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  position: relative;
+}
+
+.custom-select-search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.custom-select-search-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 0.76rem;
+  font-weight: 500;
+}
+
+.custom-select-search-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.custom-select-search-clear {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+}
+
+.custom-select-search-clear:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Options List & Items */
+.custom-select-options-list {
+  max-height: 250px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.35) transparent;
+}
+
+.custom-select-options-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-select-options-list::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.35);
+  border-radius: 4px;
+}
+
+.custom-select-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.custom-select-option:hover {
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+}
+
+.custom-select-option--selected {
+  background: rgba(59, 130, 246, 0.22);
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+.custom-select-option-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.custom-select-option-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-select-check-icon {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+.custom-select-empty {
+  padding: 14px;
+  text-align: center;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Custom Time Picker Component
+   -------------------------------------------------------------------------- */
+.custom-time-picker-container {
+  position: relative;
+  display: inline-block;
+  user-select: none;
+}
+
+.custom-time-picker-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 12px;
+  background: rgba(18, 26, 44, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.custom-time-picker--sm .custom-time-picker-trigger {
+  padding: 4px 8px;
+  font-size: 0.74rem;
+  border-radius: 6px;
+}
+
+.custom-time-picker-trigger:hover {
+  background: rgba(26, 38, 64, 0.9);
+  border-color: rgba(59, 130, 246, 0.45);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 10px rgba(59, 130, 246, 0.18);
+}
+
+.custom-time-picker-trigger--open {
+  border-color: #38bdf8;
+  background: rgba(26, 38, 64, 0.95);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25), 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.custom-time-picker-trigger-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.custom-time-prefix {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.custom-time-value {
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+}
+
+.custom-time-icon {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+/* Time Popover Dropdown */
+.custom-time-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 290px;
+  background: rgba(13, 20, 36, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.8), 0 0 24px rgba(56, 189, 248, 0.18);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 10px;
+  animation: customSelectFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top left;
+}
+
+.custom-time-popover--upwards {
+  top: auto;
+  bottom: calc(100% + 6px);
+  transform-origin: bottom left;
+}
+
+.custom-time-popover--right {
+  left: auto;
+  right: 0;
+  transform-origin: top right;
+}
+
+/* Popover Header */
+.time-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.time-popover-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.time-popover-icon {
+  color: #38bdf8;
+}
+
+.time-popover-preview-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Quick Presets Strip */
+.time-popover-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.time-presets-title {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.time-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.time-preset-pill {
+  padding: 4px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.time-preset-pill:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+.time-preset-pill--active {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+}
+
+/* Two Columns: Hours & Minutes */
+.time-columns-container {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 8px;
+  height: 160px;
+}
+
+.time-column-wrap {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.time-column-header {
+  padding: 5px 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
+}
+
+.time-column-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.35) transparent;
+}
+
+.time-column-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.time-column-list::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.35);
+  border-radius: 4px;
+}
+
+.time-picker-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.74rem;
+  transition: all 0.12s ease;
+}
+
+.time-picker-item:hover {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+}
+
+.time-picker-item--active {
+  background: rgba(56, 189, 248, 0.25);
+  color: #38bdf8;
+  font-weight: 800;
+}
+
+.time-item-main {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.time-item-sub {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.time-item-check {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+/* Footer Action */
+.time-popover-footer {
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.time-popover-done-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 7px;
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+}
+
+.time-popover-done-btn:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5);
+  transform: translateY(-1px);
+}
