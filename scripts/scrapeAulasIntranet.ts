@@ -188,8 +188,16 @@ async function runScraper() {
   console.log(`⚡ Concurrencia: ${config.concurrency} peticiones paralelas`);
 
   console.log('📡 Consultando catálogo de espacios...');
-  const catalog = await fetchCatalog(config.token);
-  console.log(`✅ Catálogo obtenido: ${catalog.length} aulas/espacios registrados.`);
+  const rawCatalog = await fetchCatalog(config.token);
+  
+  // Filter out E rooms (study rooms like E801-E810), rooms ending in -A (like A701-A), and L203E
+  const isExcludedRoom = (name: string) => {
+    const clean = name.trim().toUpperCase();
+    return clean.startsWith('E') || clean.endsWith('-A') || clean.endsWith('_A') || clean.startsWith('L203') || clean === 'L203E';
+  };
+
+  const catalog = rawCatalog.filter((item: RawAula) => !isExcludedRoom(item.nomAliasAula));
+  console.log(`✅ Catálogo filtrado: ${catalog.length} aulas válidas (${rawCatalog.length - catalog.length} excluidas: salas E y sub-aulas -A).`);
 
   const classroomMap = new Map<string, ClassroomInfo>();
 

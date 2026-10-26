@@ -1,11 +1,14 @@
 {
-  "updatedAt": "2026-10-26T14:52:32.795Z",
-  "weekRange": {
-    "start": "26/10/2026",
-    "end": "31/10/2026"
+  "updatedAt": "2026-10-26T17:05:52.461Z",
+  "semester": "2026-2",
+  "weeksCount": 16,
+  "dateRange": {
+    "start": "01/08/2026",
+    "end": "31/12/2026"
   },
-  "totalRooms": 111,
-  "totalEvents": 1517,
+  "totalRooms": 99,
+  "totalSemesterRawEvents": 24232,
+  "totalConsolidatedWeeklySessions": 1617,
   "classrooms": [
     {
       "id": "A1001",
@@ -216,6 +219,21 @@
         ],
         "Mie": [
           {
+            "courseCode": "ME5302",
+            "courseName": "Infraestructura Minera",
+            "sectionNumber": "1",
+            "sessionGroup": "1",
+            "day": "Mie",
+            "startTime": "08:00",
+            "endTime": "10:00",
+            "startMinutes": 480,
+            "endMinutes": 600,
+            "professor": "Apaza Nina, Jose Enrique",
+            "email": "japaza@utec.edu.pe",
+            "vacancies": 30,
+            "enrolled": 0
+          },
+          {
             "courseCode": "HH2102",
             "courseName": "Economía, Gobernanza y Relaciones de Poder",
             "sectionNumber": "10",
@@ -261,8 +279,8 @@
             "enrolled": 0
           },
           {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Reunion DEU",
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mie",
@@ -270,7 +288,7 @@
             "endTime": "17:00",
             "startMinutes": 960,
             "endMinutes": 1020,
-            "professor": "Reunion DEU",
+            "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -317,9 +335,9 @@
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Lopez Rodriguez, Naudy Ricardo",
-            "email": "nlopez@utec.edu.pe",
-            "vacancies": 40,
+            "professor": "Sanchez Ramirez, Nedher",
+            "email": "nsanchezr@utec.edu.pe",
+            "vacancies": 45,
             "enrolled": 0
           },
           {
@@ -332,9 +350,9 @@
             "endTime": "13:00",
             "startMinutes": 660,
             "endMinutes": 780,
-            "professor": "Lopez Rodriguez, Naudy Ricardo",
-            "email": "nlopez@utec.edu.pe",
-            "vacancies": 40,
+            "professor": "Sanchez Ramirez, Nedher",
+            "email": "nsanchezr@utec.edu.pe",
+            "vacancies": 45,
             "enrolled": 0
           },
           {
@@ -447,6 +465,21 @@
         ],
         "Sab": [
           {
+            "courseCode": "BI5327",
+            "courseName": "Principios de Ingeniería de Tejidos",
+            "sectionNumber": "1",
+            "sessionGroup": "1",
+            "day": "Sab",
+            "startTime": "10:00",
+            "endTime": "12:00",
+            "startMinutes": 600,
+            "endMinutes": 720,
+            "professor": "Gonzales Rojas, Karen",
+            "email": "kgonzales@utec.edu.pe",
+            "vacancies": 30,
+            "enrolled": 0
+          },
+          {
             "courseCode": "HH5101",
             "courseName": "Ética y Tecnología",
             "sectionNumber": "5",
@@ -494,36 +527,6 @@
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Lun",
-            "startTime": "08:30",
-            "endTime": "09:30",
-            "startMinutes": 510,
-            "endMinutes": 570,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Lun",
-            "startTime": "09:30",
-            "endTime": "13:30",
-            "startMinutes": 570,
-            "endMinutes": 810,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Lun",
             "startTime": "14:00",
             "endTime": "16:00",
             "startMinutes": 840,
@@ -532,50 +535,20 @@
             "email": "",
             "vacancies": 0,
             "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Grupo de Programación Competitiva",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Lun",
-            "startTime": "16:00",
-            "endTime": "21:00",
-            "startMinutes": 960,
-            "endMinutes": 1260,
-            "professor": "Grupo de Programación Competitiva",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
           }
         ],
         "Mar": [
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "evento -. Angela Ramirez",
+            "courseName": "Reunión PGA Calidad - Ing. Electrónica -  Carmen Claire Meza Coral",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mar",
-            "startTime": "08:00",
-            "endTime": "08:30",
-            "startMinutes": 480,
-            "endMinutes": 510,
-            "professor": "evento -. Angela Ramirez",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "evento- Angela Ramirez",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Mar",
-            "startTime": "08:30",
-            "endTime": "12:30",
-            "startMinutes": 510,
-            "endMinutes": 750,
-            "professor": "evento- Angela Ramirez",
+            "startTime": "10:00",
+            "endTime": "12:00",
+            "startMinutes": 600,
+            "endMinutes": 720,
+            "professor": "Reunión PGA Calidad - Ing. Electrónica -  Carmen Claire Meza Coral",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -598,16 +571,16 @@
         ],
         "Mie": [
           {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "PLANEAMIENTO LEGAL",
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mie",
-            "startTime": "09:00",
-            "endTime": "12:00",
-            "startMinutes": 540,
-            "endMinutes": 720,
-            "professor": "PLANEAMIENTO LEGAL",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -660,23 +633,7 @@
             "enrolled": 0
           }
         ],
-        "Vie": [
-          {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Vie",
-            "startTime": "09:00",
-            "endTime": "13:00",
-            "startMinutes": 540,
-            "endMinutes": 780,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          }
-        ],
+        "Vie": [],
         "Sab": []
       }
     },
@@ -747,6 +704,21 @@
             "professor": "Nuñez Del Prado Tavara, Aaron",
             "email": "anunezd@utec.edu.pe",
             "vacancies": 30,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Lun",
+            "startTime": "15:00",
+            "endTime": "16:00",
+            "startMinutes": 900,
+            "endMinutes": 960,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -1146,6 +1118,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "AM3003",
+            "courseName": "Microbiología Ambiental",
+            "sectionNumber": "1",
+            "sessionGroup": "1",
+            "day": "Lun",
+            "startTime": "18:00",
+            "endTime": "20:00",
+            "startMinutes": 1080,
+            "endMinutes": 1200,
+            "professor": "Rabitsch Musso, Ingrid",
+            "email": "irabitsch@utec.edu.pe",
+            "vacancies": 18,
+            "enrolled": 0
+          },
+          {
             "courseCode": "AD3017",
             "courseName": "Gestión de Personas y Organizaciones",
             "sectionNumber": "1",
@@ -1198,10 +1185,55 @@
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mar",
-            "startTime": "17:00",
-            "endTime": "18:00",
-            "startMinutes": 1020,
-            "endMinutes": 1080,
+            "startTime": "11:00",
+            "endTime": "12:00",
+            "startMinutes": 660,
+            "endMinutes": 720,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "12:00",
+            "endTime": "13:00",
+            "startMinutes": 720,
+            "endMinutes": 780,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "startMinutes": 780,
+            "endMinutes": 840,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
             "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
@@ -1270,6 +1302,36 @@
             "enrolled": 0
           },
           {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "15:00",
+            "endTime": "17:00",
+            "startMinutes": 900,
+            "endMinutes": 1020,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "AD4002",
             "courseName": "Supply Chain Management",
             "sectionNumber": "1",
@@ -1332,6 +1394,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "11:00",
+            "endTime": "12:00",
+            "startMinutes": 660,
+            "endMinutes": 720,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "ACTIVIDAD",
             "courseName": "Reunión de Coordinación Ciencias - Elizabeth Quintanilla",
             "sectionNumber": "-",
@@ -1354,10 +1431,55 @@
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Vie",
+            "startTime": "10:00",
+            "endTime": "11:00",
+            "startMinutes": 600,
+            "endMinutes": 660,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Vie",
             "startTime": "11:00",
             "endTime": "12:00",
             "startMinutes": 660,
             "endMinutes": 720,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Vie",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Vie",
+            "startTime": "17:00",
+            "endTime": "19:00",
+            "startMinutes": 1020,
+            "endMinutes": 1140,
             "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
@@ -1381,6 +1503,21 @@
         ],
         "Sab": [
           {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "11:00",
+            "endTime": "13:00",
+            "startMinutes": 660,
+            "endMinutes": 780,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "ACTIVIDAD",
             "courseName": "ENM V1 - Ciclo V",
             "sectionNumber": "-",
@@ -1391,6 +1528,36 @@
             "startMinutes": 660,
             "endMinutes": 1170,
             "professor": "ENM V1 - Ciclo V",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "14:00",
+            "endTime": "16:00",
+            "startMinutes": 840,
+            "endMinutes": 960,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "16:00",
+            "endTime": "18:00",
+            "startMinutes": 960,
+            "endMinutes": 1080,
+            "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -1512,6 +1679,21 @@
             "professor": "Nuñez Del Prado Tavara, Aaron",
             "email": "anunezd@utec.edu.pe",
             "vacancies": 30,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "11:00",
+            "endTime": "12:00",
+            "startMinutes": 660,
+            "endMinutes": 720,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -1684,6 +1866,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "GI2101",
             "courseName": "Empresa y Consumidor",
             "sectionNumber": "1",
@@ -1746,6 +1943,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Vie",
+            "startTime": "11:00",
+            "endTime": "12:00",
+            "startMinutes": 660,
+            "endMinutes": 720,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "PI3103",
             "courseName": "Proyectos Interdisciplinarios 3",
             "sectionNumber": "18",
@@ -1792,21 +2004,6 @@
           }
         ],
         "Sab": [
-          {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Sab",
-            "startTime": "11:00",
-            "endTime": "13:00",
-            "startMinutes": 660,
-            "endMinutes": 780,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
           {
             "courseCode": "RESERVA",
             "courseName": "RESERVADO",
@@ -1869,7 +2066,38 @@
           }
         ],
         "Vie": [],
-        "Sab": []
+        "Sab": [
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MAESTRIA TECH MBA V3 - Ciclo IV",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "08:00",
+            "endTime": "14:30",
+            "startMinutes": 480,
+            "endMinutes": 870,
+            "professor": "MAESTRIA TECH MBA V3 - Ciclo IV",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MCCP 25 V1 - Ciclo IV",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "08:00",
+            "endTime": "18:00",
+            "startMinutes": 480,
+            "endMinutes": 1080,
+            "professor": "MCCP 25 V1 - Ciclo IV",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          }
+        ]
       }
     },
     {
@@ -1932,7 +2160,23 @@
         "Mar": [],
         "Mie": [],
         "Jue": [],
-        "Vie": [],
+        "Vie": [
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "CMT V1 - Ciclo I",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Vie",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "CMT V1 - Ciclo I",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          }
+        ],
         "Sab": []
       }
     },
@@ -1952,15 +2196,15 @@
         "Sab": [
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "Ciclo 5_Energy Management",
+            "courseName": "DET V1 - Ciclo III",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Sab",
             "startTime": "08:00",
-            "endTime": "11:00",
+            "endTime": "14:30",
             "startMinutes": 480,
-            "endMinutes": 660,
-            "professor": "Ciclo 5_Energy Management",
+            "endMinutes": 870,
+            "professor": "DET V1 - Ciclo III",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -1979,13 +2223,13 @@
         "Lun": [
           {
             "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
+            "courseName": "Reservado - CIENCIAS (MN)",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Lun",
-            "startTime": "09:00",
+            "startTime": "10:00",
             "endTime": "12:00",
-            "startMinutes": 540,
+            "startMinutes": 600,
             "endMinutes": 720,
             "professor": "Reserva Institucional",
             "email": "",
@@ -2023,21 +2267,6 @@
             "enrolled": 0
           },
           {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Lun",
-            "startTime": "16:00",
-            "endTime": "18:00",
-            "startMinutes": 960,
-            "endMinutes": 1080,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
             "courseCode": "IS5202",
             "courseName": "Introducción a Business Analytics",
             "sectionNumber": "1",
@@ -2056,30 +2285,60 @@
         "Mar": [
           {
             "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
+            "courseName": "Reservado - CIENCIAS (C1V)",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mar",
-            "startTime": "10:00",
-            "endTime": "12:00",
-            "startMinutes": 600,
-            "endMinutes": 720,
+            "startTime": "09:00",
+            "endTime": "11:00",
+            "startMinutes": 540,
+            "endMinutes": 660,
             "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
           },
           {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Reserva para Grabación Marketing Posgrado",
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "12:00",
+            "endTime": "13:00",
+            "startMinutes": 720,
+            "endMinutes": 780,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "startMinutes": 780,
+            "endMinutes": 840,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mar",
             "startTime": "14:00",
-            "endTime": "18:00",
+            "endTime": "15:00",
             "startMinutes": 840,
-            "endMinutes": 1080,
-            "professor": "Reserva para Grabación Marketing Posgrado",
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -2102,6 +2361,36 @@
         ],
         "Mie": [
           {
+            "courseCode": "RESERVA",
+            "courseName": "Reservado - CIENCIAS",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "10:00",
+            "endTime": "12:00",
+            "startMinutes": 600,
+            "endMinutes": 720,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "11:00",
+            "endTime": "12:00",
+            "startMinutes": 660,
+            "endMinutes": 720,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "IN3003",
             "courseName": "Principios de Diseño de Productos y Servicios",
             "sectionNumber": "2",
@@ -2114,6 +2403,21 @@
             "professor": "Camacho Jiménez, Francisco José",
             "email": "fcamacho@utec.edu.pe",
             "vacancies": 16,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "Reserva de Espacios - Taller Club de Empleabilidad 2026 - 2 - Jair Stephano Rodriguez Calla",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "15:00",
+            "endTime": "18:00",
+            "startMinutes": 900,
+            "endMinutes": 1080,
+            "professor": "Reserva de Espacios - Taller Club de Empleabilidad 2026 - 2 - Jair Stephano Rodriguez Calla",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -2154,25 +2458,10 @@
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Jue",
-            "startTime": "10:00",
-            "endTime": "13:00",
-            "startMinutes": 600,
-            "endMinutes": 780,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Jue",
-            "startTime": "13:00",
-            "endTime": "15:00",
-            "startMinutes": 780,
-            "endMinutes": 900,
+            "startTime": "11:00",
+            "endTime": "12:00",
+            "startMinutes": 660,
+            "endMinutes": 720,
             "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
@@ -2231,27 +2520,10 @@
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Vie",
-            "startTime": "17:00",
-            "endTime": "19:00",
-            "startMinutes": 1020,
-            "endMinutes": 1140,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          }
-        ],
-        "Sab": [
-          {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Sab",
             "startTime": "14:00",
-            "endTime": "16:00",
+            "endTime": "15:00",
             "startMinutes": 840,
-            "endMinutes": 960,
+            "endMinutes": 900,
             "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
@@ -2262,17 +2534,18 @@
             "courseName": "RESERVADO",
             "sectionNumber": "-",
             "sessionGroup": "-",
-            "day": "Sab",
-            "startTime": "16:00",
-            "endTime": "18:00",
-            "startMinutes": 960,
-            "endMinutes": 1080,
+            "day": "Vie",
+            "startTime": "17:00",
+            "endTime": "19:00",
+            "startMinutes": 1020,
+            "endMinutes": 1140,
             "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
           }
-        ]
+        ],
+        "Sab": []
       }
     },
     {
@@ -2347,16 +2620,46 @@
         ],
         "Mar": [
           {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Reprogramación de Evaluación",
+            "courseCode": "RESERVA",
+            "courseName": "Reservado - CIENCIAS (EDO)",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mar",
-            "startTime": "11:00",
+            "startTime": "09:00",
+            "endTime": "11:00",
+            "startMinutes": 540,
+            "endMinutes": 660,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "12:00",
             "endTime": "13:00",
-            "startMinutes": 660,
+            "startMinutes": 720,
             "endMinutes": 780,
-            "professor": "Reprogramación de Evaluación",
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "13:00",
+            "endTime": "14:00",
+            "startMinutes": 780,
+            "endMinutes": 840,
+            "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -2377,6 +2680,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "AM3003",
+            "courseName": "Microbiología Ambiental",
+            "sectionNumber": "1",
+            "sessionGroup": "1",
+            "day": "Mar",
+            "startTime": "17:00",
+            "endTime": "18:00",
+            "startMinutes": 1020,
+            "endMinutes": 1080,
+            "professor": "Rabitsch Musso, Ingrid",
+            "email": "irabitsch@utec.edu.pe",
+            "vacancies": 18,
+            "enrolled": 0
+          },
+          {
             "courseCode": "CI5391",
             "courseName": "Diseño de Pavimentos",
             "sectionNumber": "1",
@@ -2394,16 +2712,46 @@
         ],
         "Mie": [
           {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Grupo de Programación Competitiva",
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mie",
-            "startTime": "10:00",
+            "startTime": "11:00",
+            "endTime": "12:00",
+            "startMinutes": 660,
+            "endMinutes": 720,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "14:00",
             "endTime": "15:00",
-            "startMinutes": 600,
+            "startMinutes": 840,
             "endMinutes": 900,
-            "professor": "Grupo de Programación Competitiva",
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "Reservado - CIENCIAS (CV)",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "15:00",
+            "endTime": "17:00",
+            "startMinutes": 900,
+            "endMinutes": 1020,
+            "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -2481,6 +2829,21 @@
             "startMinutes": 840,
             "endMinutes": 960,
             "professor": "Taller de Proyectos Especiales - Jimena Muñoz Rios",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "16:00",
+            "endTime": "18:00",
+            "startMinutes": 960,
+            "endMinutes": 1080,
+            "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -2861,9 +3224,9 @@
             "endTime": "17:00",
             "startMinutes": 900,
             "endMinutes": 1020,
-            "professor": "Lopez Rodriguez, Naudy Ricardo",
-            "email": "nlopez@utec.edu.pe",
-            "vacancies": 40,
+            "professor": "Sanchez Ramirez, Nedher",
+            "email": "nsanchezr@utec.edu.pe",
+            "vacancies": 45,
             "enrolled": 0
           },
           {
@@ -3080,6 +3443,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "12:00",
+            "endTime": "13:00",
+            "startMinutes": 720,
+            "endMinutes": 780,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "CC6103",
             "courseName": "Cálculo de una Variable",
             "sectionNumber": "6",
@@ -3169,6 +3547,21 @@
             "professor": "Orbegoso Salas, Istavay Alberto",
             "email": "iorbegoso@utec.edu.pe",
             "vacancies": 30,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -3326,6 +3719,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "AD2011",
+            "courseName": "Antropología Aplicada a los Negocios",
+            "sectionNumber": "1",
+            "sessionGroup": "1",
+            "day": "Vie",
+            "startTime": "15:00",
+            "endTime": "17:00",
+            "startMinutes": 900,
+            "endMinutes": 1020,
+            "professor": "XICOTA TORRES, ESTER",
+            "email": "exicota@utec.edu.pe",
+            "vacancies": 30,
+            "enrolled": 0
+          },
+          {
             "courseCode": "CI5351",
             "courseName": "Ingeniería Geotécnica II",
             "sectionNumber": "1",
@@ -3454,8 +3862,8 @@
             "endTime": "17:00",
             "startMinutes": 840,
             "endMinutes": 1020,
-            "professor": "Vento Garcia, Oscar Arturo",
-            "email": "ovento@utec.edu.pe",
+            "professor": "Espinoza Matos, José Francisco",
+            "email": "jespinozam@utec.edu.pe",
             "vacancies": 25,
             "enrolled": 0
           },
@@ -3599,6 +4007,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "ME5303",
+            "courseName": "Gestión de Equipos y Maquinarias",
+            "sectionNumber": "1",
+            "sessionGroup": "1",
+            "day": "Mie",
+            "startTime": "10:00",
+            "endTime": "12:00",
+            "startMinutes": 600,
+            "endMinutes": 720,
+            "professor": "Apaza Nina, Jose Enrique",
+            "email": "japaza@utec.edu.pe",
+            "vacancies": 24,
+            "enrolled": 0
+          },
+          {
             "courseCode": "IQ5002",
             "courseName": "Diseño de Procesos Químicos",
             "sectionNumber": "1",
@@ -3626,6 +4049,21 @@
             "professor": "Olivera Oliva, Davy Alonso",
             "email": "volivera@utec.edu.pe",
             "vacancies": 30,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "17:00",
+            "endTime": "18:00",
+            "startMinutes": 1020,
+            "endMinutes": 1080,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -3751,21 +4189,6 @@
             "email": "dparada@utec.edu.pe",
             "vacancies": 12,
             "enrolled": 0
-          },
-          {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Vie",
-            "startTime": "19:00",
-            "endTime": "20:00",
-            "startMinutes": 1140,
-            "endMinutes": 1200,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
           }
         ],
         "Sab": [
@@ -3797,23 +4220,8 @@
       "sessionsByDay": {
         "Lun": [
           {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Grupo de Programación Competitiva",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Lun",
-            "startTime": "09:00",
-            "endTime": "14:00",
-            "startMinutes": 540,
-            "endMinutes": 840,
-            "professor": "Grupo de Programación Competitiva",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Grupo de Programación Competitiva",
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Lun",
@@ -3821,7 +4229,7 @@
             "endTime": "15:00",
             "startMinutes": 840,
             "endMinutes": 900,
-            "professor": "Grupo de Programación Competitiva",
+            "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -3844,16 +4252,16 @@
         ],
         "Mar": [
           {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Reprogramación EA3 Algebra lineal",
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mar",
-            "startTime": "09:00",
-            "endTime": "11:00",
-            "startMinutes": 540,
-            "endMinutes": 660,
-            "professor": "Reprogramación EA3 Algebra lineal",
+            "startTime": "11:00",
+            "endTime": "13:00",
+            "startMinutes": 660,
+            "endMinutes": 780,
+            "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -3864,10 +4272,10 @@
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mar",
-            "startTime": "11:00",
-            "endTime": "13:00",
-            "startMinutes": 660,
-            "endMinutes": 780,
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
             "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
@@ -3892,14 +4300,44 @@
         "Mie": [
           {
             "courseCode": "RESERVA",
+            "courseName": "Reservado - CIENCIAS (IM)",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "10:00",
+            "endTime": "12:00",
+            "startMinutes": 600,
+            "endMinutes": 720,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
             "courseName": "RESERVADO",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mie",
             "startTime": "14:00",
-            "endTime": "16:00",
+            "endTime": "15:00",
             "startMinutes": 840,
-            "endMinutes": 960,
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "16:00",
+            "endTime": "18:00",
+            "startMinutes": 960,
+            "endMinutes": 1080,
             "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
@@ -3913,10 +4351,40 @@
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Jue",
+            "startTime": "11:00",
+            "endTime": "12:00",
+            "startMinutes": 660,
+            "endMinutes": 720,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
             "startTime": "14:00",
             "endTime": "16:00",
             "startMinutes": 840,
             "endMinutes": 960,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "16:00",
+            "endTime": "18:00",
+            "startMinutes": 960,
+            "endMinutes": 1080,
             "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
@@ -4045,7 +4513,7 @@
           },
           {
             "courseCode": "RESERVA",
-            "courseName": "Reservado - Ciencias (QGyE)",
+            "courseName": "RESERVADO",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mar",
@@ -4228,8 +4696,23 @@
             "enrolled": 0
           },
           {
+            "courseCode": "RESERVA",
+            "courseName": "Reservado - CIENCIAS (IME)",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "10:00",
+            "endTime": "12:00",
+            "startMinutes": 600,
+            "endMinutes": 720,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "ACTIVIDAD",
-            "courseName": "Grupo de Programación Competitiva",
+            "courseName": "Reserva para Examenes Parciales",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Jue",
@@ -4237,7 +4720,7 @@
             "endTime": "15:00",
             "startMinutes": 600,
             "endMinutes": 900,
-            "professor": "Grupo de Programación Competitiva",
+            "professor": "Reserva para Examenes Parciales",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -4320,7 +4803,23 @@
             "enrolled": 0
           }
         ],
-        "Sab": []
+        "Sab": [
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "ENM V2 - Ciclo II",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "08:00",
+            "endTime": "19:30",
+            "startMinutes": 480,
+            "endMinutes": 1170,
+            "professor": "ENM V2 - Ciclo II",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          }
+        ]
       }
     },
     {
@@ -4422,6 +4921,21 @@
             "professor": "Nuñez Del Prado Tavara, Aaron",
             "email": "anunezd@utec.edu.pe",
             "vacancies": 20,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "Alexander Peralta",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "14:00",
+            "endTime": "16:00",
+            "startMinutes": 840,
+            "endMinutes": 960,
+            "professor": "Alexander Peralta",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -4534,6 +5048,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "11:00",
+            "endTime": "13:00",
+            "startMinutes": 660,
+            "endMinutes": 780,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "PI3103",
             "courseName": "Proyectos Interdisciplinarios 3",
             "sectionNumber": "7",
@@ -4566,6 +5095,21 @@
         ],
         "Vie": [
           {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Vie",
+            "startTime": "10:00",
+            "endTime": "13:00",
+            "startMinutes": 600,
+            "endMinutes": 780,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "ACTIVIDAD",
             "courseName": "MCI V6 - Ciclo I",
             "sectionNumber": "-",
@@ -4581,7 +5125,38 @@
             "enrolled": 0
           }
         ],
-        "Sab": []
+        "Sab": [
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MEM V2 - Ciclo IV",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "09:00",
+            "endTime": "14:00",
+            "startMinutes": 540,
+            "endMinutes": 840,
+            "professor": "MEM V2 - Ciclo IV",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "AM6102",
+            "courseName": "Química Orgánica e Inorgánica",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Sab",
+            "startTime": "09:00",
+            "endTime": "13:00",
+            "startMinutes": 540,
+            "endMinutes": 780,
+            "professor": "Flores Flores, Myra",
+            "email": "mfloresf@utec.edu.pe",
+            "vacancies": 20,
+            "enrolled": 0
+          }
+        ]
       }
     },
     {
@@ -4639,6 +5214,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Lun",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "IQ4003",
             "courseName": "Diseño de Reactores Químicos",
             "sectionNumber": "1",
@@ -4678,7 +5268,7 @@
             "endTime": "21:00",
             "startMinutes": 1140,
             "endMinutes": 1260,
-            "professor": "Espinoza Matos, José Francisco",
+            "professor": "Pino Matos, Jose",
             "email": "jpino@utec.edu.pe",
             "vacancies": 30,
             "enrolled": 0
@@ -4740,7 +5330,7 @@
             "endTime": "15:00",
             "startMinutes": 840,
             "endMinutes": 900,
-            "professor": "Espinoza Matos, José Francisco",
+            "professor": "Pino Matos, Jose",
             "email": "jpino@utec.edu.pe",
             "vacancies": 30,
             "enrolled": 0
@@ -4901,7 +5491,7 @@
           },
           {
             "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
+            "courseName": "Reservado - CIENCIAS (AL)",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Jue",
@@ -4916,7 +5506,7 @@
           },
           {
             "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
+            "courseName": "Reservado - CIENCIAS (AL)",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Jue",
@@ -5084,22 +5674,6 @@
             "enrolled": 0
           }
         ]
-      }
-    },
-    {
-      "id": "A701-A",
-      "code": "A701-A",
-      "rawLocation": "A701-A",
-      "displayName": "A701-A",
-      "type": "otro",
-      "floor": 1,
-      "sessionsByDay": {
-        "Lun": [],
-        "Mar": [],
-        "Mie": [],
-        "Jue": [],
-        "Vie": [],
-        "Sab": []
       }
     },
     {
@@ -5395,9 +5969,9 @@
             "endTime": "16:00",
             "startMinutes": 840,
             "endMinutes": 960,
-            "professor": "Lopez Rodriguez, Naudy Ricardo",
-            "email": "nlopez@utec.edu.pe",
-            "vacancies": 40,
+            "professor": "Sanchez Ramirez, Nedher",
+            "email": "nsanchezr@utec.edu.pe",
+            "vacancies": 45,
             "enrolled": 0
           },
           {
@@ -6222,14 +6796,29 @@
           },
           {
             "courseCode": "RESERVA",
+            "courseName": "Reservado - CIENCIAS (FC)",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Lun",
+            "startTime": "14:00",
+            "endTime": "16:00",
+            "startMinutes": 840,
+            "endMinutes": 960,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
             "courseName": "RESERVADO",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Lun",
-            "startTime": "16:00",
-            "endTime": "18:00",
-            "startMinutes": 960,
-            "endMinutes": 1080,
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
             "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
@@ -6292,7 +6881,7 @@
             "endTime": "13:00",
             "startMinutes": 660,
             "endMinutes": 780,
-            "professor": "Espinoza Matos, José Francisco",
+            "professor": "Pino Matos, Jose",
             "email": "jpino@utec.edu.pe",
             "vacancies": 30,
             "enrolled": 0
@@ -6999,6 +7588,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "BI4014",
+            "courseName": "Fisiología y Fisiopatología",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Jue",
+            "startTime": "16:00",
+            "endTime": "20:00",
+            "startMinutes": 960,
+            "endMinutes": 1200,
+            "professor": "Manrique Chicoma, Hugo",
+            "email": "hmanriquec@utec.edu.pe",
+            "vacancies": 30,
+            "enrolled": 0
+          },
+          {
             "courseCode": "AD6100",
             "courseName": "Emprendimiento I",
             "sectionNumber": "3",
@@ -7073,6 +7677,21 @@
             "professor": "Escudero Villanueva, Alfredo Luis",
             "email": "aescudero@utec.edu.pe",
             "vacancies": 30,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Vie",
+            "startTime": "15:00",
+            "endTime": "17:00",
+            "startMinutes": 900,
+            "endMinutes": 1020,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -7222,6 +7841,21 @@
             "professor": "Gutierrez Alva, Julio",
             "email": "jgalva@utec.edu.pe",
             "vacancies": 44,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Lun",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -8353,21 +8987,6 @@
             "enrolled": 0
           },
           {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Asesoría presencial del curso de Ciencia de los Materiales - Repaso EA3",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Mie",
-            "startTime": "18:00",
-            "endTime": "20:00",
-            "startMinutes": 1080,
-            "endMinutes": 1200,
-            "professor": "Asesoría presencial del curso de Ciencia de los Materiales - Repaso EA3",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
             "courseCode": "AD3018",
             "courseName": "Gerencia de Productos Digitales II",
             "sectionNumber": "2",
@@ -8520,6 +9139,21 @@
             "email": "",
             "vacancies": 0,
             "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Vie",
+            "startTime": "17:30",
+            "endTime": "19:30",
+            "startMinutes": 1050,
+            "endMinutes": 1170,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
           }
         ],
         "Sab": [
@@ -8593,6 +9227,21 @@
             "professor": "Lozano Bravo, Miguel Angel",
             "email": "mlozano@utec.edu.pe",
             "vacancies": 20,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Lun",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -9233,6 +9882,21 @@
             "email": "cdiaze@utec.edu.pe",
             "vacancies": 45,
             "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "Asesorías - Programación II",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "20:00",
+            "endTime": "22:00",
+            "startMinutes": 1200,
+            "endMinutes": 1320,
+            "professor": "Asesorías - Programación II",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
           }
         ],
         "Mie": [
@@ -9264,6 +9928,21 @@
             "professor": "Antonini Bova, Claudia Fausta Maura",
             "email": "cantonini@utec.edu.pe",
             "vacancies": 45,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "CI4034",
+            "courseName": "Ingeniería de Costos en la Construcción",
+            "sectionNumber": "2",
+            "sessionGroup": "2",
+            "day": "Mie",
+            "startTime": "12:00",
+            "endTime": "13:00",
+            "startMinutes": 720,
+            "endMinutes": 780,
+            "professor": "Suarez Torres, Harold Alberto",
+            "email": "hsuarezt@utec.edu.pe",
+            "vacancies": 30,
             "enrolled": 0
           },
           {
@@ -9360,7 +10039,7 @@
           },
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "Grupo de Programación Competitiva",
+            "courseName": "Mantenimiento TI",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Jue",
@@ -9368,7 +10047,7 @@
             "endTime": "15:00",
             "startMinutes": 780,
             "endMinutes": 900,
-            "professor": "Grupo de Programación Competitiva",
+            "professor": "Mantenimiento TI",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -9567,6 +10246,21 @@
             "professor": "Huamanchahua Canchanya, Deyby",
             "email": "dhuamanchahua@utec.edu.pe",
             "vacancies": 20,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Lun",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -9796,21 +10490,6 @@
             "professor": "Michhue Vela, Gabriel Percy",
             "email": "gmichhue@utec.edu.pe",
             "vacancies": 22,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Juan Carlos Bueno Villanueva",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Mie",
-            "startTime": "10:00",
-            "endTime": "11:00",
-            "startMinutes": 600,
-            "endMinutes": 660,
-            "professor": "Juan Carlos Bueno Villanueva",
-            "email": "",
-            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -10058,21 +10737,6 @@
             "email": "lperes@utec.edu.pe",
             "vacancies": 20,
             "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "IEEEXtreme 20.0",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Sab",
-            "startTime": "11:00",
-            "endTime": "19:00",
-            "startMinutes": 660,
-            "endMinutes": 1140,
-            "professor": "IEEEXtreme 20.0",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
           }
         ]
       }
@@ -10267,6 +10931,21 @@
             "email": "vflores@utec.edu.pe",
             "vacancies": 24,
             "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "ENM V1",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "20:00",
+            "endTime": "22:00",
+            "startMinutes": 1200,
+            "endMinutes": 1320,
+            "professor": "ENM V1",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
           }
         ],
         "Mie": [
@@ -10423,21 +11102,6 @@
             "enrolled": 0
           },
           {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Jue",
-            "startTime": "13:00",
-            "endTime": "15:00",
-            "startMinutes": 780,
-            "endMinutes": 900,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
             "courseCode": "GI3101",
             "courseName": "Finanzas Empresariales",
             "sectionNumber": "1",
@@ -10558,21 +11222,6 @@
             "email": "lfloresl@utec.edu.pe",
             "vacancies": 45,
             "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "IEEEXtreme 20.0",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Vie",
-            "startTime": "18:00",
-            "endTime": "22:00",
-            "startMinutes": 1080,
-            "endMinutes": 1320,
-            "professor": "IEEEXtreme 20.0",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
           }
         ],
         "Sab": [
@@ -10587,6 +11236,21 @@
             "startMinutes": 480,
             "endMinutes": 1050,
             "professor": "CD&IA V3 - Ciclo V",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "Reserva IBT - Laura Felices Alvarez",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "12:00",
+            "endTime": "17:00",
+            "startMinutes": 720,
+            "endMinutes": 1020,
+            "professor": "Reserva IBT - Laura Felices Alvarez",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -10842,7 +11506,22 @@
             "endTime": "14:00",
             "startMinutes": 720,
             "endMinutes": 840,
-            "professor": "Luis Ayala",
+            "professor": "Sanchez Ramirez, Nedher",
+            "email": "nsanchezr@utec.edu.pe",
+            "vacancies": 45,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -11245,51 +11924,6 @@
         ],
         "Mie": [
           {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Mie",
-            "startTime": "10:00",
-            "endTime": "12:00",
-            "startMinutes": 600,
-            "endMinutes": 720,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "CD&IA V5 - Ciclo II",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Mie",
-            "startTime": "14:00",
-            "endTime": "17:00",
-            "startMinutes": 840,
-            "endMinutes": 1020,
-            "professor": "CD&IA V5 - Ciclo II",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Mie",
-            "startTime": "17:00",
-            "endTime": "18:00",
-            "startMinutes": 1020,
-            "endMinutes": 1080,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
             "courseCode": "CC2101",
             "courseName": "Ecuaciones Diferenciales",
             "sectionNumber": "2",
@@ -11395,6 +12029,21 @@
             "email": "",
             "vacancies": 0,
             "enrolled": 0
+          },
+          {
+            "courseCode": "IQ5336",
+            "courseName": "Procesos Metalúrgicos",
+            "sectionNumber": "1",
+            "sessionGroup": "1",
+            "day": "Jue",
+            "startTime": "19:00",
+            "endTime": "22:00",
+            "startMinutes": 1140,
+            "endMinutes": 1320,
+            "professor": "Guerrero Guevara, Jose Luis",
+            "email": "jguerrero@utec.edu.pe",
+            "vacancies": 12,
+            "enrolled": 0
           }
         ],
         "Vie": [
@@ -11456,6 +12105,21 @@
             "professor": "Pino Matos, Jose",
             "email": "jpino@utec.edu.pe",
             "vacancies": 30,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Vie",
+            "startTime": "16:00",
+            "endTime": "18:00",
+            "startMinutes": 960,
+            "endMinutes": 1080,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           }
         ],
@@ -11522,10 +12186,10 @@
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Lun",
-            "startTime": "15:00",
-            "endTime": "16:00",
-            "startMinutes": 900,
-            "endMinutes": 960,
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
             "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
@@ -11636,6 +12300,21 @@
             "professor": "Volodina Egorovna de Denegri,  Ludmila",
             "email": "lvolodina@utec.edu.pe",
             "vacancies": 24,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "ENM V2",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "19:00",
+            "endTime": "22:00",
+            "startMinutes": 1140,
+            "endMinutes": 1320,
+            "professor": "ENM V2",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           }
         ],
@@ -11806,6 +12485,21 @@
             "email": "",
             "vacancies": 0,
             "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "ENM V2",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "19:00",
+            "endTime": "22:00",
+            "startMinutes": 1140,
+            "endMinutes": 1320,
+            "professor": "ENM V2",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
           }
         ],
         "Vie": [
@@ -11870,7 +12564,23 @@
             "enrolled": 0
           }
         ],
-        "Sab": []
+        "Sab": [
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "CD&IA V4 - Ciclo IV",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "08:00",
+            "endTime": "17:00",
+            "startMinutes": 480,
+            "endMinutes": 1020,
+            "professor": "CD&IA V4 - Ciclo IV",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          }
+        ]
       }
     },
     {
@@ -11940,6 +12650,21 @@
             "professor": "Kalinowski Castillo, Ivo Marek",
             "email": "ikalinowski@utec.edu.pe",
             "vacancies": 20,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Lun",
+            "startTime": "17:00",
+            "endTime": "19:00",
+            "startMinutes": 1020,
+            "endMinutes": 1140,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           }
         ],
@@ -12281,7 +13006,23 @@
             "enrolled": 0
           }
         ],
-        "Sab": []
+        "Sab": [
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MEM V3 - Ciclo I",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "09:00",
+            "endTime": "18:00",
+            "startMinutes": 540,
+            "endMinutes": 1080,
+            "professor": "MEM V3 - Ciclo I",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          }
+        ]
       }
     },
     {
@@ -12336,6 +13077,21 @@
             "professor": "Meza Huallpa, Quemer Luis",
             "email": "qmeza@utec.edu.pe",
             "vacancies": 45,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Lun",
+            "startTime": "14:00",
+            "endTime": "15:00",
+            "startMinutes": 840,
+            "endMinutes": 900,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -12416,21 +13172,6 @@
             "enrolled": 0
           },
           {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Mar",
-            "startTime": "12:00",
-            "endTime": "13:00",
-            "startMinutes": 720,
-            "endMinutes": 780,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
             "courseCode": "IN5009",
             "courseName": "Estrategia de Operaciones",
             "sectionNumber": "1",
@@ -12443,6 +13184,21 @@
             "professor": "De La Puente Maldonado, Jose Gaspar",
             "email": "jdelapuente@utec.edu.pe",
             "vacancies": 25,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "16:00",
+            "endTime": "17:00",
+            "startMinutes": 960,
+            "endMinutes": 1020,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -12720,24 +13476,25 @@
             "email": "jvalencia@utec.edu.pe",
             "vacancies": 40,
             "enrolled": 0
-          },
+          }
+        ],
+        "Sab": [
           {
             "courseCode": "ACTIVIDAD",
             "courseName": "MA&IA V1 - Ciclo IV",
             "sectionNumber": "-",
             "sessionGroup": "-",
-            "day": "Vie",
-            "startTime": "19:00",
-            "endTime": "21:00",
-            "startMinutes": 1140,
-            "endMinutes": 1260,
+            "day": "Sab",
+            "startTime": "08:00",
+            "endTime": "14:30",
+            "startMinutes": 480,
+            "endMinutes": 870,
             "professor": "MA&IA V1 - Ciclo IV",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
           }
-        ],
-        "Sab": []
+        ]
       }
     },
     {
@@ -13180,21 +13937,6 @@
             "enrolled": 0
           },
           {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Sab",
-            "startTime": "11:00",
-            "endTime": "13:00",
-            "startMinutes": 660,
-            "endMinutes": 780,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
             "courseCode": "HH5101",
             "courseName": "Ética y Tecnología",
             "sectionNumber": "10",
@@ -13558,21 +14300,6 @@
             "enrolled": 0
           },
           {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Jue",
-            "startTime": "17:00",
-            "endTime": "18:00",
-            "startMinutes": 1020,
-            "endMinutes": 1080,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
             "courseCode": "BI5319",
             "courseName": "Nanotecnología",
             "sectionNumber": "1",
@@ -13831,6 +14558,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "16:00",
+            "endTime": "18:00",
+            "startMinutes": 960,
+            "endMinutes": 1080,
+            "professor": "Reserva Institucional",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "PI3103",
             "courseName": "Proyectos Interdisciplinarios 3",
             "sectionNumber": "11",
@@ -13979,7 +14721,7 @@
             "endTime": "10:00",
             "startMinutes": 420,
             "endMinutes": 600,
-            "professor": "Donayre Torres, Alberto Jesus",
+            "professor": "Suarez Torres, Harold Alberto",
             "email": "hsuarezt@utec.edu.pe",
             "vacancies": 30,
             "enrolled": 0
@@ -14077,21 +14819,6 @@
             "enrolled": 0
           },
           {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Vie",
-            "startTime": "14:00",
-            "endTime": "15:00",
-            "startMinutes": 840,
-            "endMinutes": 900,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
             "courseCode": "ACTIVIDAD",
             "courseName": "MCI V6",
             "sectionNumber": "-",
@@ -14108,6 +14835,21 @@
           }
         ],
         "Sab": [
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MEM V2",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "08:00",
+            "endTime": "17:00",
+            "startMinutes": 480,
+            "endMinutes": 1020,
+            "professor": "MEM V2",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
           {
             "courseCode": "ACTIVIDAD",
             "courseName": "Actividades ingresantes UTEC -  Luis Hurtado Mondoñedo",
@@ -14182,15 +14924,15 @@
           },
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "Taller de salud integral para alumnos de peer mentoring - #SDO-7748",
+            "courseName": "Reserva para Exámenes Parciales",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Lun",
-            "startTime": "14:00",
-            "endTime": "15:00",
-            "startMinutes": 840,
-            "endMinutes": 900,
-            "professor": "Taller de salud integral para alumnos de peer mentoring - #SDO-7748",
+            "startTime": "13:00",
+            "endTime": "18:00",
+            "startMinutes": 780,
+            "endMinutes": 1080,
+            "professor": "Reserva para Exámenes Parciales",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -14208,6 +14950,21 @@
             "professor": "Villavicencio Antunez, Jorge",
             "email": "jvillavicencio@utec.edu.pe",
             "vacancies": 30,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MANTENIMIENTO TI - Cristhian Blasido",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Lun",
+            "startTime": "20:00",
+            "endTime": "22:00",
+            "startMinutes": 1200,
+            "endMinutes": 1320,
+            "professor": "MANTENIMIENTO TI - Cristhian Blasido",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           }
         ],
@@ -14241,50 +14998,20 @@
             "email": "lobispo@utec.edu.pe",
             "vacancies": 25,
             "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Pruebas de imagen y control para la Conferencia-Workshop y CTF - #SDO-7909",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Mar",
-            "startTime": "13:00",
-            "endTime": "15:00",
-            "startMinutes": 780,
-            "endMinutes": 900,
-            "professor": "Pruebas de imagen y control para la Conferencia-Workshop y CTF - #SDO-7909",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Proyección Interna HACS - #SDO-8030",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Mar",
-            "startTime": "15:00",
-            "endTime": "20:00",
-            "startMinutes": 900,
-            "endMinutes": 1200,
-            "professor": "Proyección Interna HACS - #SDO-8030",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
           }
         ],
         "Mie": [
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "FUSICA SESSION - #SDO-7656",
+            "courseName": "#SDO-7643 Global Mining Guidelines Group - GMG - Lesly Morocho",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mie",
-            "startTime": "12:00",
-            "endTime": "20:30",
-            "startMinutes": 720,
-            "endMinutes": 1230,
-            "professor": "FUSICA SESSION - #SDO-7656",
+            "startTime": "07:00",
+            "endTime": "22:00",
+            "startMinutes": 420,
+            "endMinutes": 1320,
+            "professor": "#SDO-7643 Global Mining Guidelines Group - GMG - Lesly Morocho",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -14293,15 +15020,15 @@
         "Jue": [
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "#SDO-5168 Final DISRUPTON 2026 - Cindy Archenti",
+            "courseName": "#SDO-6230 Congreso Americancol - Andrea Valencia",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Jue",
             "startTime": "07:00",
-            "endTime": "20:00",
+            "endTime": "22:00",
             "startMinutes": 420,
-            "endMinutes": 1200,
-            "professor": "#SDO-5168 Final DISRUPTON 2026 - Cindy Archenti",
+            "endMinutes": 1320,
+            "professor": "#SDO-6230 Congreso Americancol - Andrea Valencia",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -14310,15 +15037,15 @@
         "Vie": [
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "#SDO-5168 Final DISRUPTON 2026 - Cindy Archenti",
+            "courseName": "Reserva - Enrique Stiglich",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Vie",
             "startTime": "07:00",
-            "endTime": "20:00",
+            "endTime": "22:00",
             "startMinutes": 420,
-            "endMinutes": 1200,
-            "professor": "#SDO-5168 Final DISRUPTON 2026 - Cindy Archenti",
+            "endMinutes": 1320,
+            "professor": "Reserva - Enrique Stiglich",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -14327,7 +15054,7 @@
         "Sab": [
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "#SDO-7539 CSH - CTF - Maria Belen Ortiz",
+            "courseName": "#SDO-6554 OPEN DAY STEM - Israel Alpaca",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Sab",
@@ -14335,7 +15062,7 @@
             "endTime": "19:00",
             "startMinutes": 420,
             "endMinutes": 1140,
-            "professor": "#SDO-7539 CSH - CTF - Maria Belen Ortiz",
+            "professor": "#SDO-6554 OPEN DAY STEM - Israel Alpaca",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -14490,21 +15217,6 @@
             "enrolled": 0
           },
           {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Taller de salud integral para alumnos de peer mentoring - #SDO-7745",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Mar",
-            "startTime": "13:00",
-            "endTime": "14:00",
-            "startMinutes": 780,
-            "endMinutes": 840,
-            "professor": "Taller de salud integral para alumnos de peer mentoring - #SDO-7745",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
             "courseCode": "CS2013",
             "courseName": "Programación III",
             "sectionNumber": "1",
@@ -14552,21 +15264,6 @@
             "enrolled": 0
           },
           {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Taller de salud integral para alumnos de peer mentoring - #SDO-7746",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Mie",
-            "startTime": "14:00",
-            "endTime": "15:00",
-            "startMinutes": 840,
-            "endMinutes": 900,
-            "professor": "Taller de salud integral para alumnos de peer mentoring - #SDO-7746",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
             "courseCode": "CC1141",
             "courseName": "Química General",
             "sectionNumber": "1",
@@ -14597,72 +15294,11 @@
             "enrolled": 0
           }
         ],
-        "Jue": [
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Congreso ASM UTEC - Fátima Castillo - #SDO-8084",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Jue",
-            "startTime": "08:00",
-            "endTime": "11:00",
-            "startMinutes": 480,
-            "endMinutes": 660,
-            "professor": "Congreso ASM UTEC - Fátima Castillo - #SDO-8084",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Taller de salud integral para alumnos de peer mentoring - #SDO-7747",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Jue",
-            "startTime": "11:00",
-            "endTime": "12:00",
-            "startMinutes": 660,
-            "endMinutes": 720,
-            "professor": "Taller de salud integral para alumnos de peer mentoring - #SDO-7747",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Congreso ASM UTEC - Fátima Castillo - #SDO-8084",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Jue",
-            "startTime": "12:00",
-            "endTime": "18:00",
-            "startMinutes": 720,
-            "endMinutes": 1080,
-            "professor": "Congreso ASM UTEC - Fátima Castillo - #SDO-8084",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Tea & Talk para Padres - #SDO-8521",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Jue",
-            "startTime": "18:00",
-            "endTime": "22:00",
-            "startMinutes": 1080,
-            "endMinutes": 1320,
-            "professor": "Tea & Talk para Padres - #SDO-8521",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          }
-        ],
+        "Jue": [],
         "Vie": [
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "#SDO-7578 EA3 Ciencia de los Materiales - Alejandro Rios",
+            "courseName": "#SDO-7578 EA2Ciencia de los Materiales - Alejandro Rios",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Vie",
@@ -14670,29 +15306,14 @@
             "endTime": "10:00",
             "startMinutes": 480,
             "endMinutes": 600,
-            "professor": "#SDO-7578 EA3 Ciencia de los Materiales - Alejandro Rios",
+            "professor": "#SDO-7578 EA2Ciencia de los Materiales - Alejandro Rios",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
           },
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "Congreso ASM UTEC - Fátima Castillo - #SDO-8085",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Vie",
-            "startTime": "10:00",
-            "endTime": "14:00",
-            "startMinutes": 600,
-            "endMinutes": 840,
-            "professor": "Congreso ASM UTEC - Fátima Castillo - #SDO-8085",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "#SDO-7578 EA3 Ciencia de los Materiales - Alejandro Rios",
+            "courseName": "#SDO-7578 EA1Ciencia de los Materiales - Alejandro Rios",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Vie",
@@ -14700,22 +15321,7 @@
             "endTime": "16:00",
             "startMinutes": 840,
             "endMinutes": 960,
-            "professor": "#SDO-7578 EA3 Ciencia de los Materiales - Alejandro Rios",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Congreso ASM UTEC - Fátima Castillo - #SDO-8085",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Vie",
-            "startTime": "16:00",
-            "endTime": "18:00",
-            "startMinutes": 960,
-            "endMinutes": 1080,
-            "professor": "Congreso ASM UTEC - Fátima Castillo - #SDO-8085",
+            "professor": "#SDO-7578 EA1Ciencia de los Materiales - Alejandro Rios",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -14724,180 +15330,20 @@
         "Sab": [
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "Conferencia de Software y Cloud ACM UTEC  - #SDO-8029",
+            "courseName": "Open Day UTEC - Elmer Dueñas - #SDO-7694",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Sab",
-            "startTime": "09:00",
-            "endTime": "16:30",
-            "startMinutes": 540,
-            "endMinutes": 990,
-            "professor": "Conferencia de Software y Cloud ACM UTEC  - #SDO-8029",
+            "startTime": "07:00",
+            "endTime": "19:00",
+            "startMinutes": 420,
+            "endMinutes": 1140,
+            "professor": "Open Day UTEC - Elmer Dueñas - #SDO-7694",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
           }
         ]
-      }
-    },
-    {
-      "id": "E801",
-      "code": "E801",
-      "rawLocation": "E801",
-      "displayName": "E801",
-      "type": "otro",
-      "floor": 1,
-      "sessionsByDay": {
-        "Lun": [],
-        "Mar": [],
-        "Mie": [],
-        "Jue": [],
-        "Vie": [],
-        "Sab": []
-      }
-    },
-    {
-      "id": "E802",
-      "code": "E802",
-      "rawLocation": "E802",
-      "displayName": "E802",
-      "type": "otro",
-      "floor": 1,
-      "sessionsByDay": {
-        "Lun": [],
-        "Mar": [],
-        "Mie": [],
-        "Jue": [],
-        "Vie": [],
-        "Sab": []
-      }
-    },
-    {
-      "id": "E803",
-      "code": "E803",
-      "rawLocation": "E803",
-      "displayName": "E803",
-      "type": "otro",
-      "floor": 1,
-      "sessionsByDay": {
-        "Lun": [],
-        "Mar": [],
-        "Mie": [],
-        "Jue": [],
-        "Vie": [],
-        "Sab": []
-      }
-    },
-    {
-      "id": "E804",
-      "code": "E804",
-      "rawLocation": "E804",
-      "displayName": "E804",
-      "type": "otro",
-      "floor": 1,
-      "sessionsByDay": {
-        "Lun": [],
-        "Mar": [],
-        "Mie": [],
-        "Jue": [],
-        "Vie": [],
-        "Sab": []
-      }
-    },
-    {
-      "id": "E805",
-      "code": "E805",
-      "rawLocation": "E805",
-      "displayName": "E805",
-      "type": "otro",
-      "floor": 1,
-      "sessionsByDay": {
-        "Lun": [],
-        "Mar": [],
-        "Mie": [],
-        "Jue": [],
-        "Vie": [],
-        "Sab": []
-      }
-    },
-    {
-      "id": "E806",
-      "code": "E806",
-      "rawLocation": "E806",
-      "displayName": "E806",
-      "type": "otro",
-      "floor": 1,
-      "sessionsByDay": {
-        "Lun": [],
-        "Mar": [],
-        "Mie": [],
-        "Jue": [],
-        "Vie": [],
-        "Sab": []
-      }
-    },
-    {
-      "id": "E807",
-      "code": "E807",
-      "rawLocation": "E807",
-      "displayName": "E807",
-      "type": "otro",
-      "floor": 1,
-      "sessionsByDay": {
-        "Lun": [],
-        "Mar": [],
-        "Mie": [],
-        "Jue": [],
-        "Vie": [],
-        "Sab": []
-      }
-    },
-    {
-      "id": "E808",
-      "code": "E808",
-      "rawLocation": "E808",
-      "displayName": "E808",
-      "type": "otro",
-      "floor": 1,
-      "sessionsByDay": {
-        "Lun": [],
-        "Mar": [],
-        "Mie": [],
-        "Jue": [],
-        "Vie": [],
-        "Sab": []
-      }
-    },
-    {
-      "id": "E809",
-      "code": "E809",
-      "rawLocation": "E809",
-      "displayName": "E809",
-      "type": "otro",
-      "floor": 1,
-      "sessionsByDay": {
-        "Lun": [],
-        "Mar": [],
-        "Mie": [],
-        "Jue": [],
-        "Vie": [],
-        "Sab": []
-      }
-    },
-    {
-      "id": "E810",
-      "code": "E810",
-      "rawLocation": "E810",
-      "displayName": "E810",
-      "type": "otro",
-      "floor": 1,
-      "sessionsByDay": {
-        "Lun": [],
-        "Mar": [],
-        "Mie": [],
-        "Jue": [],
-        "Vie": [],
-        "Sab": []
       }
     },
     {
@@ -14910,40 +15356,25 @@
       "sessionsByDay": {
         "Lun": [],
         "Mar": [],
-        "Mie": [
+        "Mie": [],
+        "Jue": [],
+        "Vie": [
           {
             "courseCode": "RESERVA",
             "courseName": "RESERVADO",
             "sectionNumber": "-",
             "sessionGroup": "-",
-            "day": "Mie",
-            "startTime": "18:30",
-            "endTime": "19:30",
-            "startMinutes": 1110,
-            "endMinutes": 1170,
-            "professor": "Reserva Institucional",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "RESERVA",
-            "courseName": "RESERVADO",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Mie",
-            "startTime": "19:30",
-            "endTime": "20:30",
-            "startMinutes": 1170,
-            "endMinutes": 1230,
+            "day": "Vie",
+            "startTime": "18:00",
+            "endTime": "19:00",
+            "startMinutes": 1080,
+            "endMinutes": 1140,
             "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
           }
         ],
-        "Jue": [],
-        "Vie": [],
         "Sab": []
       }
     },
@@ -15070,8 +15501,39 @@
         "Lun": [],
         "Mar": [],
         "Mie": [],
-        "Jue": [],
+        "Jue": [
+          {
+            "courseCode": "CI3032",
+            "courseName": "Tecnología de los Materiales de Construcción",
+            "sectionNumber": "2",
+            "sessionGroup": "21",
+            "day": "Jue",
+            "startTime": "15:00",
+            "endTime": "19:00",
+            "startMinutes": 900,
+            "endMinutes": 1140,
+            "professor": "Vasquez Arrieta, Elba Rosaura",
+            "email": "rvasqueza@utec.edu.pe",
+            "vacancies": 18,
+            "enrolled": 0
+          }
+        ],
         "Vie": [
+          {
+            "courseCode": "CI3032",
+            "courseName": "Tecnología de los Materiales de Construcción",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Vie",
+            "startTime": "09:00",
+            "endTime": "13:00",
+            "startMinutes": 540,
+            "endMinutes": 780,
+            "professor": "Vasquez Arrieta, Elba Rosaura",
+            "email": "rvasqueza@utec.edu.pe",
+            "vacancies": 18,
+            "enrolled": 0
+          },
           {
             "courseCode": "CI3032",
             "courseName": "Tecnología de los Materiales de Construcción",
@@ -15134,15 +15596,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "2",
-            "sessionGroup": "2",
+            "sectionNumber": "3",
+            "sessionGroup": "3",
             "day": "Lun",
             "startTime": "09:00",
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Velarde Espinoza, Jose",
-            "email": "jvelarde@utec.edu.pe",
+            "professor": "Rojas muñoz, Nimrod Angel",
+            "email": "nrojas@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -15164,15 +15626,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "17",
-            "sessionGroup": "17",
+            "sectionNumber": "18",
+            "sessionGroup": "18",
             "day": "Lun",
             "startTime": "15:00",
             "endTime": "17:00",
             "startMinutes": 900,
             "endMinutes": 1020,
-            "professor": "Velarde Espinoza, Jose",
-            "email": "jvelarde@utec.edu.pe",
+            "professor": "Rojas muñoz, Nimrod Angel",
+            "email": "nrojas@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           }
@@ -15196,15 +15658,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "6",
-            "sessionGroup": "6",
+            "sectionNumber": "7",
+            "sessionGroup": "7",
             "day": "Mar",
             "startTime": "09:00",
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Ortiz Cabello, Omar Hernan",
-            "email": "oortiz@utec.edu.pe",
+            "professor": "Velarde Espinoza, Jose",
+            "email": "jvelarde@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -15226,15 +15688,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "8",
-            "sessionGroup": "8",
+            "sectionNumber": "15",
+            "sessionGroup": "15",
             "day": "Mar",
             "startTime": "15:00",
             "endTime": "17:00",
             "startMinutes": 900,
             "endMinutes": 1020,
-            "professor": "Ortiz Cabello, Omar Hernan",
-            "email": "oortiz@utec.edu.pe",
+            "professor": "Velarde Espinoza, Jose",
+            "email": "jvelarde@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           }
@@ -15258,15 +15720,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "10",
-            "sessionGroup": "10",
+            "sectionNumber": "11",
+            "sessionGroup": "11",
             "day": "Mie",
             "startTime": "09:00",
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Ortiz Cabello, Omar Hernan",
-            "email": "oortiz@utec.edu.pe",
+            "professor": "Rojas muñoz, Nimrod Angel",
+            "email": "nrojas@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -15288,15 +15750,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "20",
-            "sessionGroup": "20",
+            "sectionNumber": "21",
+            "sessionGroup": "21",
             "day": "Mie",
             "startTime": "15:00",
             "endTime": "17:00",
             "startMinutes": 900,
             "endMinutes": 1020,
-            "professor": "Ortiz Cabello, Omar Hernan",
-            "email": "oortiz@utec.edu.pe",
+            "professor": "Velarde Espinoza, Jose",
+            "email": "jvelarde@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           }
@@ -15320,15 +15782,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "13",
-            "sessionGroup": "13",
+            "sectionNumber": "14",
+            "sessionGroup": "14",
             "day": "Jue",
             "startTime": "09:00",
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Bohorquez Bendezu, Jose Luis",
-            "email": "jbohorquez@utec.edu.pe",
+            "professor": "Rojas muñoz, Nimrod Angel",
+            "email": "nrojas@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -15350,16 +15812,16 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "23",
-            "sessionGroup": "23",
+            "sectionNumber": "24",
+            "sessionGroup": "24",
             "day": "Jue",
             "startTime": "17:00",
             "endTime": "19:00",
             "startMinutes": 1020,
             "endMinutes": 1140,
-            "professor": "Bohorquez Bendezu, Jose Luis",
-            "email": "jbohorquez@utec.edu.pe",
-            "vacancies": 26,
+            "professor": "Castillo Castillo, Fabrizio Julio",
+            "email": "fcastillo@utec.edu.pe",
+            "vacancies": 14,
             "enrolled": 0
           }
         ],
@@ -15457,15 +15919,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "3",
-            "sessionGroup": "3",
+            "sectionNumber": "1",
+            "sessionGroup": "1",
             "day": "Lun",
             "startTime": "09:00",
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Rojas muñoz, Nimrod Angel",
-            "email": "nrojas@utec.edu.pe",
+            "professor": "Paucara Prado, Jhonatan David",
+            "email": "jpaucara@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -15487,15 +15949,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "18",
-            "sessionGroup": "18",
+            "sectionNumber": "16",
+            "sessionGroup": "16",
             "day": "Lun",
             "startTime": "15:00",
             "endTime": "17:00",
             "startMinutes": 900,
             "endMinutes": 1020,
-            "professor": "Rojas muñoz, Nimrod Angel",
-            "email": "nrojas@utec.edu.pe",
+            "professor": "Paucara Prado, Jhonatan David",
+            "email": "jpaucara@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           }
@@ -15519,15 +15981,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "7",
-            "sessionGroup": "7",
+            "sectionNumber": "5",
+            "sessionGroup": "5",
             "day": "Mar",
             "startTime": "09:00",
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Velarde Espinoza, Jose",
-            "email": "jvelarde@utec.edu.pe",
+            "professor": "Paucara Prado, Jhonatan David",
+            "email": "jpaucara@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -15549,15 +16011,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "15",
-            "sessionGroup": "15",
+            "sectionNumber": "4",
+            "sessionGroup": "4",
             "day": "Mar",
             "startTime": "15:00",
             "endTime": "17:00",
             "startMinutes": 900,
             "endMinutes": 1020,
-            "professor": "Velarde Espinoza, Jose",
-            "email": "jvelarde@utec.edu.pe",
+            "professor": "Paucara Prado, Jhonatan David",
+            "email": "jpaucara@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           }
@@ -15581,15 +16043,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "11",
-            "sessionGroup": "11",
+            "sectionNumber": "9",
+            "sessionGroup": "9",
             "day": "Mie",
             "startTime": "09:00",
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Rojas muñoz, Nimrod Angel",
-            "email": "nrojas@utec.edu.pe",
+            "professor": "Velarde Espinoza, Jose",
+            "email": "jvelarde@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -15611,15 +16073,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "21",
-            "sessionGroup": "21",
+            "sectionNumber": "19",
+            "sessionGroup": "19",
             "day": "Mie",
             "startTime": "15:00",
             "endTime": "17:00",
             "startMinutes": 900,
             "endMinutes": 1020,
-            "professor": "Velarde Espinoza, Jose",
-            "email": "jvelarde@utec.edu.pe",
+            "professor": "Arellanos Tafur, Elmer Hugo",
+            "email": "earellanos@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           }
@@ -15643,15 +16105,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "14",
-            "sessionGroup": "14",
+            "sectionNumber": "12",
+            "sessionGroup": "12",
             "day": "Jue",
             "startTime": "09:00",
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Rojas muñoz, Nimrod Angel",
-            "email": "nrojas@utec.edu.pe",
+            "professor": "Velarde Espinoza, Jose",
+            "email": "jvelarde@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -15673,16 +16135,16 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "24",
-            "sessionGroup": "24",
+            "sectionNumber": "22",
+            "sessionGroup": "22",
             "day": "Jue",
             "startTime": "17:00",
             "endTime": "19:00",
             "startMinutes": 1020,
             "endMinutes": 1140,
-            "professor": "Castillo Castillo, Fabrizio Julio",
-            "email": "fcastillo@utec.edu.pe",
-            "vacancies": 14,
+            "professor": "Rojas muñoz, Nimrod Angel",
+            "email": "nrojas@utec.edu.pe",
+            "vacancies": 27,
             "enrolled": 0
           }
         ],
@@ -15795,16 +16257,16 @@
           {
             "courseCode": "MT5001",
             "courseName": "Diseño de Sistemas Mecatrónicos",
-            "sectionNumber": "1",
-            "sessionGroup": "11",
+            "sectionNumber": "2",
+            "sessionGroup": "266",
             "day": "Mar",
             "startTime": "18:00",
             "endTime": "22:00",
             "startMinutes": 1080,
             "endMinutes": 1320,
-            "professor": "Puchuri Lopez, Marko",
-            "email": "mpuchuri@utec.edu.pe",
-            "vacancies": 20,
+            "professor": "MAGALLANES CARDENAS, JOSE RODRIGO",
+            "email": "jmagallanesc@utec.edu.pe",
+            "vacancies": 18,
             "enrolled": 0
           }
         ],
@@ -15812,16 +16274,46 @@
           {
             "courseCode": "MT5306",
             "courseName": "Robótica industrial",
-            "sectionNumber": "2",
-            "sessionGroup": "21",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Mie",
+            "startTime": "09:00",
+            "endTime": "13:00",
+            "startMinutes": 540,
+            "endMinutes": 780,
+            "professor": "Garcia Zevallos, Luis Enrique",
+            "email": "lgarciaz@utec.edu.pe",
+            "vacancies": 12,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "MT5306",
+            "courseName": "Robótica industrial",
+            "sectionNumber": "1",
+            "sessionGroup": "13",
             "day": "Mie",
             "startTime": "14:00",
             "endTime": "18:00",
             "startMinutes": 840,
             "endMinutes": 1080,
-            "professor": "Garcia Zevallos, Luis Enrique",
-            "email": "lgarciaz@utec.edu.pe",
+            "professor": "Cabrera Donayre, Rony Martin",
+            "email": "rcabrerad@utec.edu.pe",
             "vacancies": 12,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "MT5001",
+            "courseName": "Diseño de Sistemas Mecatrónicos",
+            "sectionNumber": "2",
+            "sessionGroup": "21",
+            "day": "Mie",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "MAGALLANES CARDENAS, JOSE RODRIGO",
+            "email": "jmagallanesc@utec.edu.pe",
+            "vacancies": 18,
             "enrolled": 0
           }
         ],
@@ -15889,6 +16381,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "MT5306",
+            "courseName": "Robótica industrial",
+            "sectionNumber": "2",
+            "sessionGroup": "22",
+            "day": "Vie",
+            "startTime": "11:00",
+            "endTime": "15:00",
+            "startMinutes": 660,
+            "endMinutes": 900,
+            "professor": "Cabrera Donayre, Rony Martin",
+            "email": "rcabrerad@utec.edu.pe",
+            "vacancies": 12,
+            "enrolled": 0
+          },
+          {
             "courseCode": "ACTIVIDAD",
             "courseName": "Open Labs",
             "sectionNumber": "-",
@@ -15917,6 +16424,21 @@
             "email": "jlopezm@utec.edu.pe",
             "vacancies": 30,
             "enrolled": 0
+          },
+          {
+            "courseCode": "MT4001",
+            "courseName": "Fundamentos de Robótica",
+            "sectionNumber": "2",
+            "sessionGroup": "21",
+            "day": "Vie",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "Lopez Manrique, Jose Alexander",
+            "email": "jlopezm@utec.edu.pe",
+            "vacancies": 20,
+            "enrolled": 0
           }
         ],
         "Sab": [
@@ -15936,18 +16458,18 @@
             "enrolled": 0
           },
           {
-            "courseCode": "MT4001",
-            "courseName": "Fundamentos de Robótica",
-            "sectionNumber": "1",
-            "sessionGroup": "11",
+            "courseCode": "ACTIVIDAD",
+            "courseName": "Mantenimiento",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
             "day": "Sab",
-            "startTime": "13:00",
-            "endTime": "17:00",
-            "startMinutes": 780,
-            "endMinutes": 1020,
-            "professor": "Lopez Manrique, Jose Alexander",
-            "email": "jlopezm@utec.edu.pe",
-            "vacancies": 20,
+            "startTime": "09:00",
+            "endTime": "12:00",
+            "startMinutes": 540,
+            "endMinutes": 720,
+            "professor": "Mantenimiento",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           }
         ]
@@ -16079,7 +16601,7 @@
             "courseCode": "EN2013",
             "courseName": "Máquinas Eléctricas",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Sab",
             "startTime": "11:00",
             "endTime": "15:00",
@@ -16094,22 +16616,6 @@
       }
     },
     {
-      "id": "L203E",
-      "code": "L203E",
-      "rawLocation": "L203E",
-      "displayName": "L203E",
-      "type": "otro",
-      "floor": 1,
-      "sessionsByDay": {
-        "Lun": [],
-        "Mar": [],
-        "Mie": [],
-        "Jue": [],
-        "Vie": [],
-        "Sab": []
-      }
-    },
-    {
       "id": "L204",
       "code": "L204",
       "rawLocation": "L204",
@@ -16120,6 +16626,21 @@
         "Lun": [],
         "Mar": [],
         "Mie": [
+          {
+            "courseCode": "CI3071",
+            "courseName": "Mecánica de Fluidos en Ingeniería Civil",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Mie",
+            "startTime": "07:00",
+            "endTime": "11:00",
+            "startMinutes": 420,
+            "endMinutes": 660,
+            "professor": "Mendoza Montalvo, Jimmy",
+            "email": "jmendozam@utec.edu.pe",
+            "vacancies": 30,
+            "enrolled": 0
+          },
           {
             "courseCode": "AM3002",
             "courseName": "Mecánica de Fluidos Ambiental",
@@ -16136,13 +16657,29 @@
             "enrolled": 0
           }
         ],
-        "Jue": [],
+        "Jue": [
+          {
+            "courseCode": "CI3071",
+            "courseName": "Mecánica de Fluidos en Ingeniería Civil",
+            "sectionNumber": "2",
+            "sessionGroup": "264",
+            "day": "Jue",
+            "startTime": "08:00",
+            "endTime": "12:00",
+            "startMinutes": 480,
+            "endMinutes": 720,
+            "professor": "Ramos Orlandino, Carmela Cristhy",
+            "email": "cramos@utec.edu.pe",
+            "vacancies": 30,
+            "enrolled": 0
+          }
+        ],
         "Vie": [
           {
             "courseCode": "CI4072",
             "courseName": "Hidráulica Superficial",
             "sectionNumber": "1",
-            "sessionGroup": "11",
+            "sessionGroup": "167",
             "day": "Vie",
             "startTime": "08:00",
             "endTime": "12:00",
@@ -16159,7 +16696,7 @@
             "courseCode": "CI2003",
             "courseName": "Geomática I",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Sab",
             "startTime": "14:00",
             "endTime": "18:00",
@@ -16343,12 +16880,42 @@
             "courseCode": "MT4002",
             "courseName": "Sistemas Hidráulicos y Neumáticos",
             "sectionNumber": "1",
+            "sessionGroup": "13",
+            "day": "Mar",
+            "startTime": "08:00",
+            "endTime": "12:00",
+            "startMinutes": 480,
+            "endMinutes": 720,
+            "professor": "Miranda Barrueto, Renato Alonso",
+            "email": "rmiranda@utec.edu.pe",
+            "vacancies": 15,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "MT4002",
+            "courseName": "Sistemas Hidráulicos y Neumáticos",
+            "sectionNumber": "1",
             "sessionGroup": "12",
             "day": "Mar",
             "startTime": "14:00",
             "endTime": "18:00",
             "startMinutes": 840,
             "endMinutes": 1080,
+            "professor": "Palomino Barzola, Styven (Asistente de enseñanza senior)",
+            "email": "spalomino@utec.edu.pe",
+            "vacancies": 15,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "MT4002",
+            "courseName": "Sistemas Hidráulicos y Neumáticos",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Mar",
+            "startTime": "17:00",
+            "endTime": "21:00",
+            "startMinutes": 1020,
+            "endMinutes": 1260,
             "professor": "Palomino Barzola, Styven (Asistente de enseñanza senior)",
             "email": "spalomino@utec.edu.pe",
             "vacancies": 15,
@@ -16370,9 +16937,54 @@
             "email": "rmiranda@utec.edu.pe",
             "vacancies": 15,
             "enrolled": 0
+          },
+          {
+            "courseCode": "MT3001",
+            "courseName": "Sensores y Actuadores",
+            "sectionNumber": "1",
+            "sessionGroup": "13",
+            "day": "Mie",
+            "startTime": "17:00",
+            "endTime": "21:00",
+            "startMinutes": 1020,
+            "endMinutes": 1260,
+            "professor": "Miranda Barrueto, Renato Alonso",
+            "email": "rmiranda@utec.edu.pe",
+            "vacancies": 15,
+            "enrolled": 0
           }
         ],
         "Jue": [
+          {
+            "courseCode": "MT3001",
+            "courseName": "Sensores y Actuadores",
+            "sectionNumber": "2",
+            "sessionGroup": "22",
+            "day": "Jue",
+            "startTime": "07:00",
+            "endTime": "11:00",
+            "startMinutes": 420,
+            "endMinutes": 660,
+            "professor": "Palomino Barzola, Styven (Asistente de enseñanza senior)",
+            "email": "spalomino@utec.edu.pe",
+            "vacancies": 15,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "MT4002",
+            "courseName": "Sistemas Hidráulicos y Neumáticos",
+            "sectionNumber": "2",
+            "sessionGroup": "22",
+            "day": "Jue",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "Palomino Barzola, Styven (Asistente de enseñanza senior)",
+            "email": "spalomino@utec.edu.pe",
+            "vacancies": 15,
+            "enrolled": 0
+          },
           {
             "courseCode": "MT3001",
             "courseName": "Sensores y Actuadores",
@@ -16670,6 +17282,21 @@
         ],
         "Jue": [
           {
+            "courseCode": "EL6011",
+            "courseName": "Introducción a la Ingeniería Electrónica",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Jue",
+            "startTime": "09:00",
+            "endTime": "13:00",
+            "startMinutes": 540,
+            "endMinutes": 780,
+            "professor": "Camacho Jiménez, Francisco José",
+            "email": "fcamacho@utec.edu.pe",
+            "vacancies": 22,
+            "enrolled": 0
+          },
+          {
             "courseCode": "MT6011",
             "courseName": "Introducción a la Ingeniería Mecatrónica",
             "sectionNumber": "2",
@@ -16705,7 +17332,7 @@
             "courseCode": "MT6011",
             "courseName": "Introducción a la Ingeniería Mecatrónica",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Vie",
             "startTime": "09:00",
             "endTime": "13:00",
@@ -16715,9 +17342,40 @@
             "email": "spalomino@utec.edu.pe",
             "vacancies": 15,
             "enrolled": 0
+          },
+          {
+            "courseCode": "MT6011",
+            "courseName": "Introducción a la Ingeniería Mecatrónica",
+            "sectionNumber": "3",
+            "sessionGroup": "31",
+            "day": "Vie",
+            "startTime": "14:00",
+            "endTime": "18:00",
+            "startMinutes": 840,
+            "endMinutes": 1080,
+            "professor": "Miguel Tomas Olortegui",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
           }
         ],
-        "Sab": []
+        "Sab": [
+          {
+            "courseCode": "EL5319",
+            "courseName": "Seguridad Computacional y de Redes",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Sab",
+            "startTime": "08:00",
+            "endTime": "12:00",
+            "startMinutes": 480,
+            "endMinutes": 720,
+            "professor": "Ramirez Horna, Flavio Cesar",
+            "email": "framirez@utec.edu.pe",
+            "vacancies": 12,
+            "enrolled": 0
+          }
+        ]
       }
     },
     {
@@ -16927,6 +17585,21 @@
             "email": "",
             "vacancies": 0,
             "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "Maestría de Investigación en Inteligencia Artificial",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "19:00",
+            "endTime": "21:00",
+            "startMinutes": 1140,
+            "endMinutes": 1260,
+            "professor": "Maestría de Investigación en Inteligencia Artificial",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
           }
         ],
         "Jue": [
@@ -16940,9 +17613,9 @@
             "endTime": "09:00",
             "startMinutes": 420,
             "endMinutes": 540,
-            "professor": "Chira Siaden, David Gustavo",
-            "email": "dchira@utec.edu.pe",
-            "vacancies": 15,
+            "professor": "Maria Belen Ortiz",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -17475,7 +18148,7 @@
             "courseCode": "IQ3005",
             "courseName": "Transferencia de calor",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Mar",
             "startTime": "15:00",
             "endTime": "19:00",
@@ -17487,13 +18160,44 @@
             "enrolled": 0
           }
         ],
-        "Mie": [],
+        "Mie": [
+          {
+            "courseCode": "IQ4003",
+            "courseName": "Diseño de Reactores Químicos",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Mie",
+            "startTime": "08:00",
+            "endTime": "12:00",
+            "startMinutes": 480,
+            "endMinutes": 720,
+            "professor": "Carranza Oropeza, Maria Veronica",
+            "email": "mcarranza@utec.edu.pe",
+            "vacancies": 15,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "IQ3003",
+            "courseName": "Operaciones de Separación I",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Mie",
+            "startTime": "13:00",
+            "endTime": "17:00",
+            "startMinutes": 780,
+            "endMinutes": 1020,
+            "professor": "Chuman Lopez, Margeo Javier",
+            "email": "mchuman@utec.edu.pe",
+            "vacancies": 12,
+            "enrolled": 0
+          }
+        ],
         "Jue": [
           {
             "courseCode": "IQ4002",
             "courseName": "Operaciones de Separación II",
             "sectionNumber": "1",
-            "sessionGroup": "110",
+            "sessionGroup": "11",
             "day": "Jue",
             "startTime": "08:00",
             "endTime": "12:00",
@@ -17510,7 +18214,7 @@
             "courseCode": "BI5324",
             "courseName": "Biorreactores",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Vie",
             "startTime": "15:00",
             "endTime": "19:00",
@@ -17527,7 +18231,7 @@
             "courseCode": "IQ3001",
             "courseName": "Fenómenos de Transporte",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Sab",
             "startTime": "07:00",
             "endTime": "11:00",
@@ -17535,6 +18239,21 @@
             "endMinutes": 660,
             "professor": "Chuman Lopez, Margeo Javier",
             "email": "mchuman@utec.edu.pe",
+            "vacancies": 12,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "IQ3006",
+            "courseName": "Biotecnologías y Bioprocesos",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Sab",
+            "startTime": "13:00",
+            "endTime": "17:00",
+            "startMinutes": 780,
+            "endMinutes": 1020,
+            "professor": "Gonzales Rojas, Karen",
+            "email": "kgonzales@utec.edu.pe",
             "vacancies": 12,
             "enrolled": 0
           }
@@ -17570,7 +18289,7 @@
             "courseCode": "IQ2002",
             "courseName": "Análisis Químico para Ingeniería",
             "sectionNumber": "1",
-            "sessionGroup": "157",
+            "sessionGroup": "11",
             "day": "Lun",
             "startTime": "09:00",
             "endTime": "13:00",
@@ -17603,6 +18322,21 @@
         "Jue": [],
         "Vie": [
           {
+            "courseCode": "BI6001",
+            "courseName": "Introducción a la Bioingeniería",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Vie",
+            "startTime": "09:00",
+            "endTime": "13:00",
+            "startMinutes": 540,
+            "endMinutes": 780,
+            "professor": "CAJAHUANCA HUACCHO, TITO MARTIN",
+            "email": "tcajahuanca@utec.edu.pe",
+            "vacancies": 45,
+            "enrolled": 0
+          },
+          {
             "courseCode": "IQ6001",
             "courseName": "Introducción a la Ingeniería Química",
             "sectionNumber": "1",
@@ -17623,7 +18357,7 @@
             "courseCode": "IQ6002",
             "courseName": "Química Avanzada",
             "sectionNumber": "1",
-            "sessionGroup": "11",
+            "sessionGroup": "12",
             "day": "Sab",
             "startTime": "07:00",
             "endTime": "11:00",
@@ -17638,7 +18372,7 @@
             "courseCode": "BI3006",
             "courseName": "Biología Celular y Molecular",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Sab",
             "startTime": "13:00",
             "endTime": "17:00",
@@ -17666,7 +18400,7 @@
             "courseCode": "BI6003",
             "courseName": "Química Aplicada",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Mar",
             "startTime": "08:00",
             "endTime": "12:00",
@@ -17698,7 +18432,7 @@
             "courseCode": "BI6003",
             "courseName": "Química Aplicada",
             "sectionNumber": "2",
-            "sessionGroup": "262",
+            "sessionGroup": "261",
             "day": "Mie",
             "startTime": "18:00",
             "endTime": "22:00",
@@ -17715,7 +18449,7 @@
             "courseCode": "BI3010",
             "courseName": "Bioquímica para Bioingenieros",
             "sectionNumber": "1",
-            "sessionGroup": "11",
+            "sessionGroup": "12",
             "day": "Jue",
             "startTime": "07:00",
             "endTime": "11:00",
@@ -17724,6 +18458,21 @@
             "professor": "Cueva Tavara, Mario",
             "email": "mcueva@utec.edu.pe",
             "vacancies": 24,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "AM2001",
+            "courseName": "Química Ambiental",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Jue",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "Flores Flores, Myra",
+            "email": "mfloresf@utec.edu.pe",
+            "vacancies": 14,
             "enrolled": 0
           }
         ],
@@ -17744,7 +18493,23 @@
             "enrolled": 0
           }
         ],
-        "Sab": []
+        "Sab": [
+          {
+            "courseCode": "AM6102",
+            "courseName": "Química Orgánica e Inorgánica",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Sab",
+            "startTime": "09:00",
+            "endTime": "13:00",
+            "startMinutes": 540,
+            "endMinutes": 780,
+            "professor": "Flores Flores, Myra",
+            "email": "mfloresf@utec.edu.pe",
+            "vacancies": 20,
+            "enrolled": 0
+          }
+        ]
       }
     },
     {
@@ -17825,7 +18590,7 @@
             "courseCode": "ME3014",
             "courseName": "Automatización de sistemas",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Mie",
             "startTime": "11:00",
             "endTime": "15:00",
@@ -17866,7 +18631,23 @@
       "type": "laboratorio",
       "floor": 4,
       "sessionsByDay": {
-        "Lun": [],
+        "Lun": [
+          {
+            "courseCode": "EL5303",
+            "courseName": "Redes digitales de comunicaciones",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Lun",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "Onaka Nuñez, Carlos Henry",
+            "email": "conaka@utec.edu.pe",
+            "vacancies": 12,
+            "enrolled": 0
+          }
+        ],
         "Mar": [
           {
             "courseCode": "ACTIVIDAD",
@@ -17889,7 +18670,7 @@
             "courseCode": "EL2081",
             "courseName": "Circuitos Eléctricos y Electrónicos I",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Mie",
             "startTime": "08:00",
             "endTime": "12:00",
@@ -17918,15 +18699,15 @@
           {
             "courseCode": "EL2081",
             "courseName": "Circuitos Eléctricos y Electrónicos I",
-            "sectionNumber": "3",
-            "sessionGroup": "31",
+            "sectionNumber": "2",
+            "sessionGroup": "22",
             "day": "Mie",
             "startTime": "18:00",
             "endTime": "22:00",
             "startMinutes": 1080,
             "endMinutes": 1320,
-            "professor": "Amaya Montes, Cristian",
-            "email": "camaya@utec.edu.pe",
+            "professor": "Zavala Chavez, Jose Gabriel",
+            "email": "jzavalac@utec.edu.pe",
             "vacancies": 22,
             "enrolled": 0
           }
@@ -17951,7 +18732,7 @@
             "courseCode": "EL2082",
             "courseName": "Circuitos Eléctricos y Electrónicos II",
             "sectionNumber": "2",
-            "sessionGroup": "22",
+            "sessionGroup": "21",
             "day": "Jue",
             "startTime": "18:00",
             "endTime": "22:00",
@@ -17965,6 +18746,21 @@
         ],
         "Vie": [
           {
+            "courseCode": "EL2082",
+            "courseName": "Circuitos Eléctricos y Electrónicos II",
+            "sectionNumber": "1",
+            "sessionGroup": "154",
+            "day": "Vie",
+            "startTime": "09:00",
+            "endTime": "13:00",
+            "startMinutes": 540,
+            "endMinutes": 780,
+            "professor": "Cespedes Duran, Axel Eliam",
+            "email": "acespedes@utec.edu.pe",
+            "vacancies": 20,
+            "enrolled": 0
+          },
+          {
             "courseCode": "EL2081",
             "courseName": "Circuitos Eléctricos y Electrónicos I",
             "sectionNumber": "3",
@@ -17976,6 +18772,36 @@
             "endMinutes": 900,
             "professor": "Amaya Montes, Cristian",
             "email": "camaya@utec.edu.pe",
+            "vacancies": 22,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "EL2011",
+            "courseName": "Circuitos Eléctricos",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Vie",
+            "startTime": "14:00",
+            "endTime": "18:00",
+            "startMinutes": 840,
+            "endMinutes": 1080,
+            "professor": "Zavala Chavez, Jose Gabriel",
+            "email": "jzavalac@utec.edu.pe",
+            "vacancies": 20,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "EL4011",
+            "courseName": "Electrónica de potencia",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Vie",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "Monterrey Ikeda, Christian Aaron",
+            "email": "cmonterrey@utec.edu.pe",
             "vacancies": 22,
             "enrolled": 0
           },
@@ -18009,6 +18835,21 @@
             "professor": "Belen Contreras, Miguel Angel",
             "email": "mbelen@utec.edu.pe",
             "vacancies": 20,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "EL4013",
+            "courseName": "Introducción a las redes de computadoras",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Sab",
+            "startTime": "13:00",
+            "endTime": "17:00",
+            "startMinutes": 780,
+            "endMinutes": 1020,
+            "professor": "Ramirez Horna, Flavio Cesar",
+            "email": "framirez@utec.edu.pe",
+            "vacancies": 24,
             "enrolled": 0
           },
           {
@@ -18288,6 +19129,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "EN2014",
+            "courseName": "Ingeniería de Petróleo",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Vie",
+            "startTime": "11:00",
+            "endTime": "15:00",
+            "startMinutes": 660,
+            "endMinutes": 900,
+            "professor": "Araujo Pantoja, Patricia",
+            "email": "paraujo@utec.edu.pe",
+            "vacancies": 24,
+            "enrolled": 0
+          },
+          {
             "courseCode": "EN3014",
             "courseName": "Ingeniería de los Gases Sostenibles",
             "sectionNumber": "1",
@@ -18351,8 +19207,8 @@
           {
             "courseCode": "EL3303",
             "courseName": "Control de Procesos",
-            "sectionNumber": "1",
-            "sessionGroup": "11",
+            "sectionNumber": "2",
+            "sessionGroup": "23",
             "day": "Mie",
             "startTime": "11:00",
             "endTime": "15:00",
@@ -18367,7 +19223,7 @@
             "courseCode": "EL3012",
             "courseName": "Control Automático",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Mie",
             "startTime": "18:00",
             "endTime": "22:00",
@@ -18379,7 +19235,23 @@
             "enrolled": 0
           }
         ],
-        "Jue": [],
+        "Jue": [
+          {
+            "courseCode": "MT5307",
+            "courseName": "Control Inteligente",
+            "sectionNumber": "1",
+            "sessionGroup": "13",
+            "day": "Jue",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "Gutarra Sanchez, Anthony Gerardo",
+            "email": "agutarra@utec.edu.pe",
+            "vacancies": 15,
+            "enrolled": 0
+          }
+        ],
         "Vie": [
           {
             "courseCode": "EL3303",
@@ -18395,6 +19267,21 @@
             "email": "smorales@utec.edu.pe",
             "vacancies": 15,
             "enrolled": 0
+          },
+          {
+            "courseCode": "EL5312",
+            "courseName": "Control de Sistemas no Lineales",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Vie",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "Gutarra Sanchez, Anthony Gerardo",
+            "email": "agutarra@utec.edu.pe",
+            "vacancies": 15,
+            "enrolled": 0
           }
         ],
         "Sab": [
@@ -18402,7 +19289,7 @@
             "courseCode": "EL3012",
             "courseName": "Control Automático",
             "sectionNumber": "2",
-            "sessionGroup": "22",
+            "sessionGroup": "21",
             "day": "Sab",
             "startTime": "07:00",
             "endTime": "11:00",
@@ -18425,13 +19312,44 @@
       "floor": 4,
       "sessionsByDay": {
         "Lun": [],
-        "Mar": [],
+        "Mar": [
+          {
+            "courseCode": "EL4302",
+            "courseName": "Sistemas embebidos interconectados",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Mar",
+            "startTime": "09:00",
+            "endTime": "13:00",
+            "startMinutes": 540,
+            "endMinutes": 780,
+            "professor": "Briceño Carbajal, Christopher Eduardo",
+            "email": "cbriceno@utec.edu.pe",
+            "vacancies": 20,
+            "enrolled": 0
+          }
+        ],
         "Mie": [
+          {
+            "courseCode": "EL2013",
+            "courseName": "Circuitos Digitales",
+            "sectionNumber": "3",
+            "sessionGroup": "31",
+            "day": "Mie",
+            "startTime": "09:00",
+            "endTime": "13:00",
+            "startMinutes": 540,
+            "endMinutes": 780,
+            "professor": "Briceño Carbajal, Christopher Eduardo",
+            "email": "cbriceno@utec.edu.pe",
+            "vacancies": 22,
+            "enrolled": 0
+          },
           {
             "courseCode": "EL3014",
             "courseName": "Introducción a Sistemas Embebidos",
             "sectionNumber": "2",
-            "sessionGroup": "22",
+            "sessionGroup": "21",
             "day": "Mie",
             "startTime": "18:00",
             "endTime": "22:00",
@@ -18460,10 +19378,25 @@
             "enrolled": 0
           },
           {
+            "courseCode": "EL5308",
+            "courseName": "Tópicos sobre procesamiento de señales biológicas",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Jue",
+            "startTime": "08:00",
+            "endTime": "12:00",
+            "startMinutes": 480,
+            "endMinutes": 720,
+            "professor": "Michhue Vela, Gabriel Percy",
+            "email": "gmichhue@utec.edu.pe",
+            "vacancies": 12,
+            "enrolled": 0
+          },
+          {
             "courseCode": "EL2013",
             "courseName": "Circuitos Digitales",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Jue",
             "startTime": "18:00",
             "endTime": "22:00",
@@ -18477,6 +19410,21 @@
         ],
         "Vie": [
           {
+            "courseCode": "EL3011",
+            "courseName": "Diseño de computadoras",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Vie",
+            "startTime": "07:00",
+            "endTime": "11:00",
+            "startMinutes": 420,
+            "endMinutes": 660,
+            "professor": "Camacho Jiménez, Francisco José",
+            "email": "fcamacho@utec.edu.pe",
+            "vacancies": 20,
+            "enrolled": 0
+          },
+          {
             "courseCode": "EL2013",
             "courseName": "Circuitos Digitales",
             "sectionNumber": "2",
@@ -18488,6 +19436,21 @@
             "endMinutes": 840,
             "professor": "Briceño Carbajal, Christopher Eduardo",
             "email": "cbriceno@utec.edu.pe",
+            "vacancies": 22,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "EL3014",
+            "courseName": "Introducción a Sistemas Embebidos",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Vie",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "Nuñovero Cisneros, Nicolas Jose (Asistente de Enseñanza Senior)",
+            "email": "nnunovero@utec.edu.pe",
             "vacancies": 22,
             "enrolled": 0
           },
@@ -18509,10 +19472,25 @@
         ],
         "Sab": [
           {
+            "courseCode": "EL2013",
+            "courseName": "Circuitos Digitales",
+            "sectionNumber": "2",
+            "sessionGroup": "22",
+            "day": "Sab",
+            "startTime": "08:00",
+            "endTime": "12:00",
+            "startMinutes": 480,
+            "endMinutes": 720,
+            "professor": "Patiño Ortega, Giancarlo (Asistente de enseñanza senior)",
+            "email": "gpatino@utec.edu.pe",
+            "vacancies": 22,
+            "enrolled": 0
+          },
+          {
             "courseCode": "EL3014",
             "courseName": "Introducción a Sistemas Embebidos",
-            "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sectionNumber": "3",
+            "sessionGroup": "31",
             "day": "Sab",
             "startTime": "12:00",
             "endTime": "16:00",
@@ -18536,6 +19514,21 @@
       "sessionsByDay": {
         "Lun": [
           {
+            "courseCode": "EL5304",
+            "courseName": "Automatización con Industria 4.0",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Lun",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "Diaz Pozzuoli, Carlos Francisco",
+            "email": "cdiazp@utec.edu.pe",
+            "vacancies": 12,
+            "enrolled": 0
+          },
+          {
             "courseCode": "EL4301",
             "courseName": "Redes Industriales",
             "sectionNumber": "1",
@@ -18556,7 +19549,7 @@
             "courseCode": "EL3301",
             "courseName": "Instrumentación Industrial",
             "sectionNumber": "1",
-            "sessionGroup": "11",
+            "sessionGroup": "12",
             "day": "Mar",
             "startTime": "09:00",
             "endTime": "13:00",
@@ -18565,6 +19558,21 @@
             "professor": "Cespedes Duran, Axel Eliam",
             "email": "acespedes@utec.edu.pe",
             "vacancies": 11,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "EL5306",
+            "courseName": "Sistemas Industriales de Control",
+            "sectionNumber": "1",
+            "sessionGroup": "12",
+            "day": "Mar",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "Jara Zumaran, Diego Marcos",
+            "email": "djara@utec.edu.pe",
+            "vacancies": 12,
             "enrolled": 0
           }
         ],
@@ -18590,7 +19598,7 @@
             "courseCode": "EL4301",
             "courseName": "Redes Industriales",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "13",
             "day": "Jue",
             "startTime": "09:00",
             "endTime": "13:00",
@@ -18605,7 +19613,7 @@
             "courseCode": "EL5306",
             "courseName": "Sistemas Industriales de Control",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Jue",
             "startTime": "18:00",
             "endTime": "22:00",
@@ -18622,7 +19630,7 @@
             "courseCode": "EL3301",
             "courseName": "Instrumentación Industrial",
             "sectionNumber": "1",
-            "sessionGroup": "13",
+            "sessionGroup": "155",
             "day": "Vie",
             "startTime": "15:00",
             "endTime": "19:00",
@@ -18677,23 +19685,7 @@
       "type": "laboratorio",
       "floor": 4,
       "sessionsByDay": {
-        "Lun": [
-          {
-            "courseCode": "PI3103",
-            "courseName": "Proyectos Interdisciplinarios 3",
-            "sectionNumber": "9",
-            "sessionGroup": "9",
-            "day": "Lun",
-            "startTime": "14:00",
-            "endTime": "17:00",
-            "startMinutes": 840,
-            "endMinutes": 1020,
-            "professor": "Jorge Fernando Figueroa",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          }
-        ],
+        "Lun": [],
         "Mar": [
           {
             "courseCode": "CS2032",
@@ -18990,7 +19982,23 @@
             "enrolled": 0
           }
         ],
-        "Mar": [],
+        "Mar": [
+          {
+            "courseCode": "BI4439",
+            "courseName": "Ciencia y Cocina",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Mar",
+            "startTime": "08:00",
+            "endTime": "10:00",
+            "startMinutes": 480,
+            "endMinutes": 600,
+            "professor": "Giulianna Travi",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          }
+        ],
         "Mie": [],
         "Jue": [],
         "Vie": [],
@@ -19451,8 +20459,8 @@
           {
             "courseCode": "CI3033",
             "courseName": "Tecnología del Concreto",
-            "sectionNumber": "1",
-            "sessionGroup": "146",
+            "sectionNumber": "2",
+            "sessionGroup": "21",
             "day": "Jue",
             "startTime": "18:00",
             "endTime": "22:00",
@@ -19460,7 +20468,7 @@
             "endMinutes": 1320,
             "professor": "Salas Paulet, Manuel Jesus",
             "email": "msalas@utec.edu.pe",
-            "vacancies": 8,
+            "vacancies": 22,
             "enrolled": 0
           }
         ],
@@ -19486,7 +20494,7 @@
             "courseCode": "CI3051",
             "courseName": "Mecánica de Suelos",
             "sectionNumber": "1",
-            "sessionGroup": "12",
+            "sessionGroup": "11",
             "day": "Sab",
             "startTime": "08:00",
             "endTime": "12:00",
@@ -19501,7 +20509,7 @@
             "courseCode": "CI3051",
             "courseName": "Mecánica de Suelos",
             "sectionNumber": "2",
-            "sessionGroup": "22",
+            "sessionGroup": "21",
             "day": "Sab",
             "startTime": "13:00",
             "endTime": "17:00",
@@ -20211,7 +21219,7 @@
           },
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "Taller de IA  - #SDO-8426",
+            "courseName": "MANTENIMIENTO TI",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mar",
@@ -20219,7 +21227,7 @@
             "endTime": "18:00",
             "startMinutes": 840,
             "endMinutes": 1080,
-            "professor": "Taller de IA  - #SDO-8426",
+            "professor": "MANTENIMIENTO TI",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -20404,6 +21412,21 @@
             "startMinutes": 660,
             "endMinutes": 780,
             "professor": "David Ricardo Perez",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MANTENIMIENTO TI",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "13:00",
+            "endTime": "15:00",
+            "startMinutes": 780,
+            "endMinutes": 900,
+            "professor": "MANTENIMIENTO TI",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -20834,10 +21857,25 @@
             "enrolled": 0
           },
           {
+            "courseCode": "BI3008",
+            "courseName": "Biodiseño",
+            "sectionNumber": "2",
+            "sessionGroup": "21",
+            "day": "Mie",
+            "startTime": "13:00",
+            "endTime": "17:00",
+            "startMinutes": 780,
+            "endMinutes": 1020,
+            "professor": "Agapito Cordova, Alonso",
+            "email": "aagapito@utec.edu.pe",
+            "vacancies": 25,
+            "enrolled": 0
+          },
+          {
             "courseCode": "AM2003",
             "courseName": "Geología",
-            "sectionNumber": "1",
-            "sessionGroup": "11",
+            "sectionNumber": "2",
+            "sessionGroup": "21",
             "day": "Mie",
             "startTime": "17:00",
             "endTime": "21:00",
@@ -21199,6 +22237,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "Mantenimiento TI",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "13:00",
+            "endTime": "16:00",
+            "startMinutes": 780,
+            "endMinutes": 960,
+            "professor": "Mantenimiento TI",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "CS3025",
             "courseName": "Compiladores",
             "sectionNumber": "1",
@@ -21211,6 +22264,21 @@
             "professor": "Yarasca Moscol, Julio Eduardo",
             "email": "jyarascam@utec.edu.pe",
             "vacancies": 30,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "Reserva de aula Mixta para Sesión de Programa Arquitectura de Datos - #SDO-7532",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "18:00",
+            "endTime": "22:00",
+            "startMinutes": 1080,
+            "endMinutes": 1320,
+            "professor": "Reserva de aula Mixta para Sesión de Programa Arquitectura de Datos - #SDO-7532",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           }
         ],
@@ -21243,6 +22311,21 @@
             "professor": "Jenny Carolina Saldaña",
             "email": "",
             "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "EL3016",
+            "courseName": "Análisis de Señales y Sistemas para Bioingeniería",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Mie",
+            "startTime": "12:00",
+            "endTime": "16:00",
+            "startMinutes": 720,
+            "endMinutes": 960,
+            "professor": "Clemente Arenas, Mark Donny",
+            "email": "mclemente@utec.edu.pe",
+            "vacancies": 30,
             "enrolled": 0
           },
           {
@@ -21285,9 +22368,9 @@
             "endTime": "21:00",
             "startMinutes": 1140,
             "endMinutes": 1260,
-            "professor": "Chira Siaden, David Gustavo",
-            "email": "dchira@utec.edu.pe",
-            "vacancies": 15,
+            "professor": "Maria Belen Ortiz",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           }
         ],
@@ -21446,6 +22529,21 @@
           },
           {
             "courseCode": "ACTIVIDAD",
+            "courseName": "Reserva - Heider Sanchez Enriquez",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Vie",
+            "startTime": "18:00",
+            "endTime": "20:00",
+            "startMinutes": 1080,
+            "endMinutes": 1200,
+            "professor": "Reserva - Heider Sanchez Enriquez",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
             "courseName": "CIBERSEGURIDAD V1 - CICLO I",
             "sectionNumber": "-",
             "sessionGroup": "-",
@@ -21472,6 +22570,21 @@
             "startMinutes": 540,
             "endMinutes": 1110,
             "professor": "CIBERSEGURIDAD V1 - CICLO I",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "TECH MBA v4 CICLO 2",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "11:00",
+            "endTime": "14:30",
+            "startMinutes": 660,
+            "endMinutes": 870,
+            "professor": "TECH MBA v4 CICLO 2",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -21506,16 +22619,31 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "1",
-            "sessionGroup": "1",
+            "sectionNumber": "2",
+            "sessionGroup": "2",
             "day": "Lun",
             "startTime": "09:00",
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Paucara Prado, Jhonatan David",
-            "email": "jpaucara@utec.edu.pe",
+            "professor": "Velarde Espinoza, Jose",
+            "email": "jvelarde@utec.edu.pe",
             "vacancies": 27,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "ExP PI1 - Paola Martinez",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Lun",
+            "startTime": "11:00",
+            "endTime": "13:00",
+            "startMinutes": 660,
+            "endMinutes": 780,
+            "professor": "ExP PI1 - Paola Martinez",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -21536,31 +22664,16 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "16",
-            "sessionGroup": "16",
+            "sectionNumber": "17",
+            "sessionGroup": "17",
             "day": "Lun",
             "startTime": "15:00",
             "endTime": "17:00",
             "startMinutes": 900,
             "endMinutes": 1020,
-            "professor": "Paucara Prado, Jhonatan David",
-            "email": "jpaucara@utec.edu.pe",
+            "professor": "Velarde Espinoza, Jose",
+            "email": "jvelarde@utec.edu.pe",
             "vacancies": 27,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "MT3001 ¿ Sensores y Actuadores - Evaluación Continua 2",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Lun",
-            "startTime": "18:00",
-            "endTime": "19:00",
-            "startMinutes": 1080,
-            "endMinutes": 1140,
-            "professor": "MT3001 ¿ Sensores y Actuadores - Evaluación Continua 2",
-            "email": "",
-            "vacancies": 0,
             "enrolled": 0
           }
         ],
@@ -21583,15 +22696,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "5",
-            "sessionGroup": "5",
+            "sectionNumber": "6",
+            "sessionGroup": "6",
             "day": "Mar",
             "startTime": "09:00",
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Paucara Prado, Jhonatan David",
-            "email": "jpaucara@utec.edu.pe",
+            "professor": "Ortiz Cabello, Omar Hernan",
+            "email": "oortiz@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -21628,15 +22741,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "4",
-            "sessionGroup": "4",
+            "sectionNumber": "8",
+            "sessionGroup": "8",
             "day": "Mar",
             "startTime": "15:00",
             "endTime": "17:00",
             "startMinutes": 900,
             "endMinutes": 1020,
-            "professor": "Paucara Prado, Jhonatan David",
-            "email": "jpaucara@utec.edu.pe",
+            "professor": "Ortiz Cabello, Omar Hernan",
+            "email": "oortiz@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -21690,15 +22803,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "9",
-            "sessionGroup": "9",
+            "sectionNumber": "10",
+            "sessionGroup": "10",
             "day": "Mie",
             "startTime": "09:00",
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Velarde Espinoza, Jose",
-            "email": "jvelarde@utec.edu.pe",
+            "professor": "Ortiz Cabello, Omar Hernan",
+            "email": "oortiz@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -21735,15 +22848,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "19",
-            "sessionGroup": "19",
+            "sectionNumber": "20",
+            "sessionGroup": "20",
             "day": "Mie",
             "startTime": "15:00",
             "endTime": "17:00",
             "startMinutes": 900,
             "endMinutes": 1020,
-            "professor": "Arellanos Tafur, Elmer Hugo",
-            "email": "earellanos@utec.edu.pe",
+            "professor": "Ortiz Cabello, Omar Hernan",
+            "email": "oortiz@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -21797,15 +22910,15 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "12",
-            "sessionGroup": "12",
+            "sectionNumber": "13",
+            "sessionGroup": "13",
             "day": "Jue",
             "startTime": "09:00",
             "endTime": "11:00",
             "startMinutes": 540,
             "endMinutes": 660,
-            "professor": "Velarde Espinoza, Jose",
-            "email": "jvelarde@utec.edu.pe",
+            "professor": "Bohorquez Bendezu, Jose Luis",
+            "email": "jbohorquez@utec.edu.pe",
             "vacancies": 27,
             "enrolled": 0
           },
@@ -21842,16 +22955,16 @@
           {
             "courseCode": "PI6002",
             "courseName": "Proyectos Interdisciplinarios II",
-            "sectionNumber": "22",
-            "sessionGroup": "22",
+            "sectionNumber": "23",
+            "sessionGroup": "23",
             "day": "Jue",
             "startTime": "17:00",
             "endTime": "19:00",
             "startMinutes": 1020,
             "endMinutes": 1140,
-            "professor": "Rojas muñoz, Nimrod Angel",
-            "email": "nrojas@utec.edu.pe",
-            "vacancies": 27,
+            "professor": "Bohorquez Bendezu, Jose Luis",
+            "email": "jbohorquez@utec.edu.pe",
+            "vacancies": 26,
             "enrolled": 0
           },
           {
@@ -22141,6 +23254,21 @@
             "email": "cwilliams@utec.edu.pe",
             "vacancies": 30,
             "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "Programa Arquitectura de Datos - #SDO-7699 - Adrián Loayza",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "19:00",
+            "endTime": "22:00",
+            "startMinutes": 1140,
+            "endMinutes": 1320,
+            "professor": "Programa Arquitectura de Datos - #SDO-7699 - Adrián Loayza",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
           }
         ],
         "Mie": [
@@ -22392,15 +23520,30 @@
         "Sab": [
           {
             "courseCode": "ACTIVIDAD",
-            "courseName": "Sesión CD&IA V5 - Ivette Olivas - #SDO-7896",
+            "courseName": "Examen de admisión - Cesar Paredes Vasquez",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Sab",
             "startTime": "08:00",
-            "endTime": "13:00",
+            "endTime": "12:00",
             "startMinutes": 480,
-            "endMinutes": 780,
-            "professor": "Sesión CD&IA V5 - Ivette Olivas - #SDO-7896",
+            "endMinutes": 720,
+            "professor": "Examen de admisión - Cesar Paredes Vasquez",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "CD&IA V4 - Ivette Olivas - #SDO-7663",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "08:00",
+            "endTime": "11:00",
+            "startMinutes": 480,
+            "endMinutes": 660,
+            "professor": "CD&IA V4 - Ivette Olivas - #SDO-7663",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -22447,21 +23590,6 @@
       "floor": 6,
       "sessionsByDay": {
         "Lun": [
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "MT3001 ¿ Sensores y Actuadores - Evaluación Continua 2",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Lun",
-            "startTime": "08:00",
-            "endTime": "09:00",
-            "startMinutes": 480,
-            "endMinutes": 540,
-            "professor": "MT3001 ¿ Sensores y Actuadores - Evaluación Continua 2",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
           {
             "courseCode": "AD3001",
             "courseName": "Análisis de Estados Financieros",
@@ -22594,7 +23722,22 @@
             "endTime": "17:00",
             "startMinutes": 900,
             "endMinutes": 1020,
-            "professor": "Carlos Abel Dominguez",
+            "professor": "Garcia Zanabria, Germain",
+            "email": "ggarciaz@utec.edu.pe",
+            "vacancies": 15,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "#SDO-6431 MAPFRE - Humberto Bazán",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "17:00",
+            "endTime": "21:00",
+            "startMinutes": 1020,
+            "endMinutes": 1260,
+            "professor": "#SDO-6431 MAPFRE - Humberto Bazán",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -22754,6 +23897,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MANTENIMIENTO TI",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "13:00",
+            "endTime": "15:00",
+            "startMinutes": 780,
+            "endMinutes": 900,
+            "professor": "MANTENIMIENTO TI",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "CS2041",
             "courseName": "Base de Datos I",
             "sectionNumber": "1",
@@ -22764,6 +23922,21 @@
             "startMinutes": 900,
             "endMinutes": 1020,
             "professor": "Henrry Ivan Arias",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "POSGRADO",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "17:00",
+            "endTime": "21:00",
+            "startMinutes": 1020,
+            "endMinutes": 1260,
+            "professor": "POSGRADO",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -22798,6 +23971,21 @@
             "professor": "Williams Valencia, Carlos Eduardo",
             "email": "cwilliams@utec.edu.pe",
             "vacancies": 30,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MANTENIMIENTO TI",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Vie",
+            "startTime": "12:00",
+            "endTime": "14:00",
+            "startMinutes": 720,
+            "endMinutes": 840,
+            "professor": "MANTENIMIENTO TI",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -22873,21 +24061,6 @@
             "startMinutes": 420,
             "endMinutes": 540,
             "professor": "David Ricardo Perez",
-            "email": "",
-            "vacancies": 0,
-            "enrolled": 0
-          },
-          {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "TECH MBA 26",
-            "sectionNumber": "-",
-            "sessionGroup": "-",
-            "day": "Sab",
-            "startTime": "11:00",
-            "endTime": "14:30",
-            "startMinutes": 660,
-            "endMinutes": 870,
-            "professor": "TECH MBA 26",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -23069,6 +24242,21 @@
             "professor": "Perez Cupe, Rosulo",
             "email": "rperezc@utec.edu.pe",
             "vacancies": 40,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MANTENIMIENTO TI",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mar",
+            "startTime": "19:00",
+            "endTime": "22:00",
+            "startMinutes": 1140,
+            "endMinutes": 1320,
+            "professor": "MANTENIMIENTO TI",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           }
         ],
@@ -23359,9 +24547,9 @@
             "endTime": "13:00",
             "startMinutes": 540,
             "endMinutes": 780,
-            "professor": "David Vereau",
-            "email": "",
-            "vacancies": 0,
+            "professor": "Quispe Gutierrez, Antonio Marty",
+            "email": "aquispeg@utec.edu.pe",
+            "vacancies": 45,
             "enrolled": 0
           },
           {
@@ -23664,6 +24852,21 @@
             "email": "jgalva@utec.edu.pe",
             "vacancies": 44,
             "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MANTENIMIENTO TI",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Mie",
+            "startTime": "19:00",
+            "endTime": "22:00",
+            "startMinutes": 1140,
+            "endMinutes": 1320,
+            "professor": "MANTENIMIENTO TI",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
           }
         ],
         "Jue": [
@@ -23708,6 +24911,21 @@
             "startMinutes": 660,
             "endMinutes": 780,
             "professor": "Maria Bermejo",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MANTENIMIENTO TI",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "13:00",
+            "endTime": "16:00",
+            "startMinutes": 780,
+            "endMinutes": 960,
+            "professor": "MANTENIMIENTO TI",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -23805,6 +25023,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "IQ5002",
+            "courseName": "Diseño de Procesos Químicos",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Vie",
+            "startTime": "12:00",
+            "endTime": "16:00",
+            "startMinutes": 720,
+            "endMinutes": 960,
+            "professor": "Flores Lima, Artemio",
+            "email": "aflores@utec.edu.pe",
+            "vacancies": 24,
+            "enrolled": 0
+          },
+          {
             "courseCode": "CS3025",
             "courseName": "Compiladores",
             "sectionNumber": "1",
@@ -23849,6 +25082,21 @@
             "professor": "Olivera Oliva, Davy Alonso",
             "email": "volivera@utec.edu.pe",
             "vacancies": 45,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MANTENIMIENTO TI",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Sab",
+            "startTime": "11:00",
+            "endTime": "13:00",
+            "startMinutes": 660,
+            "endMinutes": 780,
+            "professor": "MANTENIMIENTO TI",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -24185,6 +25433,21 @@
             "enrolled": 0
           },
           {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MANTENIMIENTO TI",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "13:00",
+            "endTime": "15:00",
+            "startMinutes": 780,
+            "endMinutes": 900,
+            "professor": "MANTENIMIENTO TI",
+            "email": "",
+            "vacancies": 0,
+            "enrolled": 0
+          },
+          {
             "courseCode": "IS5205",
             "courseName": "Process Mining",
             "sectionNumber": "1",
@@ -24197,6 +25460,21 @@
             "professor": "Cardenas Maita, Ana Rocio",
             "email": "acardenasm@utec.edu.pe",
             "vacancies": 20,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "MANTENIMIENTO TI",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Jue",
+            "startTime": "17:00",
+            "endTime": "20:00",
+            "startMinutes": 1020,
+            "endMinutes": 1200,
+            "professor": "MANTENIMIENTO TI",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -24259,6 +25537,21 @@
             "professor": "Quineche Orellana, Luis Ernesto",
             "email": "lquineche@utec.edu.pe",
             "vacancies": 45,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "ACTIVIDAD",
+            "courseName": "Mantenimiento TI - Fernando Jose Valle",
+            "sectionNumber": "-",
+            "sessionGroup": "-",
+            "day": "Vie",
+            "startTime": "13:00",
+            "endTime": "15:00",
+            "startMinutes": 780,
+            "endMinutes": 900,
+            "professor": "Mantenimiento TI - Fernando Jose Valle",
+            "email": "",
+            "vacancies": 0,
             "enrolled": 0
           },
           {
@@ -24564,6 +25857,36 @@
           }
         ],
         "Mie": [
+          {
+            "courseCode": "BI3009",
+            "courseName": "Principios de Biomecánica",
+            "sectionNumber": "2",
+            "sessionGroup": "21",
+            "day": "Mie",
+            "startTime": "07:00",
+            "endTime": "11:00",
+            "startMinutes": 420,
+            "endMinutes": 660,
+            "professor": "Cordova Rodriguez, Anthony Raul",
+            "email": "acordovar@utec.edu.pe",
+            "vacancies": 35,
+            "enrolled": 0
+          },
+          {
+            "courseCode": "BI5016",
+            "courseName": "Sistemas Biológicos",
+            "sectionNumber": "1",
+            "sessionGroup": "11",
+            "day": "Mie",
+            "startTime": "11:00",
+            "endTime": "15:00",
+            "startMinutes": 660,
+            "endMinutes": 900,
+            "professor": "HUACACHI BAZAN, JOSE GABRIEL",
+            "email": "jhuacachi@utec.edu.pe",
+            "vacancies": 45,
+            "enrolled": 0
+          },
           {
             "courseCode": "BI3008",
             "courseName": "Biodiseño",
@@ -24887,16 +26210,16 @@
         ],
         "Mie": [
           {
-            "courseCode": "ACTIVIDAD",
-            "courseName": "Reserva - Silvana Estefany Cruz Molina",
+            "courseCode": "RESERVA",
+            "courseName": "RESERVADO",
             "sectionNumber": "-",
             "sessionGroup": "-",
             "day": "Mie",
-            "startTime": "09:00",
-            "endTime": "13:00",
-            "startMinutes": 540,
-            "endMinutes": 780,
-            "professor": "Reserva - Silvana Estefany Cruz Molina",
+            "startTime": "07:00",
+            "endTime": "20:00",
+            "startMinutes": 420,
+            "endMinutes": 1200,
+            "professor": "Reserva Institucional",
             "email": "",
             "vacancies": 0,
             "enrolled": 0
@@ -24939,6 +26262,5 @@
         "Sab": []
       }
     }
-  ],
-  "enrichedWithExcel": true
+  ]
 }
