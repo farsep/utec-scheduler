@@ -54,6 +54,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
 
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const inspectorRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number>(0);
   const isDragging = useRef<boolean>(false);
   const isClosing = useRef<boolean>(false);
@@ -111,9 +112,23 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
     };
   }, [onClose]);
 
+  // Smooth scroll inspector into view when a session is clicked
+  useEffect(() => {
+    if (selectedSession && inspectorRef.current) {
+      inspectorRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selectedSession]);
+
   // Mobile swipe-to-dismiss gesture handling
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
+      if (e.target instanceof Element && (e.target.closest('button') || e.target.closest('a') || e.target.closest('input'))) {
+        return;
+      }
+      // If modal is scrolled down, allow normal scrolling instead of dragging sheet
+      if (modalRef.current && modalRef.current.scrollTop > 5) {
+        return;
+      }
       touchStartY.current = e.touches[0].clientY;
       isDragging.current = true;
       if (modalRef.current) modalRef.current.style.transition = 'none';
@@ -122,6 +137,10 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging.current || isClosing.current) return;
+    if (modalRef.current && modalRef.current.scrollTop > 5) {
+      isDragging.current = false;
+      return;
+    }
     const deltaY = e.touches[0].clientY - touchStartY.current;
 
     if (rafId.current) cancelAnimationFrame(rafId.current);
@@ -297,8 +316,9 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
             className={`prof-modal-tab-btn ${activeTab === 'horario' ? 'prof-modal-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('horario')}
           >
-            <Calendar size={16} />
-            <span>Horario Semanal ({professor.totalSessionsCount} clases)</span>
+            <Calendar size={15} />
+            <span className="tab-label-full">Horario Semanal ({professor.totalSessionsCount} clases)</span>
+            <span className="tab-label-short">Horario ({professor.totalSessionsCount})</span>
           </button>
 
           <button
@@ -306,8 +326,9 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
             className={`prof-modal-tab-btn ${activeTab === 'cursos' ? 'prof-modal-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('cursos')}
           >
-            <BookOpen size={16} />
-            <span>Cursos ({professor.uniqueCoursesCount}) • Secciones ({professor.uniqueSectionsCount})</span>
+            <BookOpen size={15} />
+            <span className="tab-label-full">Cursos ({professor.uniqueCoursesCount}) • Secciones ({professor.uniqueSectionsCount})</span>
+            <span className="tab-label-short">Cursos ({professor.uniqueCoursesCount})</span>
           </button>
 
           <button
@@ -315,8 +336,9 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
             className={`prof-modal-tab-btn ${activeTab === 'aulas' ? 'prof-modal-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('aulas')}
           >
-            <MapPin size={16} />
-            <span>Aulas Utilizadas ({professor.uniqueRooms.length})</span>
+            <MapPin size={15} />
+            <span className="tab-label-full">Aulas Utilizadas ({professor.uniqueRooms.length})</span>
+            <span className="tab-label-short">Aulas ({professor.uniqueRooms.length})</span>
           </button>
         </div>
 
@@ -335,7 +357,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
 
               {/* Inspector card if a session is clicked */}
               {selectedSession && (
-                <div className="prof-session-inspector glass-card">
+                <div ref={inspectorRef} className="prof-session-inspector glass-card">
                   <div className="prof-inspector-header">
                     <div className="prof-inspector-title-row">
                       <span
