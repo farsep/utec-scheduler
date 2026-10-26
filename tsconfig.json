@@ -5,7 +5,9 @@
     "**/*"
   ],
   "exclude": [
-    "dist"
+    "dist",
+    "scratch",
+    "CoursesLists"
   ],
   "compilerOptions": {
     "jsx": "react-jsx",

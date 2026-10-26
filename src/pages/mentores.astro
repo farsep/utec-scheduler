@@ -1,0 +1,26 @@
+---
+import { MentorApp } from '../components/MentorDirectory/MentorApp';
+import '../styles/main.css';
+import '../styles/classrooms.css';
+import '../styles/professors.css';
+import '../styles/mentors.css';
+---
+
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/MatricuLAB.svg" />
+		<link rel="apple-touch-icon" href="/MatricuLAB.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Mentores Académicos UTEC 2026-2 - MatrícuLAB</title>
+		<meta
+			name="description"
+			content="Directorio de mentores académicos UTEC: consulta horarios de asesorías gratuitas entre pares, modalidad presencial y virtual, y la programación de aulas asignadas para todo el ciclo 2026-2."
+		/>
+		<meta name="google-site-verification" content="ZgHiho7M8N8ye_j9arHgWtIVSpyeyTgiJHEmebWlKP8" />
+	</head>
+	<body>
+		<MentorApp client:only="react" />
+	</body>
+</html>
