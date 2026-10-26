@@ -1,9 +1,19 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { ProfessorInfo, ProfessorSession } from '../../types/professor';
 import { ALL_DAYS, DAY_LABELS } from '../../utils/classroomUtils';
 import { minutesToTime } from '../../utils/scheduleUtils';
-import { MapPin, Clock, Users, Laptop, Building, GraduationCap, CheckCircle } from 'lucide-react';
+import {
+  MapPin,
+  Clock,
+  Users,
+  Calendar,
+  LayoutGrid,
+  List,
+  Sparkles,
+  ChevronRight,
+  BookOpen
+} from 'lucide-react';
 
 interface ProfessorTimetableProps {
   professor: ProfessorInfo;
@@ -172,6 +182,19 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
   nowDay,
   nowMinutes
 }) => {
+  const [viewMode, setViewMode] = useState<'matriz' | 'agenda'>('matriz');
+
+  const defaultDay = useMemo<DayOfWeek>(() => {
+    if (nowDay && (professor.sessionsByDay[nowDay]?.length || 0) > 0) return nowDay;
+    const firstWithSessions = ALL_DAYS.find(d => (professor.sessionsByDay[d]?.length || 0) > 0);
+    return firstWithSessions || nowDay || 'Lun';
+  }, [nowDay, professor]);
+
+  const [agendaDay, setAgendaDay] = useState<DayOfWeek>(defaultDay);
+  const [activeScrollDay, setActiveScrollDay] = useState<DayOfWeek>(defaultDay);
+
+  const daysScrollRef = useRef<HTMLDivElement>(null);
+
   // Determine timetable bounds (start from at most 07:00 or earliest class, end at at least 21:00 or latest class)
   const { minHour, maxHour, totalHours } = useMemo(() => {
     let minH = 7;
@@ -222,235 +245,453 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
   const slotHeightPerHour = 60;
   const gridHeight = Math.max(620, totalHours * slotHeightPerHour);
 
+  // Auto-scroll on mount to today's column or first day with sessions (for mobile horizontal viewport)
+  useEffect(() => {
+    if (daysScrollRef.current) {
+      const targetDay = defaultDay;
+      const dayIdx = ALL_DAYS.indexOf(targetDay);
+      if (dayIdx > 0) {
+        const colEl = daysScrollRef.current.querySelector(`[data-day="${targetDay}"]`) as HTMLElement;
+        if (colEl) {
+          daysScrollRef.current.scrollTo({
+            left: Math.max(0, colEl.offsetLeft - 8),
+            behavior: 'smooth'
+          });
+        }
+      }
+    }
+  }, [defaultDay]);
+
+  const handleDayClick = (day: DayOfWeek) => {
+    setActiveScrollDay(day);
+    setAgendaDay(day);
+
+    if (viewMode === 'matriz' && daysScrollRef.current) {
+      const colEl = daysScrollRef.current.querySelector(`[data-day="${day}"]`) as HTMLElement;
+      if (colEl) {
+        daysScrollRef.current.scrollTo({
+          left: Math.max(0, colEl.offsetLeft - 8),
+          behavior: 'smooth'
+        });
+      }
+    }
+  };
+
+  const handleDaysScroll = () => {
+    if (!daysScrollRef.current) return;
+    const scrollLeft = daysScrollRef.current.scrollLeft;
+    const colEls = daysScrollRef.current.querySelectorAll('[data-day]');
+    for (let i = 0; i < colEls.length; i++) {
+      const col = colEls[i] as HTMLElement;
+      if (col.offsetLeft + col.offsetWidth / 2 > scrollLeft + 30) {
+        const day = col.getAttribute('data-day') as DayOfWeek;
+        if (day && day !== activeScrollDay) {
+          setActiveScrollDay(day);
+        }
+        break;
+      }
+    }
+  };
+
+  // Agenda mode sessions for selected day
+  const agendaSessions = useMemo(() => {
+    const raw = professor.sessionsByDay[agendaDay] || [];
+    return [...raw].sort((a, b) => a.startMinutes - b.startMinutes);
+  }, [professor, agendaDay]);
+
+  const totalAgendaHours = useMemo(() => {
+    return agendaSessions.reduce((sum, s) => sum + s.durationHours, 0);
+  }, [agendaSessions]);
+
   return (
     <div className="prof-timetable-wrap">
-      {/* Visual Timetable Grid */}
-      <div className="prof-timetable-container">
-        {/* Header Days Row */}
-        <div className="prof-timetable-header">
-          <div className="prof-timetable-time-corner">
-            <Clock size={14} />
-            <span>Hora</span>
-          </div>
+      {/* Quick Navigation Controls Bar */}
+      <div className="prof-timetable-controls-bar">
+        {/* Day Jump Navigation Pills */}
+        <div className="prof-day-jump-pills">
+          {ALL_DAYS.map(day => {
+            const count = (professor.sessionsByDay[day] || []).length;
+            const isToday = nowDay === day;
+            const isSelected = viewMode === 'agenda' ? agendaDay === day : activeScrollDay === day;
 
-          <div className="prof-timetable-days-grid">
-            {ALL_DAYS.map(day => {
-              const daySessionsCount = (professor.sessionsByDay[day] || []).length;
-              const isToday = nowDay === day;
-              const isBusiest = professor.busiestDay === day && daySessionsCount > 0;
-
-              return (
-                <div
-                  key={day}
-                  className={`prof-timetable-day-col-header ${isToday ? 'prof-timetable-day-col-header--today' : ''}`}
-                >
-                  <div className="prof-day-name-row">
-                    <span className="prof-day-abbr">{day}</span>
-                    <span className="prof-day-full">{DAY_LABELS[day]}</span>
-                  </div>
-                  <div className="prof-day-meta-row">
-                    {daySessionsCount > 0 ? (
-                      <span className={`prof-day-badge ${isBusiest ? 'prof-day-badge--busiest' : ''}`}>
-                        {daySessionsCount} {daySessionsCount === 1 ? 'clase' : 'clases'}
-                      </span>
-                    ) : (
-                      <span className="prof-day-badge prof-day-badge--empty">Libre</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+            return (
+              <button
+                key={day}
+                type="button"
+                className={`prof-day-jump-pill ${isSelected ? 'prof-day-jump-pill--active' : ''} ${isToday ? 'prof-day-jump-pill--today' : ''}`}
+                onClick={() => handleDayClick(day)}
+                title={`Ver clases de ${DAY_LABELS[day]} (${count} clases)`}
+              >
+                <span className="pill-day-label">{day.substring(0, 3)}</span>
+                {count > 0 ? (
+                  <span className="pill-day-count">{count}</span>
+                ) : (
+                  <span className="pill-day-dot" />
+                )}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Timetable Body (Time Ruler + 6 Day Columns) */}
-        <div className="prof-timetable-body" style={{ height: `${gridHeight}px` }}>
-          {/* Left Time Axis */}
-          <div className="prof-timetable-time-axis">
-            {timeMarks.map(mark => (
-              <div
-                key={mark.hour}
-                className="prof-time-mark"
-                style={{ top: `${mark.topPercent}%` }}
-              >
-                <span>{mark.label}</span>
-              </div>
-            ))}
+        {/* View Mode Switcher: Full Matrix vs Focused Day Agenda */}
+        <div className="prof-view-mode-toggle">
+          <button
+            type="button"
+            className={`prof-view-toggle-btn ${viewMode === 'matriz' ? 'active' : ''}`}
+            onClick={() => setViewMode('matriz')}
+            title="Vista Matriz Semanal Completa"
+          >
+            <LayoutGrid size={13} />
+            <span>Matriz</span>
+          </button>
+
+          <button
+            type="button"
+            className={`prof-view-toggle-btn ${viewMode === 'agenda' ? 'active' : ''}`}
+            onClick={() => setViewMode('agenda')}
+            title="Vista Detallada por Día"
+          >
+            <List size={13} />
+            <span>Por Día</span>
+          </button>
+        </div>
+      </div>
+
+      {/* VIEW MODE 1: VISUAL TIMETABLE MATRIX */}
+      {viewMode === 'matriz' ? (
+        <div className="prof-timetable-container">
+          {/* Fixed Left Time Axis Column */}
+          <div className="prof-timetable-time-col">
+            <div className="prof-timetable-time-corner">
+              <Clock size={13} />
+              <span>Hora</span>
+            </div>
+
+            <div className="prof-timetable-time-axis" style={{ height: `${gridHeight}px` }}>
+              {timeMarks.map(mark => (
+                <div
+                  key={mark.hour}
+                  className="prof-time-mark"
+                  style={{ top: `${mark.topPercent}%` }}
+                >
+                  <span>{mark.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* 6 Days Grid Columns */}
-          <div className="prof-timetable-columns-container">
-            {/* Horizontal Grid lines across columns */}
-            {timeMarks.map(mark => (
-              <div
-                key={`grid-${mark.hour}`}
-                className="prof-grid-hour-line"
-                style={{ top: `${mark.topPercent}%` }}
-              />
-            ))}
+          {/* Horizontally Scrollable Right Days Area (Header + Body scroll together) */}
+          <div
+            className="prof-timetable-days-scroll-wrapper"
+            ref={daysScrollRef}
+            onScroll={handleDaysScroll}
+          >
+            <div className="prof-timetable-days-content">
+              {/* Header Days Row */}
+              <div className="prof-timetable-days-header-row">
+                {ALL_DAYS.map(day => {
+                  const daySessionsCount = (professor.sessionsByDay[day] || []).length;
+                  const isToday = nowDay === day;
+                  const isBusiest = professor.busiestDay === day && daySessionsCount > 0;
+                  const isSelected = activeScrollDay === day;
 
-            {/* Live horizontal line if today */}
-            {showNowIndicator && (
-              <div
-                className="prof-timetable-now-line"
-                style={{ top: `${nowTopPercent}%` }}
-                title={`Hora actual: ${minutesToTime(nowMinutes || 0)}`}
-              >
-                <span className="prof-now-line-pill">Ahora {minutesToTime(nowMinutes || 0)}</span>
+                  return (
+                    <div
+                      key={day}
+                      data-day={day}
+                      className={`prof-timetable-day-col-header ${isToday ? 'prof-timetable-day-col-header--today' : ''} ${isSelected ? 'prof-timetable-day-col-header--focused' : ''}`}
+                      onClick={() => handleDayClick(day)}
+                    >
+                      <div className="prof-day-name-row">
+                        <span className="prof-day-abbr">{day}</span>
+                        <span className="prof-day-full">{DAY_LABELS[day]}</span>
+                      </div>
+                      <div className="prof-day-meta-row">
+                        {daySessionsCount > 0 ? (
+                          <span className={`prof-day-badge ${isBusiest ? 'prof-day-badge--busiest' : ''}`}>
+                            {daySessionsCount} {daySessionsCount === 1 ? 'clase' : 'clases'}
+                          </span>
+                        ) : (
+                          <span className="prof-day-badge prof-day-badge--empty">Libre</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
 
-            {/* 6 Columns */}
-            {ALL_DAYS.map(day => {
-              const rawSessions = professor.sessionsByDay[day] || [];
-              // Prevent duplicate overlapping sessions on the same timeslot
-              const seenSlot = new Set<string>();
-              const uniqueSessions = rawSessions.filter(s => {
-                const slotKey = `${s.courseCode}-${s.sessionGroup}-${s.startMinutes}-${s.endMinutes}`;
-                if (seenSlot.has(slotKey)) return false;
-                seenSlot.add(slotKey);
-                return true;
-              });
-              const positionedSessions = computeSessionLayouts(uniqueSessions);
-              const isToday = nowDay === day;
+              {/* Timetable Columns Container */}
+              <div className="prof-timetable-columns-container" style={{ height: `${gridHeight}px` }}>
+                {/* Horizontal Grid lines across columns */}
+                {timeMarks.map(mark => (
+                  <div
+                    key={`grid-${mark.hour}`}
+                    className="prof-grid-hour-line"
+                    style={{ top: `${mark.topPercent}%` }}
+                  />
+                ))}
 
-              return (
-                <div
-                  key={day}
-                  className={`prof-timetable-day-column ${isToday ? 'prof-timetable-day-column--today' : ''}`}
-                >
-                  {positionedSessions.map(({ session, colIndex, totalCols }) => {
-                    const top = ((session.startMinutes - minMinutes) / totalMinutes) * 100;
-                    const height = ((session.endMinutes - session.startMinutes) / totalMinutes) * 100;
-                    const isSelected = selectedSession?.id === session.id;
-                    const isLive =
-                      isToday &&
-                      nowMinutes !== undefined &&
-                      nowMinutes >= session.startMinutes &&
-                      nowMinutes < session.endMinutes;
+                {/* Live horizontal line if today */}
+                {showNowIndicator && (
+                  <div
+                    className="prof-timetable-now-line"
+                    style={{ top: `${nowTopPercent}%` }}
+                    title={`Hora actual: ${minutesToTime(nowMinutes || 0)}`}
+                  >
+                    <span className="prof-now-line-pill">Ahora {minutesToTime(nowMinutes || 0)}</span>
+                  </div>
+                )}
 
-                    const durationMinutes = session.endMinutes - session.startMinutes;
-                    const isShortBlock = durationMinutes <= 75; // 1-hour or 75-min short session
-                    const isLongBlock = durationMinutes >= 150; // 2.5h, 3h, 4h+ long session
-                    const isNarrowBlock = totalCols > 1;
+                {/* 6 Columns */}
+                {ALL_DAYS.map(day => {
+                  const rawSessions = professor.sessionsByDay[day] || [];
+                  // Prevent duplicate overlapping sessions on the same timeslot
+                  const seenSlot = new Set<string>();
+                  const uniqueSessions = rawSessions.filter(s => {
+                    const slotKey = `${s.courseCode}-${s.sessionGroup}-${s.startMinutes}-${s.endMinutes}`;
+                    if (seenSlot.has(slotKey)) return false;
+                    seenSlot.add(slotKey);
+                    return true;
+                  });
+                  const positionedSessions = computeSessionLayouts(uniqueSessions);
+                  const isToday = nowDay === day;
 
-                    const colWidthPercent = 100 / totalCols;
-                    const leftPercent = colIndex * colWidthPercent;
+                  return (
+                    <div
+                      key={day}
+                      data-day={day}
+                      className={`prof-timetable-day-column ${isToday ? 'prof-timetable-day-column--today' : ''}`}
+                    >
+                      {positionedSessions.map(({ session, colIndex, totalCols }) => {
+                        const top = ((session.startMinutes - minMinutes) / totalMinutes) * 100;
+                        const height = ((session.endMinutes - session.startMinutes) / totalMinutes) * 100;
+                        const isSelected = selectedSession?.id === session.id;
+                        const isLive =
+                          isToday &&
+                          nowMinutes !== undefined &&
+                          nowMinutes >= session.startMinutes &&
+                          nowMinutes < session.endMinutes;
 
-                    return (
-                      <div
-                        key={session.id}
-                        className={`prof-session-block ${isShortBlock ? 'prof-session-block--short' : ''} ${isLongBlock ? 'prof-session-block--long' : ''} ${isNarrowBlock ? 'prof-session-block--narrow' : ''} ${isSelected ? 'prof-session-block--selected' : ''} ${isLive ? 'prof-session-block--live' : ''}`}
-                        style={{
-                          top: `${top}%`,
-                          height: `calc(${height}% - 2px)`,
-                          left: totalCols > 1 ? `calc(${leftPercent}% + 2px)` : '3px',
-                          width: totalCols > 1 ? `calc(${colWidthPercent}% - 4px)` : 'calc(100% - 6px)',
-                          right: 'auto',
-                          borderLeftColor: session.courseColor || '#3b82f6',
-                          background: `linear-gradient(135deg, ${session.courseColor || '#3b82f6'}26 0%, #0d1527 100%)`
-                        }}
-                        onClick={() => onSelectSession(isSelected ? null : session)}
-                        title={`${session.courseCode}: ${session.courseName}\n${session.sessionGroup}\n${session.startTime} - ${session.endTime}\nAula: ${session.roomDisplayName}`}
-                      >
-                        {isShortBlock ? (
-                          /* Compact 2-row layout with AutoAdvanceCarousel ticker: strictly bounded within 1 hour, auto-advances overflowing info */
-                          <div className="prof-session-short-inner">
-                            <div className="prof-session-short-row-top">
-                              <span
-                                className="prof-session-code"
-                                style={{ color: session.courseColor || '#60a5fa' }}
-                              >
-                                {session.courseCode}
-                              </span>
-                              <AutoAdvanceCarousel className="prof-session-short-title-wrap">
-                                <span className="prof-session-short-title" title={session.courseName}>
-                                  {session.courseName}
-                                </span>
-                              </AutoAdvanceCarousel>
-                            </div>
+                        const durationMinutes = session.endMinutes - session.startMinutes;
+                        const isShortBlock = durationMinutes <= 75; // 1-hour or 75-min short session
+                        const isLongBlock = durationMinutes >= 150; // 2.5h, 3h, 4h+ long session
+                        const isNarrowBlock = totalCols > 1;
 
-                            <div className="prof-session-short-row-bottom">
-                              <AutoAdvanceCarousel className="prof-session-short-bottom-wrap">
-                                <div className="prof-session-short-bottom-content">
-                                  <span className="prof-session-short-time">
+                        const colWidthPercent = 100 / totalCols;
+                        const leftPercent = colIndex * colWidthPercent;
+
+                        return (
+                          <div
+                            key={session.id}
+                            className={`prof-session-block ${isShortBlock ? 'prof-session-block--short' : ''} ${isLongBlock ? 'prof-session-block--long' : ''} ${isNarrowBlock ? 'prof-session-block--narrow' : ''} ${isSelected ? 'prof-session-block--selected' : ''} ${isLive ? 'prof-session-block--live' : ''}`}
+                            style={{
+                              top: `${top}%`,
+                              height: `calc(${height}% - 2px)`,
+                              left: totalCols > 1 ? `calc(${leftPercent}% + 2px)` : '3px',
+                              width: totalCols > 1 ? `calc(${colWidthPercent}% - 4px)` : 'calc(100% - 6px)',
+                              right: 'auto',
+                              borderLeftColor: session.courseColor || '#3b82f6',
+                              background: `linear-gradient(135deg, ${session.courseColor || '#3b82f6'}26 0%, #0d1527 100%)`
+                            }}
+                            onClick={() => onSelectSession(isSelected ? null : session)}
+                            title={`${session.courseCode}: ${session.courseName}\n${session.sessionGroup}\n${session.startTime} - ${session.endTime}\nAula: ${session.roomDisplayName}`}
+                          >
+                            {isShortBlock ? (
+                              /* Compact 2-row layout with AutoAdvanceCarousel ticker */
+                              <div className="prof-session-short-inner">
+                                <div className="prof-session-short-row-top">
+                                  <span
+                                    className="prof-session-code"
+                                    style={{ color: session.courseColor || '#60a5fa' }}
+                                  >
+                                    {session.courseCode}
+                                  </span>
+                                  <AutoAdvanceCarousel className="prof-session-short-title-wrap">
+                                    <span className="prof-session-short-title" title={session.courseName}>
+                                      {session.courseName}
+                                    </span>
+                                  </AutoAdvanceCarousel>
+                                </div>
+
+                                <div className="prof-session-short-row-bottom">
+                                  <AutoAdvanceCarousel className="prof-session-short-bottom-wrap">
+                                    <div className="prof-session-short-bottom-content">
+                                      <span className="prof-session-short-time">
+                                        {session.startTime} - {session.endTime}
+                                      </span>
+                                      <span className="prof-session-group-tag" title={session.sessionGroup}>
+                                        {abbreviateSessionGroup(session.sessionGroup)}
+                                      </span>
+                                      <span className="prof-session-room-tag" title={session.roomDisplayName}>
+                                        <MapPin size={9} />
+                                        {session.roomCode}
+                                      </span>
+                                      {isLive && (
+                                        <span className="prof-session-live-beacon">
+                                          VIVO
+                                        </span>
+                                      )}
+                                    </div>
+                                  </AutoAdvanceCarousel>
+                                </div>
+                              </div>
+                            ) : (
+                              /* Structured layout for standard / long sessions */
+                              <div className="prof-session-block-inner">
+                                <div className="prof-session-block-header">
+                                  <span
+                                    className="prof-session-code"
+                                    style={{ color: session.courseColor || '#60a5fa' }}
+                                  >
+                                    {session.courseCode}
+                                  </span>
+                                  <span className="prof-session-time">
                                     {session.startTime} - {session.endTime}
                                   </span>
+                                </div>
+
+                                <div className={`prof-session-name ${isLongBlock ? 'prof-session-name--long' : ''}`} title={session.courseName}>
+                                  {session.courseName}
+                                </div>
+
+                                {isLongBlock && (
+                                  <div className="prof-session-long-badge-row">
+                                    <span className="prof-session-duration-tag">
+                                      {session.durationHours}h de clase
+                                    </span>
+                                    {session.modality && (
+                                      <span className="prof-session-modality-tag">
+                                        {session.modality}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+
+                                <div className="prof-session-footer">
                                   <span className="prof-session-group-tag" title={session.sessionGroup}>
-                                    {abbreviateSessionGroup(session.sessionGroup)}
+                                    {isNarrowBlock ? abbreviateSessionGroup(session.sessionGroup) : session.sessionGroup}
                                   </span>
+
                                   <span className="prof-session-room-tag" title={session.roomDisplayName}>
-                                    <MapPin size={9} />
+                                    <MapPin size={11} />
                                     {session.roomCode}
                                   </span>
+
                                   {isLive && (
                                     <span className="prof-session-live-beacon">
-                                      VIVO
+                                      EN VIVO
                                     </span>
                                   )}
                                 </div>
-                              </AutoAdvanceCarousel>
-                            </div>
-                          </div>
-                        ) : (
-                          /* Structured cohesive layout for 2h - 4h+ sessions */
-                          <div className="prof-session-block-inner">
-                            <div className="prof-session-block-header">
-                              <span
-                                className="prof-session-code"
-                                style={{ color: session.courseColor || '#60a5fa' }}
-                              >
-                                {session.courseCode}
-                              </span>
-                              <span className="prof-session-time">
-                                {session.startTime} - {session.endTime}
-                              </span>
-                            </div>
-
-                            <div className={`prof-session-name ${isLongBlock ? 'prof-session-name--long' : ''}`} title={session.courseName}>
-                              {session.courseName}
-                            </div>
-
-                            {isLongBlock && (
-                              <div className="prof-session-long-badge-row">
-                                <span className="prof-session-duration-tag">
-                                  {session.durationHours}h de clase
-                                </span>
-                                {session.modality && (
-                                  <span className="prof-session-modality-tag">
-                                    {session.modality}
-                                  </span>
-                                )}
                               </div>
                             )}
-
-                            <div className="prof-session-footer">
-                              <span className="prof-session-group-tag" title={session.sessionGroup}>
-                                {isNarrowBlock ? abbreviateSessionGroup(session.sessionGroup) : session.sessionGroup}
-                              </span>
-
-                              <span className="prof-session-room-tag" title={session.roomDisplayName}>
-                                <MapPin size={11} />
-                                {session.roomCode}
-                              </span>
-
-                              {isLive && (
-                                <span className="prof-session-live-beacon">
-                                  EN VIVO
-                                </span>
-                              )}
-                            </div>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        /* VIEW MODE 2: FOCUSED DAY AGENDA VIEW (Zero truncation on mobile) */
+        <div className="prof-agenda-container">
+          <div className="prof-agenda-header">
+            <div className="prof-agenda-day-title">
+              <Calendar size={16} />
+              <span>Clases de {DAY_LABELS[agendaDay]}</span>
+              <span className="prof-agenda-day-badge">
+                {agendaSessions.length} {agendaSessions.length === 1 ? 'clase' : 'clases'} ({totalAgendaHours}h)
+              </span>
+            </div>
+            {nowDay === agendaDay && (
+              <span className="prof-live-badge">
+                <span className="live-dot" /> HOY
+              </span>
+            )}
+          </div>
+
+          {agendaSessions.length === 0 ? (
+            <div className="prof-agenda-empty">
+              <span className="prof-agenda-empty-icon">☕</span>
+              <h4>Día libre de clases</h4>
+              <p>El docente no tiene sesiones programadas para el {DAY_LABELS[agendaDay]}.</p>
+            </div>
+          ) : (
+            <div className="prof-agenda-list">
+              {agendaSessions.map(session => {
+                const isSelected = selectedSession?.id === session.id;
+                const isLive =
+                  nowDay === session.day &&
+                  nowMinutes !== undefined &&
+                  nowMinutes >= session.startMinutes &&
+                  nowMinutes < session.endMinutes;
+
+                return (
+                  <div
+                    key={session.id}
+                    className={`prof-agenda-card ${isSelected ? 'prof-agenda-card--selected' : ''} ${isLive ? 'prof-agenda-card--live' : ''}`}
+                    style={{ borderLeftColor: session.courseColor || '#3b82f6' }}
+                    onClick={() => onSelectSession(isSelected ? null : session)}
+                  >
+                    <div className="prof-agenda-time-col">
+                      <span className="prof-agenda-time-start">{session.startTime}</span>
+                      <span
+                        className="prof-agenda-time-bar"
+                        style={{ backgroundColor: session.courseColor || '#3b82f6' }}
+                      />
+                      <span className="prof-agenda-time-end">{session.endTime}</span>
+                      <span className="prof-agenda-time-duration">{session.durationHours}h</span>
+                    </div>
+
+                    <div className="prof-agenda-details">
+                      <div className="prof-agenda-top-row">
+                        <span
+                          className="prof-agenda-course-code"
+                          style={{
+                            color: session.courseColor || '#60a5fa',
+                            backgroundColor: `${session.courseColor || '#3b82f6'}20`,
+                            borderColor: `${session.courseColor || '#3b82f6'}44`
+                          }}
+                        >
+                          {session.courseCode}
+                        </span>
+                        {isLive && (
+                          <span className="prof-session-live-beacon">
+                            EN VIVO AHORA
+                          </span>
+                        )}
+                      </div>
+
+                      <h4 className="prof-agenda-course-name">{session.courseName}</h4>
+
+                      <div className="prof-agenda-meta-row">
+                        <span className="prof-agenda-meta-pill">
+                          <Users size={12} />
+                          <span>Sección {session.sectionNumber} • {session.sessionGroup}</span>
+                        </span>
+
+                        <span className="prof-agenda-meta-pill">
+                          <MapPin size={12} />
+                          <span>Aula {session.roomCode} (Piso {session.floor})</span>
+                        </span>
+
+                        {session.modality && (
+                          <span className="prof-agenda-meta-pill">
+                            <span>{session.modality}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

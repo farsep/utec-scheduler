@@ -801,6 +801,17 @@
   max-width: 960px;
   width: 95%;
   max-height: 90vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tab-label-short {
+  display: none;
+}
+
+.tab-label-full {
+  display: inline;
 }
 
 .prof-modal-header {
@@ -1026,30 +1037,148 @@
 .prof-timetable-wrap {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   width: 100%;
 }
 
+/* Quick Navigation Controls Bar */
+.prof-timetable-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.prof-day-jump-pills {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(10, 14, 23, 0.55);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: none;
+}
+
+.prof-day-jump-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.prof-day-jump-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.prof-day-jump-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.prof-day-jump-pill--active {
+  background: var(--accent-primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.prof-day-jump-pill--today {
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.pill-day-label {
+  text-transform: capitalize;
+}
+
+.pill-day-count {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.pill-day-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.prof-view-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(10, 14, 23, 0.55);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-left: auto;
+}
+
+.prof-view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.prof-view-toggle-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.prof-view-toggle-btn.active {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+/* Timetable Container: Left fixed time column + Right scrollable days */
 .prof-timetable-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   border-radius: 14px;
   background: rgba(10, 14, 23, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
   box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+  position: relative;
+  width: 100%;
 }
 
-.prof-timetable-header {
-  display: grid;
-  grid-template-columns: 56px 1fr;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(15, 21, 35, 0.95);
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* Left Time Axis Column - Fixed horizontally */
+.prof-timetable-time-col {
+  width: 54px;
+  min-width: 54px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(13, 19, 33, 0.98);
+  z-index: 10;
+  box-shadow: 3px 0 10px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
 }
 
 .prof-timetable-time-corner {
@@ -1060,22 +1189,71 @@
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-muted);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 8px 0;
+  height: 48px;
+  box-sizing: border-box;
+  background: rgba(15, 21, 35, 0.98);
 }
 
-.prof-timetable-days-grid {
+.prof-timetable-time-axis {
+  position: relative;
+  width: 100%;
+  flex: 1;
+}
+
+.prof-time-mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Right Scrollable Days Area */
+.prof-timetable-days-scroll-wrapper {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
+}
+
+.prof-timetable-days-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.prof-timetable-days-header-row {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 21, 35, 0.95);
+  height: 48px;
+  box-sizing: border-box;
 }
 
 .prof-timetable-day-col-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 4px;
+  justify-content: center;
+  padding: 6px 4px;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.prof-timetable-day-col-header:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .prof-timetable-day-col-header:last-child {
@@ -1084,6 +1262,10 @@
 
 .prof-timetable-day-col-header--today {
   background: rgba(59, 130, 246, 0.12);
+}
+
+.prof-timetable-day-col-header--focused {
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .prof-day-name-row {
@@ -1124,37 +1306,11 @@
 }
 
 /* Timetable Body Grid */
-.prof-timetable-body {
-  display: grid;
-  grid-template-columns: 56px 1fr;
-  position: relative;
-  min-height: 520px;
-  height: 540px;
-}
-
-.prof-timetable-time-axis {
-  position: relative;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(10, 14, 23, 0.4);
-}
-
-.prof-time-mark {
-  position: absolute;
-  left: 0;
-  right: 0;
-  transform: translateY(-50%);
-  display: flex;
-  justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
 .prof-timetable-columns-container {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   position: relative;
-  height: 100%;
+  width: 100%;
 }
 
 .prof-grid-hour-line {
@@ -1201,6 +1357,201 @@
 
 .prof-timetable-day-column--today {
   background: rgba(59, 130, 246, 0.03);
+}
+
+/* --------------------------------------------------------------------------
+   Agenda View Styles
+   -------------------------------------------------------------------------- */
+.prof-agenda-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.prof-agenda-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.prof-agenda-day-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.prof-agenda-day-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.16);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.prof-agenda-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prof-agenda-card {
+  display: flex;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(15, 21, 35, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid #3b82f6;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.prof-agenda-card:hover {
+  transform: translateY(-2px);
+  background: rgba(22, 32, 54, 0.95);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.prof-agenda-card--selected {
+  outline: 2px solid #60a5fa;
+  outline-offset: 1px;
+  background: rgba(25, 36, 62, 0.95);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+}
+
+.prof-agenda-card--live {
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+}
+
+.prof-agenda-time-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding-right: 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.prof-agenda-time-start {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.prof-agenda-time-bar {
+  width: 2px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 3px 0;
+  border-radius: 2px;
+}
+
+.prof-agenda-time-end {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.prof-agenda-time-duration {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #93c5fd;
+  margin-top: 4px;
+}
+
+.prof-agenda-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.prof-agenda-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.prof-agenda-course-code {
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid;
+  letter-spacing: 0.3px;
+}
+
+.prof-agenda-course-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+  margin: 0;
+}
+
+.prof-agenda-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.prof-agenda-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.prof-agenda-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 16px;
+  text-align: center;
+  background: rgba(10, 14, 23, 0.5);
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.prof-agenda-empty-icon {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+}
+
+.prof-agenda-empty h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.prof-agenda-empty p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
 }
 
 /* Session Block in Timetable */
@@ -2022,26 +2373,156 @@
     grid-template-columns: 1fr;
   }
 
-  .prof-modal-profile-group {
-    flex-direction: column;
-    gap: 12px;
-  }
-  .prof-modal-avatar {
-    width: 52px;
-    height: 52px;
-    min-width: 52px;
-    font-size: 1.25rem;
-  }
-  .prof-modal-title {
-    font-size: 1.25rem;
+  /* Bottom Sheet Modal on mobile / tablet <= 768px */
+  .classroom-modal-overlay.prof-modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+    overflow-y: hidden !important;
   }
 
-  /* Timetable on mobile horizontal scroll */
-  .prof-timetable-wrap {
-    overflow-x: auto;
+  .classroom-modal.prof-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 92vh !important;
+    max-height: 92vh !important;
+    border-radius: 24px 24px 0 0 !important;
+    padding: 8px 14px max(24px, env(safe-area-inset-bottom)) !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    overflow-y: auto !important; /* CRITICAL: Enables fluid vertical scrolling on the modal */
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
   }
-  .prof-timetable-container {
-    min-width: 600px;
+
+  .prof-modal-header {
+    gap: 10px;
+  }
+
+  .prof-modal-profile-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .prof-modal-avatar {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 14px;
+    font-size: 1.15rem;
+  }
+
+  .prof-modal-title {
+    font-size: 1.15rem;
+    line-height: 1.2;
+  }
+
+  .prof-modal-subname {
+    font-size: 0.76rem;
+  }
+
+  .prof-modal-email-row {
+    margin-top: 2px;
+    gap: 6px;
+  }
+
+  .prof-modal-email-link {
+    padding: 3px 8px;
+    font-size: 0.74rem;
+  }
+
+  .prof-modal-copy-btn {
+    padding: 3px 8px;
+    font-size: 0.72rem;
+  }
+
+  .prof-modal-live-banner {
+    padding: 7px 10px;
+    font-size: 0.78rem;
+    gap: 8px;
+  }
+
+  .prof-modal-next-banner {
+    padding: 6px 10px;
+    font-size: 0.76rem;
+    gap: 6px;
+  }
+
+  /* 4 KPI cards in single sleek row */
+  .classroom-modal-kpis.prof-modal-kpis {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 5px !important;
+    margin-bottom: 2px;
+  }
+
+  .classroom-modal-kpis.prof-modal-kpis .modal-kpi-card {
+    padding: 6px 2px !important;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  .classroom-modal-kpis.prof-modal-kpis .kpi-card-label {
+    font-size: 0.6rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .classroom-modal-kpis.prof-modal-kpis .kpi-card-value {
+    font-size: 0.92rem;
+    font-weight: 800;
+  }
+
+  /* Sticky nav tabs on mobile */
+  .prof-modal-nav-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: rgba(15, 21, 35, 0.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    padding: 6px 0 8px;
+    margin: 0 -4px;
+    padding-left: 4px;
+    padding-right: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .prof-modal-tab-btn {
+    padding: 6px 8px;
+    font-size: 0.78rem;
+    gap: 5px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .tab-label-full {
+    display: none;
+  }
+
+  .tab-label-short {
+    display: inline;
+  }
+
+  /* Timetable Days Content on mobile */
+  .prof-timetable-days-content {
+    min-width: 720px !important;
+  }
+
+  .prof-timetable-controls-bar {
+    gap: 6px;
+  }
+
+  .prof-day-jump-pills {
+    flex: 1;
+    min-width: 0;
   }
 
   .prof-course-session-row {
