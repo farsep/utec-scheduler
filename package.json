@@ -14,7 +14,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "scrape:aulas": "tsx scripts/scrapeAulasIntranet.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
@@ -33,6 +34,7 @@
     "typescript": "^7.0.2"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
     "rollup": "^4.63.3",
     "tsx": "^4.23.13",
     "vite-plugin-top-level-await": "^1.6.0",
