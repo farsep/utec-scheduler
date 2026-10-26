@@ -122,19 +122,50 @@ export const ClassroomApp: React.FC = () => {
     setSimulatedMinutes(realTime.minutes);
   };
 
-  // Load default master schedule on mount
+  // Data source info
+  const [dataSourceInfo, setDataSourceInfo] = useState<{
+    type: 'intranet' | 'excel';
+    weekRange?: { start: string; end: string };
+    totalEvents?: number;
+    updatedAt?: string;
+  }>({ type: 'intranet' });
+
+  // Load schedule on mount (intranet live JSON with Excel fallback)
   const loadMasterSchedule = useCallback(async () => {
     setIsLoading(true);
     setLoadError(null);
     try {
+      // 1. Try loading real-time intranet JSON
+      try {
+        const liveRes = await fetch('/data/classrooms_intranet.json');
+        if (liveRes.ok) {
+          const liveData = await liveRes.json();
+          if (Array.isArray(liveData.classrooms) && liveData.classrooms.length > 0) {
+            setClassrooms(liveData.classrooms);
+            setDataSourceInfo({
+              type: 'intranet',
+              weekRange: liveData.weekRange,
+              totalEvents: liveData.totalEvents,
+              updatedAt: liveData.updatedAt
+            });
+            setIsLoading(false);
+            return;
+          }
+        }
+      } catch (liveErr) {
+        console.warn('Classrooms intranet data not found, attempting Excel fallback:', liveErr);
+      }
+
+      // 2. Fallback to Excel
       const res = await fetch('/samples/Consulta_Horario.xlsx');
-      if (!res.ok) throw new Error('No se pudo descargar el archivo de horarios de ejemplo');
+      if (!res.ok) throw new Error('No se pudo descargar el archivo de horarios');
       const buffer = await res.arrayBuffer();
       const parseResult = parseExcelFile(buffer);
       const extractedRooms = extractClassroomsFromCourses(parseResult.courses);
       setClassrooms(extractedRooms);
+      setDataSourceInfo({ type: 'excel' });
     } catch (err: any) {
-      console.error('Error cargando Consulta_Horario.xlsx:', err);
+      console.error('Error cargando datos de horarios:', err);
       setLoadError(err?.message || 'Error al cargar datos de horarios');
     } finally {
       setIsLoading(false);
@@ -269,9 +300,26 @@ export const ClassroomApp: React.FC = () => {
         {/* Hero Banner Section */}
         <div className="classroom-hero-banner glass-card">
           <div className="hero-content">
-            <div className="hero-chip">
-              <Sparkles size={14} className="hero-chip-icon" />
-              <span>Buscador Inteligente de Espacios UTEC</span>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
+              <div className="hero-chip" style={{ marginBottom: 0 }}>
+                <Sparkles size={14} className="hero-chip-icon" />
+                <span>Buscador Inteligente de Espacios UTEC</span>
+              </div>
+              {dataSourceInfo.type === 'intranet' && (
+                <div
+                  className="hero-chip"
+                  style={{
+                    marginBottom: 0,
+                    background: 'rgba(16, 185, 129, 0.15)',
+                    borderColor: 'rgba(16, 185, 129, 0.4)',
+                    color: '#34d399'
+                  }}
+                  title={`Sincronizado con Intranet de Reservas UTEC (${dataSourceInfo.weekRange ? `Semana ${dataSourceInfo.weekRange.start} - ${dataSourceInfo.weekRange.end}` : ''})`}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+                  <span>Intranet UTEC en Vivo ({dataSourceInfo.totalEvents?.toLocaleString() || 0} reservas)</span>
+                </div>
+              )}
             </div>
             <h1 className="hero-title">
               Encuentra <span className="gradient-text">Aulas y Espacios Libres</span> al instante
