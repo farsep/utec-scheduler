@@ -5,6 +5,7 @@ import type {
   ProfessorCourseSummary,
   ProfessorFilterState
 } from '../types/professor';
+import type { ClassroomInfo } from '../types/classroom';
 import { parseLocationInfo, ALL_DAYS } from './classroomUtils';
 import { parseSessionType, getCourseColor } from './scheduleUtils';
 
@@ -515,4 +516,59 @@ export function filterAndSortProfessors(
           return a.displayName.localeCompare(b.displayName);
       }
     });
+}
+
+/**
+ * Cross-references parsed Excel courses with scraped intranet sessions to fill in
+ * missing or unassigned professors ("DOCENTE UTEC" or blank) with their real assigned teachers.
+ */
+export function enrichCoursesWithIntranetData(courses: Course[], intranetClassrooms: ClassroomInfo[]): Course[] {
+  // Index intranet sessions by courseCode + sectionNumber + day
+  const intranetMap = new Map<string, { professor: string; email: string }>();
+
+  for (const room of intranetClassrooms) {
+    for (const day of ALL_DAYS) {
+      const daySessions = room.sessionsByDay[day] || [];
+      for (const sess of daySessions) {
+        if (sess.courseCode === 'RESERVA' || sess.courseCode === 'ACTIVIDAD') continue;
+        if (!sess.professor || /docente\s*utec/i.test(sess.professor)) continue;
+
+        const secNorm = String(parseInt(sess.sectionNumber, 10) || sess.sectionNumber).trim();
+        const key = `${sess.courseCode.toUpperCase()}::${secNorm}::${day}`;
+        if (!intranetMap.has(key)) {
+          intranetMap.set(key, {
+            professor: sess.professor,
+            email: sess.email || ''
+          });
+        }
+      }
+    }
+  }
+
+  // Clone and enrich courses
+  return courses.map(course => ({
+    ...course,
+    sections: course.sections.map(section => {
+      const secNorm = String(parseInt(section.sectionNumber, 10) || section.sectionNumber).trim();
+      return {
+        ...section,
+        sessions: section.sessions.map(session => {
+          const p = (session.professor || '').trim();
+          const isMissing = !p || /docente\s*utec/i.test(p) || /por\s*asignar/i.test(p) || /no\s*asignado/i.test(p);
+          if (isMissing && session.day) {
+            const key = `${course.code.toUpperCase()}::${secNorm}::${session.day}`;
+            if (intranetMap.has(key)) {
+              const found = intranetMap.get(key)!;
+              return {
+                ...session,
+                professor: found.professor,
+                email: found.email || session.email
+              };
+            }
+          }
+          return session;
+        })
+      };
+    })
+  }));
 }
