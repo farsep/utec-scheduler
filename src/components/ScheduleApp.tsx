@@ -441,7 +441,7 @@ export const ScheduleApp: React.FC = () => {
       )}
 
       {/* App Footer */}
-      <footer style={{ marginTop: 'auto', padding: '16px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', fontSize: '0.78rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', width: '100%' }}>
+      <footer style={{ marginTop: 'auto', padding: '16px 14px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '6px 12px', fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', width: '100%', textAlign: 'center' }}>
         <span>MatrícuLAB © 2026</span>
         <span>•</span>
         <a href="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
