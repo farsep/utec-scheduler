@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar, Upload, Sparkles, Trash2, Building2, GraduationCap, Award, BookOpen } from 'lucide-react';
 import type { MetadataInfo } from '../types/schedule';
+import { MobileBottomNav } from './MobileBottomNav';
 
 interface NavbarProps {
   metadata: MetadataInfo;
@@ -20,7 +21,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   eligibleCount
 }) => {
   return (
-    <header className={`app-header ${coursesCount === 0 ? 'app-header--empty' : ''}`}>
+    <>
+      <header className={`app-header ${coursesCount === 0 ? 'app-header--empty' : ''}`}>
       <div className="classroom-brand-section">
         <a href="/" className="brand-title brand-title--link" title="MatrícuLAB - Armador de Horarios">
           <div className="brand-logo">
@@ -92,5 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
       </div>
     </header>
+    <MobileBottomNav activeTab="horarios" />
+  </>
   );
 };

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, Building2, GraduationCap, Award, BookOpen } from 'lucide-react';
+import { MobileBottomNav } from '../MobileBottomNav';
 
 interface MentorNavbarProps {
   totalMentors: number;
@@ -13,7 +14,8 @@ export const MentorNavbar: React.FC<MentorNavbarProps> = ({
   liveNowCount
 }) => {
   return (
-    <header className="app-header classroom-navbar mentor-navbar">
+    <>
+      <header className="app-header classroom-navbar mentor-navbar">
       {/* Brand & Global Mode Switcher Tabs */}
       <div className="classroom-brand-section">
         <a href="/" className="brand-title brand-title--link" title="Ir al Armador de Horarios">
@@ -71,5 +73,7 @@ export const MentorNavbar: React.FC<MentorNavbarProps> = ({
         </div>
       </div>
     </header>
+    <MobileBottomNav activeTab="mentores" />
+  </>
   );
 };
