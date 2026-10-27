@@ -1,22 +1,16 @@
 import React from 'react';
-import { Calendar, Building2, GraduationCap, Award, BookOpen, Star, Radio } from 'lucide-react';
+import { Calendar, Building2, GraduationCap, Award, BookOpen } from 'lucide-react';
 
 interface CourseNavbarProps {
   totalCourses: number;
   filteredCount: number;
   liveNowCount: number;
-  visitorCount: number;
-  onToggleVisitorFilter: () => void;
-  isVisitorFilterActive: boolean;
 }
 
 export const CourseNavbar: React.FC<CourseNavbarProps> = ({
   totalCourses,
   filteredCount,
-  liveNowCount,
-  visitorCount,
-  onToggleVisitorFilter,
-  isVisitorFilterActive
+  liveNowCount
 }) => {
   return (
     <header className="app-header classroom-navbar course-navbar">
@@ -58,10 +52,10 @@ export const CourseNavbar: React.FC<CourseNavbarProps> = ({
         </nav>
       </div>
 
-      {/* Meta Stats Badges */}
-      <div className="classroom-navbar-meta course-navbar-meta">
+      {/* Meta Stats Badge */}
+      <div className="classroom-navbar-meta">
         <div className="meta-chip">
-          <span style={{ color: 'var(--text-muted)' }}>Cursos Ofertados:</span>
+          <span style={{ color: 'var(--text-muted)' }}>Cursos:</span>
           <span className="meta-chip-val" style={{ color: 'var(--accent-primary)' }}>
             {filteredCount === totalCourses ? totalCourses : `${filteredCount} de ${totalCourses}`}
           </span>
@@ -75,18 +69,6 @@ export const CourseNavbar: React.FC<CourseNavbarProps> = ({
             </span>
           )}
         </div>
-
-        {/* Visitor quick chip button */}
-        <button
-          type="button"
-          onClick={onToggleVisitorFilter}
-          className={`course-visitor-pill-btn ${isVisitorFilterActive ? 'course-visitor-pill-btn--active' : ''}`}
-          title="Ver mis cursos guardados como visitante / oyente"
-        >
-          <Star size={14} className={visitorCount > 0 ? 'star-filled-gold' : ''} />
-          <span>Mis Visitados</span>
-          <span className="course-visitor-badge-counter">{visitorCount}</span>
-        </button>
       </div>
     </header>
   );
