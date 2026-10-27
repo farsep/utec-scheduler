@@ -1,0 +1,26 @@
+---
+import { CourseApp } from '../components/CourseDirectory/CourseApp';
+import '../styles/main.css';
+import '../styles/classrooms.css';
+import '../styles/professors.css';
+import '../styles/courses.css';
+---
+
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/MatricuLAB.svg" />
+		<link rel="apple-touch-icon" href="/MatricuLAB.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Catálogo de Cursos UTEC - MatrícuLAB</title>
+		<meta
+			name="description"
+			content="Consulta la oferta completa de cursos de UTEC: secciones, horarios semanales, docentes, aulas asignadas y asiste directamente como visitante u oyente."
+		/>
+		<meta name="google-site-verification" content="ZgHiho7M8N8ye_j9arHgWtIVSpyeyTgiJHEmebWlKP8" />
+	</head>
+	<body>
+		<CourseApp client:only="react" />
+	</body>
+</html>
