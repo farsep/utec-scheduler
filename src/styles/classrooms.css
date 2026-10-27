@@ -44,6 +44,13 @@
   gap: 24px;
 }
 
+.classroom-navbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
 .brand-title--link {
   text-decoration: none;
   color: inherit;

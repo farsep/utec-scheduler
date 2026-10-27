@@ -194,9 +194,6 @@ export const CourseApp: React.FC = () => {
         totalCourses={courses.length}
         filteredCount={filteredCourses.length}
         liveNowCount={liveNowCount}
-        visitorCount={visitorItems.length}
-        onToggleVisitorFilter={() => handleFilterChange({ onlyVisitor: !filter.onlyVisitor })}
-        isVisitorFilterActive={filter.onlyVisitor}
       />
 
       <main className="classroom-finder-main course-finder-main">
