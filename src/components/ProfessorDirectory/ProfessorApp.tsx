@@ -6,9 +6,9 @@ import { parseExcelFile } from '../../utils/excelParser';
 import {
   extractProfessorsFromCourses,
   filterAndSortProfessors,
-  evaluateProfessorLiveStatus,
-  enrichCoursesWithIntranetData
+  evaluateProfessorLiveStatus
 } from '../../utils/professorUtils';
+import { mutuallyEnrichCoursesWithScrapedData } from '../../utils/courseDirectoryUtils';
 import { ProfessorNavbar } from './ProfessorNavbar';
 import { ProfessorFilterBar } from './ProfessorFilterBar';
 import { ProfessorCard } from './ProfessorCard';
@@ -98,7 +98,7 @@ export const ProfessorApp: React.FC = () => {
         if (liveRes.ok) {
           const liveData = await liveRes.json();
           if (Array.isArray(liveData.classrooms) && liveData.classrooms.length > 0) {
-            coursesToUse = enrichCoursesWithIntranetData(parseResult.courses, liveData.classrooms);
+            coursesToUse = mutuallyEnrichCoursesWithScrapedData(parseResult.courses, liveData.classrooms);
           }
         }
       } catch (liveErr) {

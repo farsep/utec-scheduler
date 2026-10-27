@@ -7,7 +7,7 @@ import type {
 } from '../types/professor';
 import type { ClassroomInfo } from '../types/classroom';
 import { parseLocationInfo, ALL_DAYS } from './classroomUtils';
-import { parseSessionType, getCourseColor } from './scheduleUtils';
+import { parseSessionType, getCourseColor, normalizeString } from './scheduleUtils';
 
 export const DEPARTMENT_CONFIG: Record<string, { label: string; color: string }> = {
   CS: { label: 'Ciencia de la Computación', color: '#3b82f6' },
@@ -438,24 +438,24 @@ export function filterAndSortProfessors(
   nowDay: DayOfWeek,
   nowMinutes: number
 ): ProfessorInfo[] {
-  const query = filter.searchQuery.trim().toLowerCase();
+  const normQuery = normalizeString(filter.searchQuery);
 
   return professors
     .filter(prof => {
       // 1. Text search across name, academic name, email, course codes, course names, rooms
-      if (query) {
+      if (normQuery) {
         const matchesName =
-          prof.displayName.toLowerCase().includes(query) ||
-          prof.lastNameFirst.toLowerCase().includes(query) ||
-          prof.rawName.toLowerCase().includes(query);
+          normalizeString(prof.displayName).includes(normQuery) ||
+          normalizeString(prof.lastNameFirst).includes(normQuery) ||
+          normalizeString(prof.rawName).includes(normQuery);
 
-        const matchesEmail = prof.email.toLowerCase().includes(query);
+        const matchesEmail = normalizeString(prof.email).includes(normQuery);
 
         const matchesCourse = prof.courses.some(
-          c => c.code.toLowerCase().includes(query) || c.name.toLowerCase().includes(query)
+          c => normalizeString(c.code).includes(normQuery) || normalizeString(c.name).includes(normQuery)
         );
 
-        const matchesRoom = prof.uniqueRooms.some(r => r.toLowerCase().includes(query));
+        const matchesRoom = prof.uniqueRooms.some(r => normalizeString(r).includes(normQuery));
 
         if (!matchesName && !matchesEmail && !matchesCourse && !matchesRoom) {
           return false;
