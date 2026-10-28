@@ -1405,7 +1405,20 @@
 /* Override professors.css hardcoded 720px min-width so gridTemplateColumns controls width cleanly */
 .course-timetable-wrap .prof-timetable-days-content {
   min-width: 100% !important;
-  width: max-content !important;
+  width: 100% !important;
+}
+
+.course-timetable-wrap .prof-timetable-days-content[data-elastic="true"] {
+  min-width: 100% !important;
+  width: 100% !important;
+}
+
+.course-timetable-wrap .time-mark-desktop {
+  display: inline;
+}
+
+.course-timetable-wrap .time-mark-mobile {
+  display: none;
 }
 
 .course-timetable-wrap .prof-day-abbr {
@@ -1414,6 +1427,27 @@
 
 .course-timetable-wrap .prof-day-full {
   display: inline;
+}
+
+/* Sleek Recessed Treatment for Empty Days ('Libre') in Full 6-Day Grid */
+.course-timetable-wrap .prof-timetable-day-col-header--empty {
+  background: rgba(8, 12, 22, 0.45);
+  opacity: 0.72;
+  cursor: default;
+}
+
+.course-timetable-wrap .prof-timetable-day-col-header--empty:hover {
+  background: rgba(8, 12, 22, 0.45);
+}
+
+.course-timetable-wrap .prof-timetable-day-column--empty {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(8, 12, 22, 0.28),
+    rgba(8, 12, 22, 0.28) 6px,
+    rgba(15, 23, 42, 0.14) 6px,
+    rgba(15, 23, 42, 0.14) 12px
+  );
 }
 
 /* Course Session Block Card inside Canvas */
@@ -2545,13 +2579,25 @@
   }
 
   .course-timetable-wrap .prof-timetable-time-col {
-    width: 44px;
-    min-width: 44px;
+    width: 34px;
+    min-width: 34px;
+  }
+
+  .course-timetable-wrap .prof-timetable-time-corner span {
+    display: none;
+  }
+
+  .course-timetable-wrap .time-mark-desktop {
+    display: none;
+  }
+
+  .course-timetable-wrap .time-mark-mobile {
+    display: inline;
   }
 
   .course-timetable-wrap .prof-time-mark {
-    font-size: 0.64rem;
-    padding-right: 4px;
+    font-size: 0.62rem;
+    padding-right: 3px;
   }
 
   .course-timetable-wrap .prof-timetable-days-scroll-wrapper {
@@ -2565,19 +2611,22 @@
     width: max-content !important;
   }
 
+  .course-timetable-wrap .prof-timetable-days-content[data-elastic="true"],
   .course-timetable-wrap .prof-timetable-days-content[data-cols="1"],
   .course-timetable-wrap .prof-timetable-days-content[data-cols="2"] {
     width: 100% !important;
+    min-width: 100% !important;
   }
 
   .course-timetable-wrap .prof-timetable-day-col-header {
-    padding: 6px 4px;
+    padding: 5px 2px;
     gap: 2px;
+    min-width: 0;
   }
 
   .course-timetable-wrap .prof-day-abbr {
     display: inline;
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: 800;
   }
 
@@ -2586,8 +2635,31 @@
   }
 
   .course-timetable-wrap .prof-day-badge {
+    font-size: 0.58rem;
+    padding: 1px 4px;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .course-timetable-wrap .prof-timetable-days-content[data-elastic="true"] .course-session-card {
+    padding: 2.5px 3.5px;
+    gap: 1px;
+  }
+
+  .course-timetable-wrap .prof-timetable-days-content[data-elastic="true"] .course-card-block-sec {
     font-size: 0.62rem;
-    padding: 1px 5px;
+  }
+
+  .course-timetable-wrap .prof-timetable-days-content[data-elastic="true"] .course-card-block-type {
+    font-size: 0.52rem;
+  }
+
+  .course-timetable-wrap .prof-timetable-days-content[data-elastic="true"] .course-card-block-time {
+    font-size: 0.58rem;
+  }
+
+  .course-timetable-wrap .prof-timetable-days-content[data-elastic="true"] .course-card-block-room {
+    font-size: 0.58rem;
   }
 
   /* Agenda View on Mobile */

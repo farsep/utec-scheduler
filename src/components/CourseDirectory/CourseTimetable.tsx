@@ -191,8 +191,20 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'matriz' | 'agenda'>('matriz');
   const [selectedSessionItem, setSelectedSessionItem] = useState<TimetableSessionItem | null>(null);
+  const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth <= 700 : false
+  );
   const daysScrollRef = useRef<HTMLDivElement>(null);
   const inspectorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleResize = () => {
+      setIsMobileViewport(window.innerWidth <= 700);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Flatten all sessions across visible sections and merge identical shared lectures when viewing 'ALL'
   const allSessionItems = useMemo<TimetableSessionItem[]>(() => {
@@ -271,8 +283,12 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
 
   const [agendaDay, setAgendaDay] = useState<DayOfWeek>(defaultAgendaDay);
 
-  // Default to showing only active days if course has classes on fewer than 6 days
-  const [filterOnlyActiveDays, setFilterOnlyActiveDays] = useState<boolean>(true);
+  // Default to full 6-day week (false) across Desktop, Tablet, and Mobile so the student always
+  // sees the complete Lunes-Sábado calendar grid by default. Users can still toggle Zoom if desired.
+  const [filterOnlyActiveDays, setFilterOnlyActiveDays] = useState<boolean>(false);
+
+  // Full academic day (07:00 - 22:00) vs compact hour range toggle
+  const [compactHours, setCompactHours] = useState<boolean>(false);
 
   const daysToRender = useMemo<DayOfWeek[]>(() => {
     if (filterOnlyActiveDays && activeDaysWithClasses.length > 0 && activeDaysWithClasses.length < 6) {
@@ -281,7 +297,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
     return ALL_DAYS;
   }, [filterOnlyActiveDays, activeDaysWithClasses]);
 
-  // Determine tight dynamic hour bounds so morning/afternoon courses don't have 6+ empty hours
+  // Determine hour bounds: Full Academic Day (07:00 - 21:00/22:00) by default so the full grid is visible
   const { minHour, maxHour, totalHours } = useMemo(() => {
     let minH = 7;
     let maxH = 22;
@@ -291,27 +307,34 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
       const latestEnd = Math.max(...allSessionItems.map(i => i.session.endMinutes));
       const earliestH = Math.floor(earliestStart / 60);
       const latestH = Math.ceil(latestEnd / 60);
-      minH = Math.max(7, earliestH);
-      maxH = Math.min(22, Math.max(minH + 4, latestH + 1));
+
+      if (compactHours) {
+        minH = Math.max(7, earliestH);
+        maxH = Math.min(22, Math.max(minH + 5, latestH + 1));
+      } else {
+        minH = Math.min(7, earliestH);
+        maxH = Math.max(21, Math.min(22, latestH + 1));
+      }
     }
 
     return {
       minHour: minH,
       maxHour: maxH,
-      totalHours: Math.max(4, maxH - minH)
+      totalHours: Math.max(5, maxH - minH)
     };
-  }, [allSessionItems]);
+  }, [allSessionItems, compactHours]);
 
   const minMinutes = minHour * 60;
   const totalMinutes = totalHours * 60;
 
   // Hourly time marks
   const timeMarks = useMemo(() => {
-    const marks: { hour: number; label: string; topPercent: number }[] = [];
+    const marks: { hour: number; label: string; shortLabel: string; topPercent: number }[] = [];
     for (let h = minHour; h <= maxHour; h++) {
       marks.push({
         hour: h,
         label: `${String(h).padStart(2, '0')}:00`,
+        shortLabel: `${String(h).padStart(2, '0')}h`,
         topPercent: ((h * 60 - minMinutes) / totalMinutes) * 100
       });
     }
@@ -322,8 +345,11 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
   const showNowIndicator = nowMinutes >= minMinutes && nowMinutes <= minMinutes + totalMinutes;
   const nowTopPercent = ((nowMinutes - minMinutes) / totalMinutes) * 100;
 
-  const slotHeightPerHour = 52;
-  const gridHeight = Math.max(260, totalHours * slotHeightPerHour);
+  // Adaptive row height so the full 07:00-21:00 grid fits 100% on screen without scrolling
+  const slotHeightPerHour = isMobileViewport
+    ? (compactHours ? 42 : 27)
+    : (compactHours ? 46 : 31);
+  const gridHeight = Math.max(isMobileViewport ? 220 : 320, totalHours * slotHeightPerHour);
 
   // Positioned sessions per day
   const positionedByDay = useMemo<Record<DayOfWeek, PositionedSession[]>>(() => {
@@ -341,26 +367,57 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
     return res;
   }, [sessionsByDay]);
 
-  // Compute adaptive column width based on number of rendered days and parallel overlap
-  const maxColsInAnyDay = useMemo(() => {
-    let maxC = 1;
-    daysToRender.forEach(d => {
-      positionedByDay[d]?.forEach(p => {
-        if (p.totalCols > maxC) maxC = p.totalCols;
-      });
+  // Compute max parallel columns per day and overall
+  const maxColsByDay = useMemo<Record<DayOfWeek, number>>(() => {
+    const map: Record<DayOfWeek, number> = { Lun: 0, Mar: 0, Mie: 0, Jue: 0, Vie: 0, Sab: 0 };
+    ALL_DAYS.forEach(d => {
+      const pos = positionedByDay[d] || [];
+      if (pos.length === 0) {
+        map[d] = 0;
+      } else {
+        map[d] = Math.max(1, ...pos.map(p => p.totalCols));
+      }
     });
-    return maxC;
-  }, [daysToRender, positionedByDay]);
+    return map;
+  }, [positionedByDay]);
 
-  const minColWidth = useMemo(() => {
+  const maxColsInAnyDay = useMemo(() => {
+    return Math.max(1, ...daysToRender.map(d => maxColsByDay[d] || 1));
+  }, [daysToRender, maxColsByDay]);
+
+  // Smart Proportional Elastic Grid Template Columns:
+  // When showing all 6 days (Lun-Sab), empty days ('Libre') take a slimmer proportional track
+  // while active days expand automatically based on how many parallel sections they hold.
+  // This guarantees all 6 days fit 100% of the width with ZERO horizontal scroll!
+  const gridTemplateColumns = useMemo(() => {
+    if (!filterOnlyActiveDays && daysToRender.length === 6) {
+      return daysToRender
+        .map(d => {
+          const cols = maxColsByDay[d];
+          if (cols === 0) {
+            return isMobileViewport ? 'minmax(28px, 0.42fr)' : 'minmax(68px, 0.72fr)';
+          }
+          if (cols === 1) {
+            return isMobileViewport ? 'minmax(54px, 1.35fr)' : 'minmax(112px, 1.35fr)';
+          }
+          if (cols === 2) {
+            return isMobileViewport ? 'minmax(68px, 1.65fr)' : 'minmax(140px, 1.65fr)';
+          }
+          return isMobileViewport ? 'minmax(78px, 1.9fr)' : 'minmax(168px, 1.95fr)';
+        })
+        .join(' ');
+    }
+
+    // Zoomed / Active-Days-Only mode
     if (daysToRender.length === 1) return 'minmax(100%, 1fr)';
     if (daysToRender.length === 2) {
-      return maxColsInAnyDay >= 3 ? 'minmax(175px, 1fr)' : 'minmax(135px, 1fr)';
+      return maxColsInAnyDay >= 3 ? 'repeat(2, minmax(165px, 1fr))' : 'repeat(2, minmax(130px, 1fr))';
     }
-    if (maxColsInAnyDay === 1) return 'minmax(112px, 1fr)';
-    if (maxColsInAnyDay === 2) return 'minmax(158px, 1fr)';
-    return 'minmax(210px, 1fr)';
-  }, [daysToRender.length, maxColsInAnyDay]);
+    const minW = maxColsInAnyDay === 1 ? '108px' : maxColsInAnyDay === 2 ? '150px' : '195px';
+    return `repeat(${daysToRender.length}, minmax(${minW}, 1fr))`;
+  }, [filterOnlyActiveDays, daysToRender, maxColsByDay, isMobileViewport, maxColsInAnyDay]);
+
+  const isFullWeekElastic = !filterOnlyActiveDays && daysToRender.length === 6;
 
   // Section dropdown options for quick filtering on mobile/tablet
   const sectionSelectOptions = useMemo<SelectOption[]>(() => [
@@ -394,11 +451,11 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
 
   return (
     <div className="prof-timetable-wrap course-timetable-wrap">
-      {/* Compact Toolbar: Section Filter + Active Days Toggle + View Switcher */}
+      {/* Compact Toolbar: Section Filter + Full Week / Zoom Toggle + View Switcher */}
       <div className="course-timetable-toolbar">
         <div className="course-timetable-top-bar">
           <div className="course-timetable-filters-left">
-            {course.extendedSections.length > 1 && (
+            {course.extendedSections.length > 1 && (!isMobileViewport || course.extendedSections.length > 6) && (
               <CustomSelect
                 value={selectedSectionNumber}
                 onChange={val => onSelectSectionNumber?.(val)}
@@ -410,15 +467,31 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
               />
             )}
 
-            {activeDaysWithClasses.length < 6 && viewMode === 'matriz' && (
+            {viewMode === 'matriz' && activeDaysWithClasses.length < 6 && (
               <button
                 type="button"
-                className={`prof-day-jump-pill course-days-filter-pill ${filterOnlyActiveDays ? 'prof-day-jump-pill--active' : ''}`}
+                className={`prof-day-jump-pill course-days-filter-pill ${!filterOnlyActiveDays ? 'prof-day-jump-pill--active' : ''}`}
                 onClick={() => setFilterOnlyActiveDays(prev => !prev)}
-                title={filterOnlyActiveDays ? 'Ver semana completa (6 días)' : 'Ver solo días con clases'}
+                title={!filterOnlyActiveDays ? 'Hacer zoom solo a los días con clases' : 'Ver semana completa (Lunes a Sábado)'}
               >
                 <Calendar size={12} />
-                <span>{filterOnlyActiveDays ? `${activeDaysWithClasses.length} días` : '6 días'}</span>
+                <span>
+                  {!filterOnlyActiveDays
+                    ? (isMobileViewport ? '6 Días' : '6 días (Lun–Sab)')
+                    : (isMobileViewport ? `Zoom (${activeDaysWithClasses.length}d)` : `Solo activos (${activeDaysWithClasses.length}d)`)}
+                </span>
+              </button>
+            )}
+
+            {viewMode === 'matriz' && (
+              <button
+                type="button"
+                className={`prof-day-jump-pill course-days-filter-pill ${!compactHours ? 'prof-day-jump-pill--active' : ''}`}
+                onClick={() => setCompactHours(prev => !prev)}
+                title={!compactHours ? 'Compactar a solo horas con clase' : 'Mostrar jornada completa (07:00 - 22:00)'}
+              >
+                <Clock size={12} />
+                <span>{!compactHours ? '07–22h' : (isMobileViewport ? 'Zoom h' : 'Horas activas')}</span>
               </button>
             )}
           </div>
@@ -485,8 +558,8 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
           </div>
         )}
 
-        {/* Quick Day Jump Bar when Matriz has > 2 days */}
-        {viewMode === 'matriz' && daysToRender.length > 2 && (
+        {/* Quick Day Jump Bar only when horizontal scroll is active in Zoom mode */}
+        {viewMode === 'matriz' && filterOnlyActiveDays && daysToRender.length > 2 && isMobileViewport && (
           <div className="course-day-jump-bar">
             <span className="course-day-jump-label">Ir al día:</span>
             <div className="course-day-jump-chips">
@@ -515,7 +588,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
           {/* Left Time Axis Column */}
           <div className="prof-timetable-time-col">
             <div className="prof-timetable-time-corner">
-              <Clock size={12} />
+              <Clock size={11} />
               <span>Hora</span>
             </div>
             <div className="prof-timetable-time-axis" style={{ height: gridHeight }}>
@@ -525,48 +598,58 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                   className="prof-time-mark"
                   style={{ top: `${mark.topPercent}%` }}
                 >
-                  {mark.label}
+                  <span className="time-mark-desktop">{mark.label}</span>
+                  <span className="time-mark-mobile">{mark.shortLabel}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Right Scrollable Days Grid */}
+          {/* Right Days Grid (100% full width on Desktop/Tablet & Mobile 6D Elastic Mode) */}
           <div className="prof-timetable-days-scroll-wrapper" ref={daysScrollRef}>
             <div
               className="prof-timetable-days-content"
               data-cols={daysToRender.length}
+              data-elastic={isFullWeekElastic ? 'true' : 'false'}
             >
               {/* Header Row: Days */}
               <div
                 className="prof-timetable-days-header-row"
                 style={{
-                  gridTemplateColumns: `repeat(${daysToRender.length}, ${minColWidth})`
+                  gridTemplateColumns
                 }}
               >
                 {daysToRender.map(day => {
                   const daySessions = sessionsByDay[day] || [];
                   const isToday = nowDay === day;
+                  const isEmptyDay = daySessions.length === 0;
 
                   return (
                     <div
                       key={day}
                       data-day-col={day}
-                      className={`prof-timetable-day-col-header ${isToday ? 'prof-timetable-day-col-header--today' : ''}`}
+                      className={`prof-timetable-day-col-header ${isToday ? 'prof-timetable-day-col-header--today' : ''} ${isEmptyDay ? 'prof-timetable-day-col-header--empty' : ''}`}
                       onClick={() => {
-                        setAgendaDay(day);
-                        setViewMode('agenda');
+                        if (daySessions.length > 0) {
+                          setAgendaDay(day);
+                          setViewMode('agenda');
+                        }
                       }}
-                      title={`Ver agenda del ${DAY_LABELS[day]}`}
                     >
                       <div className="prof-day-name-row">
                         <span className="prof-day-abbr">{day}</span>
                         <span className="prof-day-full">{DAY_LABELS[day]}</span>
                       </div>
                       <span
-                        className={`prof-day-badge ${daySessions.length === 0 ? 'prof-day-badge--empty' : ''}`}
+                        className={`prof-day-badge ${isEmptyDay ? 'prof-day-badge--empty' : ''}`}
                       >
-                        {daySessions.length > 0 ? `${daySessions.length} ${daySessions.length === 1 ? 'clase' : 'clases'}` : 'Libre'}
+                        {daySessions.length > 0 ? (
+                          isMobileViewport && isFullWeekElastic
+                            ? `${daySessions.length}`
+                            : `${daySessions.length} ${daySessions.length === 1 ? 'clase' : 'clases'}`
+                        ) : (
+                          isMobileViewport && isFullWeekElastic ? '—' : 'Libre'
+                        )}
                       </span>
                     </div>
                   );
@@ -578,7 +661,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                 className="prof-timetable-columns-container"
                 style={{
                   height: gridHeight,
-                  gridTemplateColumns: `repeat(${daysToRender.length}, ${minColWidth})`
+                  gridTemplateColumns
                 }}
               >
                 {/* Horizontal Hour Lines */}
@@ -604,11 +687,12 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                 {daysToRender.map(day => {
                   const positioned = positionedByDay[day];
                   const isToday = nowDay === day;
+                  const isEmptyDay = (sessionsByDay[day] || []).length === 0;
 
                   return (
                     <div
                       key={day}
-                      className={`prof-timetable-day-column ${isToday ? 'prof-timetable-day-column--today' : ''}`}
+                      className={`prof-timetable-day-column ${isToday ? 'prof-timetable-day-column--today' : ''} ${isEmptyDay ? 'prof-timetable-day-column--empty' : ''}`}
                     >
                       {positioned.map(({ item, colIndex, totalCols }) => {
                         const s = item.session;
@@ -627,9 +711,14 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
 
                         const mergedCount = item.mergedSections?.length || 1;
                         const overflowCount = item.overflowItems ? item.overflowItems.length - 1 : 0;
-                        const shortSecLabel = mergedCount > 1
+                        const baseShortSec = mergedCount > 1
                           ? `Sec. ${item.sectionNumber.split(' ')[0]} (${mergedCount} grp)`
                           : formatShortSectionLabel(item.sectionNumber);
+
+                        const shortSecLabel =
+                          isMobileViewport && (isFullWeekElastic || totalCols >= 2)
+                            ? baseShortSec.replace(/^Sec\.\s*/, 'S').replace(/\s*•\s*/, '•')
+                            : baseShortSec;
 
                         const shortProf = s.professor && !/docente\s*utec/i.test(s.professor)
                           ? formatProfessorName(s.professor).shortName
@@ -638,7 +727,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                         return (
                           <div
                             key={item.id}
-                            className={`prof-session-card course-session-card ${isLiveNow ? 'prof-session-card--live' : ''} ${isSelected ? 'prof-session-card--selected' : ''} ${totalCols >= 2 ? 'course-session-card--compact' : ''}`}
+                            className={`prof-session-card course-session-card ${isLiveNow ? 'prof-session-card--live' : ''} ${isSelected ? 'prof-session-card--selected' : ''} ${totalCols >= 2 || (isMobileViewport && isFullWeekElastic) ? 'course-session-card--compact' : ''}`}
                             style={{
                               top: `${top}%`,
                               height: `${height}%`,
@@ -648,7 +737,6 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                               background: palette.bg
                             }}
                             onClick={() => setSelectedSessionItem(isSelected ? null : item)}
-                            title={`${shortSecLabel} • ${s.sessionGroup}\n${s.startTime} - ${s.endTime}\n${s.roomDisplayName}\nProf. ${s.professor || 'Docente UTEC'}`}
                           >
                             <div className="course-card-block-top">
                               <span
@@ -659,26 +747,28 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                               </span>
                               {overflowCount > 0 ? (
                                 <span className="course-card-overflow-badge">
-                                  +{overflowCount} más
+                                  +{overflowCount}
                                 </span>
-                              ) : (
+                              ) : totalCols === 1 ? (
                                 <span className="course-card-block-type">
                                   {abbreviateSessionType(s.sessionType)}
                                 </span>
-                              )}
+                              ) : null}
                             </div>
 
                             <div className="course-card-block-time">
-                              {s.startTime} - {s.endTime}
+                              {isMobileViewport && totalCols >= 2
+                                ? `${s.startTime.slice(0, 2)}-${s.endTime.slice(0, 2)}h`
+                                : `${s.startTime} - ${s.endTime}`}
                             </div>
 
-                            <div className="course-card-block-room" title={s.roomDisplayName}>
-                              <MapPin size={10} />
-                              <span>{s.roomDisplayName}</span>
+                            <div className="course-card-block-room">
+                              <MapPin size={9} />
+                              <span>{s.roomDisplayName.replace(/^Aula\s+/i, 'A')}</span>
                             </div>
 
-                            {shortProf && (
-                              <div className="course-card-block-prof" title={s.professor}>
+                            {shortProf && (!isMobileViewport || totalCols === 1) && (
+                              <div className="course-card-block-prof">
                                 {shortProf}
                               </div>
                             )}
