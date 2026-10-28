@@ -741,7 +741,7 @@
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  z-index: 100;
+  z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -963,6 +963,10 @@
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+}
+
+.course-modal-body--timetable {
+  padding: 0.75rem 1rem;
 }
 
 /* Sections List */
@@ -1802,8 +1806,42 @@
     grid-template-columns: 1fr;
   }
 
+  .courses-container {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+
+  .course-modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+    z-index: 2000;
+  }
+
   .course-modal-dialog {
-    max-height: 95vh;
+    max-height: 94vh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    width: 100%;
+  }
+
+  .course-modal-body {
+    padding: 1rem 0.75rem;
+  }
+
+  .course-modal-body--timetable {
+    padding: 0.25rem 0.35rem;
+  }
+
+  .modal-footer-etiquette {
+    display: none;
+  }
+
+  .course-modal-footer {
+    padding: 0.65rem 1rem calc(16px + env(safe-area-inset-bottom));
+    justify-content: flex-end;
+  }
+
+  .course-modal-footer .btn {
+    width: 100%;
   }
 
   .course-modal-visitor-banner {
@@ -1820,12 +1858,50 @@
     justify-content: center;
   }
 
-  .timetable-header-row,
-  .timetable-row {
-    grid-template-columns: 50px repeat(6, 1fr);
+  .course-timetable-wrap {
+    padding: 0.25rem 0.25rem 0.75rem;
   }
 
-  .timetable-session-chip .cell-room {
-    display: none;
+  .timetable-swipe-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #93c5fd;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px dashed rgba(59, 130, 246, 0.3);
+    border-radius: 6px;
+    padding: 5px 10px;
+    margin: 4px 0 8px;
+  }
+
+  .course-timetable-wrap .prof-timetable-days-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+  }
+
+  .course-timetable-wrap .prof-timetable-days-content[data-cols="1"],
+  .course-timetable-wrap .prof-timetable-days-content[data-cols="2"] {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .course-timetable-wrap .prof-timetable-days-content[data-cols="3"] {
+    min-width: 390px !important;
+  }
+
+  .course-timetable-wrap .prof-timetable-days-content[data-cols="4"] {
+    min-width: 520px !important;
+  }
+
+  .course-timetable-wrap .prof-timetable-days-content[data-cols="5"] {
+    min-width: 650px !important;
+  }
+
+  .course-timetable-wrap .prof-timetable-days-content[data-cols="6"] {
+    min-width: 780px !important;
   }
 }

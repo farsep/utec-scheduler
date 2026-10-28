@@ -1,15 +1,13 @@
-import { parseExcelFile, type ExcelParseResult } from './excelParser';
+import type { ExcelParseResult } from './excelParser';
+import { getSampleScheduleData } from './masterDataLoader';
 
 export async function loadDefaultSampleData(): Promise<ExcelParseResult> {
   try {
-    const excelResp = await fetch('/samples/Consulta_Horario.xlsx');
-    if (!excelResp.ok) throw new Error('Failed to load sample Excel file');
-    const excelBuffer = await excelResp.arrayBuffer();
-    const result = parseExcelFile(excelBuffer);
+    const sample = await getSampleScheduleData();
     return {
-      ...result,
+      courses: sample.courses,
       metadata: {
-        ...result.metadata,
+        ...sample.metadata,
         studentName: 'Farid Espinoza',
         major: 'Ciencia de Datos',
         program: 'Pregrado',

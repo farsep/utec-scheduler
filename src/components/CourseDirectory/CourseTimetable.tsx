@@ -114,13 +114,6 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
   const [viewMode, setViewMode] = useState<'matriz' | 'agenda'>('matriz');
   const [selectedSessionItem, setSelectedSessionItem] = useState<TimetableSessionItem | null>(null);
 
-  const defaultAgendaDay = useMemo<DayOfWeek>(() => {
-    if (nowDay && course.daysTaught.includes(nowDay)) return nowDay;
-    return course.daysTaught[0] || 'Lun';
-  }, [nowDay, course]);
-
-  const [agendaDay, setAgendaDay] = useState<DayOfWeek>(defaultAgendaDay);
-
   // Flatten all sessions across visible sections
   const allSessionItems = useMemo<TimetableSessionItem[]>(() => {
     const sectionsToInclude = selectedSectionNumber === 'ALL'
@@ -159,6 +152,29 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
     });
     return map;
   }, [allSessionItems]);
+
+  // Active days that actually have classes in this course
+  const activeDaysWithClasses = useMemo<DayOfWeek[]>(() => {
+    const days = ALL_DAYS.filter(d => (sessionsByDay[d] || []).length > 0);
+    return days.length > 0 ? days : ALL_DAYS;
+  }, [sessionsByDay]);
+
+  const defaultAgendaDay = useMemo<DayOfWeek>(() => {
+    if (nowDay && activeDaysWithClasses.includes(nowDay)) return nowDay;
+    return activeDaysWithClasses[0] || 'Lun';
+  }, [nowDay, activeDaysWithClasses]);
+
+  const [agendaDay, setAgendaDay] = useState<DayOfWeek>(defaultAgendaDay);
+
+  // Default to showing only active days if course has classes on fewer than 6 days
+  const [filterOnlyActiveDays, setFilterOnlyActiveDays] = useState<boolean>(true);
+
+  const daysToRender = useMemo<DayOfWeek[]>(() => {
+    if (filterOnlyActiveDays && activeDaysWithClasses.length > 0 && activeDaysWithClasses.length < 6) {
+      return activeDaysWithClasses;
+    }
+    return ALL_DAYS;
+  }, [filterOnlyActiveDays, activeDaysWithClasses]);
 
   // Determine dynamic bounds
   const { minHour, maxHour, totalHours } = useMemo(() => {
@@ -260,6 +276,18 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
               </button>
             );
           })}
+          {/* Active Days Toggle (Filters out empty days so columns are spacious) */}
+          {activeDaysWithClasses.length < 6 && (
+            <button
+              type="button"
+              className={`prof-day-jump-pill ${filterOnlyActiveDays ? 'prof-day-jump-pill--active' : ''}`}
+              onClick={() => setFilterOnlyActiveDays(prev => !prev)}
+              title={filterOnlyActiveDays ? 'Ver semana completa (6 días)' : 'Ver solo días con clases'}
+            >
+              <Calendar size={13} />
+              <span>{filterOnlyActiveDays ? `Días de clase (${activeDaysWithClasses.length})` : 'Toda la semana'}</span>
+            </button>
+          )}
         </div>
 
         {/* View Mode Toggle: Matriz Semanal vs Agenda */}
@@ -285,6 +313,13 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
         </div>
       </div>
 
+      {/* Touch swipe hint when horizontal overflow exists */}
+      {viewMode === 'matriz' && daysToRender.length > 2 && (
+        <div className="timetable-swipe-hint">
+          <span>👉 Desliza horizontalmente para navegar entre los {daysToRender.length} días</span>
+        </div>
+      )}
+
       {viewMode === 'matriz' ? (
         /* ================= Matriz Semanal ================= */
         <div className="prof-timetable-container course-timetable-container">
@@ -309,10 +344,18 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
 
           {/* Right Scrollable Days Grid */}
           <div className="prof-timetable-days-scroll-wrapper">
-            <div className="prof-timetable-days-content">
+            <div
+              className="prof-timetable-days-content"
+              data-cols={daysToRender.length}
+            >
               {/* Header Row: Days */}
-              <div className="prof-timetable-days-header-row">
-                {ALL_DAYS.map(day => {
+              <div
+                className="prof-timetable-days-header-row"
+                style={{
+                  gridTemplateColumns: `repeat(${daysToRender.length}, minmax(130px, 1fr))`
+                }}
+              >
+                {daysToRender.map(day => {
                   const daySessions = sessionsByDay[day] || [];
                   const isToday = nowDay === day;
 
@@ -343,7 +386,10 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
               {/* Columns Container */}
               <div
                 className="prof-timetable-columns-container"
-                style={{ height: gridHeight }}
+                style={{
+                  height: gridHeight,
+                  gridTemplateColumns: `repeat(${daysToRender.length}, minmax(130px, 1fr))`
+                }}
               >
                 {/* Horizontal Hour Lines */}
                 {timeMarks.map(mark => (
@@ -365,7 +411,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                 )}
 
                 {/* Day Columns */}
-                {ALL_DAYS.map(day => {
+                {daysToRender.map(day => {
                   const positioned = positionedByDay[day];
                   const isToday = nowDay === day;
 

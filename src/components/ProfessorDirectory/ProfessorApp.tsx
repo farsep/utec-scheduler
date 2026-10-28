@@ -3,6 +3,7 @@ import type { DayOfWeek } from '../../types/schedule';
 import type { ProfessorInfo, ProfessorFilterState } from '../../types/professor';
 import { getCurrentDayAndMinutes, ALL_DAYS } from '../../utils/classroomUtils';
 import { parseExcelFile } from '../../utils/excelParser';
+import { getProfessorsCatalog } from '../../utils/masterDataLoader';
 import {
   extractProfessorsFromCourses,
   filterAndSortProfessors,
@@ -86,29 +87,10 @@ export const ProfessorApp: React.FC = () => {
     setIsLoading(true);
     setLoadError(null);
     try {
-      const res = await fetch('/samples/Consulta_Horario.xlsx');
-      if (!res.ok) throw new Error('No se pudo descargar el archivo de horarios de UTEC');
-      const buffer = await res.arrayBuffer();
-      const parseResult = parseExcelFile(buffer);
-
-      // Try enriching with intranet data to recover unassigned professors ("DOCENTE UTEC" / empty)
-      let coursesToUse = parseResult.courses;
-      try {
-        const liveRes = await fetch('/data/classrooms_intranet.json');
-        if (liveRes.ok) {
-          const liveData = await liveRes.json();
-          if (Array.isArray(liveData.classrooms) && liveData.classrooms.length > 0) {
-            coursesToUse = mutuallyEnrichCoursesWithScrapedData(parseResult.courses, liveData.classrooms);
-          }
-        }
-      } catch (liveErr) {
-        console.warn('No se pudo cargar classrooms_intranet.json para enriquecer profesores:', liveErr);
-      }
-
-      const extractedProfs = extractProfessorsFromCourses(coursesToUse);
+      const extractedProfs = await getProfessorsCatalog();
       setProfessors(extractedProfs);
     } catch (err: any) {
-      console.error('Error cargando docentes desde Consulta_Horario.xlsx:', err);
+      console.error('Error cargando docentes de UTEC:', err);
       setLoadError(err?.message || 'Error al cargar datos de docentes');
     } finally {
       setIsLoading(false);
