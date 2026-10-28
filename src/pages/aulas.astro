@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import { ClassroomApp } from '../components/ClassroomFinder/ClassroomApp';
 import '../styles/main.css';
 import '../styles/classrooms.css';
@@ -14,6 +15,7 @@ import '../styles/classrooms.css';
 		<title>Aulas Libres UTEC - MatrícuLAB</title>
 		<meta name="description" content="Encuentra aulas, laboratorios y mesas de estudio desocupadas en UTEC en tiempo real o en cualquier rango de horas." />
 		<meta name="google-site-verification" content="ZgHiho7M8N8ye_j9arHgWtIVSpyeyTgiJHEmebWlKP8" />
+		<ClientRouter />
 	</head>
 	<body>
 		<ClassroomApp client:only="react" />

@@ -102,55 +102,57 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
           </button>
         </div>
 
-        {/* Visitor Command Strip / Actions */}
-        <div className="course-modal-visitor-banner">
-          <div className="visitor-banner-content">
-            <div className="visitor-banner-icon">
-              <Star size={20} className={isVisitor ? 'star-filled-gold' : ''} />
+        {/* Visitor Command Strip / Actions (Only on sections tab to give timetable maximum screen space) */}
+        {activeTab === 'sections' && (
+          <div className="course-modal-visitor-banner">
+            <div className="visitor-banner-content">
+              <div className="visitor-banner-icon">
+                <Star size={20} className={isVisitor ? 'star-filled-gold' : ''} />
+              </div>
+              <div>
+                <h4 className="visitor-banner-title">
+                  {isVisitor ? 'Curso guardado en tu lista de Oyente' : '¿Deseas asistir como visitante / oyente?'}
+                </h4>
+                <p className="visitor-banner-desc">
+                  {isVisitor
+                    ? 'Tienes este curso registrado para consultar aulas, horarios y exportar a tu calendario.'
+                    : 'Puedes ingresar a las clases presenciales o sincrónicas para aprender y enriquecer tu formación académica.'}
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="visitor-banner-title">
-                {isVisitor ? 'Curso guardado en tu lista de Oyente' : '¿Deseas asistir como visitante / oyente?'}
-              </h4>
-              <p className="visitor-banner-desc">
-                {isVisitor
-                  ? 'Tienes este curso registrado para consultar aulas, horarios y exportar a tu calendario.'
-                  : 'Puedes ingresar a las clases presenciales o sincrónicas para aprender y enriquecer tu formación académica.'}
-              </p>
+
+            <div className="visitor-banner-actions">
+              <button
+                type="button"
+                className={`btn ${isVisitor ? 'btn-secondary visitor-btn--active' : 'btn-primary'}`}
+                onClick={() => onToggleVisitor(course)}
+              >
+                <Star size={15} className={isVisitor ? 'star-filled-gold' : ''} />
+                <span>{isVisitor ? 'Guardado como Visitante' : 'Marcar como Visitante'}</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setIsEmailModalOpen(true)}
+                title="Generar correo respetuoso para solicitar permiso al docente"
+              >
+                <Mail size={15} />
+                <span>Pedir Permiso al Docente</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleDownloadIcs}
+                title="Descargar eventos de clase (.ics) para Apple Calendar o Outlook"
+              >
+                <Download size={15} />
+                <span>Exportar .ICS</span>
+              </button>
             </div>
           </div>
-
-          <div className="visitor-banner-actions">
-            <button
-              type="button"
-              className={`btn ${isVisitor ? 'btn-secondary visitor-btn--active' : 'btn-primary'}`}
-              onClick={() => onToggleVisitor(course)}
-            >
-              <Star size={15} className={isVisitor ? 'star-filled-gold' : ''} />
-              <span>{isVisitor ? 'Guardado como Visitante' : 'Marcar como Visitante'}</span>
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => setIsEmailModalOpen(true)}
-              title="Generar correo respetuoso para solicitar permiso al docente"
-            >
-              <Mail size={15} />
-              <span>Pedir Permiso al Docente</span>
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={handleDownloadIcs}
-              title="Descargar eventos de clase (.ics) para Apple Calendar o Outlook"
-            >
-              <Download size={15} />
-              <span>Exportar .ICS</span>
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* Navigation Tabs (Secciones vs Horario Semanal) */}
         <div className="course-modal-nav-tabs">
@@ -193,7 +195,7 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
         </div>
 
         {/* Modal Main Content */}
-        <div className="course-modal-body">
+        <div className={`course-modal-body ${activeTab === 'timetable' ? 'course-modal-body--timetable' : ''}`}>
           {activeTab === 'sections' ? (
             <div className="course-sections-list">
               {visibleSections.map(sec => (

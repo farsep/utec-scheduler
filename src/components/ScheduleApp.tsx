@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import confetti from 'canvas-confetti';
 import { Navbar } from './Navbar';
 import { StudentBanner } from './StudentBanner';
 import { CourseSidebar } from './CourseSidebar';
@@ -15,6 +14,16 @@ import type { PDFParseResult } from '../utils/pdfParser';
 import { detectConflicts, calculateTotalHours, matchSectionNumber } from '../utils/scheduleUtils';
 import { sendConsolidadoEmail } from '../utils/emailService';
 import { Download, RefreshCw, CheckCircle, Upload, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
+
+const triggerConfetti = async () => {
+  try {
+    const confettiModule = await import('canvas-confetti');
+    const confetti = confettiModule.default || confettiModule;
+    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+  } catch {
+    // fallback if confetti fails to load
+  }
+};
 
 export const ScheduleApp: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -53,7 +62,7 @@ export const ScheduleApp: React.FC = () => {
           const nextSecs = { ...opt.selectedSections, [courseCode]: sectionNumber };
           const newConflicts = detectConflicts(courses, nextSecs);
           if (newConflicts.length === 0 && Object.keys(nextSecs).length >= 3) {
-            confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+            triggerConfetti();
           }
           return { ...opt, selectedSections: nextSecs };
         }
@@ -142,7 +151,7 @@ export const ScheduleApp: React.FC = () => {
     // Celebrate if completely full schedule without conflicts (just like normal selection)
     const newConflicts = detectConflicts(courses, newSections);
     if (newConflicts.length === 0 && Object.keys(newSections).length >= 3) {
-      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+      triggerConfetti();
     }
   };
 
@@ -160,7 +169,7 @@ export const ScheduleApp: React.FC = () => {
     
     const newConflicts = detectConflicts(courses, newSections);
     if (newConflicts.length === 0 && Object.keys(newSections).length >= 3) {
-      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+      triggerConfetti();
     }
     
     return newName;

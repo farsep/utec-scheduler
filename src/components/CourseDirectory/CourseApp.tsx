@@ -6,10 +6,8 @@ import type {
   VisitorCourseItem
 } from '../../types/courseDirectory';
 import { getCurrentDayAndMinutes, ALL_DAYS } from '../../utils/classroomUtils';
-import { parseExcelFile } from '../../utils/excelParser';
+import { getCoursesCatalog } from '../../utils/masterDataLoader';
 import {
-  processRawCoursesIntoDirectory,
-  mutuallyEnrichCoursesWithScrapedData,
   evaluateCourseLiveStatus,
   filterAndSortCourses,
   getSavedVisitorCourses,
@@ -113,28 +111,10 @@ export const CourseApp: React.FC = () => {
     setIsLoading(true);
     setLoadError(null);
     try {
-      const res = await fetch('/samples/Consulta_Horario.xlsx');
-      if (!res.ok) throw new Error('No se pudo descargar la oferta académica de UTEC');
-      const buffer = await res.arrayBuffer();
-      const parseResult = parseExcelFile(buffer);
-
-      let coursesToUse = parseResult.courses;
-      try {
-        const liveRes = await fetch('/data/classrooms_intranet.json');
-        if (liveRes.ok) {
-          const liveData = await liveRes.json();
-          if (Array.isArray(liveData.classrooms) && liveData.classrooms.length > 0) {
-            coursesToUse = mutuallyEnrichCoursesWithScrapedData(parseResult.courses, liveData.classrooms);
-          }
-        }
-      } catch (liveErr) {
-        console.warn('No se pudo cargar classrooms_intranet.json para enriquecer cursos:', liveErr);
-      }
-
-      const extended = processRawCoursesIntoDirectory(coursesToUse);
+      const extended = await getCoursesCatalog();
       setCourses(extended);
     } catch (err: any) {
-      console.error('Error cargando cursos desde Consulta_Horario.xlsx:', err);
+      console.error('Error cargando cursos de UTEC:', err);
       setLoadError(err?.message || 'Error al cargar cursos ofertados de UTEC');
     } finally {
       setIsLoading(false);

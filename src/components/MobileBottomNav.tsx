@@ -32,6 +32,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab }) =
           <a
             key={id}
             href={href}
+            data-astro-prefetch="hover"
             className={`mobile-bottom-nav-item ${isActive ? 'mobile-bottom-nav-item--active' : ''}`}
             title={title}
             aria-current={isActive ? 'page' : undefined}
