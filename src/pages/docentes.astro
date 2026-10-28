@@ -1,9 +1,10 @@
 ---
-import { ClientRouter } from 'astro:transitions';
-import { ProfessorApp } from '../components/ProfessorDirectory/ProfessorApp';
+import { AppShell } from '../components/AppShell';
 import '../styles/main.css';
 import '../styles/classrooms.css';
 import '../styles/professors.css';
+import '../styles/courses.css';
+import '../styles/mentors.css';
 ---
 
 <!DOCTYPE html>
@@ -16,9 +17,8 @@ import '../styles/professors.css';
 		<title>Directorio de Docentes UTEC - MatrícuLAB</title>
 		<meta name="description" content="Directorio completo de profesores de UTEC: consulta sus horarios semanales, cursos que dictan, aulas asignadas, correo institucional y clases en tiempo real." />
 		<meta name="google-site-verification" content="ZgHiho7M8N8ye_j9arHgWtIVSpyeyTgiJHEmebWlKP8" />
-		<ClientRouter />
 	</head>
 	<body>
-		<ProfessorApp client:only="react" />
+		<AppShell client:only="react" initialTab="professors" />
 	</body>
 </html>

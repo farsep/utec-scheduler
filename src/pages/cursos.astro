@@ -1,10 +1,10 @@
 ---
-import { ClientRouter } from 'astro:transitions';
-import { CourseApp } from '../components/CourseDirectory/CourseApp';
+import { AppShell } from '../components/AppShell';
 import '../styles/main.css';
 import '../styles/classrooms.css';
 import '../styles/professors.css';
 import '../styles/courses.css';
+import '../styles/mentors.css';
 ---
 
 <!DOCTYPE html>
@@ -20,9 +20,8 @@ import '../styles/courses.css';
 			content="Consulta la oferta completa de cursos de UTEC: secciones, horarios semanales, docentes, aulas asignadas y asiste directamente como visitante u oyente."
 		/>
 		<meta name="google-site-verification" content="ZgHiho7M8N8ye_j9arHgWtIVSpyeyTgiJHEmebWlKP8" />
-		<ClientRouter />
 	</head>
 	<body>
-		<CourseApp client:only="react" />
+		<AppShell client:only="react" initialTab="courses" />
 	</body>
 </html>

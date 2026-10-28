@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { ProfessorInfo, ProfessorFilterState } from '../../types/professor';
 import { getCurrentDayAndMinutes, ALL_DAYS } from '../../utils/classroomUtils';
 import { parseExcelFile } from '../../utils/excelParser';
-import { getProfessorsCatalog } from '../../utils/masterDataLoader';
+import { getProfessorsCatalog, getSynchronousCachedProfessors } from '../../utils/masterDataLoader';
 import {
   extractProfessorsFromCourses,
   filterAndSortProfessors,
@@ -30,9 +30,11 @@ import {
 
 export const ProfessorApp: React.FC = () => {
   const initialTime = getCurrentDayAndMinutes();
+  const cachedProfessors = getSynchronousCachedProfessors();
 
-  const [professors, setProfessors] = useState<ProfessorInfo[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Instant render without skeleton if already in memory
+  const [professors, setProfessors] = useState<ProfessorInfo[]>(() => cachedProfessors || []);
+  const [isLoading, setIsLoading] = useState<boolean>(() => !cachedProfessors || cachedProfessors.length === 0);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // System real-time clock that ticks every second
@@ -84,7 +86,9 @@ export const ProfessorApp: React.FC = () => {
 
   // Load default master schedule on mount
   const loadMasterSchedule = useCallback(async () => {
-    setIsLoading(true);
+    if (!professors.length) {
+      setIsLoading(true);
+    }
     setLoadError(null);
     try {
       const extractedProfs = await getProfessorsCatalog();
@@ -95,7 +99,7 @@ export const ProfessorApp: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [professors.length]);
 
   useEffect(() => {
     loadMasterSchedule();
@@ -124,6 +128,34 @@ export const ProfessorApp: React.FC = () => {
   const filteredProfessors = useMemo(() => {
     return filterAndSortProfessors(professors, filter, realTime.day, realTime.minutes);
   }, [professors, filter, realTime.day, realTime.minutes]);
+
+  // Progressive rendering: 36 professors rendered on first frame for instant <10ms paint
+  const [visibleCount, setVisibleCount] = useState<number>(36);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setVisibleCount(36);
+  }, [filter]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount(prev => Math.min(prev + 36, filteredProfessors.length));
+        }
+      },
+      { rootMargin: '600px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [filteredProfessors.length]);
+
+  const displayedProfessors = useMemo(() => {
+    return filteredProfessors.slice(0, visibleCount);
+  }, [filteredProfessors, visibleCount]);
 
   return (
     <div className="classroom-finder-root professor-finder-root">
@@ -268,7 +300,7 @@ export const ProfessorApp: React.FC = () => {
               </div>
             ) : (
               <div className="professors-cards-grid">
-                {filteredProfessors.map(prof => (
+                {displayedProfessors.map(prof => (
                   <ProfessorCard
                     key={prof.id}
                     professor={prof}
@@ -277,6 +309,12 @@ export const ProfessorApp: React.FC = () => {
                     onOpenDetail={setSelectedProf}
                   />
                 ))}
+                {visibleCount < filteredProfessors.length && (
+                  <div
+                    ref={sentinelRef}
+                    style={{ height: '20px', width: '100%', gridColumn: '1 / -1', pointerEvents: 'none' }}
+                  />
+                )}
               </div>
             )}
           </div>

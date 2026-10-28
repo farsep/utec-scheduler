@@ -22,6 +22,83 @@ let inMemorySample: { courses: Course[]; metadata: MetadataInfo } | null = null;
 let inMemoryClassrooms: ClassroomInfo[] | null = null;
 
 /**
+ * Returns courses synchronously if already present in memory or sessionStorage.
+ * Used to avoid any loading flicker or skeleton when mounting components.
+ */
+export function getSynchronousCachedCourses(): CourseExtendedInfo[] | null {
+  if (inMemoryCourses && inMemoryCourses.length > 0) return inMemoryCourses;
+  if (typeof window !== 'undefined' && window.__MATRICULAB_COURSES__ && window.__MATRICULAB_COURSES__.length > 0) {
+    inMemoryCourses = window.__MATRICULAB_COURSES__;
+    return inMemoryCourses;
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = sessionStorage.getItem('matriculab_courses_cache');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          inMemoryCourses = parsed;
+          window.__MATRICULAB_COURSES__ = parsed;
+          return parsed;
+        }
+      }
+    } catch {}
+  }
+  return null;
+}
+
+/**
+ * Returns professors synchronously if already present in memory or sessionStorage.
+ */
+export function getSynchronousCachedProfessors(): ProfessorInfo[] | null {
+  if (inMemoryProfessors && inMemoryProfessors.length > 0) return inMemoryProfessors;
+  if (typeof window !== 'undefined' && window.__MATRICULAB_PROFESSORS__ && window.__MATRICULAB_PROFESSORS__.length > 0) {
+    inMemoryProfessors = window.__MATRICULAB_PROFESSORS__;
+    return inMemoryProfessors;
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = sessionStorage.getItem('matriculab_professors_cache');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          inMemoryProfessors = parsed;
+          window.__MATRICULAB_PROFESSORS__ = parsed;
+          return parsed;
+        }
+      }
+    } catch {}
+  }
+  return null;
+}
+
+/**
+ * Prewarms all catalogs in background idle time so switching between any tabs is instant.
+ */
+export function prewarmAllCatalogs() {
+  if (typeof window === 'undefined') return;
+  const runner = async () => {
+    try {
+      await Promise.allSettled([
+        getCoursesCatalog(),
+        getProfessorsCatalog(),
+        getClassroomsCatalog()
+      ]);
+    } catch {}
+  };
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(runner, { timeout: 2000 });
+  } else {
+    setTimeout(runner, 80);
+  }
+}
+
+// Automatically start prewarming when module is evaluated in browser
+if (typeof window !== 'undefined') {
+  prewarmAllCatalogs();
+}
+
+/**
  * Loads course catalog with multi-tier caching (Memory -> SessionStorage -> Static JSON -> Excel Fallback).
  * Returns in < 5ms once cached.
  */
@@ -186,3 +263,61 @@ export async function getSampleScheduleData(): Promise<{ courses: Course[]; meta
   if (typeof window !== 'undefined') window.__MATRICULAB_SAMPLE__ = sample;
   return sample;
 }
+
+/**
+ * Returns classrooms synchronously if already in memory or sessionStorage.
+ */
+export function getSynchronousCachedClassrooms(): ClassroomInfo[] | null {
+  if (inMemoryClassrooms && inMemoryClassrooms.length > 0) return inMemoryClassrooms;
+  if (typeof window !== 'undefined' && window.__MATRICULAB_CLASSROOMS__ && window.__MATRICULAB_CLASSROOMS__.length > 0) {
+    inMemoryClassrooms = window.__MATRICULAB_CLASSROOMS__;
+    return inMemoryClassrooms;
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = sessionStorage.getItem('matriculab_classrooms_cache');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          inMemoryClassrooms = parsed;
+          window.__MATRICULAB_CLASSROOMS__ = parsed;
+          return parsed;
+        }
+      }
+    } catch {}
+  }
+  return null;
+}
+
+/**
+ * Loads classrooms catalog with multi-tier caching (Memory -> SessionStorage -> Static JSON -> Fallback).
+ */
+export async function getClassroomsCatalog(): Promise<ClassroomInfo[]> {
+  const sync = getSynchronousCachedClassrooms();
+  if (sync) return sync;
+
+  try {
+    const liveRes = await fetch('/data/classrooms_intranet.json');
+    if (liveRes.ok) {
+      const liveData = await liveRes.json();
+      if (Array.isArray(liveData.classrooms) && liveData.classrooms.length > 0) {
+        inMemoryClassrooms = liveData.classrooms;
+        if (typeof window !== 'undefined') {
+          window.__MATRICULAB_CLASSROOMS__ = liveData.classrooms;
+          try {
+            sessionStorage.setItem('matriculab_classrooms_cache', JSON.stringify(liveData.classrooms));
+          } catch {}
+        }
+        return liveData.classrooms;
+      }
+    }
+  } catch {}
+
+  const courses = await getCoursesCatalog();
+  const { extractClassroomsFromCourses } = await import('./classroomUtils');
+  const extracted = extractClassroomsFromCourses(courses as any);
+  inMemoryClassrooms = extracted;
+  if (typeof window !== 'undefined') window.__MATRICULAB_CLASSROOMS__ = extracted;
+  return extracted;
+}
+

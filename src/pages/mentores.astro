@@ -1,9 +1,9 @@
 ---
-import { ClientRouter } from 'astro:transitions';
-import { MentorApp } from '../components/MentorDirectory/MentorApp';
+import { AppShell } from '../components/AppShell';
 import '../styles/main.css';
 import '../styles/classrooms.css';
 import '../styles/professors.css';
+import '../styles/courses.css';
 import '../styles/mentors.css';
 ---
 
@@ -20,9 +20,8 @@ import '../styles/mentors.css';
 			content="Directorio de mentores académicos UTEC: consulta horarios de asesorías gratuitas entre pares, modalidad presencial y virtual, y la programación de aulas asignadas para todo el ciclo 2026-2."
 		/>
 		<meta name="google-site-verification" content="ZgHiho7M8N8ye_j9arHgWtIVSpyeyTgiJHEmebWlKP8" />
-		<ClientRouter />
 	</head>
 	<body>
-		<MentorApp client:only="react" />
+		<AppShell client:only="react" initialTab="mentors" />
 	</body>
 </html>

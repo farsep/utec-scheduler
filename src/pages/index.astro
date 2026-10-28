@@ -1,7 +1,10 @@
 ---
-import { ClientRouter } from 'astro:transitions';
-import { ScheduleApp } from '../components/ScheduleApp';
+import { AppShell } from '../components/AppShell';
 import '../styles/main.css';
+import '../styles/classrooms.css';
+import '../styles/professors.css';
+import '../styles/courses.css';
+import '../styles/mentors.css';
 ---
 
 <!DOCTYPE html>
@@ -15,9 +18,8 @@ import '../styles/main.css';
 		<meta name="description" content="Arma y optimiza tu horario universitario arrastrando cursos y secciones con detección de cruces e importación de Excel y PDF." />
 		<!-- Google Site Verification for Search Console & Google Cloud OAuth Domain Verification -->
 		<meta name="google-site-verification" content="ZgHiho7M8N8ye_j9arHgWtIVSpyeyTgiJHEmebWlKP8" />
-		<ClientRouter />
 	</head>
 	<body>
-		<ScheduleApp client:only="react" />
+		<AppShell client:only="react" initialTab="schedule" />
 	</body>
 </html>
