@@ -9,7 +9,7 @@ import {
   ROOM_TYPE_LABELS
 } from '../../utils/classroomUtils';
 import { minutesToTime } from '../../utils/scheduleUtils';
-import { parseExcelFile } from '../../utils/excelParser';
+import { getClassroomsCatalog, getSynchronousCachedClassrooms } from '../../utils/masterDataLoader';
 import { ClassroomNavbar } from './ClassroomNavbar';
 import { ClassroomFilterBar } from './ClassroomFilterBar';
 import { ClassroomCard } from './ClassroomCard';
@@ -30,9 +30,10 @@ import {
 
 export const ClassroomApp: React.FC = () => {
   const initialTime = getCurrentDayAndMinutes();
+  const cachedClassrooms = getSynchronousCachedClassrooms();
 
-  const [classrooms, setClassrooms] = useState<ClassroomInfo[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [classrooms, setClassrooms] = useState<ClassroomInfo[]>(() => cachedClassrooms || []);
+  const [isLoading, setIsLoading] = useState<boolean>(() => !cachedClassrooms || cachedClassrooms.length === 0);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // System real-time clock that ticks every second
@@ -130,47 +131,22 @@ export const ClassroomApp: React.FC = () => {
     updatedAt?: string;
   }>({ type: 'intranet' });
 
-  // Load schedule on mount (intranet live JSON with Excel fallback)
+  // Load schedule on mount (intranet live JSON with Excel fallback via masterDataLoader)
   const loadMasterSchedule = useCallback(async () => {
-    setIsLoading(true);
+    if (!classrooms.length) {
+      setIsLoading(true);
+    }
     setLoadError(null);
     try {
-      // 1. Try loading real-time intranet JSON
-      try {
-        const liveRes = await fetch('/data/classrooms_intranet.json');
-        if (liveRes.ok) {
-          const liveData = await liveRes.json();
-          if (Array.isArray(liveData.classrooms) && liveData.classrooms.length > 0) {
-            setClassrooms(liveData.classrooms);
-            setDataSourceInfo({
-              type: 'intranet',
-              weekRange: liveData.weekRange,
-              totalEvents: liveData.totalEvents,
-              updatedAt: liveData.updatedAt
-            });
-            setIsLoading(false);
-            return;
-          }
-        }
-      } catch (liveErr) {
-        console.warn('Classrooms intranet data not found, attempting Excel fallback:', liveErr);
-      }
-
-      // 2. Fallback to Excel
-      const res = await fetch('/samples/Consulta_Horario.xlsx');
-      if (!res.ok) throw new Error('No se pudo descargar el archivo de horarios');
-      const buffer = await res.arrayBuffer();
-      const parseResult = parseExcelFile(buffer);
-      const extractedRooms = extractClassroomsFromCourses(parseResult.courses);
+      const extractedRooms = await getClassroomsCatalog();
       setClassrooms(extractedRooms);
-      setDataSourceInfo({ type: 'excel' });
     } catch (err: any) {
       console.error('Error cargando datos de horarios:', err);
       setLoadError(err?.message || 'Error al cargar datos de horarios');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [classrooms.length]);
 
   useEffect(() => {
     loadMasterSchedule();

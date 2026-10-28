@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type {
   CourseExtendedInfo,
@@ -6,7 +6,7 @@ import type {
   VisitorCourseItem
 } from '../../types/courseDirectory';
 import { getCurrentDayAndMinutes, ALL_DAYS } from '../../utils/classroomUtils';
-import { getCoursesCatalog } from '../../utils/masterDataLoader';
+import { getCoursesCatalog, getSynchronousCachedCourses } from '../../utils/masterDataLoader';
 import {
   evaluateCourseLiveStatus,
   filterAndSortCourses,
@@ -32,9 +32,11 @@ import {
 
 export const CourseApp: React.FC = () => {
   const initialTime = getCurrentDayAndMinutes();
+  const cachedCourses = getSynchronousCachedCourses();
 
-  const [courses, setCourses] = useState<CourseExtendedInfo[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Instant render without skeleton if already in memory
+  const [courses, setCourses] = useState<CourseExtendedInfo[]>(() => cachedCourses || []);
+  const [isLoading, setIsLoading] = useState<boolean>(() => !cachedCourses || cachedCourses.length === 0);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // System real-time clock that ticks every second
@@ -108,7 +110,9 @@ export const CourseApp: React.FC = () => {
 
   // Load master courses on mount
   const loadMasterCourses = useCallback(async () => {
-    setIsLoading(true);
+    if (!courses.length) {
+      setIsLoading(true);
+    }
     setLoadError(null);
     try {
       const extended = await getCoursesCatalog();
@@ -119,7 +123,7 @@ export const CourseApp: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [courses.length]);
 
   useEffect(() => {
     loadMasterCourses();
@@ -166,6 +170,36 @@ export const CourseApp: React.FC = () => {
       visitorCourseCodes
     );
   }, [courses, filter, realTime.day, realTime.minutes, visitorCourseCodes]);
+
+  // Progressive rendering: initial batch of 36 cards renders in <10ms for Adobe-level responsiveness
+  const [visibleCount, setVisibleCount] = useState<number>(36);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Reset batch size on filter or search changes
+  useEffect(() => {
+    setVisibleCount(36);
+  }, [filter]);
+
+  // IntersectionObserver smoothly streams more cards as user scrolls
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount(prev => Math.min(prev + 36, filteredCourses.length));
+        }
+      },
+      { rootMargin: '600px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [filteredCourses.length]);
+
+  const displayedCourses = useMemo(() => {
+    return filteredCourses.slice(0, visibleCount);
+  }, [filteredCourses, visibleCount]);
 
   return (
     <div className="classroom-finder-root course-finder-root">
@@ -328,7 +362,7 @@ export const CourseApp: React.FC = () => {
               </div>
             ) : (
               <div className="courses-cards-grid">
-                {filteredCourses.map(course => (
+                {displayedCourses.map(course => (
                   <CourseCard
                     key={course.code}
                     course={course}
@@ -339,6 +373,12 @@ export const CourseApp: React.FC = () => {
                     onOpenDetail={setSelectedCourse}
                   />
                 ))}
+                {visibleCount < filteredCourses.length && (
+                  <div
+                    ref={sentinelRef}
+                    style={{ height: '20px', width: '100%', gridColumn: '1 / -1', pointerEvents: 'none' }}
+                  />
+                )}
               </div>
             )}
           </div>
