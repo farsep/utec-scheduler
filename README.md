@@ -1,4 +1,4 @@
-# 🎓 MatrícuLAB 2.0 — Asistente Inteligente y Optimizador de Horarios UTEC
+# 🎓 MatrícuLAB 2.0 — Ecosistema Académico y Optimizador Inteligente de Horarios UTEC
 
 <div align="center">
 
@@ -9,9 +9,9 @@
 ![Rust WASM](https://img.shields.io/badge/Rust_WASM-QuantumEngine-DEA584.svg?style=for-the-badge&logo=rust&logoColor=black)
 ![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)
 
-**La plataforma definitiva para planificar, optimizar algorítmicamente y exportar tus horarios en la Universidad de Ingeniería y Tecnología (UTEC).**
+**La plataforma integral para planificar y optimizar horarios algorítmicamente, explorar el catálogo de cursos como oyente, ubicar aulas libres en tiempo real, consultar horarios docentes y conectar con mentores académicos en la Universidad de Ingeniería y Tecnología (UTEC).**
 
-[Características](#-características-principales) • [Arquitectura Algorítmica](#-arquitectura-y-motor-de-optimización) • [Buscador de Aulas](#-buscador-de-aulas-libres-aulas) • [Instalación](#-instalación-y-desarrollo-local) • [CI/CD](#-pipeline-de-cicd-gitlab-pages) • [Privacidad](#-privacidad-y-seguridad)
+[Módulos del Ecosistema](#-módulos-del-ecosistema) • [Motor Algorítmico](#-arquitectura-y-motor-de-optimización) • [Arquitectura SPA y Caché](#-arquitectura-de-navegación-instantánea-y-datos) • [Estructura del Proyecto](#-estructura-del-proyecto) • [Instalación](#-instalación-y-desarrollo-local) • [CI/CD](#-pipeline-de-cicd-gitlab-pages) • [Privacidad](#-privacidad-y-seguridad)
 
 </div>
 
@@ -19,69 +19,102 @@
 
 ## 📌 ¿Qué es MatrícuLAB?
 
-**MatrícuLAB** es una aplicación web de alto rendimiento creada por y para estudiantes de **UTEC**. Su objetivo es eliminar el estrés de la matrícula universitaria resolviendo de manera automatizada el problema combinatorio de armar un horario libre de cruces, adaptado a tus preferencias personales y optimizado al milisegundo.
+**MatrícuLAB 2.0** es una plataforma web de alto rendimiento diseñada por y para la comunidad estudiantil de **UTEC**. Nacida originalmente para resolver el problema combinatorio de armar horarios sin cruces durante la matrícula, hoy integra **cinco módulos académicos interconectados** bajo una arquitectura instantánea:
 
-Permite cargar tus documentos oficiales de UTEC (Excel de horarios o PDFs de carga hábil / consolidado), armar horarios manualmente en una grilla interactiva, o dejar que el **motor de optimización matemática multihilo (Web Workers + Rust WASM)** explore millones de combinaciones para entregarte las mejores opciones clasificadas por afinidad.
-
----
-
-## ✨ Características Principales
-
-### 1. 📅 Armador Manual e Interactivo de Horarios
-* **Grilla Semanal Intuitiva:** Visualización clara de lunes a sábado de 07:00 a 22:00 con bloques diferenciados por colores armónicos por curso.
-* **Detalle Completo de Sesión:** Información visual directa de tipo de clase (*Teoría*, *Práctica*, *Laboratorio*), aula asignada, docente y vacantes disponibles.
-* **Detección de Cruces en Tiempo Real:** Detección instantánea de choques de horario con alertas contextuales y resaltado de conflictos.
-* **Previsualización Dinámica (Hover & Drag):** Pasa el cursor sobre cualquier sección para previsualizar cómo encaja en tu semana antes de seleccionarla.
-* **Pestañas Multi-Horario:** Crea, duplica y compara múltiples alternativas (*Opción A*, *Opción B*, *Opción C*, etc.) en paralelo.
-* **Bloqueador de Horarios (Time Blocker Grid):** Marca franjas horarias no disponibles (trabajo, entrenamiento, transporte o descanso) para que el optimizador nunca asigne clases en esos momentos.
-* **Microinteracciones y Confeti:** Efecto festivo al completar un horario de 3 o más cursos sin ningún cruce.
+1. **📅 Armador y Optimizador de Horarios (`/`):** Planificación manual e inteligencia combinatoria multihilo (**Web Workers + Rust WebAssembly**) que evalúa millones de combinaciones en milisegundos.
+2. **📚 Catálogo de Cursos y Hub de Visitantes (`/cursos`):** Explorador completo de la oferta académica con malla horaria por curso y herramientas para asistir como estudiante visitante (*oyente*).
+3. **🏫 Buscador de Aulas Libres (`/aulas`):** Radar en tiempo real de salones, laboratorios y espacios disponibles por piso y franja horaria en el campus.
+4. **👨‍🏫 Directorio de Docentes (`/profesores`):** Buscador de profesores con ubicación en vivo en el campus, carga horaria semanal, cursos dictados y malla horaria individual.
+5. **🏅 Mentores Académicos (`/mentores`):** Directorio de mentores estudiantiles filtrable por carrera, ciclo y cursos de especialidad.
 
 ---
 
-### 2. ⚡ Optimizador Automático 2.0 (Generación de Horarios)
-Olvídate de cuadrar secciones a mano. El optimizador evalúa todas las permutaciones posibles y te entrega un ranking con los mejores horarios.
+## ✨ Módulos del Ecosistema
 
-* **Modo Básico:** Elige los cursos exactos que deseas cursar y el algoritmo encuentra todas las combinaciones de secciones válidas.
-* **Modo Avanzado (Bolsa Combinatoria $C(n,k)$):** Selecciona una bolsa amplia de cursos candidatos (ej. 10 cursos entre obligatorios y electivos) e indica cuántos deseas llevar (ej. *"Armar horarios con 5 cursos de esta lista"*). El sistema evalúa todas las combinaciones de cursos y secciones posibles.
-* **Secciones Fijadas (Pinning):** ¿Quieres llevar un profesor específico o una sección inamovible? Fíjala con un clic y el algoritmo optimizará el resto de cursos alrededor de ella.
-* **Filtros y Penalizaciones Personalizadas:**
-  * **⚡ Menos huecos:** Minimiza las horas muertas entre clases.
-  * **📅 Menos días:** Compacta la semana en la menor cantidad de días de asistencia posibles.
-  * **🚫 Sin días puente:** Penalización estricta (`-1000 pts`) a los horarios que dejan días libres aislados entre días con clases (ej. clases lunes y miércoles con martes libre).
-  * **🌅 Preferencia Mañana:** Bonificación a clases que inician antes del mediodía (12:00 PM).
-  * **🌇 Preferencia Tarde:** Bonificación a clases que inician a partir del mediodía.
-  * **🥪 Garantía de Almuerzo:** Define una ventana horaria (ej. 12:00 a 15:00) y duración mínima para asegurar tu almuerzo sin clases.
-
----
-
-### 3. 📄 Soporte Integral de Archivos Oficiales UTEC
-* **Excel de Catálogo (`Consulta_Horario.xlsx`):** Carga masiva de la oferta académica completa del ciclo con vacantes, profesores, aulas y tipos de sesión.
-* **PDF de Cursos Habilitados (Carga Hábil):** Extracción automatizada con `pdfjs-dist` de tus datos de alumno (*Nombre*, *Código*, *Carrera*, *Malla*) clasificando automáticamente los cursos en **Obligatorios**, **Electivos** y **Habilitados**.
-* **PDF de Consolidado de Matrícula / Horario:** Visualiza instantáneamente tu horario oficial una vez matriculado.
-* **Normalización Inteligente:**
-  * Limpieza automática de prefijos de aulas (ej. transforma `UTEC-BA A804` en un legible `A804`).
-  * Agrupación robusta de sub-secciones complejas (Teoría + Laboratorio) guiada por recuento de vacantes para evitar desajustes en cursos multigrupo (*Álgebra Lineal*, *Química General*).
+### 1. 📅 Armador Manual e Interactivo de Horarios (`/`)
+* **Grilla Semanal de Alta Densidad:** Visualización de lunes a sábado (`07:00` a `22:00`) con bloques codificados cromáticamente por curso y detección automática de hora actual.
+* **Detalle Completo de Sesión:** Visualización inmediata de modalidad, tipo de clase (*Teoría*, *Práctica*, *Laboratorio*), código de aula, docente asignado y vacantes.
+* **Detección de Cruces en Tiempo Real:** Identificación instantánea de choques de horario con alertas contextuales y resaltado visual de las sesiones en conflicto.
+* **Previsualización Dinámica (Hover Preview):** Pasa el cursor sobre cualquier sección del panel lateral para previsualizar en tiempo real cómo encajaría en tu semana antes de seleccionarla.
+* **Pestañas Multi-Horario:** Crea, renombra, duplica y compara múltiples escenarios de matrícula (*Opción A*, *Opción B*, *Opción C*, etc.) en paralelo.
+* **Bloqueador de Tiempo Personal (Time Blocker Grid):** Marca franjas horarias reservadas para trabajo, deporte, transporte o estudio; el optimizador respetará estrictamente estos bloques como restricciones duras.
+* **Carga de Documentos Oficiales UTEC:**
+  * **Excel de Oferta Académica (`Consulta_Horario.xlsx`):** Procesamiento completo de cursos, secciones, docentes, aulas y vacantes.
+  * **PDF de Carga Hábil (Cursos Habilitados):** Extracción local mediante `pdfjs-dist` de tus datos de estudiante (*Nombre*, *Código*, *Carrera*, *Malla Curricular*), clasificando automáticamente tus cursos en **Obligatorios**, **Electivos** y **Habilitados**.
+  * **PDF de Consolidado de Matrícula:** Importación directa de tu horario oficial matriculado.
 
 ---
 
-### 4. 📤 Exportación e Integraciones
-* **📅 Google Calendar:** Sincronización nativa directa mediante **Google OAuth 2.0**. Crea eventos recurrentes durante todo el semestre académico con ubicación, aula, nombre del docente y paleta de colores oficial de Google Calendar.
-* **📆 Archivo iCalendar (`.ics`):** Exporta un archivo estándar compatible con Apple Calendar, Microsoft Outlook y Google Calendar móvil.
-* **🖼️ Imagen PNG en Alta Resolución:** Descarga tu horario semanal renderizado limpiamente para compartir o usar como fondo de pantalla.
+### 2. ⚡ Optimizador Automático 2.0 (Motor Combinatorio)
+Evalúa todas las permutaciones válidas de secciones y entrega un ranking ordenado por porcentaje de afinidad (`0%` a `100%`):
+
+* **Modo Básico:** Selecciona los cursos exactos que deseas llevar y obtén las mejores combinaciones de secciones sin cruces.
+* **Modo Avanzado — Bolsa Combinatoria $C(n,k)$:** Selecciona un conjunto amplio de cursos candidatos (por ejemplo, 10 cursos entre obligatorios y electivos) y define cuántos deseas cursar ($k$). El motor explora todas las sub-combinaciones posibles de $k$ cursos y sus respectivas secciones.
+* **Fijado de Secciones (Pinning):** Fija un docente o sección específica en un curso para que el algoritmo construya el resto del horario alrededor de tu elección.
+* **Criterios Heurísticos y Penalizaciones Configurables:**
+  * **⚡ Menos huecos:** Minimiza los tiempos muertos entre bloques de clases de un mismo día.
+  * **📅 Menos días de asistencia:** Compacta la carga académica en la menor cantidad de días posibles.
+  * **🚫 Sin días puente:** Penaliza severamente (`-1000 pts`) horarios con días libres aislados entre días de clase (ej. asistir lunes y miércoles dejando martes vacío).
+  * **🌅 Preferencia Mañana / 🌇 Preferencia Tarde:** Bonifica horarios concentrados antes o después de las `12:00`.
+  * **🥪 Garantía de Almuerzo:** Define una ventana horaria (ej. `12:00` – `15:00`) y una duración mínima libre continua para asegurar tu hora de almuerzo todos los días.
 
 ---
 
-### 5. 🏫 Buscador de Aulas Libres (`/aulas`)
-¿Buscas un lugar tranquilo para estudiar o hacer trabajos grupales en el campus?
-* Encuentra aulas, laboratorios y mesas de estudio desocupadas en tiempo real en UTEC.
-* Filtra por **piso**, **edificio**, **tipo de espacio** o consulta la disponibilidad en cualquier rango horario futuro.
-* Línea de tiempo interactiva que muestra las horas exactas en las que cada salón se encuentra libre u ocupado.
+### 3. 📚 Catálogo de Cursos y Hub de Visitantes / Oyentes (`/cursos`)
+Explora los **409+ cursos ofertados** y más de **1,019 secciones** del semestre en una interfaz diseñada para descubrir clases y asistir como oyente:
+
+* **Indicadores en Tiempo Real:** Muestra cuántos cursos tienen sesiones dictándose en este preciso instante (`En clase ahora`) con detalle de aula y hora de término.
+* **Filtros Avanzados:** Búsqueda instantánea por código (`CC1101`, `CS2041`, etc.), nombre del curso, apellido del docente o número de aula; filtrado por **Carrera / Departamento**, **Día de la semana**, **Modalidad** (*Presencial* / *Sincrónico*) y filtros rápidos para **En vivo ahora** y **Mis Visitados**.
+* **Malla Horaria Semanal por Curso (`CourseTimetable`):**
+  * **Vista Matriz y Vista Agenda Diaria:** Visualiza todas las secciones del curso simultáneamente o filtra una sección específica mediante selector desplegable o píldoras horizontales deslizables.
+  * **Fusión Inteligente de Clases Compartidas:** Agrupa automáticamente las sesiones teóricas magistrales compartidas por múltiples sub-secciones (ej. `Sec. 1 (4 grp)` en `Aula Magna`) para evitar bloques duplicados.
+  * **Control de Superposición (`MAX_COLS = 3`) e Inspector Interactivo:** En cursos masivos (hasta 24 secciones), agrupa limpiamente las secciones paralelas con indicador `+X más` y un inspector inferior para alternar entre secciones, consultar el aula o agendar la sesión en Google Calendar.
+  * **Rango Horario Dinámico y Salto Rápido por Día:** Ajusta automáticamente el eje vertical a las horas reales del curso y permite saltar a cualquier día con un toque en pantallas móviles.
+* **Modo Oyente / Visitante:**
+  * Guarda tus cursos de interés en **Mis Visitados** (persistido localmente).
+  * **Generador de Solicitud de Permiso al Docente:** Redacta automáticamente una plantilla formal dirigida al correo institucional (`@utec.edu.pe`) del profesor de la sección elegida, lista para abrir en tu cliente de correo, Gmail Web o copiar al portapapeles.
+  * **Exportación Directa:** Descarga el calendario `.ics` del curso o agenda sesiones individuales en Google Calendar.
+
+---
+
+### 4. 🏫 Buscador de Aulas Libres en Tiempo Real (`/aulas`)
+Encuentra salones, laboratorios, auditorios y espacios desocupados en el campus de UTEC para estudiar en grupo o repasar antes de un examen:
+
+* **Estado en Tiempo Real:** Clasifica cada espacio como **Libre ahora** (indicando hasta qué hora permanece libre o si está libre el resto del día), **Por desocuparse pronto** o **Ocupado** (mostrando qué curso, sección y docente están en clase).
+* **Filtros por Piso y Duración:** Filtra por piso (`Piso 1` a `Piso 11`), tipo de espacio (*Aulas*, *Laboratorios*, *Auditorios*), tiempo libre mínimo requerido (`30m`, `1h`, `2h+`) o simula la disponibilidad en cualquier día y hora futura.
+* **Línea de Tiempo Interactiva (`07:00` – `22:00`):** Barra visual en cada tarjeta que muestra las franjas libres (verde) y ocupadas (rojo/ámbar) a lo largo del día.
+* **Modal de Ocupación Semanal (`ClassroomDetailModal`):** Consulta la matriz semanal completa de cualquier salón del campus.
+
+---
+
+### 5. 👨‍🏫 Directorio de Docentes (`/profesores` y `/docentes`)
+Consulta el perfil académico y horario de todos los profesores que dictan en el semestre:
+
+* **Radar "En Clase Ahora":** Identifica al instante qué docentes se encuentran dictando clase en este momento y en qué aula del campus se ubican.
+* **Métricas por Docente:** Total de horas semanales de dictado, número de cursos distintos, secciones a cargo, días activos en el campus y distribución por modalidad.
+* **Contacto Institucional:** Generación y validación automática del correo institucional (`@utec.edu.pe`) con botón de copiado rápido.
+* **Malla Horaria Docente (`ProfessorTimetable`):** Visualiza la semana completa del profesor en modo **Matriz** o **Agenda Diaria**, navega hacia los cursos o aulas asociadas con un clic y exporta su horario en formato `.ics`.
+
+---
+
+### 6. 🏅 Directorio de Mentores Académicos (`/mentores`)
+Conecta con estudiantes mentores de ciclos superiores para recibir acompañamiento académico y orientación universitaria:
+
+* **Búsqueda y Filtros Especializados:** Filtra mentores por **Carrera**, **Curso que domina** o busca por nombre.
+* **Tarjetas y Perfil Detallado (`MentorDetailModal`):** Fotografías, ciclo actual, insignia de rol (*Mentor* / *Coordinador*), biografía, frase motivacional, lista de cursos en los que brinda mentoría y acceso directo a contacto.
+
+---
+
+### 7. 📤 Exportación e Integración con Calendarios
+* **📅 Sincronización con Google Calendar (OAuth 2.0):** Conecta tu cuenta de Google para crear automáticamente eventos recurrentes semanales durante todo el ciclo académico, incluyendo código de aula, nombre del docente y colores diferenciados.
+* **📆 Estándar iCalendar (`.ics`):** Descarga archivos `.ics` compatibles con Apple Calendar, Microsoft Outlook, Notion Calendar y Google Calendar desde el armador de horarios, el catálogo de cursos o el directorio de docentes.
+* **🖼️ Captura PNG en Alta Definición:** Exporta tu horario semanal como una imagen limpia en alta resolución mediante `html2canvas`, ideal para fondo de pantalla o compartir con amigos.
 
 ---
 
 ## 🧠 Arquitectura y Motor de Optimización
 
-El núcleo de optimización de MatricuLAB 2.0 fue diseñado para superar las limitaciones de cómputo de JavaScript en el navegador mediante técnicas matemáticas y arquitecturas distribuidas:
+El núcleo algorítmico de **MatrícuLAB 2.0** resuelve el problema de satisfacción de restricciones (**CSP**) combinando paralelismo en el cliente y compilación nativa a **WebAssembly**:
 
 ```mermaid
 flowchart TD
@@ -112,25 +145,44 @@ flowchart TD
 ```
 
 ### 1. CSP (Constraint Satisfaction Problem) y Heurística MRV
-En lugar de iterar por fuerza bruta ($O(n^2)$), los cursos se ordenan según la heurística **Minimum Remaining Values (MRV)**: se colocan primero los cursos con menor cantidad de secciones disponibles (más restrictivos). Si una sección genera conflicto, el algoritmo **poda toda la rama de búsqueda**, evitando calcular millones de combinaciones inviables.
+En lugar de evaluar combinaciones por fuerza bruta, el motor ordena los cursos aplicando la heurística **Minimum Remaining Values (MRV)**: prioriza aquellos cursos con menor cantidad de secciones válidas (mayor restricción). Si una sección colisiona con el horario acumulado o con el bloqueador de tiempo, el algoritmo **poda la rama completa del árbol**, descartando millones de estados inválidos en una sola operación.
 
-### 2. Detección de Colisiones por Mapas de Bits (Bitmasks en $O(1)$)
-Los horarios de la semana se traducen a enteros de 64 bits (`BigInt`). Cada bloque de 15/30 minutos es un bit en la máscara. La detección de cruces entre dos clases o con el bloqueador de tiempo se resuelve en un solo ciclo de CPU evaluando la conjunción a nivel de bits ($\land$):
+### 2. Detección de Colisiones en $O(1)$ mediante Bitmasks
+Cada horario semanal se codifica como una máscara de bits sobre enteros de 64 bits (`BigInt` / `u64`), donde cada bit representa un bloque temporal de la semana. Verificar si dos secciones o franjas bloqueadas se cruzan se reduce a una operación lógica a nivel de CPU:
 
 $$\text{colision} = (\mathbf{mask}_A \land \mathbf{mask}_B) \neq 0$$
 
-Equivalente a nivel de implementación en TypeScript:
 ```typescript
 const hayColision = (maskA & maskB) !== 0n;
 ```
 
-### 3. Enjambre Paralelo (Web Worker Swarm + Rust WASM)
-* **Web Workers:** Se distribuye la carga entre tantos hilos paralelos como núcleos físicos posea el dispositivo (`navigator.hardwareConcurrency`).
-* **QuantumEngine (Rust compilado a WebAssembly):** Módulo nativo ultraoptimizado (`wasm-engine/`) que ejecuta la búsqueda exhaustiva y cálculo de métricas en memoria lineal sin pausas de Garbage Collector.
+### 3. Enjambre de Web Workers + Rust WASM (`QuantumEngine`)
+* **Web Worker Swarm:** Divide el espacio combinatorio $C(n,k)$ en particiones equilibradas y las distribuye entre tantos hilos paralelos como núcleos lógicos exponga el procesador (`navigator.hardwareConcurrency`).
+* **QuantumEngine (`wasm-engine/`):** Motor escrito en **Rust** y compilado a **WebAssembly** que ejecuta el backtracking, el filtrado de almuerzo y la evaluación heurística en memoria lineal sin pausas de *Garbage Collection*.
 
 ### 4. Sistema de Puntuación en Dos Fases
-1. **Fase 1 (Heurística Masiva en Workers):** Calcula un `rawScore` rápido para descartar opciones y alimentar una cola de prioridad (`MinMaxHeap`) que retiene los mejores horarios.
-2. **Fase 2 (Normalización Relativa en Frontend):** Evalúa el Top seleccionado contra el resto mediante interpolación lineal relativa, ponderando cada filtro para generar una puntuación porcentual humana (0% a 100%) con desempates por minutos de hueco, días activos y fin de jornada.
+1. **Fase 1 (Heurística en Workers):** Calcula un puntaje bruto (`rawScore`) en tiempo constante y mantiene únicamente las mejores $K$ soluciones en una estructura `MinMaxHeap` acotada.
+2. **Fase 2 (Normalización Relativa en el Hilo Principal):** Compara el conjunto élite resultante mediante interpolación lineal relativa según los pesos configurados por el estudiante, generando un porcentaje de afinidad (`0%` – `100%`) y aplicando criterios de desempate deterministas (minutos de hueco, días activos y hora de salida).
+
+---
+
+## ⚡ Arquitectura de Navegación Instantánea y Datos
+
+### 1. AppShell Híbrido (Transiciones de `0ms`)
+Todas las rutas principales (`/`, `/cursos`, `/aulas`, `/profesores`, `/mentores`) están envueltas por el componente [`AppShell.tsx`](src/components/AppShell.tsx). Al navegar entre módulos desde la barra superior o el dock móvil inferior (`MobileBottomNav.tsx`):
+* Se intercepta la navegación interna mediante `history.pushState` sin recargar el documento HTML.
+* Los módulos ya visitados permanecen montados en memoria preservando tus filtros, búsquedas y posición exacta de scroll.
+* Se soportan enlaces profundos cruzados entre módulos (por ejemplo, hacer clic en `Aula 802` dentro de `/cursos` abre directamente `/aulas?search=Aula%20802`, o hacer clic en el nombre de un docente abre su perfil en `/profesores?search=...`).
+
+### 2. Caché Multicapa y Precalentamiento (`masterDataLoader.ts`)
+El cargador maestro gestiona los catálogos precompilados (`public/data/`) con una jerarquía de tres niveles:
+1. **Nivel 1 — Memoria RAM (`window.__MATRICULAB_*__`):** Lectura síncrona en `0ms` sin parpadeos ni *skeletons*.
+2. **Nivel 2 — `sessionStorage`:** Persistencia instantánea entre recargas de pestaña.
+3. **Nivel 3 — JSON Estático Precompilado / Fallback Excel:** Carga asíncrona desde `public/data/courses_catalog.json`, `professors_catalog.json` y `classrooms_semester_consolidated.json`, con precalentamiento automático en segundo plano mediante `requestIdleCallback`.
+
+### 3. Diseño Responsivo Adaptado a Safari iOS y Tablets
+* **Unidades Dinámicas de Viewport (`dvh`):** Los modales, hojas inferiores (*bottom sheets*) y grillas horarias descuentan automáticamente el espacio consumido por la barra de búsqueda y navegación de **Safari en iOS** y navegadores móviles.
+* **Gestos Táctiles Nativos:** Soporte de deslizamiento vertical (*swipe-down*) para cerrar modales en móviles, bloqueo inteligente de scroll de fondo, selectores con fuentes anti-zoom (`16px`) y barras de filtros con desplazamiento horizontal táctil.
 
 ---
 
@@ -138,62 +190,96 @@ const hayColision = (maskA & maskB) !== 0n;
 
 ```text
 Matricula/
-├── .gitlab-ci.yml              # Pipeline CI/CD para compilación y despliegue en GitLab Pages
-├── astro.config.mjs            # Configuración de Astro, integración React y optimización Rollup
-├── package.json                # Dependencias del proyecto (Astro, React, Lucide, PDF.js, etc.)
-├── wasm-engine/                # Motor de optimización en Rust compilado a WebAssembly
-│   ├── Cargo.toml              # Manifiesto de Rust (wasm-bindgen, serde, gloo-timers)
-│   └── src/lib.rs              # QuantumEngine: evaluación CSP y bitmasks nativos
-├── docs_v2/                    # Documentación técnica y de usuario detallada
-│   ├── Asignacion_Puntos.md    # Especificación matemática del sistema de scoring
-│   ├── README_TECH.md          # Changelog técnico de la versión 2.0
-│   └── README_USER.md          # Guía detallada para el estudiante
-├── public/                     # Recursos estáticos (logos, favicons)
+├── .gitlab-ci.yml                  # Pipeline CI/CD para compilación WASM y despliegue en GitLab Pages
+├── astro.config.mjs                # Configuración de Astro v7, integración React y plugins WASM
+├── package.json                    # Dependencias y scripts de automatización
+├── wasm-engine/                    # Motor combinatorio en Rust compilado a WebAssembly
+│   ├── Cargo.toml                  # Manifiesto de Rust (wasm-bindgen, serde, js-sys)
+│   └── src/lib.rs                  # QuantumEngine: backtracking CSP, bitmasks y scoring
+├── scripts/                        # Scripts CLI para precompilación y enriquecimiento de catálogos
+│   ├── buildCoursesCatalog.ts      # Genera courses_catalog.json y professors_catalog.json
+│   ├── buildMentorsData.ts         # Procesa datos e insignias de mentores académicos
+│   ├── enrichClassrooms.ts         # Enriquecimiento cruzado de aulas y cursos
+│   ├── scrapeAulasIntranet.ts      # Extracción de disponibilidad de aulas
+│   └── scrapeSemesterAvailability.ts # Consolidación semestral de espacios
+├── docs_v2/                        # Documentación técnica y matemática
+│   ├── Asignacion_Puntos.md        # Especificación matemática del algoritmo de puntuación
+│   ├── README_TECH.md              # Arquitectura interna del motor de optimización
+│   └── README_USER.md              # Manual de uso para el estudiante
+├── public/                         # Activos estáticos servidos directamente
+│   ├── data/                       # Catálogos JSON precompilados de carga ultrarrápida
+│   └── samples/                    # Archivo Consulta_Horario.xlsx de respaldo
 └── src/
-    ├── components/             # Componentes React de la interfaz
-    │   ├── ClassroomFinder/    # Módulo de Buscador de Aulas Libres (/aulas)
+    ├── components/                 # Componentes React de la interfaz
+    │   ├── AppShell.tsx            # Contenedor SPA con transiciones de 0ms e historial
+    │   ├── Navbar.tsx              # Barra de navegación superior de escritorio
+    │   ├── MobileBottomNav.tsx     # Dock de navegación inferior para móviles y tablets
+    │   ├── ScheduleApp.tsx         # Aplicación principal del Armador de Horarios
+    │   ├── CourseSidebar.tsx       # Panel lateral de búsqueda, carga hábil y secciones
+    │   ├── TimetableGrid.tsx       # Grilla semanal interactiva de horarios
+    │   ├── ScheduleOptimizerModal.tsx # Interfaz del Optimizador 2.0 y controles heurísticos
+    │   ├── TimeBlockerGrid.tsx     # Grilla interactiva para bloquear horas no disponibles
+    │   ├── MultiScheduleTabs.tsx   # Gestión de múltiples opciones de horario (A, B, C...)
+    │   ├── GoogleCalendarModal.tsx # Sincronización directa con Google Calendar (OAuth 2.0)
+    │   ├── FileUploadModal.tsx     # Importador de Excel y PDFs de UTEC
+    │   ├── ExportModal.tsx         # Exportación a PNG de alta resolución y archivo .ics
+    │   ├── CourseDirectory/        # Módulo Catálogo de Cursos y Oyentes (/cursos)
+    │   │   ├── CourseApp.tsx
+    │   │   ├── CourseCard.tsx
+    │   │   ├── CourseFilterBar.tsx
+    │   │   ├── CourseDetailModal.tsx
+    │   │   ├── CourseTimetable.tsx
+    │   │   └── VisitorEmailModal.tsx
+    │   ├── ClassroomFinder/        # Módulo Buscador de Aulas Libres (/aulas)
     │   │   ├── ClassroomApp.tsx
     │   │   ├── ClassroomCard.tsx
     │   │   ├── ClassroomFilterBar.tsx
-    │   │   └── ClassroomTimeline.tsx
-    │   ├── CourseSidebar.tsx   # Panel lateral de cursos, filtros y selección de secciones
-    │   ├── TimetableGrid.tsx   # Grilla semanal interactiva con drag-and-drop
-    │   ├── ScheduleOptimizerModal.tsx # Modal del optimizador con enjambre de Web Workers
-    │   ├── GoogleCalendarModal.tsx    # Integración con Google Calendar OAuth 2.0
-    │   ├── TimeBlockerGrid.tsx # Grilla para bloquear franjas horarias personales
-    │   ├── MultiScheduleTabs.tsx      # Gestión de pestañas (Opción A, B, C...)
-    │   ├── FileUploadModal.tsx # Carga y procesamiento de Excel y PDFs
-    │   └── ExportModal.tsx     # Opciones de exportación (.ics, PNG, correo)
-    ├── pages/                  # Rutas de Astro
-    │   ├── index.astro         # Página principal (Armador y Optimizador)
-    │   ├── aulas.astro         # Página del Buscador de Aulas Libres
-    │   ├── privacy.astro       # Política de privacidad
-    │   └── terms.astro         # Términos y condiciones
-    ├── styles/                 # Hojas de estilo CSS (Glassmorphism, Dark UI, Responsive)
-    ├── types/                  # Definiciones de tipos TypeScript (Course, Session, Metrics...)
-    └── utils/                  # Lógica de negocio y utilitarios
-        ├── excelParser.ts      # Parser para Consulta_Horario.xlsx de UTEC
-        ├── pdfParser.ts        # Parser para Carga Hábil y Consolidados PDF
-        ├── scheduleOptimizer.ts# Lógica CSP y cálculo de métricas
-        ├── scheduleWorker.ts   # Web Worker para cómputo multihilo
-        ├── googleCalendarService.ts # API Client de Google Calendar
-        ├── icsExporter.ts      # Generador de archivos .ics estándar
-        └── classroomUtils.ts   # Cálculo de disponibilidad de aulas
+    │   │   ├── ClassroomTimeline.tsx
+    │   │   └── ClassroomDetailModal.tsx
+    │   ├── ProfessorDirectory/     # Módulo Directorio de Docentes (/profesores)
+    │   │   ├── ProfessorApp.tsx
+    │   │   ├── ProfessorCard.tsx
+    │   │   ├── ProfessorFilterBar.tsx
+    │   │   ├── ProfessorDetailModal.tsx
+    │   │   └── ProfessorTimetable.tsx
+    │   ├── MentorDirectory/        # Módulo Mentores Académicos (/mentores)
+    │   │   ├── MentorApp.tsx
+    │   │   ├── MentorCard.tsx
+    │   │   ├── MentorFilterBar.tsx
+    │   │   ├── MentorDetailModal.tsx
+    │   │   └── MentorStats.tsx
+    │   └── common/                 # Controles reutilizables (CustomSelect, CustomTimePicker)
+    ├── data/                       # Datos estáticos tipados (mentorsData.ts)
+    ├── pages/                      # Rutas de Astro (/, /cursos, /aulas, /profesores, /mentores)
+    ├── styles/                     # Sistema de diseño CSS (Glassmorphism, Dark UI, Responsive)
+    ├── types/                      # Contratos TypeScript para cada dominio
+    └── utils/                      # Lógica de negocio, parsers, workers y exportadores
+        ├── masterDataLoader.ts     # Caché multicapa y precalentamiento de catálogos
+        ├── excelParser.ts          # Lector y normalizador de Consulta_Horario.xlsx
+        ├── pdfParser.ts            # Extractor de Carga Hábil y Consolidado en PDF
+        ├── scheduleOptimizer.ts    # Algoritmo CSP en TypeScript y cálculo de métricas
+        ├── scheduleWorker.ts       # Coordinador de Web Workers + puente Rust WASM
+        ├── courseDirectoryUtils.ts # Procesamiento de cursos, secciones, colores y .ics
+        ├── classroomUtils.ts       # Motor de disponibilidad de aulas en tiempo real
+        ├── professorUtils.ts       # Agregación de carga docente y correos institucionales
+        ├── mentorUtils.ts          # Filtrado y estadísticas de mentores
+        ├── googleCalendarService.ts# Cliente OAuth 2.0 para Google Calendar API
+        └── icsExporter.ts          # Generador de calendarios estándar RFC 5545 (.ics)
 ```
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## 🛠️ Stack Tecnológico
 
-| Categoría | Tecnología | Uso |
+| Categoría | Tecnología | Propósito en MatrícuLAB |
 | :--- | :--- | :--- |
-| **Framework Web** | [Astro](https://astro.build/) (v7.x) | Arquitectura moderna con carga ultra rápida |
-| **Interfaz de Usuario** | [React](https://react.dev/) (v19) + [TypeScript](https://www.typescriptlang.org/) | Componentes interactivos, reactividad y tipado estricto |
-| **Motor de Cómputo** | [Rust](https://www.rust-lang.org/) + [WebAssembly](https://webassembly.org/) | Algoritmo QuantumEngine para resolución CSP a nivel nativo |
-| **Paralelismo** | Web Workers API | Arquitectura Map-Reduce distribuida en la CPU del cliente |
-| **Procesamiento de Datos** | [PDF.js](https://mozilla.github.io/pdf.js/) & [SheetJS (XLSX)](https://sheetjs.com/) | Lectura y extracción de datos desde PDFs y Excels de UTEC |
-| **Integraciones** | Google Calendar API (OAuth 2.0) | Sincronización de eventos y envío de horarios por correo |
-| **Diseño y Estilos** | CSS Moderno (Vanilla) & Lucide Icons | Estética glassmorphic oscura, responsiva y de alta fidelidad |
+| **Framework Principal** | [Astro](https://astro.build/) `v7.1` | Generación estática ultrarrápida (SSG) y enrutamiento base |
+| **Interfaz Reactiva** | [React](https://react.dev/) `v19.2` + [TypeScript](https://www.typescriptlang.org/) `v7.0` | Estado complejo, grillas interactivas y tipado estricto de extremo a extremo |
+| **Motor Nativo** | [Rust](https://www.rust-lang.org/) + [WebAssembly](https://webassembly.org/) | `QuantumEngine` para resolución combinatoria CSP y bitmasks a velocidad nativa |
+| **Concurrencia** | Web Workers API | Paralelismo Map-Reduce multihilo sobre todos los núcleos de CPU del cliente |
+| **Procesamiento Local** | [PDF.js](https://mozilla.github.io/pdf.js/) & [SheetJS (`xlsx`)](https://sheetjs.com/) | Lectura 100% en navegador de documentos PDF y Excel oficiales de UTEC |
+| **Exportación y Calendarios** | Google Calendar API (OAuth 2.0), `html2canvas` & RFC 5545 (`.ics`) | Sincronización de eventos semestrales, captura PNG en alta definición y archivos `.ics` |
+| **Sistema Visual** | CSS Moderno (Variables, Grid, `dvh`, `backdrop-filter`) & [Lucide Icons](https://lucide.dev/) | Estética *Dark Glassmorphism* de alta densidad, optimizada para escritorio, tablet y Safari móvil |
 
 ---
 
@@ -202,7 +288,7 @@ Matricula/
 ### Requisitos Previos
 * **Node.js**: `>= 22.12.0`
 * **pnpm**: `>= 9.0.0`
-* **Rust & wasm-pack** *(opcional, solo si deseas modificar o recompilar el motor WASM)*:
+* **Rust & `wasm-pack`** *(opcional, requerido únicamente si deseas recompilar `wasm-engine/`)*:
   ```bash
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
@@ -216,14 +302,14 @@ Matricula/
    cd utec-scheduler
    ```
 
-2. **Compilar el motor Rust WASM (si es necesario):**
+2. **Compilar el motor Rust a WebAssembly *(opcional si ya existe `wasm-engine/pkg`)*:**
    ```bash
    cd wasm-engine
    wasm-pack build --target web
    cd ..
    ```
 
-3. **Instalar dependencias de Node:**
+3. **Instalar las dependencias del proyecto:**
    ```bash
    pnpm install
    ```
@@ -232,18 +318,19 @@ Matricula/
    ```bash
    pnpm dev
    ```
-   > Abre tu navegador en `http://localhost:4321` para ver la aplicación en vivo.
+   > La aplicación estará disponible en `http://localhost:4321`.
 
-5. **Construir para producción:**
+5. **Generar el build de producción:**
    ```bash
    pnpm build
+   pnpm preview
    ```
 
 ---
 
 ## 🔄 Pipeline de CI/CD (GitLab Pages)
 
-El proyecto cuenta con un flujo de integración y despliegue continuo completamente automatizado definido en [`.gitlab-ci.yml`](.gitlab-ci.yml), configurado para desplegar la aplicación en **GitLab Pages** cada vez que se realizan cambios en la rama principal (`main`).
+El proyecto cuenta con integración y despliegue continuo automatizado en [`.gitlab-ci.yml`](.gitlab-ci.yml), compilando el motor Rust WASM y publicando el sitio estático en **GitLab Pages** en cada actualización sobre la rama `main`:
 
 ```mermaid
 flowchart LR
@@ -256,50 +343,35 @@ flowchart LR
     G --> H["Despliegue en GitLab Pages"]
 ```
 
-### Detalles del Pipeline:
-
-* **Entorno de Ejecución:** Imagen Docker oficial `node:22-bookworm` (Debian Bookworm con Node.js 22 LTS).
-* **Caché Persistente:** 
-  - Indexado mediante la clave del archivo `pnpm-lock.yaml`.
-  - Preserva el directorio `.pnpm-store` entre ejecuciones sucesivas para acelerar drásticamente la instalación de paquetes.
-* **Fase de Preparación (`before_script`):**
-  1. **Instalación de Rust:** Descarga el compilador oficial mediante `rustup` y carga las variables de entorno de Cargo.
-  2. **Instalación de `wasm-pack`:** Herramienta CLI para compilar Rust hacia binarios WebAssembly (`.wasm`) optimizados para navegadores web.
-  3. **Activación de `pnpm 9`:** Utiliza `corepack` nativo de Node.js (`corepack enable && corepack prepare pnpm@9 --activate`) y fija el almacén en `.pnpm-store`.
-* **Fase de Compilación y Ensamblado (`script`):**
-  1. **Compilación de WASM:** Accede al directorio `wasm-engine/` y ejecuta `wasm-pack build --target web`, generando el módulo compilado y sus bindings TypeScript en `wasm-engine/pkg/`.
-  2. **Instalación de Dependencias Web:** Ejecuta `pnpm install` para resolver todos los paquetes de Node y enlazar el motor WASM.
-  3. **Generación del Sitio Estático:** Ejecuta `pnpm run build`, procesando los componentes React, estilos y rutas de Astro para emitir el bundle de producción en `dist/`.
-  4. **Adaptación para GitLab Pages:** Como GitLab Pages publica exclusivamente los archivos situados en el directorio `public/`, el pipeline reemplaza la carpeta `public` estática con los artefactos compilados (`rm -rf public && mv dist public`).
-* **Artefactos Publicados (`artifacts`):**
-  - Publica la carpeta `public/` completa para su distribución a través del CDN de GitLab Pages.
-* **Condiciones de Ejecución (`rules`):**
-  - El despliegue (`pages`) se ejecuta de manera automática **únicamente ante commits o merges en la rama `main`**, protegiendo el entorno público de cambios en ramas de desarrollo o experimentales.
+1. **Entorno Base:** Contenedor `node:22-bookworm` con caché persistente para `.pnpm-store`.
+2. **Compilación Nativa (`wasm-pack`):** Instala la toolchain estable de Rust y compila `wasm-engine/` hacia el objetivo `--target web`.
+3. **Empaquetado Estático (`pnpm run build`):** Genera los bundles optimizados de Astro y React en `dist/`.
+4. **Publicación en GitLab Pages:** Transfiere los artefactos generados al directorio `public/` para su distribución global por CDN.
 
 ---
 
 ## 🔒 Privacidad y Seguridad
 
-* **100% Client-Side:** Todo el análisis de tus documentos (PDF de notas, carga hábil, consolidado) y el cálculo combinatorio se ejecuta **exclusivamente en tu navegador**.
-* **Cero Almacenamiento Externo:** Ninguna información personal, nombres, códigos ni horarios son enviados a servidores de terceros ni almacenados en bases de datos externas.
-* **Google OAuth Seguro:** La sincronización con Google Calendar utiliza tokens de acceso temporales que nunca salen de tu sesión local de navegador.
+* **Procesamiento 100% en tu Dispositivo (Client-Side):** Todos tus archivos personales (PDF de Carga Hábil, Consolidado de Matrícula y Excel de Horarios) se procesan localmente en la memoria de tu navegador.
+* **Cero Almacenamiento en Servidores Externos:** Ningún dato académico, código de alumno, calificaciones ni preferencias de horario se transmiten ni guardan en bases de datos externas.
+* **Persistencia Local Transparente:** Tus horarios armados, cursos marcados como visitante y caché de catálogos se almacenan exclusivamente en el `localStorage` y `sessionStorage` de tu propio navegador.
+* **Autenticación OAuth 2.0 Directa:** La integración con Google Calendar emplea tokens de sesión efímeros emitidos directamente por Google en tu navegador.
 
 ---
 
-## 🤝 Contribuciones y Soporte
+## 🤝 Contribuciones
 
-Las sugerencias, reportes de bugs y contribuciones son siempre bienvenidos. Si encuentras un caso especial en el parser de PDFs o quieres proponer un nuevo criterio de optimización:
+Las mejoras en algoritmos de optimización, soporte para nuevos formatos de documentos UTEC o refinamientos de interfaz son bienvenidos:
 
-1. Haz un Fork del proyecto.
-2. Crea una rama para tu funcionalidad (`git checkout -b feature/nueva-mejora`).
-3. Realiza tus cambios y haz commit (`git commit -m 'Añade nueva funcionalidad'`).
-4. Sube tu rama (`git push origin feature/nueva-mejora`).
-5. Abre un Merge Request / Pull Request.
+1. Realiza un **Fork** del repositorio.
+2. Crea una rama descriptiva (`git checkout -b feature/nueva-funcionalidad`).
+3. Aplica tus cambios y realiza commit (`git commit -m "feat: descripción del cambio"`).
+4. Envía tu rama (`git push origin feature/nueva-funcionalidad`) y abre un **Merge Request**.
 
 ---
 
 <div align="center">
 
-Hecho con ❤️ para la comunidad de **UTEC**.
+Hecho con ❤️ para la comunidad estudiantil de **UTEC**.
 
 </div>
