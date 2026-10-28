@@ -13,13 +13,13 @@ import {
 import type { DayOfWeek } from '../../types/schedule';
 import type {
   CourseExtendedInfo,
-  CourseExtendedSection,
   CourseExtendedSession
 } from '../../types/courseDirectory';
 import { ALL_DAYS, DAY_LABELS } from '../../utils/classroomUtils';
+import { formatProfessorName } from '../../utils/professorUtils';
+import { CustomSelect, type SelectOption } from '../common/CustomSelect';
 import {
   generateGoogleCalendarUrlForSession,
-  SECTION_PALETTES,
   getSectionColor
 } from '../../utils/courseDirectoryUtils';
 
@@ -34,6 +34,8 @@ export interface CourseTimetableProps {
 export interface TimetableSessionItem {
   id: string;
   sectionNumber: string;
+  mergedSections?: string[];
+  overflowItems?: TimetableSessionItem[];
   sectionColor: string;
   session: CourseExtendedSession;
 }
@@ -45,7 +47,35 @@ export interface PositionedSession {
 }
 
 /**
- * Computes non-overlapping horizontal layouts for sessions occurring on the same day and time
+ * Formats verbose section names like "1 (TEORÍA 11)" -> "Sec. 1 • T11"
+ */
+export function formatShortSectionLabel(secNum: string): string {
+  const trimmed = secNum.trim();
+  const match = trimmed.match(/^(\d+)\s*\((.+)\)$/);
+  if (!match) {
+    return `Sec. ${trimmed}`;
+  }
+  const baseSec = match[1];
+  const inner = match[2].trim();
+  const shortInner = inner
+    .replace(/TEOR[IÍ]A\s*/i, 'T')
+    .replace(/LABORATORIO\s*/i, 'L')
+    .replace(/PR[AÁ]CTICA\s*/i, 'P')
+    .replace(/TALLER\s*/i, 'TA');
+  return `Sec. ${baseSec} • ${shortInner}`;
+}
+
+function abbreviateSessionType(type: string): string {
+  if (/teor/i.test(type)) return 'TEO';
+  if (/lab/i.test(type)) return 'LAB';
+  if (/pr[aá]c/i.test(type)) return 'PRÁC';
+  return type.slice(0, 4).toUpperCase();
+}
+
+/**
+ * Computes non-overlapping horizontal layouts for sessions occurring on the same day and time.
+ * Caps maximum parallel columns per time cluster at MAX_COLS = 3 so mobile/tablet blocks
+ * are never crushed into unreadable slivers when viewing all sections.
  */
 function computeCourseSessionLayouts(items: TimetableSessionItem[]): PositionedSession[] {
   if (items.length === 0) return [];
@@ -74,6 +104,7 @@ function computeCourseSessionLayouts(items: TimetableSessionItem[]): PositionedS
     clusters.push(currentCluster);
   }
 
+  const MAX_COLS = 3;
   const result: PositionedSession[] = [];
 
   for (const cluster of clusters) {
@@ -93,10 +124,57 @@ function computeCourseSessionLayouts(items: TimetableSessionItem[]): PositionedS
       }
     }
 
-    const totalCols = columns.length;
-    for (let colIndex = 0; colIndex < columns.length; colIndex++) {
-      for (const item of columns[colIndex]) {
-        result.push({ item, colIndex, totalCols });
+    if (columns.length <= MAX_COLS) {
+      const totalCols = columns.length;
+      for (let colIndex = 0; colIndex < columns.length; colIndex++) {
+        for (const item of columns[colIndex]) {
+          result.push({ item, colIndex, totalCols });
+        }
+      }
+    } else {
+      // Columns 0 and 1 render normally; columns 2..N-1 are merged into column 2 per overlapping time window
+      for (let colIndex = 0; colIndex < MAX_COLS - 1; colIndex++) {
+        for (const item of columns[colIndex]) {
+          result.push({ item, colIndex, totalCols: MAX_COLS });
+        }
+      }
+      const tailItems = columns
+        .slice(MAX_COLS - 1)
+        .flat()
+        .sort(
+          (a, b) =>
+            a.session.startMinutes - b.session.startMinutes ||
+            b.session.endMinutes - a.session.endMinutes
+        );
+
+      const subGroups: TimetableSessionItem[][] = [];
+      let currGroup: TimetableSessionItem[] = [];
+      let currEnd = -1;
+
+      for (const tItem of tailItems) {
+        if (currGroup.length === 0 || tItem.session.startMinutes < currEnd) {
+          currGroup.push(tItem);
+          currEnd = Math.max(currEnd, tItem.session.endMinutes);
+        } else {
+          subGroups.push(currGroup);
+          currGroup = [tItem];
+          currEnd = tItem.session.endMinutes;
+        }
+      }
+      if (currGroup.length > 0) {
+        subGroups.push(currGroup);
+      }
+
+      for (const grp of subGroups) {
+        const primary = grp[0];
+        result.push({
+          item: {
+            ...primary,
+            overflowItems: grp.length > 1 ? grp : undefined
+          },
+          colIndex: MAX_COLS - 1,
+          totalCols: MAX_COLS
+        });
       }
     }
   }
@@ -113,18 +191,20 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'matriz' | 'agenda'>('matriz');
   const [selectedSessionItem, setSelectedSessionItem] = useState<TimetableSessionItem | null>(null);
+  const daysScrollRef = useRef<HTMLDivElement>(null);
+  const inspectorRef = useRef<HTMLDivElement>(null);
 
-  // Flatten all sessions across visible sections
+  // Flatten all sessions across visible sections and merge identical shared lectures when viewing 'ALL'
   const allSessionItems = useMemo<TimetableSessionItem[]>(() => {
     const sectionsToInclude = selectedSectionNumber === 'ALL'
       ? course.extendedSections
       : course.extendedSections.filter(s => s.sectionNumber === selectedSectionNumber);
 
-    const items: TimetableSessionItem[] = [];
+    const rawItems: TimetableSessionItem[] = [];
     sectionsToInclude.forEach(sec => {
       const palette = getSectionColor(sec.sectionNumber);
       sec.sessions.forEach(sess => {
-        items.push({
+        rawItems.push({
           id: `${sec.sectionNumber}-${sess.id || sess.sessionGroup}-${sess.day}-${sess.startMinutes}`,
           sectionNumber: sec.sectionNumber,
           sectionColor: palette.border,
@@ -132,7 +212,32 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
         });
       });
     });
-    return items;
+
+    if (selectedSectionNumber !== 'ALL') {
+      return rawItems;
+    }
+
+    // Deduplicate identical shared sessions (e.g. TEORÍA 1 shared by sub-sections 1.11-1.14)
+    const mergedMap = new Map<string, TimetableSessionItem>();
+    for (const item of rawItems) {
+      const s = item.session;
+      const key = `${s.day}|${s.startMinutes}|${s.endMinutes}|${s.sessionGroup}|${s.roomDisplayName}|${s.professor}`;
+      const existing = mergedMap.get(key);
+      if (existing) {
+        const list = existing.mergedSections || [existing.sectionNumber];
+        if (!list.includes(item.sectionNumber)) {
+          list.push(item.sectionNumber);
+        }
+        existing.mergedSections = list;
+      } else {
+        mergedMap.set(key, {
+          ...item,
+          mergedSections: [item.sectionNumber]
+        });
+      }
+    }
+
+    return Array.from(mergedMap.values());
   }, [course, selectedSectionNumber]);
 
   // Group session items by Day
@@ -176,7 +281,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
     return ALL_DAYS;
   }, [filterOnlyActiveDays, activeDaysWithClasses]);
 
-  // Determine dynamic bounds
+  // Determine tight dynamic hour bounds so morning/afternoon courses don't have 6+ empty hours
   const { minHour, maxHour, totalHours } = useMemo(() => {
     let minH = 7;
     let maxH = 22;
@@ -186,14 +291,14 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
       const latestEnd = Math.max(...allSessionItems.map(i => i.session.endMinutes));
       const earliestH = Math.floor(earliestStart / 60);
       const latestH = Math.ceil(latestEnd / 60);
-      minH = Math.max(7, Math.min(earliestH, 8));
-      maxH = Math.min(22, Math.max(latestH, 18));
+      minH = Math.max(7, earliestH);
+      maxH = Math.min(22, Math.max(minH + 4, latestH + 1));
     }
 
     return {
       minHour: minH,
       maxHour: maxH,
-      totalHours: Math.max(8, maxH - minH)
+      totalHours: Math.max(4, maxH - minH)
     };
   }, [allSessionItems]);
 
@@ -217,8 +322,8 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
   const showNowIndicator = nowMinutes >= minMinutes && nowMinutes <= minMinutes + totalMinutes;
   const nowTopPercent = ((nowMinutes - minMinutes) / totalMinutes) * 100;
 
-  const slotHeightPerHour = 56;
-  const gridHeight = Math.max(520, totalHours * slotHeightPerHour);
+  const slotHeightPerHour = 52;
+  const gridHeight = Math.max(260, totalHours * slotHeightPerHour);
 
   // Positioned sessions per day
   const positionedByDay = useMemo<Record<DayOfWeek, PositionedSession[]>>(() => {
@@ -236,89 +341,173 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
     return res;
   }, [sessionsByDay]);
 
+  // Compute adaptive column width based on number of rendered days and parallel overlap
+  const maxColsInAnyDay = useMemo(() => {
+    let maxC = 1;
+    daysToRender.forEach(d => {
+      positionedByDay[d]?.forEach(p => {
+        if (p.totalCols > maxC) maxC = p.totalCols;
+      });
+    });
+    return maxC;
+  }, [daysToRender, positionedByDay]);
+
+  const minColWidth = useMemo(() => {
+    if (daysToRender.length === 1) return 'minmax(100%, 1fr)';
+    if (daysToRender.length === 2) {
+      return maxColsInAnyDay >= 3 ? 'minmax(175px, 1fr)' : 'minmax(135px, 1fr)';
+    }
+    if (maxColsInAnyDay === 1) return 'minmax(112px, 1fr)';
+    if (maxColsInAnyDay === 2) return 'minmax(158px, 1fr)';
+    return 'minmax(210px, 1fr)';
+  }, [daysToRender.length, maxColsInAnyDay]);
+
+  // Section dropdown options for quick filtering on mobile/tablet
+  const sectionSelectOptions = useMemo<SelectOption[]>(() => [
+    {
+      value: 'ALL',
+      label: `Todas las secciones (${course.totalSectionsCount})`
+    },
+    ...course.extendedSections.map(s => ({
+      value: s.sectionNumber,
+      label: formatShortSectionLabel(s.sectionNumber),
+      badge: `${s.sessions.length}h`,
+      badgeColor: getSectionColor(s.sectionNumber).border
+    }))
+  ], [course]);
+
+  // Scroll day column into view when clicking day jump pill
+  const handleScrollToDay = (day: DayOfWeek) => {
+    if (!daysScrollRef.current) return;
+    const colEl = daysScrollRef.current.querySelector(`[data-day-col="${day}"]`) as HTMLElement | null;
+    if (colEl) {
+      colEl.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+    }
+  };
+
+  // Scroll inspector into view when selecting a session
+  useEffect(() => {
+    if (selectedSessionItem && inspectorRef.current) {
+      inspectorRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selectedSessionItem]);
+
   return (
     <div className="prof-timetable-wrap course-timetable-wrap">
-      {/* Top Toolbar: Section Filter Pills & View Mode Switcher */}
-      <div className="prof-timetable-controls-bar">
-        {/* Section Quick Pills */}
-        <div className="prof-day-jump-pills course-sec-pills-bar">
-          <button
-            type="button"
-            className={`prof-day-jump-pill ${selectedSectionNumber === 'ALL' ? 'prof-day-jump-pill--active' : ''}`}
-            onClick={() => onSelectSectionNumber?.('ALL')}
-          >
-            <Layers size={13} />
-            <span>Todas las Secciones ({course.totalSectionsCount})</span>
-          </button>
+      {/* Compact Toolbar: Section Filter + Active Days Toggle + View Switcher */}
+      <div className="course-timetable-toolbar">
+        <div className="course-timetable-top-bar">
+          <div className="course-timetable-filters-left">
+            {course.extendedSections.length > 1 && (
+              <CustomSelect
+                value={selectedSectionNumber}
+                onChange={val => onSelectSectionNumber?.(val)}
+                options={sectionSelectOptions}
+                icon={<Layers size={13} />}
+                size="sm"
+                className="course-timetable-sec-dropdown"
+                ariaLabel="Filtrar sección en horario"
+              />
+            )}
 
-          {course.extendedSections.map(sec => {
-            const isSelected = selectedSectionNumber === sec.sectionNumber;
-            const palette = getSectionColor(sec.sectionNumber);
-
-            return (
+            {activeDaysWithClasses.length < 6 && viewMode === 'matriz' && (
               <button
-                key={sec.sectionNumber}
                 type="button"
-                className={`prof-day-jump-pill ${isSelected ? 'prof-day-jump-pill--active' : ''}`}
-                onClick={() => onSelectSectionNumber?.(isSelected ? 'ALL' : sec.sectionNumber)}
-                style={
-                  isSelected
-                    ? { backgroundColor: palette.border, borderColor: palette.border }
-                    : undefined
-                }
+                className={`prof-day-jump-pill course-days-filter-pill ${filterOnlyActiveDays ? 'prof-day-jump-pill--active' : ''}`}
+                onClick={() => setFilterOnlyActiveDays(prev => !prev)}
+                title={filterOnlyActiveDays ? 'Ver semana completa (6 días)' : 'Ver solo días con clases'}
               >
-                <span
-                  className="sec-dot-inline"
-                  style={{ backgroundColor: palette.border }}
-                />
-                <span>Sec. {sec.sectionNumber}</span>
-                <span className="pill-day-count">{sec.sessions.length} clases</span>
+                <Calendar size={12} />
+                <span>{filterOnlyActiveDays ? `${activeDaysWithClasses.length} días` : '6 días'}</span>
               </button>
-            );
-          })}
-          {/* Active Days Toggle (Filters out empty days so columns are spacious) */}
-          {activeDaysWithClasses.length < 6 && (
+            )}
+          </div>
+
+          {/* View Mode Toggle: Matriz Semanal vs Agenda */}
+          <div className="prof-view-mode-toggle">
             <button
               type="button"
-              className={`prof-day-jump-pill ${filterOnlyActiveDays ? 'prof-day-jump-pill--active' : ''}`}
-              onClick={() => setFilterOnlyActiveDays(prev => !prev)}
-              title={filterOnlyActiveDays ? 'Ver semana completa (6 días)' : 'Ver solo días con clases'}
+              className={`prof-view-toggle-btn ${viewMode === 'matriz' ? 'active' : ''}`}
+              onClick={() => setViewMode('matriz')}
+              title="Ver horario en matriz semanal completa"
             >
-              <Calendar size={13} />
-              <span>{filterOnlyActiveDays ? `Días de clase (${activeDaysWithClasses.length})` : 'Toda la semana'}</span>
+              <LayoutGrid size={13} />
+              <span>Matriz</span>
             </button>
-          )}
+            <button
+              type="button"
+              className={`prof-view-toggle-btn ${viewMode === 'agenda' ? 'active' : ''}`}
+              onClick={() => setViewMode('agenda')}
+              title="Ver horario ordenado por días en lista tipo agenda"
+            >
+              <List size={13} />
+              <span>Agenda</span>
+            </button>
+          </div>
         </div>
 
-        {/* View Mode Toggle: Matriz Semanal vs Agenda */}
-        <div className="prof-view-mode-toggle">
-          <button
-            type="button"
-            className={`prof-view-toggle-btn ${viewMode === 'matriz' ? 'active' : ''}`}
-            onClick={() => setViewMode('matriz')}
-            title="Ver horario en matriz semanal completa"
-          >
-            <LayoutGrid size={13} />
-            <span>Matriz</span>
-          </button>
-          <button
-            type="button"
-            className={`prof-view-toggle-btn ${viewMode === 'agenda' ? 'active' : ''}`}
-            onClick={() => setViewMode('agenda')}
-            title="Ver horario ordenado por días en lista tipo agenda"
-          >
-            <List size={13} />
-            <span>Agenda</span>
-          </button>
-        </div>
+        {/* Single-Line Horizontal Scrollable Section Pills (Never wraps into multiple vertical rows) */}
+        {course.extendedSections.length > 1 && (
+          <div className="course-sec-pills-strip" role="tablist" aria-label="Secciones del curso">
+            <button
+              type="button"
+              className={`prof-day-jump-pill ${selectedSectionNumber === 'ALL' ? 'prof-day-jump-pill--active' : ''}`}
+              onClick={() => onSelectSectionNumber?.('ALL')}
+            >
+              <Layers size={12} />
+              <span>Todas ({course.totalSectionsCount})</span>
+            </button>
+
+            {course.extendedSections.map(sec => {
+              const isSelected = selectedSectionNumber === sec.sectionNumber;
+              const palette = getSectionColor(sec.sectionNumber);
+
+              return (
+                <button
+                  key={sec.sectionNumber}
+                  type="button"
+                  className={`prof-day-jump-pill ${isSelected ? 'prof-day-jump-pill--active' : ''}`}
+                  onClick={() => onSelectSectionNumber?.(isSelected ? 'ALL' : sec.sectionNumber)}
+                  style={
+                    isSelected
+                      ? { backgroundColor: palette.border, borderColor: palette.border }
+                      : undefined
+                  }
+                >
+                  <span
+                    className="sec-dot-inline"
+                    style={{ backgroundColor: palette.border }}
+                  />
+                  <span>{formatShortSectionLabel(sec.sectionNumber)}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Quick Day Jump Bar when Matriz has > 2 days */}
+        {viewMode === 'matriz' && daysToRender.length > 2 && (
+          <div className="course-day-jump-bar">
+            <span className="course-day-jump-label">Ir al día:</span>
+            <div className="course-day-jump-chips">
+              {daysToRender.map(day => {
+                const count = (sessionsByDay[day] || []).length;
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    className={`course-day-jump-chip ${nowDay === day ? 'course-day-jump-chip--today' : ''}`}
+                    onClick={() => handleScrollToDay(day)}
+                  >
+                    <span>{day}</span>
+                    {count > 0 && <span className="course-day-jump-count">{count}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* Touch swipe hint when horizontal overflow exists */}
-      {viewMode === 'matriz' && daysToRender.length > 2 && (
-        <div className="timetable-swipe-hint">
-          <span>👉 Desliza horizontalmente para navegar entre los {daysToRender.length} días</span>
-        </div>
-      )}
 
       {viewMode === 'matriz' ? (
         /* ================= Matriz Semanal ================= */
@@ -326,7 +515,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
           {/* Left Time Axis Column */}
           <div className="prof-timetable-time-col">
             <div className="prof-timetable-time-corner">
-              <Clock size={13} />
+              <Clock size={12} />
               <span>Hora</span>
             </div>
             <div className="prof-timetable-time-axis" style={{ height: gridHeight }}>
@@ -343,7 +532,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
           </div>
 
           {/* Right Scrollable Days Grid */}
-          <div className="prof-timetable-days-scroll-wrapper">
+          <div className="prof-timetable-days-scroll-wrapper" ref={daysScrollRef}>
             <div
               className="prof-timetable-days-content"
               data-cols={daysToRender.length}
@@ -352,7 +541,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
               <div
                 className="prof-timetable-days-header-row"
                 style={{
-                  gridTemplateColumns: `repeat(${daysToRender.length}, minmax(130px, 1fr))`
+                  gridTemplateColumns: `repeat(${daysToRender.length}, ${minColWidth})`
                 }}
               >
                 {daysToRender.map(day => {
@@ -362,6 +551,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                   return (
                     <div
                       key={day}
+                      data-day-col={day}
                       className={`prof-timetable-day-col-header ${isToday ? 'prof-timetable-day-col-header--today' : ''}`}
                       onClick={() => {
                         setAgendaDay(day);
@@ -371,12 +561,12 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                     >
                       <div className="prof-day-name-row">
                         <span className="prof-day-abbr">{day}</span>
-                        <span className="prof-day-full">{DAY_LABELS[day].slice(0, 3)}</span>
+                        <span className="prof-day-full">{DAY_LABELS[day]}</span>
                       </div>
                       <span
                         className={`prof-day-badge ${daySessions.length === 0 ? 'prof-day-badge--empty' : ''}`}
                       >
-                        {daySessions.length > 0 ? `${daySessions.length} clases` : 'Libre'}
+                        {daySessions.length > 0 ? `${daySessions.length} ${daySessions.length === 1 ? 'clase' : 'clases'}` : 'Libre'}
                       </span>
                     </div>
                   );
@@ -388,7 +578,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                 className="prof-timetable-columns-container"
                 style={{
                   height: gridHeight,
-                  gridTemplateColumns: `repeat(${daysToRender.length}, minmax(130px, 1fr))`
+                  gridTemplateColumns: `repeat(${daysToRender.length}, ${minColWidth})`
                 }}
               >
                 {/* Horizontal Hour Lines */}
@@ -435,10 +625,20 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                         const isSelected = selectedSessionItem?.id === item.id;
                         const palette = getSectionColor(item.sectionNumber);
 
+                        const mergedCount = item.mergedSections?.length || 1;
+                        const overflowCount = item.overflowItems ? item.overflowItems.length - 1 : 0;
+                        const shortSecLabel = mergedCount > 1
+                          ? `Sec. ${item.sectionNumber.split(' ')[0]} (${mergedCount} grp)`
+                          : formatShortSectionLabel(item.sectionNumber);
+
+                        const shortProf = s.professor && !/docente\s*utec/i.test(s.professor)
+                          ? formatProfessorName(s.professor).shortName
+                          : null;
+
                         return (
                           <div
                             key={item.id}
-                            className={`prof-session-card course-session-card ${isLiveNow ? 'prof-session-card--live' : ''} ${isSelected ? 'prof-session-card--selected' : ''}`}
+                            className={`prof-session-card course-session-card ${isLiveNow ? 'prof-session-card--live' : ''} ${isSelected ? 'prof-session-card--selected' : ''} ${totalCols >= 2 ? 'course-session-card--compact' : ''}`}
                             style={{
                               top: `${top}%`,
                               height: `${height}%`,
@@ -448,18 +648,24 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                               background: palette.bg
                             }}
                             onClick={() => setSelectedSessionItem(isSelected ? null : item)}
-                            title={`Sec. ${item.sectionNumber} • ${s.sessionGroup}\n${s.startTime} - ${s.endTime}\n${s.roomDisplayName}\nProf. ${s.professor || 'Docente UTEC'}`}
+                            title={`${shortSecLabel} • ${s.sessionGroup}\n${s.startTime} - ${s.endTime}\n${s.roomDisplayName}\nProf. ${s.professor || 'Docente UTEC'}`}
                           >
                             <div className="course-card-block-top">
                               <span
                                 className="course-card-block-sec"
                                 style={{ color: palette.text }}
                               >
-                                Sec. {item.sectionNumber}
+                                {shortSecLabel}
                               </span>
-                              <span className="course-card-block-type">
-                                {s.sessionType}
-                              </span>
+                              {overflowCount > 0 ? (
+                                <span className="course-card-overflow-badge">
+                                  +{overflowCount} más
+                                </span>
+                              ) : (
+                                <span className="course-card-block-type">
+                                  {abbreviateSessionType(s.sessionType)}
+                                </span>
+                              )}
                             </div>
 
                             <div className="course-card-block-time">
@@ -471,9 +677,9 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                               <span>{s.roomDisplayName}</span>
                             </div>
 
-                            {s.professor && !/docente\s*utec/i.test(s.professor) && (
+                            {shortProf && (
                               <div className="course-card-block-prof" title={s.professor}>
-                                {s.professor}
+                                {shortProf}
                               </div>
                             )}
 
@@ -496,7 +702,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
         /* ================= Vista Agenda Diaria ================= */
         <div className="course-agenda-view glass-card">
           {/* Day Tabs */}
-          <div className="prof-day-jump-pills mb-3">
+          <div className="course-sec-pills-strip mb-2">
             {ALL_DAYS.map(day => {
               const count = (sessionsByDay[day] || []).length;
               const isSelected = agendaDay === day;
@@ -556,7 +762,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                             borderColor: palette.border
                           }}
                         >
-                          Sección {item.sectionNumber}
+                          {formatShortSectionLabel(item.sectionNumber)}
                         </span>
                         <span className="agenda-group-tag">
                           {s.sessionGroup} ({s.sessionType})
@@ -616,7 +822,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                             className="session-prof-link"
                             title="Ver perfil del docente"
                           >
-                            {s.professor}
+                            {formatProfessorName(s.professor).displayName}
                           </a>
                         ) : (
                           <span className="session-prof-unassigned">Docente UTEC</span>
@@ -633,7 +839,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
 
       {/* Selected Session Inspector Drawer/Card */}
       {selectedSessionItem && (
-        <div className="prof-session-inspector glass-card animate-fadeIn">
+        <div ref={inspectorRef} className="prof-session-inspector glass-card animate-fadeIn">
           <div className="inspector-header">
             <div className="inspector-title-group">
               <span
@@ -644,7 +850,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                   borderColor: getSectionColor(selectedSessionItem.sectionNumber).border
                 }}
               >
-                Sección {selectedSessionItem.sectionNumber}
+                {formatShortSectionLabel(selectedSessionItem.sectionNumber)}
               </span>
               <h4 className="inspector-title">
                 {selectedSessionItem.session.sessionGroup} ({selectedSessionItem.session.sessionType})
@@ -659,6 +865,43 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
               ✕
             </button>
           </div>
+
+          {/* If this block has merged sections or overflow items, show quick chips */}
+          {selectedSessionItem.mergedSections && selectedSessionItem.mergedSections.length > 1 && (
+            <div className="inspector-merged-info">
+              <span>Clase compartida por {selectedSessionItem.mergedSections.length} sub-secciones:</span>
+              <div className="inspector-overflow-chips">
+                {selectedSessionItem.mergedSections.map(secNum => (
+                  <button
+                    key={secNum}
+                    type="button"
+                    className="inspector-overflow-chip"
+                    onClick={() => onSelectSectionNumber?.(secNum)}
+                  >
+                    {formatShortSectionLabel(secNum)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedSessionItem.overflowItems && selectedSessionItem.overflowItems.length > 1 && (
+            <div className="inspector-merged-info">
+              <span>Secciones en este horario ({selectedSessionItem.overflowItems.length}):</span>
+              <div className="inspector-overflow-chips">
+                {selectedSessionItem.overflowItems.map(ov => (
+                  <button
+                    key={ov.id}
+                    type="button"
+                    className={`inspector-overflow-chip ${ov.id === selectedSessionItem.id ? 'active' : ''}`}
+                    onClick={() => setSelectedSessionItem({ ...ov, overflowItems: selectedSessionItem.overflowItems })}
+                  >
+                    {formatShortSectionLabel(ov.sectionNumber)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="inspector-grid">
             <div className="inspector-item">
@@ -684,7 +927,11 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
 
             <div className="inspector-item">
               <GraduationCap size={14} className="text-purple" />
-              <span>{selectedSessionItem.session.professor || 'Docente UTEC'}</span>
+              <span>
+                {selectedSessionItem.session.professor && !/docente\s*utec/i.test(selectedSessionItem.session.professor)
+                  ? formatProfessorName(selectedSessionItem.session.professor).displayName
+                  : 'Docente UTEC'}
+              </span>
             </div>
           </div>
 
@@ -701,7 +948,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
               className="btn btn-secondary btn-sm"
             >
               <Calendar size={13} />
-              <span>Agendar esta clase en Google Calendar</span>
+              <span>Agendar en Google Calendar</span>
             </a>
           </div>
         </div>

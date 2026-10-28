@@ -141,6 +141,7 @@ export const CourseFilterBar: React.FC<CourseFilterBarProps> = ({
           options={sortOptions}
           icon={<ArrowUpDown size={15} />}
           align="right"
+          className="course-sort-select"
           ariaLabel="Ordenar cursos"
         />
       </div>
@@ -182,6 +183,7 @@ export const CourseFilterBar: React.FC<CourseFilterBarProps> = ({
           options={departmentOptions}
           icon={<GraduationCap size={15} />}
           searchPlaceholder="Buscar carrera o área..."
+          className="course-dept-select"
           ariaLabel="Filtrar por carrera o área"
         />
 
@@ -191,6 +193,7 @@ export const CourseFilterBar: React.FC<CourseFilterBarProps> = ({
           onChange={val => onFilterChange({ selectedModality: val as 'ALL' | 'Presencial' | 'Sincronico' })}
           options={modalityOptions}
           icon={<Laptop size={15} />}
+          className="course-modality-select"
           ariaLabel="Filtrar por modalidad"
         />
 
