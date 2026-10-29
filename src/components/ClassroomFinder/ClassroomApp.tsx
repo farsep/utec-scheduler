@@ -306,16 +306,39 @@ export const ClassroomApp: React.FC = () => {
             </p>
           </div>
 
-          <div className="hero-kpi-badges">
-            <div className="hero-kpi-badge">
+          <div className="hero-kpi-badges prof-hero-kpi-badges classroom-hero-kpi-badges">
+            <div className="hero-kpi-badge prof-hero-kpi-card prof-hero-kpi-card--live">
+              <div className="prof-kpi-card-header">
+                <div className="prof-kpi-icon-wrap prof-kpi-icon-wrap--emerald">
+                  <CheckCircle2 size={16} />
+                </div>
+                <span className="prof-kpi-badge-pill prof-kpi-badge-pill--live">
+                  <span className="live-dot-mini" /> En Vivo
+                </span>
+              </div>
               <span className="kpi-num text-emerald">{totalAvailable}</span>
               <span className="kpi-txt">Aulas Libres</span>
             </div>
-            <div className="hero-kpi-badge">
+            <div className="hero-kpi-badge prof-hero-kpi-card">
+              <div className="prof-kpi-card-header">
+                <div className="prof-kpi-icon-wrap prof-kpi-icon-wrap--blue">
+                  <Building2 size={16} />
+                </div>
+                <span className="prof-kpi-badge-pill">Campus</span>
+              </div>
               <span className="kpi-num text-accent">{classrooms.length}</span>
-              <span className="kpi-txt">Espacios Totales</span>
+              <span className="kpi-txt">
+                <span className="kpi-txt-full">Espacios Totales</span>
+                <span className="kpi-txt-short">Espacios</span>
+              </span>
             </div>
-            <div className="hero-kpi-badge">
+            <div className="hero-kpi-badge prof-hero-kpi-card">
+              <div className="prof-kpi-card-header">
+                <div className="prof-kpi-icon-wrap prof-kpi-icon-wrap--purple">
+                  <Layers size={16} />
+                </div>
+                <span className="prof-kpi-badge-pill">Niveles</span>
+              </div>
               <span className="kpi-num text-purple">10</span>
               <span className="kpi-txt">Pisos UTEC</span>
             </div>

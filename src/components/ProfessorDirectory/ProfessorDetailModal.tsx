@@ -289,22 +289,34 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
         {/* KPI Stats Highlights Bar */}
         <div className="classroom-modal-kpis prof-modal-kpis">
           <div className="modal-kpi-card">
-            <span className="kpi-card-label">Horas Semanales</span>
+            <span className="kpi-card-label">
+              <span className="kpi-label-full">Horas Semanales</span>
+              <span className="kpi-label-short">Horas / Sem</span>
+            </span>
             <span className="kpi-card-value text-accent">{professor.totalHoursPerWeek} hrs</span>
           </div>
 
           <div className="modal-kpi-card">
-            <span className="kpi-card-label">Cursos Distintos</span>
+            <span className="kpi-card-label">
+              <span className="kpi-label-full">Cursos Distintos</span>
+              <span className="kpi-label-short">Cursos</span>
+            </span>
             <span className="kpi-card-value text-emerald">{professor.uniqueCoursesCount}</span>
           </div>
 
           <div className="modal-kpi-card">
-            <span className="kpi-card-label">Secciones a Cargo</span>
+            <span className="kpi-card-label">
+              <span className="kpi-label-full">Secciones a Cargo</span>
+              <span className="kpi-label-short">Secciones</span>
+            </span>
             <span className="kpi-card-value text-purple">{professor.uniqueSectionsCount}</span>
           </div>
 
           <div className="modal-kpi-card">
-            <span className="kpi-card-label">Aulas Asignadas</span>
+            <span className="kpi-card-label">
+              <span className="kpi-label-full">Aulas Asignadas</span>
+              <span className="kpi-label-short">Aulas</span>
+            </span>
             <span className="kpi-card-value text-amber">{professor.uniqueRooms.length}</span>
           </div>
         </div>

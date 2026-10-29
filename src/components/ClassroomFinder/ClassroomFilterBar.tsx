@@ -122,10 +122,13 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
             className={`mode-toggle-btn ${filter.mode === 'live_now' ? 'active active--live' : ''}`}
             onClick={() => onChangeFilter({ mode: 'live_now', selectedDay: systemDay })}
           >
-            <Zap size={16} />
+            <Zap size={15} />
             <span>Libres Ahora</span>
             <span className="live-pulse-badge">
-              {isSimulatedTime ? `Simulando (${activeLiveTimeStr})` : `En vivo (${activeLiveTimeStr})`}
+              <span className="live-badge-full">
+                {isSimulatedTime ? `Simulando (${activeLiveTimeStr})` : `En vivo (${activeLiveTimeStr})`}
+              </span>
+              <span className="live-badge-short">{activeLiveTimeStr}</span>
             </span>
           </button>
 
@@ -134,7 +137,7 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
             className={`mode-toggle-btn ${filter.mode === 'custom_time' ? 'active' : ''}`}
             onClick={() => onChangeFilter({ mode: 'custom_time' })}
           >
-            <Clock size={16} />
+            <Clock size={15} />
             <span>Buscar por Horario</span>
           </button>
         </div>

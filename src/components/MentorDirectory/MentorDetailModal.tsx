@@ -256,14 +256,15 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
         </div>
 
         {/* Modal Navigation Tabs */}
-        <nav className="prof-modal-tabs-nav" aria-label="Navegación del modal de mentor">
+        <nav className="prof-modal-tabs-nav prof-modal-nav-tabs" aria-label="Navegación del modal de mentor">
           <button
             type="button"
             className={`prof-modal-tab-btn ${activeTab === 'horario' ? 'prof-modal-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('horario')}
           >
             <Calendar size={15} />
-            <span>Horario Semanal</span>
+            <span className="tab-label-full">Horario Semanal</span>
+            <span className="tab-label-short">Horario</span>
           </button>
 
           <button
@@ -272,7 +273,8 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
             onClick={() => setActiveTab('aulas')}
           >
             <MapPin size={15} />
-            <span>Aulas y Reservas {hasReservations ? '(11 Semanas)' : ''}</span>
+            <span className="tab-label-full">Aulas y Reservas {hasReservations ? '(11 Semanas)' : ''}</span>
+            <span className="tab-label-short">Aulas {hasReservations ? '(11s)' : ''}</span>
           </button>
 
           <button
@@ -281,7 +283,8 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
             onClick={() => setActiveTab('info')}
           >
             <BookOpen size={15} />
-            <span>Cursos y Consejos</span>
+            <span className="tab-label-full">Cursos y Consejos</span>
+            <span className="tab-label-short">Cursos</span>
           </button>
         </nav>
 

@@ -148,7 +148,7 @@ export const MentorApp: React.FC = () => {
           </div>
 
           {/* Hero KPI Badges on the right side - matching the gorgeous look of Aulas and Docentes */}
-          <div className="hero-kpi-badges prof-hero-kpi-badges">
+          <div className="hero-kpi-badges prof-hero-kpi-badges mentor-hero-kpi-badges">
             <div className="hero-kpi-badge prof-hero-kpi-card">
               <div className="prof-kpi-card-header">
                 <div className="prof-kpi-icon-wrap prof-kpi-icon-wrap--blue">
@@ -168,7 +168,10 @@ export const MentorApp: React.FC = () => {
                 <span className="prof-kpi-badge-pill prof-kpi-badge-pill--emerald">Cursos</span>
               </div>
               <span className="kpi-num text-emerald">{availableCourses.length}</span>
-              <span className="kpi-txt">Asignaturas</span>
+              <span className="kpi-txt">
+                <span className="kpi-txt-full">Asignaturas</span>
+                <span className="kpi-txt-short">Cursos</span>
+              </span>
             </div>
 
             <div
@@ -184,7 +187,10 @@ export const MentorApp: React.FC = () => {
                 <span className="prof-kpi-badge-pill prof-kpi-badge-pill--emerald">Campus</span>
               </div>
               <span className="kpi-num text-emerald">{presencialSessionsCount}</span>
-              <span className="kpi-txt">Presenciales</span>
+              <span className="kpi-txt">
+                <span className="kpi-txt-full">Presenciales</span>
+                <span className="kpi-txt-short">Campus</span>
+              </span>
             </div>
 
             <div
@@ -208,7 +214,10 @@ export const MentorApp: React.FC = () => {
                 </span>
               </div>
               <span className="kpi-num text-purple">{liveNowCount}</span>
-              <span className="kpi-txt">En Sesión Ahora</span>
+              <span className="kpi-txt">
+                <span className="kpi-txt-full">En Sesión Ahora</span>
+                <span className="kpi-txt-short">En Vivo</span>
+              </span>
             </div>
           </div>
         </div>

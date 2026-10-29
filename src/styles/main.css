@@ -1403,6 +1403,14 @@ body::after {
   white-space: nowrap;
 }
 
+.btn-label-short {
+  display: none;
+}
+
+.btn-label-full {
+  display: inline;
+}
+
 .upload-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1824,24 +1832,34 @@ body::after {
     height: 13px;
   }
 
-  /* Student Banner — minimal */
+  /* Student Banner — compact 2-column grid on mobile */
   .student-metadata-banner-container {
     margin: 0 6px 6px 6px;
   }
   .student-metadata-scroll {
     padding: 6px 8px;
     gap: 4px;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .student-meta-item {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     width: 100%;
     justify-content: center;
+    padding: 4px 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .student-meta-item.student-name,
+  .student-meta-item.registration-turn {
+    grid-column: 1 / -1;
   }
 
   .student-meta-label {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
   }
 
   /* Workspace — no padding / gap */
@@ -1945,10 +1963,27 @@ body::after {
     height: 30px;
   }
 
+  .timetable-actions {
+    width: 100%;
+    display: flex;
+    gap: 6px;
+  }
+
   .timetable-actions .btn {
-    padding: 6px 10px;
-    font-size: 0.75rem;
+    padding: 6px 8px;
+    font-size: 0.74rem;
     min-height: 36px;
+    white-space: nowrap;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .btn-label-full {
+    display: none;
+  }
+
+  .btn-label-short {
+    display: inline;
   }
 
   /* Timetable grid — enforce scrollable minimum width */

@@ -387,7 +387,7 @@ export const ScheduleApp: React.FC = () => {
                   }}
                   title="Limpiar selecciones en esta opción"
                 >
-                  <RefreshCw size={14} /> Limpiar
+                  <RefreshCw size={14} /> <span>Limpiar</span>
                 </button>
 
                 <button 
@@ -396,11 +396,13 @@ export const ScheduleApp: React.FC = () => {
                   style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)', borderColor: '#7c3aed' }}
                   title="Generar horarios automáticos con menos huecos"
                 >
-                  <Sparkles size={16} /> Auto-Generar
+                  <Sparkles size={16} /> <span>Auto-Generar</span>
                 </button>
 
                 <button className="btn btn-primary" onClick={() => setIsExportOpen(true)}>
-                  <Download size={16} /> Exportar Horario
+                  <Download size={16} />
+                  <span className="btn-label-full">Exportar Horario</span>
+                  <span className="btn-label-short">Exportar</span>
                 </button>
               </div>
             </div>

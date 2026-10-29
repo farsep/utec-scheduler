@@ -238,7 +238,10 @@ export const CourseApp: React.FC = () => {
                 <span className="prof-kpi-badge-pill">Catálogo</span>
               </div>
               <span className="kpi-num text-accent">{courses.length}</span>
-              <span className="kpi-txt">Cursos Ofertados</span>
+              <span className="kpi-txt">
+                <span className="kpi-txt-full">Cursos Ofertados</span>
+                <span className="kpi-txt-short">Cursos</span>
+              </span>
             </div>
 
             <div className="hero-kpi-badge prof-hero-kpi-card">
@@ -249,7 +252,10 @@ export const CourseApp: React.FC = () => {
                 <span className="prof-kpi-badge-pill prof-kpi-badge-pill--emerald">2026 - 2</span>
               </div>
               <span className="kpi-num text-emerald">{totalSectionsCount}</span>
-              <span className="kpi-txt">Secciones Totales</span>
+              <span className="kpi-txt">
+                <span className="kpi-txt-full">Secciones Totales</span>
+                <span className="kpi-txt-short">Secciones</span>
+              </span>
             </div>
 
             <div className={`hero-kpi-badge prof-hero-kpi-card ${liveNowCount > 0 ? 'prof-hero-kpi-card--live' : ''}`}>
@@ -268,7 +274,10 @@ export const CourseApp: React.FC = () => {
                 </span>
               </div>
               <span className="kpi-num text-purple">{liveNowCount}</span>
-              <span className="kpi-txt">Dictándose Ahora</span>
+              <span className="kpi-txt">
+                <span className="kpi-txt-full">Dictándose Ahora</span>
+                <span className="kpi-txt-short">En Vivo</span>
+              </span>
             </div>
 
             <div
@@ -285,7 +294,10 @@ export const CourseApp: React.FC = () => {
                 <span className="prof-kpi-badge-pill prof-kpi-badge-pill--amber">Modo Oyente</span>
               </div>
               <span className="kpi-num text-amber">{visitorItems.length}</span>
-              <span className="kpi-txt">Mis Visitados</span>
+              <span className="kpi-txt">
+                <span className="kpi-txt-full">Mis Visitados</span>
+                <span className="kpi-txt-short">Visitados</span>
+              </span>
             </div>
           </div>
         </div>

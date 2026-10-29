@@ -1359,6 +1359,26 @@
   background: rgba(59, 130, 246, 0.03);
 }
 
+.prof-timetable-day-col-header--empty {
+  background: rgba(8, 12, 22, 0.45);
+  opacity: 0.72;
+  cursor: default;
+}
+
+.prof-timetable-day-col-header--empty:hover {
+  background: rgba(8, 12, 22, 0.45);
+}
+
+.prof-timetable-day-column--empty {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(8, 12, 22, 0.28),
+    rgba(8, 12, 22, 0.28) 6px,
+    rgba(15, 23, 42, 0.14) 6px,
+    rgba(15, 23, 42, 0.14) 12px
+  );
+}
+
 /* --------------------------------------------------------------------------
    Agenda View Styles
    -------------------------------------------------------------------------- */
@@ -2351,14 +2371,50 @@
 }
 
 @media (max-width: 768px) {
+  .professor-filter-bar {
+    padding: 14px 12px;
+    gap: 10px;
+  }
   .prof-search-row {
     flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
   }
-  .prof-sort-wrapper {
+  .prof-search-row .prof-search-input-wrapper {
+    width: 100%;
+  }
+  .prof-search-row .prof-search-input {
+    font-size: 16px;
+  }
+  .prof-sort-wrapper,
+  .prof-search-row .custom-select-container,
+  .prof-search-row .custom-select-trigger {
     width: 100%;
     min-width: unset;
   }
-  .prof-dept-select {
+  .prof-controls-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .prof-day-pills-group {
+    display: grid;
+    grid-template-columns: 1.2fr repeat(6, 1fr);
+    gap: 3px;
+    padding: 3px;
+    width: 100%;
+    overflow: hidden;
+  }
+  .prof-day-pill {
+    padding: 6px 2px;
+    font-size: 0.74rem;
+    text-align: center;
+    justify-content: center;
+    min-width: 0;
+  }
+  .prof-dept-select,
+  .prof-controls-row .custom-select-container,
+  .prof-controls-row .custom-select-trigger {
     max-width: 100%;
     width: 100%;
   }
@@ -2368,9 +2424,18 @@
   .prof-toggles-group {
     margin-left: 0;
     width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .prof-toggles-group .prof-toggle-btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 130px;
   }
   .professors-cards-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   /* Bottom Sheet Modal on mobile / tablet <= 768px */
@@ -2398,12 +2463,25 @@
 
   .prof-modal-header {
     gap: 10px;
+    align-items: flex-start;
   }
 
   .prof-modal-profile-group {
     flex-direction: row;
     align-items: center;
     gap: 12px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .prof-modal-name-group {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .prof-modal-tag-row {
+    flex-wrap: wrap;
+    gap: 5px;
   }
 
   .prof-modal-avatar {
@@ -2514,6 +2592,25 @@
   /* Timetable Days Content on mobile */
   .prof-timetable-days-content {
     min-width: 720px !important;
+  }
+
+  .prof-timetable-days-content[data-elastic="true"] {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .prof-timetable-days-content[data-elastic="true"] .prof-day-full {
+    display: none;
+  }
+
+  .prof-timetable-days-content[data-elastic="true"] .prof-day-abbr {
+    font-size: 0.72rem;
+  }
+
+  .prof-timetable-days-content[data-elastic="true"] .prof-day-badge {
+    font-size: 0.58rem;
+    padding: 1px 4px;
+    white-space: nowrap;
   }
 
   .prof-timetable-controls-bar {
@@ -2673,15 +2770,26 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
-@media (max-width: 900px) {
+.course-hero-kpi-badges .prof-hero-kpi-card,
+.mentor-hero-kpi-badges .prof-hero-kpi-card {
+  min-width: 126px;
+  padding: 14px 16px;
+}
+
+@media (max-width: 1024px) {
   .prof-hero-kpi-badges {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
-    margin-top: 8px;
+    margin-top: 4px;
+  }
+  .course-hero-kpi-badges,
+  .mentor-hero-kpi-badges {
+    grid-template-columns: repeat(4, 1fr) !important;
   }
   .prof-hero-kpi-card {
     min-width: unset;
@@ -2692,26 +2800,60 @@
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .prof-hero-kpi-badges {
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
+    margin-top: 2px;
+  }
+  .course-hero-kpi-badges,
+  .mentor-hero-kpi-badges {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px;
   }
   .prof-hero-kpi-card {
-    padding: 10px 8px;
+    padding: 10px 6px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    min-width: 0 !important;
   }
   .prof-hero-kpi-card .kpi-num {
-    font-size: 1.35rem;
+    font-size: 1.32rem;
+    line-height: 1.1;
+    margin-bottom: 2px;
+  }
+  .course-hero-kpi-badges .prof-hero-kpi-card .kpi-num,
+  .mentor-hero-kpi-badges .prof-hero-kpi-card .kpi-num {
+    font-size: 1.18rem;
   }
   .prof-hero-kpi-card .kpi-txt {
     font-size: 0.6rem;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .kpi-txt-full {
+    display: none;
+  }
+  .kpi-txt-short {
+    display: inline;
   }
   .prof-kpi-card-header {
     margin-bottom: 4px;
+    justify-content: center;
   }
   .prof-kpi-icon-wrap {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+  }
+  .prof-kpi-icon-wrap svg {
+    width: 14px;
+    height: 14px;
   }
   .prof-kpi-badge-pill {
     display: none;
