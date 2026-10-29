@@ -83,6 +83,21 @@
   text-decoration: none;
   transition: all var(--transition-fast);
   position: relative;
+  white-space: nowrap;
+}
+
+.kpi-txt-short,
+.kpi-label-short,
+.live-badge-short,
+.btn-label-short {
+  display: none;
+}
+
+.kpi-txt-full,
+.kpi-label-full,
+.live-badge-full,
+.btn-label-full {
+  display: inline;
 }
 
 .nav-tab-item:hover {
@@ -137,6 +152,11 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   gap: 24px;
   flex-wrap: wrap;
+}
+
+.hero-content {
+  flex: 1;
+  min-width: 280px;
 }
 
 .hero-chip {
@@ -262,6 +282,8 @@
   text-transform: uppercase;
   margin-top: 4px;
   letter-spacing: 0.3px;
+  text-align: center;
+  white-space: nowrap;
   transition: color 0.2s ease;
 }
 
@@ -2014,6 +2036,20 @@
   font-size: 2rem;
 }
 
+.empty-day-icon-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+  margin-bottom: 4px;
+}
+
 .empty-day-banner h4 {
   font-family: var(--font-heading);
   font-size: 1.1rem;
@@ -2065,6 +2101,26 @@
 
 /* Tablet Optimizations (769px - 1024px) */
 @media (min-width: 769px) and (max-width: 1024px) {
+  .classroom-brand-section {
+    gap: 12px;
+  }
+
+  .nav-switch-tabs {
+    gap: 3px;
+    padding: 3px;
+  }
+
+  .nav-tab-item {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .classroom-navbar-meta {
+    display: none;
+  }
+
   .classroom-modal {
     width: 92%;
     max-width: 820px;
@@ -2145,7 +2201,7 @@
   }
 
   .classroom-finder-main {
-    padding: 12px 12px max(48px, env(safe-area-inset-bottom));
+    padding: 12px 12px calc(84px + env(safe-area-inset-bottom));
     gap: 16px;
   }
 
@@ -2226,24 +2282,30 @@
   .mode-toggle-btn {
     flex: 1;
     justify-content: center;
-    padding: 9px 8px;
-    font-size: 0.8rem;
-    min-height: 42px;
+    padding: 8px 6px;
+    font-size: 0.78rem;
+    min-height: 40px;
     border-radius: 9px;
+    white-space: nowrap;
+    gap: 5px;
   }
 
   .live-pulse-badge {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     padding: 2px 6px;
+    white-space: nowrap;
+  }
+
+  .live-badge-full {
+    display: none;
+  }
+
+  .live-badge-short {
+    display: inline;
   }
 
   .filter-summary-chip {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
-    padding: 6px 12px;
-    font-size: 0.78rem;
-    background: rgba(22, 30, 46, 0.5);
+    display: none;
   }
 
   /* Live Time Controller on Mobile */
@@ -2651,11 +2713,20 @@
   }
 
   .kpi-card-label {
-    font-size: 0.6rem;
+    font-size: 0.62rem;
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .kpi-label-full {
+    display: none;
+  }
+
+  .kpi-label-short {
+    display: inline;
   }
 
   .kpi-card-value {
@@ -2770,13 +2841,13 @@
     align-items: center;
     gap: 7px;
     position: fixed;
-    bottom: max(20px, env(safe-area-inset-bottom));
-    right: 16px;
-    padding: 10px 16px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    right: 14px;
+    padding: 9px 14px;
     border-radius: 30px;
     background: linear-gradient(135deg, #2563eb, #1d4ed8);
     color: #ffffff;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 700;
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
@@ -2799,49 +2870,61 @@
 /* Small Mobile Screens (max-width: 540px) */
 @media (max-width: 540px) {
   .classroom-navbar {
-    padding: 10px 14px 12px;
-    flex-direction: column;
+    padding: 8px 12px;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     width: 100%;
   }
 
   .classroom-brand-section {
-    width: 100%;
-    flex-direction: column;
+    width: auto;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 8px;
+    min-width: 0;
   }
 
   .classroom-brand-section .brand-title {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     width: auto !important;
-    justify-content: center;
-    margin: 0 auto;
+    justify-content: flex-start;
+    margin: 0;
+    gap: 7px;
   }
 
   .classroom-brand-section .brand-logo {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .classroom-brand-section .brand-badge {
+    font-size: 0.58rem;
+    padding: 1px 5px;
   }
 
   .nav-switch-tabs {
     display: none !important;
   }
 
-  .classroom-navbar {
-    padding: 8px 12px;
-  }
-
   .classroom-navbar-meta {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
   }
 
   .classroom-navbar-meta .meta-chip {
-    padding: 3px 6px;
-    font-size: 0.72rem;
+    padding: 3px 7px;
+    font-size: 0.7rem;
+    gap: 5px;
+    white-space: nowrap;
+  }
+
+  .classroom-navbar-meta .meta-chip-label {
+    display: none;
   }
 }
 

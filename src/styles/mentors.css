@@ -656,8 +656,86 @@
     padding: 16px;
   }
 
+  .mentor-modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+    overflow-y: hidden !important;
+  }
+
+  .mentor-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 92vh !important;
+    max-height: 92vh !important;
+    border-radius: 24px 24px 0 0 !important;
+    padding: 12px 14px max(24px, env(safe-area-inset-bottom)) !important;
+    gap: 12px !important;
+    margin: 0 !important;
+  }
+
+  .mentor-dept-subtitle {
+    margin: 2px 0 4px 0;
+    font-size: 0.76rem;
+  }
+
   .mentor-modal-metrics {
     grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .mentor-modal-metrics .metric-box {
+    padding: 8px 10px;
+    gap: 2px;
+  }
+
+  .mentor-modal-metrics .metric-lbl {
+    font-size: 0.64rem;
+  }
+
+  .mentor-modal-metrics .metric-val {
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mentor-modal-courses-list {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .mentor-modal-course-card {
+    padding: 9px 12px;
+  }
+
+  .mentor-schedule-table-wrap {
+    overflow-x: visible;
+    margin-bottom: 16px;
+  }
+
+  .mentor-schedule-grid {
+    grid-template-columns: repeat(2, 1fr);
+    min-width: 0;
+  }
+
+  .mentor-day-col {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .mentor-day-col:nth-child(2n) {
+    border-right: none;
+  }
+
+  .mentor-day-col-header {
+    padding: 6px 8px;
+    font-size: 0.76rem;
+  }
+
+  .mentor-day-col-body {
+    padding: 8px;
+    min-height: 64px;
   }
 
   .res-time-tag {
@@ -678,6 +756,7 @@
   }
 
   .mentor-modal-metrics {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
   }
 }

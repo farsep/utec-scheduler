@@ -192,19 +192,27 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
 
   const [agendaDay, setAgendaDay] = useState<DayOfWeek>(defaultDay);
   const [activeScrollDay, setActiveScrollDay] = useState<DayOfWeek>(defaultDay);
+  const [isMobileViewport, setIsMobileViewport] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkViewport = () => setIsMobileViewport(window.innerWidth <= 768);
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
+  }, []);
 
   const daysScrollRef = useRef<HTMLDivElement>(null);
 
   // Determine timetable bounds (start from at most 07:00 or earliest class, end at at least 21:00 or latest class)
   const { minHour, maxHour, totalHours } = useMemo(() => {
     let minH = 7;
-    let maxH = 22;
+    let maxH = 21;
 
     if (professor.sessions.length > 0) {
       const earliestHour = Math.floor(professor.earliestStartMinutes / 60);
       const latestHour = Math.ceil(professor.latestEndMinutes / 60);
-      minH = Math.max(7, Math.min(earliestHour, 8));
-      maxH = Math.min(22, Math.max(latestHour, 19));
+      minH = Math.min(7, earliestHour);
+      maxH = Math.max(21, Math.min(22, latestHour + 1));
     }
 
     return {
@@ -219,11 +227,12 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
 
   // Generate hourly time marks for the axis
   const timeMarks = useMemo(() => {
-    const marks: { hour: number; label: string; topPercent: number }[] = [];
+    const marks: { hour: number; label: string; shortLabel: string; topPercent: number }[] = [];
     for (let h = minHour; h <= maxHour; h++) {
       marks.push({
         hour: h,
         label: `${String(h).padStart(2, '0')}:00`,
+        shortLabel: `${String(h).padStart(2, '0')}h`,
         topPercent: ((h * 60 - minMinutes) / totalMinutes) * 100
       });
     }
@@ -241,9 +250,21 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
     return ((nowMinutes - minMinutes) / totalMinutes) * 100;
   }, [nowMinutes, minMinutes, totalMinutes]);
 
-  // Dynamic slot height per hour: 60px per hour guarantees comfortable breathing room without needing vertical expansion
-  const slotHeightPerHour = 60;
-  const gridHeight = Math.max(620, totalHours * slotHeightPerHour);
+  // Adaptive slot height per hour so the full 6-day week fits cleanly on screen
+  const slotHeightPerHour = isMobileViewport ? 36 : 42;
+  const gridHeight = Math.max(isMobileViewport ? 380 : 480, totalHours * slotHeightPerHour);
+
+  // Proportional elastic columns so all 6 days fit 100% width without horizontal scroll on Desktop/Tablet,
+  // and empty days compress on mobile
+  const gridTemplateColumns = useMemo(() => {
+    return ALL_DAYS.map(d => {
+      const count = (professor.sessionsByDay[d] || []).length;
+      if (count === 0) {
+        return isMobileViewport ? 'minmax(28px, 0.38fr)' : 'minmax(68px, 0.72fr)';
+      }
+      return isMobileViewport ? 'minmax(64px, 1.45fr)' : 'minmax(118px, 1.4fr)';
+    }).join(' ');
+  }, [professor, isMobileViewport]);
 
   // Auto-scroll on mount to today's column or first day with sessions (for mobile horizontal viewport)
   useEffect(() => {
@@ -386,20 +407,24 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
             ref={daysScrollRef}
             onScroll={handleDaysScroll}
           >
-            <div className="prof-timetable-days-content">
+            <div className="prof-timetable-days-content" data-elastic="true">
               {/* Header Days Row */}
-              <div className="prof-timetable-days-header-row">
+              <div
+                className="prof-timetable-days-header-row"
+                style={{ gridTemplateColumns }}
+              >
                 {ALL_DAYS.map(day => {
                   const daySessionsCount = (professor.sessionsByDay[day] || []).length;
                   const isToday = nowDay === day;
                   const isBusiest = professor.busiestDay === day && daySessionsCount > 0;
                   const isSelected = activeScrollDay === day;
+                  const isEmptyDay = daySessionsCount === 0;
 
                   return (
                     <div
                       key={day}
                       data-day={day}
-                      className={`prof-timetable-day-col-header ${isToday ? 'prof-timetable-day-col-header--today' : ''} ${isSelected ? 'prof-timetable-day-col-header--focused' : ''}`}
+                      className={`prof-timetable-day-col-header ${isToday ? 'prof-timetable-day-col-header--today' : ''} ${isSelected ? 'prof-timetable-day-col-header--focused' : ''} ${isEmptyDay ? 'prof-timetable-day-col-header--empty' : ''}`}
                       onClick={() => handleDayClick(day)}
                     >
                       <div className="prof-day-name-row">
@@ -409,10 +434,12 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                       <div className="prof-day-meta-row">
                         {daySessionsCount > 0 ? (
                           <span className={`prof-day-badge ${isBusiest ? 'prof-day-badge--busiest' : ''}`}>
-                            {daySessionsCount} {daySessionsCount === 1 ? 'clase' : 'clases'}
+                            {isMobileViewport ? `${daySessionsCount}c` : `${daySessionsCount} ${daySessionsCount === 1 ? 'clase' : 'clases'}`}
                           </span>
                         ) : (
-                          <span className="prof-day-badge prof-day-badge--empty">Libre</span>
+                          <span className="prof-day-badge prof-day-badge--empty">
+                            {isMobileViewport ? '—' : 'Libre'}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -421,7 +448,10 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
               </div>
 
               {/* Timetable Columns Container */}
-              <div className="prof-timetable-columns-container" style={{ height: `${gridHeight}px` }}>
+              <div
+                className="prof-timetable-columns-container"
+                style={{ height: `${gridHeight}px`, gridTemplateColumns }}
+              >
                 {/* Horizontal Grid lines across columns */}
                 {timeMarks.map(mark => (
                   <div
@@ -445,6 +475,7 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                 {/* 6 Columns */}
                 {ALL_DAYS.map(day => {
                   const rawSessions = professor.sessionsByDay[day] || [];
+                  const isEmptyDay = rawSessions.length === 0;
                   // Prevent duplicate overlapping sessions on the same timeslot
                   const seenSlot = new Set<string>();
                   const uniqueSessions = rawSessions.filter(s => {
@@ -460,7 +491,7 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                     <div
                       key={day}
                       data-day={day}
-                      className={`prof-timetable-day-column ${isToday ? 'prof-timetable-day-column--today' : ''}`}
+                      className={`prof-timetable-day-column ${isToday ? 'prof-timetable-day-column--today' : ''} ${isEmptyDay ? 'prof-timetable-day-column--empty' : ''}`}
                     >
                       {positionedSessions.map(({ session, colIndex, totalCols }) => {
                         const top = ((session.startMinutes - minMinutes) / totalMinutes) * 100;
@@ -615,7 +646,9 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
 
           {agendaSessions.length === 0 ? (
             <div className="prof-agenda-empty">
-              <span className="prof-agenda-empty-icon">☕</span>
+              <div className="empty-day-icon-badge">
+                <Calendar size={26} />
+              </div>
               <h4>Día libre de clases</h4>
               <p>El docente no tiene sesiones programadas para el {DAY_LABELS[agendaDay]}.</p>
             </div>

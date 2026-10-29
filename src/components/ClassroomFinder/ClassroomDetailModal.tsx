@@ -13,7 +13,8 @@ import {
   User,
   Mail,
   BookOpen,
-  Info
+  Info,
+  CheckCircle2
 } from 'lucide-react';
 
 interface ClassroomDetailModalProps {
@@ -296,15 +297,24 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
         {/* Modal KPI Highlights */}
         <div className="classroom-modal-kpis">
           <div className="modal-kpi-card">
-            <span className="kpi-card-label">Sesiones Semanales</span>
+            <span className="kpi-card-label">
+              <span className="kpi-label-full">Sesiones Semanales</span>
+              <span className="kpi-label-short">Sesiones</span>
+            </span>
             <span className="kpi-card-value">{totalWeekSessions} clases</span>
           </div>
           <div className="modal-kpi-card">
-            <span className="kpi-card-label">Horas Semanales en Uso</span>
+            <span className="kpi-card-label">
+              <span className="kpi-label-full">Horas Semanales en Uso</span>
+              <span className="kpi-label-short">Uso Semanal</span>
+            </span>
             <span className="kpi-card-value text-accent">{totalOccupiedHours.toFixed(1)} hrs</span>
           </div>
           <div className="modal-kpi-card">
-            <span className="kpi-card-label">Tiempo Libre en {activeTabDay}</span>
+            <span className="kpi-card-label">
+              <span className="kpi-label-full">Tiempo Libre en {activeTabDay}</span>
+              <span className="kpi-label-short">Libre ({activeTabDay})</span>
+            </span>
             <span className="kpi-card-value text-emerald">{formatDurationHuman(totalFreeMinutes)}</span>
           </div>
         </div>
@@ -346,7 +356,9 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
 
             {activeDaySessions.length === 0 ? (
               <div className="empty-day-banner">
-                <span className="empty-day-emoji">🎉</span>
+                <div className="empty-day-icon-badge">
+                  <CheckCircle2 size={28} />
+                </div>
                 <h4>¡Aula totalmente desocupada este día!</h4>
                 <p>No hay clases registradas para el {DAY_LABELS[activeTabDay]} de 07:00 a 22:00.</p>
               </div>

@@ -205,7 +205,10 @@ export const ProfessorApp: React.FC = () => {
                 <span className="prof-kpi-badge-pill prof-kpi-badge-pill--emerald">2026 - 2</span>
               </div>
               <span className="kpi-num text-emerald">{totalUniqueCourses}</span>
-              <span className="kpi-txt">Cursos Únicos</span>
+              <span className="kpi-txt">
+                <span className="kpi-txt-full">Cursos Únicos</span>
+                <span className="kpi-txt-short">Cursos</span>
+              </span>
             </div>
 
             <div className={`hero-kpi-badge prof-hero-kpi-card ${teachingNowCount > 0 ? 'prof-hero-kpi-card--live' : ''}`}>
@@ -224,7 +227,10 @@ export const ProfessorApp: React.FC = () => {
                 </span>
               </div>
               <span className="kpi-num text-purple">{teachingNowCount}</span>
-              <span className="kpi-txt">En Clase Ahora</span>
+              <span className="kpi-txt">
+                <span className="kpi-txt-full">En Clase Ahora</span>
+                <span className="kpi-txt-short">En Vivo</span>
+              </span>
             </div>
           </div>
         </div>

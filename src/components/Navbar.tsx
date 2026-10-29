@@ -58,17 +58,19 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
       </div>
 
-      <div className="meta-info-strip">
-        <div className="meta-chip">
-          <span style={{ color: 'var(--text-muted)' }}>Cursos Cargados:</span>
-          <span className="meta-chip-val" style={{ color: 'var(--accent-primary)' }}>{coursesCount}</span>
-          {eligibleCount > 0 && (
-            <span className="glass-pill" style={{ color: 'var(--accent-emerald)', borderColor: 'rgba(16, 185, 129, 0.4)' }}>
-              {eligibleCount} Habilitados
-            </span>
-          )}
+      {coursesCount > 0 && (
+        <div className="meta-info-strip">
+          <div className="meta-chip">
+            <span className="meta-label-full" style={{ color: 'var(--text-muted)' }}>Cursos:</span>
+            <span className="meta-chip-val" style={{ color: 'var(--accent-primary)' }}>{coursesCount}</span>
+            {eligibleCount > 0 && (
+              <span className="glass-pill" style={{ color: 'var(--accent-emerald)', borderColor: 'rgba(16, 185, 129, 0.4)' }}>
+                {eligibleCount} Hab.
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="navbar-actions">
         {coursesCount > 0 && (
