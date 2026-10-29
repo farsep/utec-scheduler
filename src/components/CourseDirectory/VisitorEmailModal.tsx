@@ -76,9 +76,10 @@ export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
             <div className="visitor-modal-icon-badge">
               <Mail size={18} />
             </div>
-            <div>
+            <div className="visitor-modal-title-text">
               <h2 className="visitor-modal-title">
-                Solicitud de Asistencia como Visitante / Oyente
+                <span className="visitor-title-desktop">Solicitud de Asistencia como Visitante / Oyente</span>
+                <span className="visitor-title-mobile">Solicitud de Oyente / Visitante</span>
               </h2>
               <span className="visitor-modal-subtitle">
                 {course.code} - {course.name}
@@ -99,7 +100,7 @@ export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
         <div className="visitor-modal-body">
           {/* Section & Student Form Row */}
           <div className="visitor-form-grid">
-            <div className="visitor-form-group">
+            <div className="visitor-form-group visitor-form-group--section">
               <label>Sección a auditar:</label>
               <CustomSelect
                 value={sectionNum}
@@ -132,7 +133,7 @@ export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
                 id="student-major"
                 type="text"
                 className="visitor-input"
-                placeholder="Ej: Ciencia de la Computación"
+                placeholder="Ej: Ciencia de Datos"
                 value={studentMajor}
                 onChange={e => setStudentMajor(e.target.value)}
               />
@@ -174,7 +175,7 @@ export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
 
           {/* Advice Alert */}
           <div className="visitor-advice-alert">
-            <ShieldCheck size={16} className="text-emerald" />
+            <ShieldCheck size={16} className="text-emerald visitor-advice-icon" />
             <p>
               <strong>Etiqueta de Oyente UTEC:</strong> Asiste con puntualidad, ubícate en los asientos disponibles sin comprometer el aforo y presenta tus respetos al docente al inicio o final de la clase.
             </p>
@@ -189,7 +190,7 @@ export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
             onClick={handleCopy}
           >
             {copied ? <Check size={16} className="text-emerald" /> : <Copy size={16} />}
-            <span>{copied ? '¡Copiado al Portapapeles!' : 'Copiar Borrador'}</span>
+            <span>{copied ? '¡Copiado!' : 'Copiar Borrador'}</span>
           </button>
 
           <a
@@ -199,7 +200,8 @@ export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
             className="btn btn-primary visitor-send-btn"
           >
             <ExternalLink size={16} />
-            <span>Abrir en Gmail / Correo</span>
+            <span className="visitor-title-desktop">Abrir en Gmail / Correo</span>
+            <span className="visitor-title-mobile">Abrir en Correo</span>
           </a>
         </div>
       </div>
