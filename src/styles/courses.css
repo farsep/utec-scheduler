@@ -469,6 +469,10 @@
   min-width: 0;
 }
 
+.course-status-next svg {
+  flex-shrink: 0;
+}
+
 .course-status-next > span {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -593,6 +597,7 @@
   flex-wrap: wrap;
   gap: 5px;
   flex: 1;
+  min-width: 0;
 }
 
 .course-sec-tag {
@@ -602,6 +607,10 @@
   border-radius: 5px;
   border: 1px solid transparent;
   line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .course-sec-tag--presencial {
@@ -634,28 +643,40 @@
   flex-wrap: wrap;
   gap: 5px;
   flex: 1;
+  min-width: 0;
 }
 
 .course-prof-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-size: 0.72rem;
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: 5px;
   background: rgba(139, 92, 246, 0.12);
   border: 1px solid rgba(139, 92, 246, 0.25);
   color: #c4b5fd;
-  max-width: 135px;
-  white-space: nowrap;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.course-prof-tag svg {
+  flex-shrink: 0;
+}
+
+.course-prof-tag span {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .course-prof-tag--more {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.08);
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 /* Classrooms Row */
@@ -670,6 +691,7 @@
   flex-wrap: wrap;
   gap: 5px;
   flex: 1;
+  min-width: 0;
 }
 
 .course-room-tag {
@@ -682,6 +704,19 @@
   background: rgba(245, 158, 11, 0.1);
   border: 1px solid rgba(245, 158, 11, 0.22);
   color: #fde68a;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.course-room-tag svg {
+  flex-shrink: 0;
+}
+
+.course-room-tag span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .course-room-tag--more {

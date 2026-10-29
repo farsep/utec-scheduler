@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { X, FileSpreadsheet, FileText, Upload, CheckCircle2, Download, AlertCircle, Trash2, Loader2, Code2 } from 'lucide-react';
 import { parseExcelFile } from '../utils/excelParser';
 import { parsePDFFile, type PDFParseResult } from '../utils/pdfParser';
+import { getClassroomsCatalog } from '../utils/masterDataLoader';
+import { mutuallyEnrichCoursesWithScrapedData } from '../utils/courseDirectoryUtils';
 import type { Course, MetadataInfo } from '../types/schedule';
 
 interface FileUploadModalProps {
@@ -83,7 +85,16 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
       if (result.courses.length === 0) {
         setErrorMsg('No se pudieron encontrar cursos válidos en el archivo Excel.');
       } else {
-        onDataParsed(result.courses, result.metadata);
+        let coursesToUse = result.courses;
+        try {
+          const classrooms = await getClassroomsCatalog();
+          if (Array.isArray(classrooms) && classrooms.length > 0) {
+            coursesToUse = mutuallyEnrichCoursesWithScrapedData(result.courses, classrooms);
+          }
+        } catch {
+          // fallback to raw Excel if classroom catalog is unavailable
+        }
+        onDataParsed(coursesToUse, result.metadata);
         setExcelLoadedName(file.name);
       }
     } catch (err: any) {

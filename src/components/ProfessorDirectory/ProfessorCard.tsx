@@ -209,7 +209,8 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
               }}
               title={`${course.code}: ${course.name} (${course.sectionsCount} secciones, ${course.totalWeeklyHours}h/sem)`}
             >
-              <strong>{course.code}</strong> {course.name}
+              <strong>{course.code}</strong>
+              <span className="prof-course-tag-name">{course.name}</span>
             </span>
           ))}
           {professor.courses.length > 3 && (
@@ -228,7 +229,7 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
             {professor.uniqueRooms.slice(0, 5).map(room => (
               <span key={room} className="prof-room-tag">
                 <MapPin size={10} />
-                {room}
+                <span>{room}</span>
               </span>
             ))}
             {professor.uniqueRooms.length > 5 && (
