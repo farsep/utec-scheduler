@@ -16,6 +16,21 @@ declare global {
   }
 }
 
+const CACHE_VERSION = 'v3';
+const COURSES_CACHE_KEY = `matriculab_courses_cache_${CACHE_VERSION}`;
+const PROFESSORS_CACHE_KEY = `matriculab_professors_cache_${CACHE_VERSION}`;
+const CLASSROOMS_CACHE_KEY = `matriculab_classrooms_cache_${CACHE_VERSION}`;
+const STATIC_ASSET_VER = '2026.2.3';
+
+// Purge legacy unversioned sessionStorage keys so existing open tabs never read stale subsections
+if (typeof window !== 'undefined') {
+  try {
+    sessionStorage.removeItem('matriculab_courses_cache');
+    sessionStorage.removeItem('matriculab_professors_cache');
+    sessionStorage.removeItem('matriculab_classrooms_cache');
+  } catch {}
+}
+
 let inMemoryCourses: CourseExtendedInfo[] | null = null;
 let inMemoryProfessors: ProfessorInfo[] | null = null;
 let inMemorySample: { courses: Course[]; metadata: MetadataInfo } | null = null;
@@ -33,7 +48,7 @@ export function getSynchronousCachedCourses(): CourseExtendedInfo[] | null {
   }
   if (typeof window !== 'undefined') {
     try {
-      const stored = sessionStorage.getItem('matriculab_courses_cache');
+      const stored = sessionStorage.getItem(COURSES_CACHE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -58,7 +73,7 @@ export function getSynchronousCachedProfessors(): ProfessorInfo[] | null {
   }
   if (typeof window !== 'undefined') {
     try {
-      const stored = sessionStorage.getItem('matriculab_professors_cache');
+      const stored = sessionStorage.getItem(PROFESSORS_CACHE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -112,7 +127,7 @@ export async function getCoursesCatalog(): Promise<CourseExtendedInfo[]> {
   // Tier 2: SessionStorage
   if (typeof window !== 'undefined') {
     try {
-      const stored = sessionStorage.getItem('matriculab_courses_cache');
+      const stored = sessionStorage.getItem(COURSES_CACHE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -128,7 +143,7 @@ export async function getCoursesCatalog(): Promise<CourseExtendedInfo[]> {
 
   // Tier 3: Pre-compiled static JSON (super fast JSON.parse vs SheetJS)
   try {
-    const res = await fetch('/data/courses_catalog.json');
+    const res = await fetch(`/data/courses_catalog.json?v=${STATIC_ASSET_VER}`);
     if (res.ok) {
       const data: CourseExtendedInfo[] = await res.json();
       if (Array.isArray(data) && data.length > 0) {
@@ -136,7 +151,7 @@ export async function getCoursesCatalog(): Promise<CourseExtendedInfo[]> {
         if (typeof window !== 'undefined') {
           window.__MATRICULAB_COURSES__ = data;
           try {
-            sessionStorage.setItem('matriculab_courses_cache', JSON.stringify(data));
+            sessionStorage.setItem(COURSES_CACHE_KEY, JSON.stringify(data));
           } catch {
             // storage quota exceeded, in-memory is enough
           }
@@ -156,7 +171,7 @@ export async function getCoursesCatalog(): Promise<CourseExtendedInfo[]> {
   let coursesToUse = parseResult.courses;
 
   try {
-    const liveRes = await fetch('/data/classrooms_intranet.json');
+    const liveRes = await fetch(`/data/classrooms_intranet.json?v=${STATIC_ASSET_VER}`);
     if (liveRes.ok) {
       const liveData = await liveRes.json();
       if (Array.isArray(liveData.classrooms) && liveData.classrooms.length > 0) {
@@ -187,7 +202,7 @@ export async function getProfessorsCatalog(): Promise<ProfessorInfo[]> {
   // Tier 2: SessionStorage
   if (typeof window !== 'undefined') {
     try {
-      const stored = sessionStorage.getItem('matriculab_professors_cache');
+      const stored = sessionStorage.getItem(PROFESSORS_CACHE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -203,7 +218,7 @@ export async function getProfessorsCatalog(): Promise<ProfessorInfo[]> {
 
   // Tier 3: Pre-compiled static JSON
   try {
-    const res = await fetch('/data/professors_catalog.json');
+    const res = await fetch(`/data/professors_catalog.json?v=${STATIC_ASSET_VER}`);
     if (res.ok) {
       const data: ProfessorInfo[] = await res.json();
       if (Array.isArray(data) && data.length > 0) {
@@ -211,7 +226,7 @@ export async function getProfessorsCatalog(): Promise<ProfessorInfo[]> {
         if (typeof window !== 'undefined') {
           window.__MATRICULAB_PROFESSORS__ = data;
           try {
-            sessionStorage.setItem('matriculab_professors_cache', JSON.stringify(data));
+            sessionStorage.setItem(PROFESSORS_CACHE_KEY, JSON.stringify(data));
           } catch {
             // ignore
           }
@@ -242,7 +257,7 @@ export async function getSampleScheduleData(): Promise<{ courses: Course[]; meta
   }
 
   try {
-    const res = await fetch('/data/enriched_courses.json');
+    const res = await fetch(`/data/enriched_courses.json?v=${STATIC_ASSET_VER}`);
     if (res.ok) {
       const data = await res.json();
       if (data && Array.isArray(data.courses) && data.courses.length > 0) {
@@ -275,7 +290,7 @@ export function getSynchronousCachedClassrooms(): ClassroomInfo[] | null {
   }
   if (typeof window !== 'undefined') {
     try {
-      const stored = sessionStorage.getItem('matriculab_classrooms_cache');
+      const stored = sessionStorage.getItem(CLASSROOMS_CACHE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -297,7 +312,7 @@ export async function getClassroomsCatalog(): Promise<ClassroomInfo[]> {
   if (sync) return sync;
 
   try {
-    const liveRes = await fetch('/data/classrooms_intranet.json');
+    const liveRes = await fetch(`/data/classrooms_intranet.json?v=${STATIC_ASSET_VER}`);
     if (liveRes.ok) {
       const liveData = await liveRes.json();
       if (Array.isArray(liveData.classrooms) && liveData.classrooms.length > 0) {
@@ -305,7 +320,7 @@ export async function getClassroomsCatalog(): Promise<ClassroomInfo[]> {
         if (typeof window !== 'undefined') {
           window.__MATRICULAB_CLASSROOMS__ = liveData.classrooms;
           try {
-            sessionStorage.setItem('matriculab_classrooms_cache', JSON.stringify(liveData.classrooms));
+            sessionStorage.setItem(CLASSROOMS_CACHE_KEY, JSON.stringify(liveData.classrooms));
           } catch {}
         }
         return liveData.classrooms;

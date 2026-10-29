@@ -92,6 +92,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
 }
 
 .mentor-course-badge {
@@ -104,16 +105,24 @@
   font-size: 0.82rem;
   font-weight: 500;
   line-height: 1.2;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .mentor-course-code {
   font-weight: 700;
   font-size: 0.78rem;
   letter-spacing: 0.5px;
+  flex-shrink: 0;
 }
 
 .mentor-course-name {
   color: #e2e8f0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Sessions list in card */

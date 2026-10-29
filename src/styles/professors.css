@@ -549,6 +549,19 @@
   align-items: center;
   gap: 6px;
   color: var(--text-secondary);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.prof-status-next svg {
+  flex-shrink: 0;
+}
+
+.prof-status-next > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .prof-status-next strong {
@@ -578,10 +591,13 @@
   color: var(--text-secondary);
   text-decoration: none;
   font-size: 0.8rem;
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   transition: color 0.18s ease;
+}
+
+.prof-email-link svg {
+  flex-shrink: 0;
 }
 
 .prof-email-link:hover {
@@ -730,18 +746,29 @@
   flex-wrap: wrap;
   gap: 5px;
   flex: 1;
+  min-width: 0;
 }
 
 .prof-course-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   padding: 3px 8px;
   border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 600;
   border: 1px solid transparent;
   max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.prof-course-tag strong {
+  flex-shrink: 0;
+}
+
+.prof-course-tag-name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -755,12 +782,13 @@
   color: var(--text-muted);
   font-size: 0.7rem;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .prof-room-tag {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   padding: 2px 7px;
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.04);
@@ -768,6 +796,19 @@
   color: var(--text-secondary);
   font-size: 0.72rem;
   font-weight: 600;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.prof-room-tag svg {
+  flex-shrink: 0;
+}
+
+.prof-room-tag span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Footer CTA */

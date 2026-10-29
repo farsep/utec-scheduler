@@ -517,11 +517,17 @@ export function mutuallyEnrichCoursesWithScrapedData(
             professor: targetProf,
             email: targetEmail
           });
-        } else if (isVirtual) {
-          // Virtual sessions (UTEC-BA Virtual / online) don't have physical classrooms in scraping, so preserve them
+        } else if (isVirtual || /\b(L301|L203)\b/i.test(session.location)) {
+          // Virtual sessions (UTEC-BA Virtual / online) and non-reservable specialized labs (L301, L203)
+          // are not in /filtro/aula/reservable, so preserve them when their section is active
+          if (/\b(L301|L203)\b/i.test(session.location)) {
+            activePhysicalCount++;
+          }
           const targetEmail = session.email || findProfEmail(session.professor);
+          const parsedLoc = parseLocationInfo(session.location);
           enrichedSessions.push({
             ...session,
+            location: parsedLoc ? parsedLoc.displayName : session.location,
             email: targetEmail
           });
         } else {
