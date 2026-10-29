@@ -307,6 +307,8 @@ export function mutuallyEnrichCoursesWithScrapedData(
   const scrapedItems: ScrapedItem[] = [];
   const scrapedBySecKey = new Map<string, ScrapedItem[]>();
   const scrapedByDayKey = new Map<string, ScrapedItem[]>();
+  const scrapedByCourseSec = new Map<string, ScrapedItem[]>();
+  const scrapedByCourse = new Map<string, ScrapedItem[]>();
 
   for (const room of intranetClassrooms) {
     for (const day of ALL_DAYS) {
@@ -322,13 +324,27 @@ export function mutuallyEnrichCoursesWithScrapedData(
           profEmail = findProfEmail(s.professor);
         }
 
+        const rawGrp = String(s.sessionGroup || secNorm).trim();
+        const grpDigits = (rawGrp.match(/\d+/) || [secNorm])[0];
+        let inferredType: SessionType = 'Teoría';
+        if (/lab|prac|prác|tall/i.test(rawGrp)) {
+          inferredType = parseSessionType(rawGrp);
+        } else if (/teo/i.test(rawGrp)) {
+          inferredType = 'Teoría';
+        } else if (room.type === 'laboratorio' || (grpDigits.length >= 2 && Number(grpDigits) >= 11 && grpDigits !== secNorm)) {
+          inferredType = 'Laboratorio';
+        }
+        const formattedGroup = /^(TEOR|LAB|PRAC|PRÁC|TALL)/i.test(rawGrp)
+          ? rawGrp
+          : `${inferredType === 'Laboratorio' ? 'LABORATORIO' : 'TEORÍA'} ${grpDigits}`;
+
         const item: ScrapedItem = {
           id: `${room.code}-${cCode}-${secNorm}-${day}-${s.startMinutes}`,
           courseCode: cCode,
           courseName: s.courseName || cCode,
           sectionNumber: secNorm,
-          sessionGroup: s.sessionGroup || '1',
-          sessionType: s.sessionGroup ? parseSessionType(s.sessionGroup) : 'Teoría',
+          sessionGroup: formattedGroup,
+          sessionType: inferredType,
           day,
           startTime: s.startTime,
           endTime: s.endTime,
@@ -351,6 +367,13 @@ export function mutuallyEnrichCoursesWithScrapedData(
         const dayKey = `${cCode}::${day}`;
         if (!scrapedByDayKey.has(dayKey)) scrapedByDayKey.set(dayKey, []);
         scrapedByDayKey.get(dayKey)!.push(item);
+
+        const courseSecKey = `${cCode}::${secNorm}`;
+        if (!scrapedByCourseSec.has(courseSecKey)) scrapedByCourseSec.set(courseSecKey, []);
+        scrapedByCourseSec.get(courseSecKey)!.push(item);
+
+        if (!scrapedByCourse.has(cCode)) scrapedByCourse.set(cCode, []);
+        scrapedByCourse.get(cCode)!.push(item);
       }
     }
   }
@@ -364,9 +387,20 @@ export function mutuallyEnrichCoursesWithScrapedData(
     const cCode = course.code.toUpperCase().trim();
 
     const validSections: Section[] = [];
+    // Collect all explicit subgroup numbers defined across sub-sections of this course
+    const explicitSubgroups = new Set<string>();
+    for (const sec of course.sections) {
+      const parenMatch = sec.sectionNumber.match(/\(([^)]+)\)/);
+      if (parenMatch) {
+        const gNum = (parenMatch[1].match(/\d+/) || [''])[0];
+        if (gNum) explicitSubgroups.add(`${String(parseInt(sec.sectionNumber, 10))}::${gNum}`);
+      }
+    }
 
     for (const section of course.sections) {
       const baseSec = String(parseInt(section.sectionNumber, 10) || section.sectionNumber.split(' ')[0]).trim();
+      const parenMatch = section.sectionNumber.match(/\(([^)]+)\)/);
+      const requiredSubgroupLabel = parenMatch ? parenMatch[1].trim().toUpperCase() : null;
       const enrichedSessions: Session[] = [];
       let hadPhysicalPlanned = false;
       let activePhysicalCount = 0;
@@ -381,7 +415,18 @@ export function mutuallyEnrichCoursesWithScrapedData(
         const secKey = `${cCode}::${baseSec}::${session.day}`;
         const dayKey = `${cCode}::${session.day}`;
 
-        const candidates = scrapedBySecKey.get(secKey) || scrapedByDayKey.get(dayKey) || [];
+        const secCandidates = scrapedBySecKey.get(secKey) || [];
+        // Only fall back to cross-section dayKey candidates if the Excel session shares the EXACT same physical room and time
+        // (combined multi-section labs where UTEC's calendar only displays one section's label)
+        const crossSecCandidates = secCandidates.length > 0
+          ? []
+          : (scrapedByDayKey.get(dayKey) || []).filter(cand =>
+              session.startMinutes === cand.startMinutes &&
+              session.endMinutes === cand.endMinutes &&
+              Boolean(session.location && (session.location.includes(cand.roomCode) || cand.roomDisplayName.includes(session.location)))
+            );
+
+        const candidates = secCandidates.length > 0 ? secCandidates : crossSecCandidates;
 
         // Score candidates to find the most accurate matching session
         let bestMatch: ScrapedItem | null = null;
@@ -396,6 +441,10 @@ export function mutuallyEnrichCoursesWithScrapedData(
           let score = 0;
           if (cand.sectionNumber === baseSec) score += 10;
           if (!cand.used) score += 5;
+
+          const sGrpNum = (session.sessionGroup.match(/\d+/) || [''])[0];
+          const cGrpNum = (cand.sessionGroup.match(/\d+/) || [''])[0];
+          if (sGrpNum && cGrpNum && sGrpNum === cGrpNum) score += 8;
 
           // Check professor compatibility
           if (session.professor && cand.professor) {
@@ -422,14 +471,34 @@ export function mutuallyEnrichCoursesWithScrapedData(
           }
         }
 
+        // If no same-day candidate matched, check if this session was rescheduled to another day/time in the Intranet
+        if (!bestMatch && !isVirtual) {
+          const sGrpNum = (session.sessionGroup.match(/\d+/) || [''])[0];
+          const allSecItems = scrapedByCourseSec.get(`${cCode}::${baseSec}`) || [];
+          const rescheduledCand = allSecItems.find(cand => {
+            if (cand.used) return false;
+            const cGrpNum = (cand.sessionGroup.match(/\d+/) || [''])[0];
+            if (sGrpNum && cGrpNum && sGrpNum !== cGrpNum) return false;
+            // Make sure this candidate won't directly match another planned session of this section on cand.day
+            const hasDirectSibling = section.sessions.some(other =>
+              other !== session &&
+              other.day === cand.day &&
+              Math.max(0, Math.min(other.endMinutes, cand.endMinutes) - Math.max(other.startMinutes, cand.startMinutes)) >= 30
+            );
+            return !hasDirectSibling;
+          });
+          if (rescheduledCand) {
+            bestMatch = rescheduledCand;
+          }
+        }
+
         if (bestMatch) {
           bestMatch.used = true;
           activePhysicalCount++;
 
           // SCRAPING IS THE SOURCE OF TRUTH:
-          // Use verified physical classroom from scraping
+          // Use verified physical classroom, day, time, and teacher from scraping
           const targetLocation = bestMatch.roomDisplayName || bestMatch.roomCode;
-          // Use verified professor from scraping if valid
           const targetProf = bestMatch.professor && !/docente\s*utec/i.test(bestMatch.professor)
             ? bestMatch.professor
             : (session.professor || bestMatch.professor || 'Docente UTEC');
@@ -438,6 +507,12 @@ export function mutuallyEnrichCoursesWithScrapedData(
 
           enrichedSessions.push({
             ...session,
+            day: bestMatch.day,
+            startTime: bestMatch.startTime,
+            endTime: bestMatch.endTime,
+            startMinutes: bestMatch.startMinutes,
+            endMinutes: bestMatch.endMinutes,
+            modality: 'Presencial',
             location: targetLocation,
             professor: targetProf,
             email: targetEmail
@@ -456,8 +531,65 @@ export function mutuallyEnrichCoursesWithScrapedData(
         }
       }
 
+      // Append any extra active Intranet sessions for this section that were added in the Intranet
+      const remainingSecItems = (scrapedByCourseSec.get(`${cCode}::${baseSec}`) || []).filter(cand => {
+        if (cand.used) return false;
+        const cGrpNum = (cand.sessionGroup.match(/\d+/) || [''])[0];
+        if (requiredSubgroupLabel) {
+          const reqGrpNum = (requiredSubgroupLabel.match(/\d+/) || [''])[0];
+          // Include if it matches this sub-section's group or the shared theory group (baseSec)
+          return cGrpNum === reqGrpNum || cGrpNum === baseSec;
+        }
+        return true;
+      });
+
+      for (const extra of remainingSecItems) {
+        const alreadyInSection = enrichedSessions.some(s =>
+          s.day === extra.day &&
+          s.startMinutes === extra.startMinutes &&
+          s.endMinutes === extra.endMinutes &&
+          s.location === extra.roomDisplayName
+        );
+        if (!alreadyInSection) {
+          extra.used = true;
+          activePhysicalCount++;
+          enrichedSessions.push({
+            id: `${cCode}-${section.sectionNumber}-${extra.day}-${extra.startMinutes}-${extra.roomCode}-extra`,
+            sessionGroup: extra.sessionGroup,
+            sessionType: extra.sessionType,
+            modality: 'Presencial',
+            day: extra.day,
+            startTime: extra.startTime,
+            endTime: extra.endTime,
+            startMinutes: extra.startMinutes,
+            endMinutes: extra.endMinutes,
+            frequency: 'Semana General',
+            location: extra.roomDisplayName,
+            vacancies: section.vacancies || 0,
+            enrolled: section.enrolled || 0,
+            professor: extra.professor,
+            email: extra.email
+          });
+        }
+      }
+
+      // If this section is a subgroup variant (e.g. "1 (LABORATORIO 12)" or "1 (TEORÍA 12)"),
+      // verify that the defining subgroup session actually survived (unless it was in non-reservable L301/L203)
+      if (requiredSubgroupLabel) {
+        const hadNonReservableRoom = section.sessions.some(s =>
+          s.sessionGroup.trim().toUpperCase() === requiredSubgroupLabel &&
+          /\b(L301|L203)\b/i.test(s.location)
+        );
+        const subgroupSurvived = enrichedSessions.some(s =>
+          s.sessionGroup.trim().toUpperCase() === requiredSubgroupLabel
+        );
+        if (!subgroupSurvived && !hadNonReservableRoom) {
+          continue;
+        }
+      }
+
       // If this section originally had physical classes planned, but ALL of them were canceled,
-      // the section itself was canceled by UTEC (e.g. CS2042 Sec 3). Drop any orphaned virtual sessions.
+      // the section itself was canceled by UTEC. Drop any orphaned virtual sessions.
       if (hadPhysicalPlanned && activePhysicalCount === 0) {
         continue;
       }
@@ -468,8 +600,46 @@ export function mutuallyEnrichCoursesWithScrapedData(
 
       validSections.push({
         ...section,
-        sessions: enrichedSessions
+        sessions: enrichedSessions,
+        professors: Array.from(new Set(enrichedSessions.map(s => s.professor).filter(Boolean)))
       });
+    }
+
+    // Also incorporate any newly opened sections in the Intranet for this existing Excel course
+    const unusedCourseItems = (scrapedByCourse.get(cCode) || []).filter(it => !it.used);
+    if (unusedCourseItems.length > 0) {
+      const newSecMap = new Map<string, ScrapedItem[]>();
+      for (const it of unusedCourseItems) {
+        it.used = true;
+        if (!newSecMap.has(it.sectionNumber)) newSecMap.set(it.sectionNumber, []);
+        newSecMap.get(it.sectionNumber)!.push(it);
+      }
+      for (const [secNum, secItems] of newSecMap.entries()) {
+        const sessions: Session[] = secItems.map((it, idx) => ({
+          id: `${cCode}-${secNum}-${it.day}-${it.startMinutes}-${idx}`,
+          sessionGroup: it.sessionGroup,
+          sessionType: it.sessionType,
+          modality: 'Presencial',
+          day: it.day,
+          startTime: it.startTime,
+          endTime: it.endTime,
+          startMinutes: it.startMinutes,
+          endMinutes: it.endMinutes,
+          frequency: 'Semana General',
+          location: it.roomDisplayName,
+          vacancies: 0,
+          enrolled: 0,
+          professor: it.professor,
+          email: it.email
+        }));
+        validSections.push({
+          sectionNumber: secNum,
+          sessions,
+          vacancies: 0,
+          enrolled: 0,
+          professors: Array.from(new Set(secItems.map(i => i.professor).filter(Boolean)))
+        });
+      }
     }
 
     if (validSections.length === 0) {
