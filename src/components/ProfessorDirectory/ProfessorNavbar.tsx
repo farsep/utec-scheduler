@@ -57,9 +57,9 @@ export const ProfessorNavbar: React.FC<ProfessorNavbarProps> = ({
       {/* Meta Stats Badge (Professor Summary) */}
       <div className="classroom-navbar-meta">
         <div className="meta-chip">
-          <span style={{ color: 'var(--text-muted)' }}>Docentes:</span>
+          <span className="meta-chip-label" style={{ color: 'var(--text-muted)' }}>Docentes:</span>
           <span className="meta-chip-val" style={{ color: 'var(--accent-primary)' }}>
-            {filteredCount === totalProfessors ? totalProfessors : `${filteredCount} de ${totalProfessors}`}
+            {filteredCount === totalProfessors ? totalProfessors : `${filteredCount}/${totalProfessors}`}
           </span>
           {teachingNowCount > 0 && (
             <span
@@ -67,7 +67,9 @@ export const ProfessorNavbar: React.FC<ProfessorNavbarProps> = ({
               style={{ color: 'var(--accent-emerald)', borderColor: 'rgba(16, 185, 129, 0.4)' }}
             >
               <span className="live-pulse-dot-inline" />
-              {teachingNowCount} Dictando ahora
+              <span className="live-pill-txt-full">{teachingNowCount} Dictando ahora</span>
+              <span className="live-pill-txt-short">{teachingNowCount} en clase</span>
+              <span className="live-pill-txt-mini">{teachingNowCount}</span>
             </span>
           )}
         </div>

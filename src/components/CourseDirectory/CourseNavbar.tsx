@@ -57,9 +57,9 @@ export const CourseNavbar: React.FC<CourseNavbarProps> = ({
       {/* Meta Stats Badge */}
       <div className="classroom-navbar-meta">
         <div className="meta-chip">
-          <span style={{ color: 'var(--text-muted)' }}>Cursos:</span>
+          <span className="meta-chip-label" style={{ color: 'var(--text-muted)' }}>Cursos:</span>
           <span className="meta-chip-val" style={{ color: 'var(--accent-primary)' }}>
-            {filteredCount === totalCourses ? totalCourses : `${filteredCount} de ${totalCourses}`}
+            {filteredCount === totalCourses ? totalCourses : `${filteredCount}/${totalCourses}`}
           </span>
           {liveNowCount > 0 && (
             <span
@@ -67,7 +67,9 @@ export const CourseNavbar: React.FC<CourseNavbarProps> = ({
               style={{ color: 'var(--accent-purple)', borderColor: 'rgba(139, 92, 246, 0.4)' }}
             >
               <span className="live-pulse-dot-inline" style={{ background: 'var(--accent-purple)' }} />
-              {liveNowCount} En clase ahora
+              <span className="live-pill-txt-full">{liveNowCount} En clase ahora</span>
+              <span className="live-pill-txt-short">{liveNowCount} en vivo</span>
+              <span className="live-pill-txt-mini">{liveNowCount}</span>
             </span>
           )}
         </div>

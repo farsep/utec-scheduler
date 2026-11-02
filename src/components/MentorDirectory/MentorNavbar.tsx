@@ -57,9 +57,9 @@ export const MentorNavbar: React.FC<MentorNavbarProps> = ({
       {/* Meta Stats Badge */}
       <div className="classroom-navbar-meta">
         <div className="meta-chip">
-          <span style={{ color: 'var(--text-muted)' }}>Mentores:</span>
+          <span className="meta-chip-label" style={{ color: 'var(--text-muted)' }}>Mentores:</span>
           <span className="meta-chip-val" style={{ color: 'var(--accent-primary)' }}>
-            {filteredCount === totalMentors ? totalMentors : `${filteredCount} de ${totalMentors}`}
+            {filteredCount === totalMentors ? totalMentors : `${filteredCount}/${totalMentors}`}
           </span>
           {liveNowCount > 0 && (
             <span
@@ -67,7 +67,9 @@ export const MentorNavbar: React.FC<MentorNavbarProps> = ({
               style={{ color: 'var(--accent-emerald)', borderColor: 'rgba(16, 185, 129, 0.4)' }}
             >
               <span className="live-pulse-dot-inline" />
-              {liveNowCount} En mentoría ahora
+              <span className="live-pill-txt-full">{liveNowCount} En mentoría ahora</span>
+              <span className="live-pill-txt-short">{liveNowCount} en vivo</span>
+              <span className="live-pill-txt-mini">{liveNowCount}</span>
             </span>
           )}
         </div>

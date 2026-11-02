@@ -680,17 +680,17 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" style={{ maxWidth: '1000px', width: '95%', maxHeight: '90vh', padding: '0', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+      <div className="modal-card optimizer-modal-card" onClick={e => e.stopPropagation()}>
         
         {/* Header */}
-        <div className="modal-header" style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.02)' }}>
+        <div className="modal-header" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.02)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ background: 'var(--accent-gradient)', padding: '8px', borderRadius: '10px', display: 'flex' }}>
+            <div style={{ background: 'var(--accent-gradient)', padding: '8px', borderRadius: '10px', display: 'flex', flexShrink: 0 }}>
               <Sparkles size={20} color="white" />
             </div>
             <div>
-              <h3 className="modal-title" style={{ fontSize: '1.2rem', marginBottom: '2px' }}>Generador Automático de Horarios</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>Encuentra las mejores combinaciones sin cruces y con menor cantidad de huecos.</p>
+              <h3 className="modal-title" style={{ fontSize: '1.15rem', marginBottom: '2px' }}>Generador Automático de Horarios</h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>Encuentra las mejores combinaciones sin cruces y con menor cantidad de huecos.</p>
             </div>
           </div>
           <button className="close-btn" onClick={onClose}><X size={20} /></button>
@@ -698,10 +698,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
 
         <ErrorBoundary>
         {/* Content Body - Split View */}
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+        <div className="optimizer-split-body">
           
           {/* Left Panel: Configuration */}
-          <div style={{ width: '340px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.1)', userSelect: 'none' }}>
+          <div className="optimizer-config-panel" data-has-results={Boolean(results || isGenerating)}>
             
             {/* Scrollable Configuration Area */}
             <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
@@ -1290,7 +1290,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
           </div>
 
           {/* Right Panel: Results */}
-          <div style={{ flex: 1, background: '#0a0d14', position: 'relative', overflow: 'hidden' }}>
+          <div className="optimizer-right-panel" data-has-results={Boolean(results || isGenerating)}>
             {/* PREVIEW VIEW */}
             {previewSchedule && (
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', background: '#0a0d14', zIndex: 10 }}>

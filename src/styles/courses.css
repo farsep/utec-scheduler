@@ -659,6 +659,7 @@
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .course-prof-tag svg {
@@ -666,10 +667,13 @@
 }
 
 .course-prof-tag span {
+  display: inline-block;
   min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 .course-prof-tag--more {
@@ -1898,7 +1902,7 @@
   background: rgba(0, 0, 0, 0.82);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  z-index: 2100;
+  z-index: 2400;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1944,6 +1948,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .visitor-title-mobile {
@@ -1969,7 +1974,25 @@
   line-height: 1.25;
 }
 
-.visitor-modal-subtitle {
+.visitor-modal-subtitle-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.visitor-course-code-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+  flex-shrink: 0;
+}
+
+.visitor-course-name-text {
   font-size: 0.8rem;
   color: var(--text-muted);
   white-space: nowrap;
@@ -1996,65 +2019,53 @@
 }
 
 .visitor-modal-body {
-  padding: 1.15rem 1.35rem;
+  padding: 1rem 1.35rem;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.75rem;
   flex: 1;
   min-height: 0;
 }
 
-.visitor-form-grid {
+/* Section & Teacher Meta Strip */
+.visitor-meta-strip {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: 180px 1fr;
+  gap: 10px;
+  align-items: center;
   flex-shrink: 0;
 }
 
-.visitor-form-group {
+.visitor-meta-section {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
 
-.visitor-form-group label {
-  font-size: 0.74rem;
+.visitor-meta-label {
+  font-size: 0.72rem;
   color: var(--text-muted);
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.visitor-select,
-.visitor-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: 7px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 0.8125rem;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 .visitor-prof-card {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0.9rem;
+  gap: 0.65rem;
+  padding: 0.5rem 0.8rem;
   background: rgba(139, 92, 246, 0.08);
   border: 1px solid rgba(139, 92, 246, 0.22);
   border-radius: var(--radius-sm);
-  flex-shrink: 0;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .visitor-prof-avatar {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: rgba(139, 92, 246, 0.2);
   color: #c4b5fd;
@@ -2067,12 +2078,19 @@
 .visitor-prof-details {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   flex: 1;
+}
+
+.visitor-prof-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
 }
 
 .visitor-prof-name {
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
@@ -2081,7 +2099,7 @@
 }
 
 .visitor-prof-email {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -2089,60 +2107,200 @@
 }
 
 .prof-dest-tag {
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   background: rgba(139, 92, 246, 0.2);
   color: #c4b5fd;
-  padding: 2px 6px;
+  padding: 1px 5px;
   border-radius: 4px;
   font-weight: 600;
   flex-shrink: 0;
 }
 
+/* Student Info Collapsible Bar */
+.visitor-student-bar {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.visitor-student-toggle-btn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  box-sizing: border-box;
+}
+
+.visitor-student-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.visitor-student-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.visitor-student-icon {
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.visitor-student-summary {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+}
+
+.visitor-student-summary strong {
+  color: var(--text-primary);
+}
+
+.visitor-student-major-pill {
+  color: var(--text-muted);
+}
+
+.visitor-student-edit-action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.visitor-student-form-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.visitor-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.visitor-form-group label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.visitor-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.visitor-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Email Preview */
 .visitor-email-preview-container {
   border: 1px solid rgba(59, 130, 246, 0.28);
   border-radius: var(--radius-sm);
-  background: rgba(6, 10, 19, 0.65);
+  background: rgba(6, 10, 19, 0.75);
   display: flex;
   flex-direction: column;
-  flex: 1 0 auto;
-  min-height: 220px;
+  flex: 1;
+  min-height: 190px;
 }
 
 .email-preview-header {
-  padding: 9px 12px;
+  padding: 8px 12px;
   background: rgba(59, 130, 246, 0.08);
   border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-  font-size: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.email-subject-group {
   display: flex;
   align-items: baseline;
   gap: 6px;
-  flex-shrink: 0;
+  min-width: 0;
+  flex: 1;
 }
 
 .email-header-label {
   color: #93c5fd;
   font-weight: 700;
   flex-shrink: 0;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
 
 .email-header-subject {
   color: var(--text-primary);
-  font-weight: 700;
-  line-height: 1.35;
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.email-copy-subj-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.email-copy-subj-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
 }
 
 .email-preview-body {
-  padding: 12px;
-  max-height: 260px;
+  padding: 10px 12px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   flex: 1;
+  min-height: 0;
 }
 
-.email-preview-body pre {
+.email-body-text {
   font-family: inherit;
   font-size: 0.8125rem;
   color: var(--text-secondary);
@@ -2150,19 +2308,20 @@
   white-space: pre-wrap;
   word-wrap: break-word;
   margin: 0;
+  user-select: text;
 }
 
 .visitor-advice-alert {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 0.65rem 0.9rem;
+  padding: 0.55rem 0.85rem;
   background: rgba(16, 185, 129, 0.08);
   border: 1px solid rgba(16, 185, 129, 0.2);
   border-radius: var(--radius-sm);
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   color: #a7f3d0;
-  line-height: 1.38;
+  line-height: 1.35;
   flex-shrink: 0;
 }
 
@@ -2791,18 +2950,22 @@
   .visitor-modal-backdrop {
     padding: 0;
     align-items: flex-end;
-    z-index: 2100;
+    z-index: 2400;
   }
 
   .visitor-modal-dialog {
-    max-height: 92vh;
-    max-height: 92dvh;
+    height: 90vh;
+    height: 90dvh;
+    max-height: 90vh;
+    max-height: 90dvh;
     border-radius: 18px 18px 0 0;
     border-bottom: none;
+    display: flex;
+    flex-direction: column;
   }
 
   .visitor-modal-header {
-    padding: 0.65rem 0.9rem;
+    padding: 0.65rem 0.85rem;
     gap: 0.5rem;
   }
 
@@ -2811,13 +2974,13 @@
   }
 
   .visitor-modal-icon-badge {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
 
   .visitor-modal-icon-badge svg {
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
   }
 
   .visitor-title-desktop {
@@ -2829,136 +2992,139 @@
   }
 
   .visitor-modal-title {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .visitor-modal-subtitle {
-    font-size: 0.74rem;
-  }
-
   .visitor-modal-body {
-    padding: 0.75rem 0.9rem;
-    gap: 0.55rem;
+    padding: 0.65rem 0.85rem;
+    gap: 0.5rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    min-height: 0;
   }
 
-  .visitor-form-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 6px 8px;
+  .visitor-meta-strip {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 
-  .visitor-form-group--section {
-    grid-column: 1 / -1;
+  .visitor-meta-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
   }
 
-  .visitor-form-group {
-    gap: 2px;
+  .visitor-meta-section .custom-select-container {
+    flex: 1;
   }
 
-  .visitor-form-group label {
-    font-size: 0.7rem;
-  }
-
-  .visitor-form-group .custom-select-trigger {
-    height: 34px;
-    padding: 4px 8px;
+  .visitor-meta-section .custom-select-trigger {
+    height: 32px;
+    padding: 3px 8px;
     font-size: 0.78rem;
   }
 
-  .visitor-select,
-  .visitor-input {
-    font-size: 16px; /* Prevents iOS Safari auto-zoom on focus */
-    height: 34px;
-    padding: 4px 8px;
+  .visitor-meta-label {
+    white-space: nowrap;
+    font-size: 0.7rem;
   }
 
   .visitor-prof-card {
-    padding: 0.45rem 0.65rem;
+    padding: 0.4rem 0.65rem;
     gap: 0.5rem;
   }
 
   .visitor-prof-avatar {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
   }
 
   .visitor-prof-avatar svg {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
   }
 
   .visitor-prof-name {
-    font-size: 0.78rem;
-    line-height: 1.2;
+    font-size: 0.76rem;
   }
 
   .visitor-prof-email {
-    font-size: 0.7rem;
-    line-height: 1.2;
-  }
-
-  .prof-dest-tag {
-    font-size: 0.64rem;
-    padding: 2px 5px;
-  }
-
-  .visitor-email-preview-container {
-    min-height: 190px;
-    flex: 1 0 auto;
-  }
-
-  .email-preview-header {
-    padding: 7px 10px;
-    font-size: 0.76rem;
-    gap: 5px;
-  }
-
-  .email-header-label {
     font-size: 0.68rem;
   }
 
+  .visitor-student-toggle-btn {
+    padding: 5px 8px;
+    font-size: 0.73rem;
+  }
+
+  .visitor-input {
+    font-size: 16px; /* Prevents iOS auto zoom */
+    height: 34px;
+    padding: 4px 8px;
+  }
+
+  .visitor-email-preview-container {
+    flex: 1;
+    min-height: 160px;
+  }
+
+  .email-preview-header {
+    padding: 6px 9px;
+  }
+
+  .email-header-label {
+    font-size: 0.66rem;
+  }
+
   .email-header-subject {
-    font-size: 0.76rem;
-    line-height: 1.3;
+    font-size: 0.75rem;
+  }
+
+  .email-copy-subj-btn {
+    padding: 2px 6px;
+    font-size: 0.68rem;
   }
 
   .email-preview-body {
-    padding: 9px 10px;
-    max-height: 230px;
+    padding: 8px 10px;
   }
 
-  .email-preview-body pre {
-    font-size: 0.76rem;
-    line-height: 1.42;
+  .email-body-text {
+    font-size: 0.78rem;
+    line-height: 1.45;
   }
 
   .visitor-advice-alert {
-    padding: 0.45rem 0.65rem;
-    font-size: 0.7rem;
-    line-height: 1.3;
-    gap: 6px;
-  }
-
-  .visitor-advice-icon {
-    width: 14px;
-    height: 14px;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.68rem;
+    line-height: 1.28;
+    gap: 5px;
   }
 
   .visitor-modal-footer {
     display: grid;
     grid-template-columns: 1fr 1.15fr;
     gap: 8px;
-    padding: 0.65rem 0.9rem calc(0.65rem + env(safe-area-inset-bottom));
+    padding: 0.65rem 0.85rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+    background: rgba(11, 15, 25, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    z-index: 2500;
   }
 
   .visitor-copy-btn,
   .visitor-send-btn {
     width: 100%;
     justify-content: center;
-    padding: 0.55rem 0.6rem;
+    padding: 0.55rem 0.5rem;
     font-size: 0.8rem;
     white-space: nowrap;
   }
