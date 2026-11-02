@@ -2474,6 +2474,12 @@
     justify-content: center;
     min-width: 130px;
   }
+  .prof-toggle-txt-full {
+    display: none;
+  }
+  .prof-toggle-txt-short {
+    display: inline;
+  }
   .professors-cards-grid {
     grid-template-columns: 1fr;
     gap: 12px;

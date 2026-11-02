@@ -211,7 +211,8 @@ export const MentorFilterBar: React.FC<MentorFilterBarProps> = ({
             title="Mostrar únicamente mentores que se encuentran en sesión en este momento"
           >
             <span className="live-beacon-dot" />
-            <span>En Mentoría Ahora</span>
+            <span className="prof-toggle-txt-full">En Mentoría Ahora</span>
+            <span className="prof-toggle-txt-short">En Vivo</span>
             {liveNowCount > 0 && (
               <span className="toggle-badge">{liveNowCount}</span>
             )}
@@ -225,11 +226,12 @@ export const MentorFilterBar: React.FC<MentorFilterBarProps> = ({
             title={`Mostrar mentores que tienen asesorías programadas hoy (${currentDay})`}
           >
             <Calendar size={14} />
-            <span>Sesiones Hoy</span>
+            <span className="prof-toggle-txt-full">Sesiones Hoy</span>
+            <span className="prof-toggle-txt-short">Hoy</span>
           </button>
 
           {/* Modality Filter Buttons */}
-          <div className="prof-modality-group">
+          <div className="prof-modality-group mentor-modality-group">
             <button
               type="button"
               className={`prof-modality-btn ${filter.selectedModality === 'Presencial' ? 'prof-modality-btn--active' : ''}`}
@@ -257,20 +259,61 @@ export const MentorFilterBar: React.FC<MentorFilterBarProps> = ({
               Virtual
             </button>
           </div>
+        </div>
+      </div>
 
-          {/* Clear Filters Button if any active */}
-          {hasActiveFilters && (
-            <button
-              type="button"
-              className="prof-clear-filters-btn"
-              onClick={resetFilters}
-              title="Restablecer filtros"
-            >
-              <RotateCcw size={14} />
-              <span>Limpiar ({totalFiltered} de {totalAll})</span>
-            </button>
+      {/* Filter Results Summary Strip with Results Count and Reset Button */}
+      <div className="prof-filter-meta-strip mentor-filter-meta-strip">
+        <div className="prof-results-text">
+          <span>
+            Mostrando <strong>{totalFiltered}</strong> de {totalAll} mentores
+          </span>
+          {filter.selectedCourse !== 'ALL' && (
+            <span className="active-tag-chip">
+              <BookOpen size={11} />
+              <span>
+                {availableCourses.find(c => c.code === filter.selectedCourse)?.code || filter.selectedCourse}
+              </span>
+              <button
+                type="button"
+                onClick={() => onFilterChange({ selectedCourse: 'ALL' })}
+                title="Quitar filtro de curso"
+                aria-label="Quitar filtro de curso"
+              >
+                <X size={11} />
+              </button>
+            </span>
+          )}
+          {filter.selectedDepartment !== 'ALL' && (
+            <span className="active-tag-chip">
+              <GraduationCap size={11} />
+              <span>
+                {availableDepartments.find(d => d.code === filter.selectedDepartment)?.code || filter.selectedDepartment}
+              </span>
+              <button
+                type="button"
+                onClick={() => onFilterChange({ selectedDepartment: 'ALL' })}
+                title="Quitar filtro de carrera o área"
+                aria-label="Quitar filtro de carrera o área"
+              >
+                <X size={11} />
+              </button>
+            </span>
           )}
         </div>
+
+        {/* Clear Filters Button if any active */}
+        {hasActiveFilters && (
+          <button
+            type="button"
+            className="prof-reset-btn"
+            onClick={resetFilters}
+            title="Restablecer todos los filtros"
+          >
+            <RotateCcw size={13} />
+            <span>Restablecer</span>
+          </button>
+        )}
       </div>
     </div>
   );

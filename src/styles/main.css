@@ -2883,9 +2883,14 @@ body::after {
   body,
   .app-container,
   .classroom-finder-root,
+  .classroom-finder-main,
   .course-app-root,
   .mentor-app-root,
-  .professor-app-root {
+  .mentor-finder-root,
+  .mentor-finder-main,
+  .professor-app-root,
+  .professor-finder-root,
+  .professor-finder-main {
     padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important;
   }
 

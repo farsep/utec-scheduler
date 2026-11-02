@@ -283,12 +283,13 @@ export const MentorApp: React.FC = () => {
       {showScrollTop && (
         <button
           type="button"
-          className="prof-scroll-top-btn"
+          className="mobile-floating-top-btn"
           onClick={scrollToTop}
-          title="Volver arriba"
-          aria-label="Volver arriba"
+          title="Subir a filtros y búsqueda"
+          aria-label="Subir a filtros y búsqueda"
         >
-          <ArrowUp size={20} />
+          <ArrowUp size={15} />
+          <span>Búsqueda</span>
         </button>
       )}
 

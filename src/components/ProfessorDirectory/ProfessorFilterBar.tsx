@@ -182,7 +182,8 @@ export const ProfessorFilterBar: React.FC<ProfessorFilterBarProps> = ({
             title="Mostrar únicamente docentes que se encuentran dictando clase en este momento"
           >
             <span className="live-beacon-dot" />
-            <span>Dictando Ahora</span>
+            <span className="prof-toggle-txt-full">Dictando Ahora</span>
+            <span className="prof-toggle-txt-short">En Clase</span>
             {teachingNowCount > 0 && (
               <span className="toggle-badge">{teachingNowCount}</span>
             )}
@@ -196,7 +197,8 @@ export const ProfessorFilterBar: React.FC<ProfessorFilterBarProps> = ({
             title="Mostrar docentes que tienen clases programadas hoy"
           >
             <Calendar size={14} />
-            <span>Clases Hoy</span>
+            <span className="prof-toggle-txt-full">Clases Hoy</span>
+            <span className="prof-toggle-txt-short">Hoy</span>
           </button>
 
           {/* Modality Filter */}
