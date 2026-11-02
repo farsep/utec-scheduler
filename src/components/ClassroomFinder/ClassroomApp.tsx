@@ -181,49 +181,55 @@ export const ClassroomApp: React.FC = () => {
     return classrooms.map(c => evaluateClassroom(c, filter, nowForEvaluation));
   }, [classrooms, filter, effectiveLiveMinutes]);
 
-  // Count available rooms per floor
-  const floorCounts = useMemo(() => {
+  // Check if a classroom item matches filters OTHER THAN floor (room type, text search query)
+  const matchesNonFloorFilters = useCallback((item: ClassroomAvailability) => {
+    const { classroom } = item;
+
+    // Room Type filter
+    if (filter.selectedType !== 'ALL' && classroom.type !== filter.selectedType) {
+      return false;
+    }
+
+    // Text query search
+    const query = filter.searchQuery.trim().toLowerCase();
+    if (query) {
+      const matchCode = classroom.code.toLowerCase().includes(query);
+      const matchName = classroom.displayName.toLowerCase().includes(query);
+      const matchFloor = `piso ${classroom.floor}`.includes(query);
+      const matchType = (ROOM_TYPE_LABELS[classroom.type]?.label || '').toLowerCase().includes(query);
+      if (!matchCode && !matchName && !matchFloor && !matchType) {
+        return false;
+      }
+    }
+
+    return true;
+  }, [filter.selectedType, filter.searchQuery]);
+
+  // Count available rooms per floor, dynamically reflecting the active type and search filters
+  const { floorCounts, totalAvailableAllFloors } = useMemo(() => {
     const counts: Record<number | string, number> = {};
     for (let f = 1; f <= 10; f++) counts[f] = 0;
+    let totalAllFloors = 0;
 
     evaluatedClassrooms.forEach(item => {
-      if (item.isAvailableForSearch) {
+      if (item.isAvailableForSearch && matchesNonFloorFilters(item)) {
         counts[item.classroom.floor] = (counts[item.classroom.floor] || 0) + 1;
+        totalAllFloors++;
       }
     });
 
-    return counts;
-  }, [evaluatedClassrooms]);
+    counts['ALL'] = totalAllFloors;
+    return { floorCounts: counts, totalAvailableAllFloors: totalAllFloors };
+  }, [evaluatedClassrooms, matchesNonFloorFilters]);
 
   // Filter and sort rooms
   const { availableRoomsList, busyRoomsList } = useMemo(() => {
-    const query = filter.searchQuery.trim().toLowerCase();
-
     const matchesFilters = (item: ClassroomAvailability) => {
-      const { classroom } = item;
-
       // Floor filter
-      if (filter.selectedFloor !== 'ALL' && classroom.floor !== filter.selectedFloor) {
+      if (filter.selectedFloor !== 'ALL' && item.classroom.floor !== filter.selectedFloor) {
         return false;
       }
-
-      // Room Type filter
-      if (filter.selectedType !== 'ALL' && classroom.type !== filter.selectedType) {
-        return false;
-      }
-
-      // Text query search
-      if (query) {
-        const matchCode = classroom.code.toLowerCase().includes(query);
-        const matchName = classroom.displayName.toLowerCase().includes(query);
-        const matchFloor = `piso ${classroom.floor}`.includes(query);
-        const matchType = (ROOM_TYPE_LABELS[classroom.type]?.label || '').toLowerCase().includes(query);
-        if (!matchCode && !matchName && !matchFloor && !matchType) {
-          return false;
-        }
-      }
-
-      return true;
+      return matchesNonFloorFilters(item);
     };
 
     const sortFn = (a: ClassroomAvailability, b: ClassroomAvailability) => {
@@ -259,7 +265,7 @@ export const ClassroomApp: React.FC = () => {
     busy.sort(sortFn);
 
     return { availableRoomsList: available, busyRoomsList: busy };
-  }, [evaluatedClassrooms, filter]);
+  }, [evaluatedClassrooms, filter.selectedFloor, filter.sortBy, matchesNonFloorFilters]);
 
   const totalAvailable = availableRoomsList.length;
   const isToday = filter.selectedDay === realTime.day;
@@ -269,7 +275,7 @@ export const ClassroomApp: React.FC = () => {
       {/* Top Navigation */}
       <ClassroomNavbar
         totalRooms={classrooms.length}
-        availableRooms={totalAvailable}
+        availableRooms={totalAvailableAllFloors}
       />
 
       <main className="classroom-finder-main">

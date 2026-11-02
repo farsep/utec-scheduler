@@ -46,46 +46,76 @@ export function parseLocationInfo(rawLoc?: string): { code: string; displayName:
 
   if (!clean || clean.toLowerCase().includes('virtual')) return null;
 
-  let type: RoomType = 'otro';
-  let floor = 1;
-  let code = clean.toUpperCase();
-  let displayName = clean;
+  // Specific auditorium / common spaces checks
+  if (/auditorio/i.test(clean)) {
+    return { code: 'AUDITORIO', displayName: 'Auditorio Principal', type: 'auditorio', floor: 1 };
+  }
+  if (/aula\s*magna/i.test(clean) || /aulamagna/i.test(clean)) {
+    return { code: 'AULAMAGNA', displayName: 'Aula Magna', type: 'auditorio', floor: 1 };
+  }
+  if (/futsal/i.test(clean)) {
+    return { code: 'FUTSAL', displayName: 'Futsal', type: 'otro', floor: 1 };
+  }
+  if (/^S\s*111$/i.test(clean)) {
+    return { code: 'S111', displayName: 'S111', type: 'otro', floor: 1 };
+  }
 
-  const match = clean.match(/^([ALM])(\d{3,4})$/i);
+  // Matches compact codes or full names:
+  // - "A1003", "A 1003", "AULA 1003", "Aula 1003"
+  // - "L414", "L 414", "LAB 414", "LABORATORIO 414", "Laboratorio 414"
+  // - "M603", "M 603", "MESAS 603", "MESA 603", "Mesas 1001"
+  const match = clean.match(/^(?:(AULA|A)|(LAB(?:ORATORIO)?|L)|(MESAS?|M))\s*(\d{3,4})$/i);
   if (match) {
-    const letter = match[1].toUpperCase();
-    const num = match[2];
+    const isAula = Boolean(match[1]);
+    const isLab = Boolean(match[2]);
+    const isMesas = Boolean(match[3]);
+    const num = match[4];
 
-    if (letter === 'A') {
+    let type: RoomType = 'otro';
+    let displayName = '';
+    let letter = 'A';
+
+    if (isAula) {
       type = 'aula';
       displayName = `Aula ${num}`;
-    } else if (letter === 'L') {
+      letter = 'A';
+    } else if (isLab) {
       type = 'laboratorio';
       displayName = `Laboratorio ${num}`;
-    } else if (letter === 'M') {
+      letter = 'L';
+    } else if (isMesas) {
       type = 'mesas';
       displayName = `Mesas ${num}`;
+      letter = 'M';
     }
 
+    let floor = 1;
     if (num.length === 4) {
       floor = parseInt(num.substring(0, 2), 10);
     } else {
-      floor = parseInt(num.substring(0, 1), 10);
+      const f = parseInt(num.substring(0, 1), 10);
+      floor = f === 0 ? 1 : f;
     }
-    code = `${letter}${num}`;
-  } else if (/auditorio/i.test(clean)) {
-    type = 'auditorio';
-    floor = 1;
-    code = 'AUDITORIO';
-    displayName = 'Auditorio Principal';
-  } else if (/aulamagna/i.test(clean)) {
-    type = 'auditorio';
-    floor = 1;
-    code = 'AULAMAGNA';
-    displayName = 'Aula Magna';
+
+    const code = `${letter}${num}`;
+    return { code, displayName, type, floor };
   }
 
-  return { code, displayName, type, floor };
+  // Fallback: If it's a 3-4 digit number like "1003" or "202"
+  const numOnlyMatch = clean.match(/^(\d{3,4})$/);
+  if (numOnlyMatch) {
+    const num = numOnlyMatch[1];
+    let floor = 1;
+    if (num.length === 4) {
+      floor = parseInt(num.substring(0, 2), 10);
+    } else {
+      const f = parseInt(num.substring(0, 1), 10);
+      floor = f === 0 ? 1 : f;
+    }
+    return { code: `A${num}`, displayName: `Aula ${num}`, type: 'aula', floor };
+  }
+
+  return { code: clean.toUpperCase(), displayName: clean, type: 'otro', floor: 1 };
 }
 
 /**

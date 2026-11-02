@@ -708,7 +708,7 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
 
                         <span className="prof-agenda-meta-pill">
                           <MapPin size={12} />
-                          <span>Aula {session.roomCode} (Piso {session.floor})</span>
+                          <span>{session.roomDisplayName || session.roomCode} (Piso {session.floor})</span>
                         </span>
 
                         {session.modality && (
