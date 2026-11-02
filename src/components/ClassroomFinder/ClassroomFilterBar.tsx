@@ -296,7 +296,7 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
             onClick={() => onChangeFilter({ selectedFloor: 'ALL' })}
           >
             <span>Todos los Pisos</span>
-            <span className="floor-count-bubble">{totalAvailable}</span>
+            <span className="floor-count-bubble">{floorCounts['ALL'] ?? totalAvailable}</span>
           </button>
 
           {floors.map(floor => {

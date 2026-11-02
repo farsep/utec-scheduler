@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { ProfessorInfo, ProfessorSession } from '../../types/professor';
-import { ALL_DAYS, DAY_LABELS } from '../../utils/classroomUtils';
+import { ALL_DAYS, DAY_LABELS, parseLocationInfo } from '../../utils/classroomUtils';
 import { evaluateProfessorLiveStatus } from '../../utils/professorUtils';
 import { ProfessorTimetable } from './ProfessorTimetable';
 import {
@@ -38,6 +38,12 @@ function getAvatarGradient(name: string): string {
   const h1 = Math.abs(hash % 360);
   const h2 = (h1 + 40) % 360;
   return `linear-gradient(135deg, hsl(${h1}, 70%, 52%) 0%, hsl(${h2}, 75%, 42%) 100%)`;
+}
+
+function getSessionFloor(sess?: { floor?: number; roomCode?: string; rawLocation?: string; roomDisplayName?: string }): number {
+  if (!sess) return 1;
+  const parsed = parseLocationInfo(sess.roomCode || sess.rawLocation || sess.roomDisplayName);
+  return parsed?.floor || sess.floor || 1;
 }
 
 export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
@@ -407,7 +413,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                     <div className="prof-inspector-item">
                       <MapPin size={14} className="text-muted" />
                       <span>
-                        <strong>Ubicación:</strong> {selectedSession.roomDisplayName} (Piso {selectedSession.floor})
+                        <strong>Ubicación:</strong> {selectedSession.roomDisplayName || selectedSession.roomCode} (Piso {getSessionFloor(selectedSession)})
                       </span>
                     </div>
 
@@ -508,7 +514,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                                   <div className="prof-sess-col-room">
                                     <MapPin size={13} className="text-muted" />
                                     <span className="prof-sess-room-code">{sess.roomCode}</span>
-                                    <span className="prof-sess-floor">P{sess.floor}</span>
+                                    <span className="prof-sess-floor">P{getSessionFloor(sess)}</span>
                                   </div>
 
                                   <div className="prof-sess-col-enrolled">
@@ -537,7 +543,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                               <div className="prof-sess-col-room">
                                 <MapPin size={13} className="text-muted" />
                                 <span>{sess.roomCode}</span>
-                                <span className="prof-sess-floor">P{sess.floor}</span>
+                                <span className="prof-sess-floor">P{getSessionFloor(sess)}</span>
                               </div>
                               <div className="prof-sess-col-enrolled">
                                 <Users size={13} className="text-muted" />
@@ -561,8 +567,10 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                 {professor.uniqueRooms.map(roomCode => {
                   const roomSessions = professor.sessions.filter(s => s.roomCode === roomCode);
                   const firstSess = roomSessions[0];
-                  const floor = firstSess?.floor || 1;
-                  const roomName = firstSess?.roomDisplayName || roomCode;
+                  const parsedLoc = parseLocationInfo(firstSess?.rawLocation || firstSess?.roomDisplayName || roomCode);
+                  const floor = getSessionFloor(firstSess) || parsedLoc?.floor || 1;
+                  const roomName = parsedLoc?.displayName || firstSess?.roomDisplayName || roomCode;
+                  const displayCode = parsedLoc?.code || roomCode;
 
                   return (
                     <div key={roomCode} className="prof-room-detail-card glass-card">
@@ -572,7 +580,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                         </div>
                         <div>
                           <h4 className="prof-room-title">{roomName}</h4>
-                          <span className="prof-room-code-badge">Código: {roomCode} • Piso {floor}</span>
+                          <span className="prof-room-code-badge">Código: {displayCode} • Piso {floor}</span>
                         </div>
                       </div>
 

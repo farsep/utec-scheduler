@@ -727,6 +727,14 @@
   cursor: not-allowed;
 }
 
+.floor-pill-btn.selected.disabled {
+  opacity: 1;
+  border-color: var(--accent-primary);
+  background: rgba(59, 130, 246, 0.25);
+  color: #ffffff;
+  cursor: pointer;
+}
+
 .floor-count-bubble {
   font-size: 0.68rem;
   padding: 1px 6px;
