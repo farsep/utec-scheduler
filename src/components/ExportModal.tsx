@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Calendar, Image, FileSpreadsheet, Download, RefreshCw, Sparkles, Bell } from 'lucide-react';
+import { X, Calendar, Image, FileSpreadsheet, Download, RefreshCw, Sparkles, Bell, BellOff, Palette, Layers } from 'lucide-react';
 import { generateICS, downloadFile } from '../utils/icsExporter';
 import { formatLocation, getCourseColor, getCoursePrefix, getScheduleColorMap, REMINDER_OPTIONS } from '../utils/scheduleUtils';
 import { GoogleCalendarModal } from './GoogleCalendarModal';
@@ -243,10 +243,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       fontWeight: icsColorMode === 'prefix' ? 700 : 500,
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
-                      textAlign: 'center'
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
                     }}
                   >
-                    🎨 Por categoría (prefijos CS, CC...)
+                    <Palette size={14} />
+                    <span>Por categoría (prefijos CS, CC...)</span>
                   </button>
                   <button
                     type="button"
@@ -261,10 +265,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       fontWeight: icsColorMode === 'course' ? 700 : 500,
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
-                      textAlign: 'center'
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
                     }}
                   >
-                    🌈 Un color por cada curso
+                    <Layers size={14} />
+                    <span>Un color por cada curso</span>
                   </button>
                 </div>
 
@@ -337,10 +345,18 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       ariaLabel="Alarma previa (.ics)"
                     />
                   </div>
-                  <div style={{ fontSize: '0.71rem', color: reminderMinutes === 0 ? 'var(--text-muted)' : 'var(--accent-emerald)' }}>
-                    {reminderMinutes === 0
-                      ? '🚫 El archivo .ics no contendrá alarmas automáticas.'
-                      : `🔔 Tu calendario móvil o de escritorio te alertará ${REMINDER_OPTIONS.find(o => o.value === reminderMinutes)?.label.toLowerCase()} de cada clase.`}
+                  <div style={{ fontSize: '0.71rem', color: reminderMinutes === 0 ? 'var(--text-muted)' : 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    {reminderMinutes === 0 ? (
+                      <>
+                        <BellOff size={13} style={{ flexShrink: 0 }} />
+                        <span>El archivo .ics no contendrá alarmas automáticas.</span>
+                      </>
+                    ) : (
+                      <>
+                        <Bell size={13} style={{ flexShrink: 0 }} />
+                        <span>Tu calendario móvil o de escritorio te alertará {REMINDER_OPTIONS.find(o => o.value === reminderMinutes)?.label.toLowerCase()} de cada clase.</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

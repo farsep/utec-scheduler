@@ -55,11 +55,13 @@ export const ClassroomNavbar: React.FC<ClassroomNavbarProps> = ({
         {/* Meta Stats Badge (Classroom Availability Summary) */}
         <div className="classroom-navbar-meta">
           <div className="meta-chip">
-            <span style={{ color: 'var(--text-muted)' }}>Espacios UTEC:</span>
+            <span className="meta-chip-label" style={{ color: 'var(--text-muted)' }}>Espacios:</span>
             <span className="meta-chip-val" style={{ color: 'var(--accent-primary)' }}>{totalRooms}</span>
             {availableRooms > 0 && (
               <span className="glass-pill" style={{ color: 'var(--accent-emerald)', borderColor: 'rgba(16, 185, 129, 0.4)' }}>
-                {availableRooms} Libres
+                <span className="live-pill-txt-full">{availableRooms} Libres</span>
+                <span className="live-pill-txt-short">{availableRooms} libres</span>
+                <span className="live-pill-txt-mini">{availableRooms}L</span>
               </span>
             )}
           </div>

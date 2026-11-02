@@ -244,7 +244,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         {/* Consolidado Automatic Flow Info Badge */}
         <div style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(16, 185, 129, 0.1) 100%)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '12px 14px', borderRadius: '10px', fontSize: '0.78rem', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ fontWeight: 700, color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>✨ Sincronización Automática con Consolidados:</span>
+            <Sparkles size={15} color="var(--accent-primary)" />
+            <span>Sincronización Automática con Consolidados:</span>
           </div>
           <div style={{ color: 'var(--text-secondary)', lineHeight: 1.4 }}>
             Si subes un <strong>Consolidado de Horario</strong> o <strong>Consolidado de Matrícula</strong>, el sistema cargará automáticamente todas tus clases matriculadas y abrirá directamente las opciones de exportación (Google Calendar e iCal <code>.ics</code>).
