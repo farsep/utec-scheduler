@@ -21,25 +21,25 @@
 
 **MatrícuLAB 2.0** es una plataforma web de alto rendimiento diseñada por y para la comunidad estudiantil de **UTEC**. Nacida originalmente para resolver el problema combinatorio de armar horarios sin cruces durante la matrícula, hoy integra **cinco módulos académicos interconectados** bajo una arquitectura instantánea:
 
-1. **📅 Armador y Optimizador de Horarios (`/`):** Planificación manual e inteligencia combinatoria multihilo (**Web Workers + Rust WebAssembly**) que evalúa millones de combinaciones en milisegundos.
-2. **📚 Catálogo de Cursos y Hub de Visitantes (`/cursos`):** Explorador completo de la oferta académica con malla horaria por curso y herramientas para asistir como estudiante visitante (*oyente*).
-3. **🏫 Buscador de Aulas Libres (`/aulas`):** Radar en tiempo real de salones, laboratorios y espacios disponibles por piso y franja horaria en el campus.
-4. **👨‍🏫 Directorio de Docentes (`/profesores`):** Buscador de profesores con ubicación en vivo en el campus, carga horaria semanal, cursos dictados y malla horaria individual.
-5. **🏅 Mentores Académicos (`/mentores`):** Directorio de mentores estudiantiles filtrable por carrera, ciclo y cursos de especialidad.
+1. **📅 Armador y Optimizador de Horarios (`/`):** Planificación manual e inteligencia combinatoria multihilo (**Web Workers + Rust WebAssembly**) que evalúa millones de combinaciones en milisegundos con enriquecimiento automático de oferta real.
+2. **📚 Catálogo de Cursos y Hub de Visitantes (`/cursos`):** Explorador de **420 cursos** y **1,044 secciones activas**, con malla horaria semanal, depuración de secciones canceladas y generador de solicitud para oyentes.
+3. **🏫 Buscador de Aulas Libres (`/aulas`):** Radar en tiempo real de los **99 espacios físicos** del campus con burbujas de piso de mutación reactiva y cronograma diario interactivo.
+4. **👨‍🏫 Directorio de Docentes (`/profesores`):** Perfil de **391 docentes** con ubicación en vivo en el campus, carga horaria semanal, mapeo exacto de pisos en aulas utilizadas y malla horaria individual.
+5. **🏅 Mentores Académicos (`/mentores`):** Directorio de mentores estudiantiles con barra de filtros responsiva para móviles, selector por curso/área y botón de restablecimiento dinámico.
 
 ---
 
 ## ✨ Módulos del Ecosistema
 
 ### 1. 📅 Armador Manual e Interactivo de Horarios (`/`)
-* **Grilla Semanal de Alta Densidad:** Visualización de lunes a sábado (`07:00` a `22:00`) con bloques codificados cromáticamente por curso y detección automática de hora actual.
-* **Detalle Completo de Sesión:** Visualización inmediata de modalidad, tipo de clase (*Teoría*, *Práctica*, *Laboratorio*), código de aula, docente asignado y vacantes.
+* **Grilla Semanal Completa y Elástica:** Visualización de lunes a sábado (`07:00` a `22:00`) con columnas elásticas adaptables que aprovechan el ancho total en monitores ultra-wide y se ajustan limpiamente en laptops, tablets y smartphones.
+* **Detalle Completo de Sesión:** Visualización inmediata de modalidad, tipo de clase (*Teoría*, *Práctica*, *Laboratorio*), código de aula física con piso verificado, docente asignado y vacantes.
 * **Detección de Cruces en Tiempo Real:** Identificación instantánea de choques de horario con alertas contextuales y resaltado visual de las sesiones en conflicto.
 * **Previsualización Dinámica (Hover Preview):** Pasa el cursor sobre cualquier sección del panel lateral para previsualizar en tiempo real cómo encajaría en tu semana antes de seleccionarla.
 * **Pestañas Multi-Horario:** Crea, renombra, duplica y compara múltiples escenarios de matrícula (*Opción A*, *Opción B*, *Opción C*, etc.) en paralelo.
 * **Bloqueador de Tiempo Personal (Time Blocker Grid):** Marca franjas horarias reservadas para trabajo, deporte, transporte o estudio; el optimizador respetará estrictamente estos bloques como restricciones duras.
-* **Carga de Documentos Oficiales UTEC:**
-  * **Excel de Oferta Académica (`Consulta_Horario.xlsx`):** Procesamiento completo de cursos, secciones, docentes, aulas y vacantes.
+* **Carga de Documentos Oficiales UTEC con Enriquecimiento Dinámico:**
+  * **Excel de Oferta Académica (`Consulta_Horario.xlsx`):** Procesamiento integral de cursos y secciones con cruce automático contra el inventario de aulas de la intranet (`mutuallyEnrichCoursesWithScrapedData`) para depurar subsecciones canceladas por falta de alumnado.
   * **PDF de Carga Hábil (Cursos Habilitados):** Extracción local mediante `pdfjs-dist` de tus datos de estudiante (*Nombre*, *Código*, *Carrera*, *Malla Curricular*), clasificando automáticamente tus cursos en **Obligatorios**, **Electivos** y **Habilitados**.
   * **PDF de Consolidado de Matrícula:** Importación directa de tu horario oficial matriculado.
 
@@ -61,10 +61,12 @@ Evalúa todas las permutaciones válidas de secciones y entrega un ranking orden
 ---
 
 ### 3. 📚 Catálogo de Cursos y Hub de Visitantes / Oyentes (`/cursos`)
-Explora los **409+ cursos ofertados** y más de **1,019 secciones** del semestre en una interfaz diseñada para descubrir clases y asistir como oyente:
+Explora los **420 cursos ofertados** y más de **1,044 secciones activas** del semestre en una interfaz diseñada para descubrir clases y asistir como oyente:
 
+* **Oferta Depurada y Sincronizada:** Cruce automatizado contra los eventos y reservas reales de la intranet (`classrooms_intranet.json`), eliminando sistemáticamente subsecciones canceladas para garantizar total coherencia en todo el catálogo.
 * **Indicadores en Tiempo Real:** Muestra cuántos cursos tienen sesiones dictándose en este preciso instante (`En clase ahora`) con detalle de aula y hora de término.
 * **Filtros Avanzados:** Búsqueda instantánea por código (`CC1101`, `CS2041`, etc.), nombre del curso, apellido del docente o número de aula; filtrado por **Carrera / Departamento**, **Día de la semana**, **Modalidad** (*Presencial* / *Sincrónico*) y filtros rápidos para **En vivo ahora** y **Mis Visitados**.
+* **Píldoras de Docentes y Aulas Adaptativas:** Tarjetas con ajuste elástico de etiquetas (`docente-pill`, `course-room-tag`) y truncado inteligente para evitar desbordes o textos cortados en cualquier resolución.
 * **Malla Horaria Semanal por Curso (`CourseTimetable`):**
   * **Vista Matriz y Vista Agenda Diaria:** Visualiza todas las secciones del curso simultáneamente o filtra una sección específica mediante selector desplegable o píldoras horizontales deslizables.
   * **Fusión Inteligente de Clases Compartidas:** Agrupa automáticamente las sesiones teóricas magistrales compartidas por múltiples sub-secciones (ej. `Sec. 1 (4 grp)` en `Aula Magna`) para evitar bloques duplicados.
@@ -72,26 +74,29 @@ Explora los **409+ cursos ofertados** y más de **1,019 secciones** del semestre
   * **Rango Horario Dinámico y Salto Rápido por Día:** Ajusta automáticamente el eje vertical a las horas reales del curso y permite saltar a cualquier día con un toque en pantallas móviles.
 * **Modo Oyente / Visitante:**
   * Guarda tus cursos de interés en **Mis Visitados** (persistido localmente).
-  * **Generador de Solicitud de Permiso al Docente:** Redacta automáticamente una plantilla formal dirigida al correo institucional (`@utec.edu.pe`) del profesor de la sección elegida, lista para abrir en tu cliente de correo, Gmail Web o copiar al portapapeles.
+  * **Generador de Solicitud de Permiso al Docente (`VisitorEmailModal`):** Modal rediseñado con ergonomía táctil para smartphones (optimizada para la barra de navegación de Safari iOS y el teclado virtual). Permite seleccionar la sección deseada, completar opcionalmente tu nombre y carrera, previsualizar el asunto formal y redactar el correo dirigido a la cuenta institucional (`@utec.edu.pe`) del docente, listo para abrir directamente en tu cliente de correo/Gmail Web o copiar al portapapeles.
   * **Exportación Directa:** Descarga el calendario `.ics` del curso o agenda sesiones individuales en Google Calendar.
 
 ---
 
 ### 4. 🏫 Buscador de Aulas Libres en Tiempo Real (`/aulas`)
-Encuentra salones, laboratorios, auditorios y espacios desocupados en el campus de UTEC para estudiar en grupo o repasar antes de un examen:
+Encuentra salones, laboratorios, auditorios y mesas de trabajo desocupadas en los **99 espacios físicos** del campus de UTEC para estudiar en grupo o repasar antes de un examen:
 
+* **Burbujas de Piso con Mutación Reactiva:** Los contadores en las píldoras de piso (`Piso 1` a `Piso 10`) y `Todos los Pisos` mutan dinámicamente en tiempo real según el tipo de espacio activo (*Aulas*, *Laboratorios*, *Mesas*, *Auditorios*) y la búsqueda por texto. Si filtras por *Aulas*, los pisos sin salones disponibles (como el *Piso 6*, exclusivo de laboratorios y mesas) mutan instantáneamente a `0`, y `Todos los Pisos` refleja con fidelidad el total de aulas libres campus-wide.
+* **Mapeo Canónico de Pisos (`parseLocationInfo`):** Decodificador físico de alta precisión que normaliza tanto códigos compactos (`A1003`, `L414`, `M603`) como nombres completos (`Aula 1003` $\rightarrow$ Piso 10, `Aula 202` $\rightarrow$ Piso 2, `Aula 404` $\rightarrow$ Piso 4, etc.).
 * **Estado en Tiempo Real:** Clasifica cada espacio como **Libre ahora** (indicando hasta qué hora permanece libre o si está libre el resto del día), **Por desocuparse pronto** o **Ocupado** (mostrando qué curso, sección y docente están en clase).
-* **Filtros por Piso y Duración:** Filtra por piso (`Piso 1` a `Piso 11`), tipo de espacio (*Aulas*, *Laboratorios*, *Auditorios*), tiempo libre mínimo requerido (`30m`, `1h`, `2h+`) o simula la disponibilidad en cualquier día y hora futura.
+* **Filtros por Piso y Duración:** Filtra por piso (`Piso 1` a `Piso 10`), tipo de espacio (*Aulas*, *Laboratorios*, *Mesas*, *Auditorios*), tiempo libre mínimo requerido (`30m`, `1h`, `2h+`) o simula la disponibilidad en cualquier día y hora futura.
 * **Línea de Tiempo Interactiva (`07:00` – `22:00`):** Barra visual en cada tarjeta que muestra las franjas libres (verde) y ocupadas (rojo/ámbar) a lo largo del día.
 * **Modal de Ocupación Semanal (`ClassroomDetailModal`):** Consulta la matriz semanal completa de cualquier salón del campus.
 
 ---
 
 ### 5. 👨‍🏫 Directorio de Docentes (`/profesores` y `/docentes`)
-Consulta el perfil académico y horario de todos los profesores que dictan en el semestre:
+Consulta el perfil académico y horario de los **391 profesores** que dictan en el semestre:
 
 * **Radar "En Clase Ahora":** Identifica al instante qué docentes se encuentran dictando clase en este momento y en qué aula del campus se ubican.
 * **Métricas por Docente:** Total de horas semanales de dictado, número de cursos distintos, secciones a cargo, días activos en el campus y distribución por modalidad.
+* **Aulas Utilizadas con Piso Real:** Cada salón en la pestaña *Aulas Utilizadas* y en las sesiones semanales cuenta con su piso físico real verificado en el campus (ej. `Aula 1003` en `Piso 10`, `Aula 202` en `Piso 2`, `Aula 404` en `Piso 4`), con enlace directo a Aulas Libres para comprobar su disponibilidad en vivo.
 * **Contacto Institucional:** Generación y validación automática del correo institucional (`@utec.edu.pe`) con botón de copiado rápido.
 * **Malla Horaria Docente (`ProfessorTimetable`):** Visualiza la semana completa del profesor en modo **Matriz** o **Agenda Diaria**, navega hacia los cursos o aulas asociadas con un clic y exporta su horario en formato `.ics`.
 
@@ -100,7 +105,8 @@ Consulta el perfil académico y horario de todos los profesores que dictan en el
 ### 6. 🏅 Directorio de Mentores Académicos (`/mentores`)
 Conecta con estudiantes mentores de ciclos superiores para recibir acompañamiento académico y orientación universitaria:
 
-* **Búsqueda y Filtros Especializados:** Filtra mentores por **Carrera**, **Curso que domina** o busca por nombre.
+* **Barra de Filtros Móvil Rediseñada (`MentorFilterBar`):** Píldoras táctiles con scroll horizontal suave, selector desplegable de cursos y áreas académicas, botón de "Limpiar" inteligente con contador dinámico `(X de Y)` y espaciado inferior protegido contra colisiones con el dock móvil.
+* **Búsqueda y Filtros Especializados:** Filtra mentores por **Carrera**, **Curso que domina** o busca por nombre y correo.
 * **Tarjetas y Perfil Detallado (`MentorDetailModal`):** Fotografías, ciclo actual, insignia de rol (*Mentor* / *Coordinador*), biografía, frase motivacional, lista de cursos en los que brinda mentoría y acceso directo a contacto.
 
 ---
@@ -177,12 +183,13 @@ Todas las rutas principales (`/`, `/cursos`, `/aulas`, `/profesores`, `/mentores
 ### 2. Caché Multicapa y Precalentamiento (`masterDataLoader.ts`)
 El cargador maestro gestiona los catálogos precompilados (`public/data/`) con una jerarquía de tres niveles:
 1. **Nivel 1 — Memoria RAM (`window.__MATRICULAB_*__`):** Lectura síncrona en `0ms` sin parpadeos ni *skeletons*.
-2. **Nivel 2 — `sessionStorage`:** Persistencia instantánea entre recargas de pestaña.
-3. **Nivel 3 — JSON Estático Precompilado / Fallback Excel:** Carga asíncrona desde `public/data/courses_catalog.json`, `professors_catalog.json` y `classrooms_semester_consolidated.json`, con precalentamiento automático en segundo plano mediante `requestIdleCallback`.
+2. **Nivel 2 — `sessionStorage`:** Persistencia instantánea entre recargas de pestaña con **versionado activo (`v4`)** y auto-purga proactiva de claves de versiones anteriores (`v3`, etc.) para asegurar que las depuraciones de subsecciones y el mapeo de pisos impacten de inmediato sin requerir limpieza manual del navegador.
+3. **Nivel 3 — JSON Estático Precompilado / Fallback Excel:** Carga asíncrona desde `public/data/courses_catalog.json`, `professors_catalog.json` y `classrooms_intranet.json`, con precalentamiento automático en segundo plano mediante `requestIdleCallback`.
 
-### 3. Diseño Responsivo Adaptado a Safari iOS y Tablets
+### 3. Diseño Responsivo Adaptado a Safari iOS, Móviles y Tablets
 * **Unidades Dinámicas de Viewport (`dvh`):** Los modales, hojas inferiores (*bottom sheets*) y grillas horarias descuentan automáticamente el espacio consumido por la barra de búsqueda y navegación de **Safari en iOS** y navegadores móviles.
-* **Gestos Táctiles Nativos:** Soporte de deslizamiento vertical (*swipe-down*) para cerrar modales en móviles, bloqueo inteligente de scroll de fondo, selectores con fuentes anti-zoom (`16px`) y barras de filtros con desplazamiento horizontal táctil.
+* **Cabecera Anti-Colisiones Móvil:** Distribución elástica y compactación inteligente de los badges de contadores (`Cursos: 420`, `42 En vivo`) en pantallas estrechas (como iPhone 17 o iPhone SE), evitando solapamientos visuales con el logo y la marca UTEC.
+* **Gestos Táctiles y Teclado Virtual:** Soporte de deslizamiento vertical (*swipe-down*) para cerrar modales en móviles, bloqueo inteligente de scroll de fondo, botones de acción siempre visibles con el teclado desplegado, selectores con fuentes anti-zoom (`16px`) y barras de filtros táctiles con scroll horizontal suave.
 
 ---
 
@@ -226,6 +233,7 @@ Matricula/
     │   ├── CourseDirectory/        # Módulo Catálogo de Cursos y Oyentes (/cursos)
     │   │   ├── CourseApp.tsx
     │   │   ├── CourseCard.tsx
+    │   │   ├── CourseNavbar.tsx
     │   │   ├── CourseFilterBar.tsx
     │   │   ├── CourseDetailModal.tsx
     │   │   ├── CourseTimetable.tsx
@@ -233,18 +241,21 @@ Matricula/
     │   ├── ClassroomFinder/        # Módulo Buscador de Aulas Libres (/aulas)
     │   │   ├── ClassroomApp.tsx
     │   │   ├── ClassroomCard.tsx
+    │   │   ├── ClassroomNavbar.tsx
     │   │   ├── ClassroomFilterBar.tsx
     │   │   ├── ClassroomTimeline.tsx
     │   │   └── ClassroomDetailModal.tsx
     │   ├── ProfessorDirectory/     # Módulo Directorio de Docentes (/profesores)
     │   │   ├── ProfessorApp.tsx
     │   │   ├── ProfessorCard.tsx
+    │   │   ├── ProfessorNavbar.tsx
     │   │   ├── ProfessorFilterBar.tsx
     │   │   ├── ProfessorDetailModal.tsx
     │   │   └── ProfessorTimetable.tsx
     │   ├── MentorDirectory/        # Módulo Mentores Académicos (/mentores)
     │   │   ├── MentorApp.tsx
     │   │   ├── MentorCard.tsx
+    │   │   ├── MentorNavbar.tsx
     │   │   ├── MentorFilterBar.tsx
     │   │   ├── MentorDetailModal.tsx
     │   │   └── MentorStats.tsx
