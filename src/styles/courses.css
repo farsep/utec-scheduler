@@ -8,8 +8,8 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+
+
   background: rgba(8, 11, 17, 0.82);
   border-bottom: 1px solid var(--border-color);
 }
@@ -791,8 +791,8 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+
+
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -1507,8 +1507,8 @@
   display: flex;
   flex-direction: column;
   gap: 1.5px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+
+
 }
 
 .course-session-card--compact {
@@ -1900,8 +1900,8 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.82);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+
+
   z-index: 2400;
   display: flex;
   align-items: center;
@@ -3113,8 +3113,8 @@
     gap: 8px;
     padding: 0.65rem 0.85rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
     background: rgba(11, 15, 25, 0.96);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+
+
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     position: relative;
     z-index: 2500;

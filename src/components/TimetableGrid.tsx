@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
-import { formatLocation, getCourseGradient, DAY_NAMES, DAYS } from '../utils/scheduleUtils';
-import type { Course, DayOfWeek, Conflict, Session } from '../types/schedule';
-import { Trash2, AlertTriangle, Sparkles, MapPin } from 'lucide-react';
+import { formatLocation, DAY_NAMES, DAYS } from '../utils/scheduleUtils';
+import {
+  getGraftonPigment,
+  isLaboratorySession,
+  getGraftonBlockBackground,
+} from '../utils/graftonPigments';
+import type { Course, DayOfWeek, Conflict } from '../types/schedule';
+import { X, AlertTriangle } from 'lucide-react';
 
 interface TimetableGridProps {
   courses: Course[];
@@ -13,338 +18,334 @@ interface TimetableGridProps {
   compressView?: boolean;
 }
 
-const abbreviateSession = (session: string) => {
-  if (!session) return '';
-  return session
-    .replace(/LABORATORIO/i, 'LAB')
-    .replace(/TEORÍA/i, 'TEO')
-    .replace(/TEORIA/i, 'TEO')
-    .replace(/SEMINARIO/i, 'SEM');
-    // Seminario case just in case...
+const formatSessionTypeLabel = (session: string) => {
+  if (!session) return 'Teoría';
+  if (/LABORATORIO|LAB/i.test(session)) return 'Lab';
+  if (/TALLER/i.test(session)) return 'Taller';
+  if (/SEMINARIO|SEM/i.test(session)) return 'Seminario';
+  return 'Teoría';
 };
 
-const MarqueeText: React.FC<{ text: string }> = ({ text }) => {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const textRef = React.useRef<HTMLDivElement>(null);
-  const [isOverflowing, setIsOverflowing] = React.useState(false);
-  const [scrollDistance, setScrollDistance] = React.useState(0);
-
-  React.useEffect(() => {
-    const checkOverflow = () => {
-      if (containerRef.current && textRef.current) {
-        const overflowAmount = textRef.current.scrollWidth - containerRef.current.clientWidth;
-        setIsOverflowing(overflowAmount > 0);
-        setScrollDistance(overflowAmount > 0 ? overflowAmount : 0);
-      }
-    };
-    checkOverflow();
-    window.addEventListener('resize', checkOverflow);
-    return () => window.removeEventListener('resize', checkOverflow);
-  }, [text]);
-
-  return (
-    <div 
-      className="marquee-film-container" 
-      ref={containerRef} 
-      style={{ width: 'auto', flex: 1, minWidth: 0, paddingBottom: '2px' }}
-    >
-      <div 
-        className={`marquee-film-text ${isOverflowing ? 'is-overflowing' : ''}`} 
-        ref={textRef}
-        style={{ lineHeight: '1.2', ...(isOverflowing ? { '--scroll-distance': `-${scrollDistance}px` } as React.CSSProperties : {}) }}
-      >
-        {text}
-      </div>
-    </div>
-  );
+const formatCompactRoom = (loc: string) => {
+  const formatted = formatLocation(loc);
+  if (!formatted) return 'Aula';
+  if (/virtual|zoom|meet/i.test(formatted)) return 'Virtual';
+  const roomMatch = formatted.match(/([ABLM]\s?-?\s?\d{3,4}[A-Z]?)/i);
+  if (roomMatch) return roomMatch[1].replace(/\s+/g, '').toUpperCase();
+  return formatted.length > 10 ? formatted.slice(0, 10) : formatted;
 };
 
-export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(({
-  courses,
-  selectedSections,
-  conflicts,
-  draggedSection,
-  onSelectSection,
-  onRemoveSection,
-  compressView = false,
-}) => {
-  const [dragOverDay, setDragOverDay] = useState<DayOfWeek | null>(null);
+export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
+  ({
+    courses,
+    selectedSections,
+    conflicts,
+    draggedSection,
+    onSelectSection,
+    onRemoveSection,
+    compressView = false,
+  }) => {
+    const [dragOverDay, setDragOverDay] = useState<DayOfWeek | null>(null);
 
-  // 1. First, build the scheduledBlocks array so we can calculate dynamic bounds
-  const scheduledBlocks: {
-    course: Course;
-    sectionNumber: string;
-    sessionGroup: string;
-    modality: string;
-    day: DayOfWeek;
-    startTime: string;
-    endTime: string;
-    startMinutes: number;
-    endMinutes: number;
-    location: string;
-    professor: string;
-    hasConflict: boolean;
-  }[] = [];
+    const scheduledBlocks: {
+      course: Course;
+      sectionNumber: string;
+      sessionGroup: string;
+      modality: string;
+      day: DayOfWeek;
+      startTime: string;
+      endTime: string;
+      startMinutes: number;
+      endMinutes: number;
+      location: string;
+      professor: string;
+      hasConflict: boolean;
+    }[] = [];
 
-  Object.entries(selectedSections).forEach(([courseCode, secNum]) => {
-    const course = courses.find(c => c.code === courseCode);
-    if (!course) return;
-    const section = course.sections.find(s => s.sectionNumber === secNum);
-    if (!section) return;
+    Object.entries(selectedSections).forEach(([courseCode, secNum]) => {
+      const course = courses.find(c => c.code === courseCode);
+      if (!course) return;
+      const section = course.sections.find(s => s.sectionNumber === secNum);
+      if (!section) return;
 
-    section.sessions.forEach(sess => {
-      const hasConflict = conflicts.some(c =>
-        (c.course1Code === course.code && c.section1Number === secNum && c.day === sess.day) ||
-        (c.course2Code === course.code && c.section2Number === secNum && c.day === sess.day)
-      );
+      section.sessions.forEach(sess => {
+        const hasConflict = conflicts.some(
+          c =>
+            (c.course1Code === course.code &&
+              c.section1Number === secNum &&
+              c.day === sess.day) ||
+            (c.course2Code === course.code && c.section2Number === secNum && c.day === sess.day)
+        );
 
-      scheduledBlocks.push({
-        course,
-        sectionNumber: secNum,
-        sessionGroup: sess.sessionGroup,
-        modality: sess.modality,
-        day: sess.day,
-        startTime: sess.startTime,
-        endTime: sess.endTime,
-        startMinutes: sess.startMinutes,
-        endMinutes: sess.endMinutes,
-        location: sess.location,
-        professor: sess.professor,
-        hasConflict
+        scheduledBlocks.push({
+          course,
+          sectionNumber: secNum,
+          sessionGroup: sess.sessionGroup,
+          modality: sess.modality,
+          day: sess.day,
+          startTime: sess.startTime,
+          endTime: sess.endTime,
+          startMinutes: sess.startMinutes,
+          endMinutes: sess.endMinutes,
+          location: sess.location,
+          professor: sess.professor,
+          hasConflict,
+        });
       });
     });
-  });
 
-  let dynamicStartHour = 7;
-  let dynamicEndHour = 22; // Fixed to 22 (10 PM) for full view
+    let dynamicStartHour = 7;
+    let dynamicEndHour = 22;
 
-  if (compressView && scheduledBlocks.length > 0) {
-    const earliestMin = Math.min(...scheduledBlocks.map(b => b.startMinutes));
-    const latestMin = Math.max(...scheduledBlocks.map(b => b.endMinutes));
-    // Pad by 1 extra hour at the bottom, clamped between 7:00 and 23:00
-    dynamicStartHour = Math.max(7, Math.floor(earliestMin / 60));
-    dynamicEndHour = Math.min(23, Math.ceil(latestMin / 60) + 1);
-  }
+    if (compressView && scheduledBlocks.length > 0) {
+      const earliestMin = Math.min(...scheduledBlocks.map(b => b.startMinutes));
+      const latestMin = Math.max(...scheduledBlocks.map(b => b.endMinutes));
+      dynamicStartHour = Math.max(7, Math.floor(earliestMin / 60));
+      dynamicEndHour = Math.min(23, Math.ceil(latestMin / 60) + 1);
+    }
 
-  const TOTAL_MINUTES = (dynamicEndHour - dynamicStartHour) * 60;
+    const TOTAL_MINUTES = (dynamicEndHour - dynamicStartHour) * 60;
 
-  // Generate hour labels
-  const hours = [];
-  for (let h = dynamicStartHour; h < dynamicEndHour; h++) {
-    hours.push(`${h.toString().padStart(2, '0')}:00`);
-  }
+    const hours: string[] = [];
+    for (let h = dynamicStartHour; h < dynamicEndHour; h++) {
+      hours.push(`${h.toString().padStart(2, '0')}:00`);
+    }
 
-  // Calculate Ghost Shadow Preview blocks if draggedSection is active
-  const ghostBlocks: {
-    courseCode: string;
-    courseName: string;
-    sectionNumber: string;
-    sessionGroup: string;
-    day: DayOfWeek;
-    startTime: string;
-    endTime: string;
-    startMinutes: number;
-    endMinutes: number;
-    location: string;
-    hasGhostConflict: boolean;
-  }[] = [];
+    // Per-day total hours for architectural header labels ("Lunes (4h)")
+    const dayHoursMap: Record<string, number> = {};
+    for (const day of DAYS) {
+      const mins = scheduledBlocks
+        .filter(b => b.day === day)
+        .reduce((acc, b) => acc + Math.max(0, b.endMinutes - b.startMinutes), 0);
+      dayHoursMap[day] = Math.round((mins / 60) * 10) / 10;
+    }
 
-  if (draggedSection) {
-    const dCourse = courses.find(c => c.code === draggedSection.courseCode);
-    if (dCourse) {
-      const dSection = dCourse.sections.find(s => s.sectionNumber === draggedSection.sectionNumber);
-      if (dSection) {
-        dSection.sessions.forEach(sess => {
-          const hasGhostConflict = scheduledBlocks.some(sb =>
-            sb.course.code !== dCourse.code &&
-            sb.day === sess.day &&
-            Math.max(sb.startMinutes, sess.startMinutes) < Math.min(sb.endMinutes, sess.endMinutes)
-          );
+    // Ghost Shadow Preview blocks if draggedSection / hovered section is active
+    const ghostBlocks: {
+      courseCode: string;
+      courseName: string;
+      sectionNumber: string;
+      sessionGroup: string;
+      day: DayOfWeek;
+      startTime: string;
+      endTime: string;
+      startMinutes: number;
+      endMinutes: number;
+      location: string;
+      hasGhostConflict: boolean;
+    }[] = [];
 
-          ghostBlocks.push({
-            courseCode: dCourse.code,
-            courseName: dCourse.name,
-            sectionNumber: draggedSection.sectionNumber,
-            sessionGroup: sess.sessionGroup,
-            day: sess.day,
-            startTime: sess.startTime,
-            endTime: sess.endTime,
-            startMinutes: sess.startMinutes,
-            endMinutes: sess.endMinutes,
-            location: sess.location,
-            hasGhostConflict
+    if (draggedSection) {
+      const dCourse = courses.find(c => c.code === draggedSection.courseCode);
+      if (dCourse && selectedSections[dCourse.code] !== draggedSection.sectionNumber) {
+        const dSection = dCourse.sections.find(
+          s => s.sectionNumber === draggedSection.sectionNumber
+        );
+        if (dSection) {
+          dSection.sessions.forEach(sess => {
+            const hasGhostConflict = scheduledBlocks.some(
+              sb =>
+                sb.course.code !== dCourse.code &&
+                sb.day === sess.day &&
+                Math.max(sb.startMinutes, sess.startMinutes) <
+                  Math.min(sb.endMinutes, sess.endMinutes)
+            );
+
+            ghostBlocks.push({
+              courseCode: dCourse.code,
+              courseName: dCourse.name,
+              sectionNumber: draggedSection.sectionNumber,
+              sessionGroup: sess.sessionGroup,
+              day: sess.day,
+              startTime: sess.startTime,
+              endTime: sess.endTime,
+              startMinutes: sess.startMinutes,
+              endMinutes: sess.endMinutes,
+              location: sess.location,
+              hasGhostConflict,
+            });
           });
-        });
+        }
       }
     }
-  }
 
-  const handleDragOver = (e: React.DragEvent, day: DayOfWeek) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
-    if (dragOverDay !== day) setDragOverDay(day);
-  };
+    const handleDragOver = (e: React.DragEvent, day: DayOfWeek) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      if (dragOverDay !== day) setDragOverDay(day);
+    };
 
-  const handleDrop = (e: React.DragEvent, day: DayOfWeek) => {
-    e.preventDefault();
-    setDragOverDay(null);
-    try {
-      const rawData = e.dataTransfer.getData('text/plain');
-      if (rawData) {
-        const { courseCode, sectionNumber } = JSON.parse(rawData);
-        onSelectSection(courseCode, sectionNumber);
+    const handleDrop = (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOverDay(null);
+      try {
+        const rawData = e.dataTransfer.getData('text/plain');
+        if (rawData) {
+          const { courseCode, sectionNumber } = JSON.parse(rawData);
+          onSelectSection(courseCode, sectionNumber);
+        }
+      } catch (err) {
+        console.error('Failed to parse drag data:', err);
       }
-    } catch (err) {
-      console.error('Failed to parse drag data:', err);
-    }
-  };
+    };
 
-  return (
-    <div className="timetable-grid-wrapper" style={{ height: '100%' }}>
-      {/* Header Days Row */}
-      <div className="timetable-header">
-        <div className="time-col-header">Hora</div>
-        {DAYS.map(day => (
-          <div key={day} className="day-col-header">
-            {DAY_NAMES[day]}
-          </div>
-        ))}
-      </div>
+    const SLOT_HEIGHT = 54;
 
-      {/* Grid Canvas Body */}
-      <div className="timetable-body timetable-scroll" style={{ display: 'block', overflowY: 'auto', height: '100%', minHeight: '300px' }}>
-        <div style={{ position: 'relative', height: `${hours.length * 52}px`, display: 'grid', gridTemplateColumns: '60px 1fr' }}>
-          
-          {/* Time labels column */}
-          <div className="time-labels-column">
-            {hours.map(hour => (
-              <div key={hour} className="time-label-slot" style={{ height: '52px' }}>
-                {hour}
-              </div>
-            ))}
-          </div>
-
-          {/* 6 Day Columns Canvas */}
-          <div className="days-canvas-grid" style={{ height: '100%' }}>
+    return (
+      <div className="timetable-grid-wrapper">
+        {/* Header Days Row */}
+        <div className="timetable-header">
+          <div className="time-col-header">HORA</div>
           {DAYS.map(day => {
-            const dayBlocks = scheduledBlocks.filter(b => b.day === day);
-            const dayGhostBlocks = ghostBlocks.filter(g => g.day === day);
-
+            const hrs = dayHoursMap[day] || 0;
             return (
-              <div
-                key={day}
-                className={`day-column-canvas ${dragOverDay === day ? 'drag-over' : ''}`}
-                onDragOver={e => handleDragOver(e, day)}
-                onDragLeave={() => setDragOverDay(null)}
-                onDrop={e => handleDrop(e, day)}
-              >
-                {/* Active Scheduled Blocks */}
-                {dayBlocks.map((block, idx) => {
-                  const topPercent = ((block.startMinutes - dynamicStartHour * 60) / TOTAL_MINUTES) * 100;
-                  const heightPercent = Math.max(((block.endMinutes - block.startMinutes) / TOTAL_MINUTES) * 100, 3.8);
-                  const gradient = getCourseGradient(block.course.code);
-
-                  const durationMinutes = block.endMinutes - block.startMinutes;
-
-                  return (
-                    <div
-                      key={idx}
-                      className={`schedule-block ${block.hasConflict ? 'has-conflict' : ''} ${durationMinutes <= 60 ? 'short-block' : ''}`}
-                      style={{
-                        top: `${topPercent}%`,
-                        height: `calc(${heightPercent}% - 2px)`,
-                        marginTop: '1px',
-                        background: gradient,
-                      }}
-                      title={`${block.course.code} ${block.course.name}\nSec ${block.sectionNumber} - ${block.sessionGroup}\n${block.startTime} - ${block.endTime}\nAula: ${formatLocation(block.location)}\nDocente: ${block.professor}`}
-                    >
-                      <div className="block-course-code" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '4px', overflow: 'hidden' }}>
-                        <MarqueeText text={block.course.name} />
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            onRemoveSection(block.course.code);
-                          }}
-                          style={{ background: 'transparent', border: 'none', color: 'white', opacity: 0.85, cursor: 'pointer', flexShrink: 0, padding: 0 }}
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-
-                      {/* Course Code and Section - Multi-line enabled and vertically centered */}
-                      {durationMinutes > 60 && (
-                        <div style={{ fontSize: '0.7rem', opacity: 0.9, lineHeight: 1.2, margin: 'auto 0', flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
-                          <span>{block.course.code} (Sec {block.sectionNumber})</span>
-                        </div>
-                      )}
-
-                      <div className="block-footer" style={{ alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, letterSpacing: '0.5px' }}>
-                          {abbreviateSession(block.sessionGroup)}
-                        </span>
-                        <span style={{ fontSize: '0.65rem', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                          <MapPin size={10} />
-                          {formatLocation(block.location) || `${block.startTime}-${block.endTime}`}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* GHOST SHADOW PREVIEW BLOCKS FOR DRAGGED SECTION */}
-                {dayGhostBlocks.map((ghost, gIdx) => {
-                  const topPercent = ((ghost.startMinutes - dynamicStartHour * 60) / TOTAL_MINUTES) * 100;
-                  const heightPercent = Math.max(((ghost.endMinutes - ghost.startMinutes) / TOTAL_MINUTES) * 100, 3.8);
-
-                  const durationMinutes = ghost.endMinutes - ghost.startMinutes;
-
-                  return (
-                    <div
-                      key={`ghost-${gIdx}`}
-                      className={`schedule-ghost-block ${ghost.hasGhostConflict ? 'ghost-conflict' : ''}`}
-                      style={{
-                        top: `${topPercent}%`,
-                        height: `calc(${heightPercent}% - 2px)`,
-                        marginTop: '1px',
-                      }}
-                    >
-                      <div className="block-course-code" style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', overflow: 'hidden' }}>
-                        <Sparkles size={12} style={{ flexShrink: 0, marginTop: '2px' }} />
-                        <MarqueeText text={`PREVIA: ${ghost.courseName}`} />
-                        {ghost.hasGhostConflict && (
-                          <span style={{ color: '#ef4444', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
-                            <AlertTriangle size={12} /> CRUCE
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Course Code and Section - Multi-line enabled and vertically centered */}
-                      {durationMinutes > 60 && (
-                        <div style={{ fontSize: '0.7rem', opacity: 0.9, lineHeight: 1.2, margin: 'auto 0', flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
-                          <span>{ghost.courseCode}</span>
-                        </div>
-                      )}
-
-                      <div className="block-footer" style={{ alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, letterSpacing: '0.5px' }}>
-                          {abbreviateSession(ghost.sessionGroup)}
-                        </span>
-                        <span style={{ fontSize: '0.65rem', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                          <MapPin size={10} />
-                          {formatLocation(ghost.location) || `${ghost.startTime}-${ghost.endTime}`}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div key={day} className="day-col-header">
+                <span>{DAY_NAMES[day]}</span>
+                {hrs > 0 && <span className="day-col-hours">({hrs}h)</span>}
               </div>
             );
           })}
         </div>
+
+        {/* Grid Canvas Body */}
+        <div id="timetable-grid-body" className="timetable-body timetable-scroll">
+          <div
+            className="timetable-canvas-inner"
+            style={{ height: `${hours.length * SLOT_HEIGHT}px` }}
+          >
+            {/* Time labels column */}
+            <div className="time-labels-column">
+              {hours.map(hour => (
+                <div key={hour} className="time-label-slot" style={{ height: `${SLOT_HEIGHT}px` }}>
+                  {hour}
+                </div>
+              ))}
+            </div>
+
+            {/* 6 Day Columns Canvas */}
+            <div className="days-canvas-grid">
+              {DAYS.map(day => {
+                const dayBlocks = scheduledBlocks.filter(b => b.day === day);
+                const dayGhostBlocks = ghostBlocks.filter(g => g.day === day);
+
+                return (
+                  <div
+                    key={day}
+                    className={`day-column-canvas ${dragOverDay === day ? 'drag-over' : ''}`}
+                    onDragOver={e => handleDragOver(e, day)}
+                    onDragLeave={() => setDragOverDay(null)}
+                    onDrop={handleDrop}
+                  >
+                    {/* Active Scheduled Blocks */}
+                    {dayBlocks.map((block, idx) => {
+                      const topPercent =
+                        ((block.startMinutes - dynamicStartHour * 60) / TOTAL_MINUTES) * 100;
+                      const heightPercent = Math.max(
+                        ((block.endMinutes - block.startMinutes) / TOTAL_MINUTES) * 100,
+                        4.0
+                      );
+                      const pigment = getGraftonPigment(block.course.code);
+                      const isLab = isLaboratorySession(block.sessionGroup);
+                      const blockBg = block.hasConflict
+                        ? '#F4E0E2'
+                        : getGraftonBlockBackground(pigment, isLab);
+                      const barColor = block.hasConflict ? '#A82032' : pigment.bar;
+                      const borderColor = block.hasConflict ? '#A82032' : pigment.border;
+                      const textColor = block.hasConflict ? '#520D17' : pigment.text;
+                      const durationMinutes = block.endMinutes - block.startMinutes;
+                      const compactRoom = formatCompactRoom(block.location);
+                      const sessionKind = formatSessionTypeLabel(block.sessionGroup);
+
+                      return (
+                        <div
+                          key={`${block.course.code}-${block.sectionNumber}-${idx}`}
+                          className={`schedule-block ${isLab ? 'schedule-block--lab' : 'schedule-block--teo'} ${block.hasConflict ? 'has-conflict' : ''} ${durationMinutes <= 60 ? 'short-block' : ''}`}
+                          style={{
+                            top: `${topPercent}%`,
+                            height: `calc(${heightPercent}% - 2px)`,
+                            marginTop: '1px',
+                            background: blockBg,
+                            border: `1px solid ${borderColor}`,
+                            borderLeft: `4px solid ${barColor}`,
+                            color: textColor,
+                          }}
+                          title={`${block.course.code} · ${block.course.name}\nSección ${block.sectionNumber} (${block.sessionGroup})\n${block.startTime} – ${block.endTime} · Aula: ${formatLocation(block.location)}\nDocente: ${block.professor}`}
+                        >
+                          <div className="block-top-row">
+                            <span className="block-room-pill">{compactRoom}</span>
+                            <button
+                              type="button"
+                              className="block-remove-btn"
+                              onClick={e => {
+                                e.stopPropagation();
+                                onRemoveSection(block.course.code);
+                              }}
+                              aria-label={`Quitar ${block.course.name}`}
+                              title="Quitar asignatura"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+
+                          <div className="block-course-title">{block.course.name}</div>
+
+                          {durationMinutes > 60 && (
+                            <div className="block-meta-mono">
+                              {block.course.code} · {sessionKind}
+                            </div>
+                          )}
+
+                          <div className="block-time-mono">
+                            {durationMinutes <= 60 ? `${block.course.code} · ` : ''}
+                            {block.startTime}–{block.endTime}
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* Ghost Diff Preview Blocks */}
+                    {dayGhostBlocks.map((ghost, gIdx) => {
+                      const topPercent =
+                        ((ghost.startMinutes - dynamicStartHour * 60) / TOTAL_MINUTES) * 100;
+                      const heightPercent = Math.max(
+                        ((ghost.endMinutes - ghost.startMinutes) / TOTAL_MINUTES) * 100,
+                        4.0
+                      );
+
+                      return (
+                        <div
+                          key={`ghost-${gIdx}`}
+                          className={`schedule-ghost-block ${ghost.hasGhostConflict ? 'ghost-conflict' : ''}`}
+                          style={{
+                            top: `${topPercent}%`,
+                            height: `calc(${heightPercent}% - 2px)`,
+                            marginTop: '1px',
+                          }}
+                        >
+                          <div className="ghost-header">
+                            <span>Ghost: {ghost.courseName}</span>
+                            {ghost.hasGhostConflict && (
+                              <span className="ghost-conflict-tag">
+                                <AlertTriangle size={11} /> CRUCE
+                              </span>
+                            )}
+                          </div>
+                          <div className="ghost-meta">
+                            {ghost.courseCode} · Sec {ghost.sectionNumber.split(' ')[0]} ·{' '}
+                            {ghost.startTime}–{ghost.endTime}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 TimetableGrid.displayName = 'TimetableGrid';

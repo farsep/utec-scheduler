@@ -1,0 +1,854 @@
+/* ==========================================================================
+   GRAFTON SWISS CONCRETE — UNIFIED SYSTEM FOR MENTORS, CLASSROOMS,
+   COURSES CATALOG & PROFESSORS (STRICT 0PX ORTHOGONAL GEOMETRY)
+   ========================================================================== */
+
+/* Enforce 0px corners, zero glow, and concrete surfaces across all sub-apps */
+.classroom-finder-root,
+.professor-finder-root,
+.mentor-finder-root,
+.course-finder-root {
+  background: var(--bg-canvas) !important;
+  color: var(--text-primary) !important;
+  min-height: calc(100vh - 56px) !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  padding-bottom: 32px !important;
+}
+
+.classroom-finder-root::before,
+.classroom-finder-root::after,
+.professor-finder-root::before,
+.professor-finder-root::after,
+.mentor-finder-root::before,
+.mentor-finder-root::after,
+.course-finder-root::before,
+.course-finder-root::after {
+  display: none !important;
+  content: none !important;
+}
+
+.classroom-finder-main,
+.professor-finder-main,
+.mentor-finder-main,
+.course-finder-main {
+  max-width: 1520px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 18px 20px 32px 20px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .classroom-finder-main,
+  .professor-finder-main,
+  .mentor-finder-main,
+  .course-finder-main {
+    padding: 12px 10px 24px 10px !important;
+  }
+}
+
+/* Structural Hero Banners */
+.classroom-hero-banner {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-top: 3px solid var(--border-strong) !important;
+  border-radius: 0px !important;
+  box-shadow: var(--shadow-tactile) !important;
+  padding: 20px 22px !important;
+}
+
+.classroom-hero-banner::before,
+.classroom-hero-banner::after {
+  display: none !important;
+}
+
+.hero-chip {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--accent-primary) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  border-radius: 0px !important;
+  padding: 3px 9px !important;
+  box-shadow: none !important;
+}
+
+.hero-title {
+  font-family: var(--font-heading) !important;
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
+  font-size: 1.5rem !important;
+  letter-spacing: -0.02em !important;
+}
+
+.gradient-text {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: var(--accent-primary) !important;
+  color: var(--accent-primary) !important;
+}
+
+.hero-subtitle {
+  color: var(--text-secondary) !important;
+  font-size: 0.88rem !important;
+  line-height: 1.5 !important;
+}
+
+/* KPI Metric Cards */
+.prof-hero-kpi-card,
+.hero-kpi-badge {
+  background: var(--bg-canvas) !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-top: 2px solid var(--border-strong) !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+.prof-hero-kpi-card--live {
+  background: #DCEEE6 !important;
+  border-color: var(--status-ok) !important;
+}
+
+.prof-kpi-icon-wrap {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--accent-primary) !important;
+  border-radius: 0px !important;
+}
+
+.prof-kpi-badge-pill {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-secondary) !important;
+  font-family: var(--font-mono) !important;
+  border-radius: 0px !important;
+}
+
+.kpi-num {
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums !important;
+  color: var(--text-primary) !important;
+  text-shadow: none !important;
+}
+.kpi-num.text-emerald {
+  color: var(--status-ok) !important;
+}
+.kpi-num.text-accent {
+  color: var(--accent-primary) !important;
+}
+.kpi-txt {
+  color: var(--text-secondary) !important;
+}
+
+/* Filter Bars across Classrooms, Mentors, Courses & Professors */
+.classroom-filter-bar,
+.professor-filter-bar,
+.prof-filter-bar,
+.mentor-filter-bar,
+.course-filter-bar {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-top: 2px solid var(--border-strong) !important;
+  border-radius: 0px !important;
+  box-shadow: var(--shadow-tactile) !important;
+}
+
+.classroom-filter-bar input,
+.professor-filter-bar input,
+.prof-filter-bar input,
+.mentor-filter-bar input,
+.course-filter-bar input,
+.classroom-filter-bar select,
+.professor-filter-bar select,
+.prof-filter-bar select,
+.mentor-filter-bar select,
+.course-filter-bar select,
+.filter-search-box,
+.prof-search-input-wrapper,
+.prof-search-input-wrap,
+.course-search-input-wrap {
+  background: #FFFFFF !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-hairline) !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+.prof-search-shortcut {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-secondary) !important;
+  border-radius: 0px !important;
+}
+
+.prof-day-pills-group,
+.prof-modality-group {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-radius: 0px !important;
+  padding: 3px !important;
+}
+
+.prof-day-pill,
+.prof-modality-btn,
+.prof-toggle-btn {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-primary) !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+.prof-day-pill:hover,
+.prof-modality-btn:hover,
+.prof-toggle-btn:hover {
+  background: var(--bg-surface) !important;
+  color: var(--accent-primary) !important;
+}
+
+.prof-day-pill--active,
+.prof-modality-btn--active,
+.prof-toggle-btn--active {
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+.classroom-filter-bar button,
+.prof-filter-bar button,
+.mentor-filter-bar button,
+.course-filter-bar button,
+.day-pill,
+.floor-pill,
+.type-pill,
+.mode-switch-btn,
+.prof-day-btn,
+.prof-filter-chip {
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+.day-pill,
+.floor-pill,
+.type-pill,
+.mode-switch-btn,
+.prof-day-btn,
+.prof-filter-chip {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-secondary) !important;
+}
+
+.day-pill.active,
+.floor-pill.active,
+.type-pill.active,
+.mode-switch-btn.active,
+.prof-day-btn.active,
+.prof-filter-chip.active,
+.day-pill--active,
+.floor-pill--active,
+.prof-day-btn--active,
+.prof-filter-chip--active {
+  background: #E0EBF5 !important;
+  border-color: var(--accent-primary) !important;
+  color: #005A78 !important;
+  font-weight: 700 !important;
+}
+
+/* Classroom Filter Controls (Exact classrooms.css selectors) */
+.mode-toggle-group {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-radius: 0px !important;
+  padding: 3px !important;
+}
+
+.mode-toggle-btn {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid transparent !important;
+  border-radius: 0px !important;
+  font-weight: 600 !important;
+}
+
+.mode-toggle-btn:hover {
+  background: rgba(20, 20, 22, 0.05) !important;
+  color: var(--text-primary) !important;
+}
+
+.mode-toggle-btn.active,
+.mode-toggle-btn.active--live {
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-top: 2px solid var(--border-strong) !important;
+  font-weight: 700 !important;
+}
+
+.live-pulse-badge,
+.live-time-badge,
+.today-badge,
+.floor-count--positive {
+  background: #DCEEE6 !important;
+  color: #093B29 !important;
+  border: 1px solid var(--status-ok) !important;
+  border-radius: 0px !important;
+}
+
+.filter-summary-chip {
+  background: #DCEEE6 !important;
+  border: 1px solid var(--status-ok) !important;
+  color: #093B29 !important;
+  border-radius: 0px !important;
+}
+
+.summary-count-highlight {
+  color: #093B29 !important;
+  font-family: var(--font-mono) !important;
+}
+
+.live-time-controller {
+  background: var(--bg-canvas) !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-left: 3px solid var(--status-ok) !important;
+  border-radius: 0px !important;
+}
+
+.btn-time-step,
+.live-time-picker,
+.time-input-box,
+.time-preset-btn {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-primary) !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+.btn-time-step:hover,
+.time-preset-btn:hover {
+  background: var(--accent-soft) !important;
+  border-color: var(--accent-primary) !important;
+  color: var(--accent-primary) !important;
+}
+
+.btn-reset-realtime {
+  background: #F5E8D3 !important;
+  border: 1px solid var(--status-warn) !important;
+  color: #5C2E00 !important;
+  border-radius: 0px !important;
+}
+
+.day-pill-btn,
+.duration-pill-btn,
+.floor-pill-btn,
+.type-chip-btn {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-primary) !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+.day-pill-btn:hover,
+.duration-pill-btn:hover,
+.floor-pill-btn:hover,
+.type-chip-btn:hover {
+  background: var(--bg-surface) !important;
+  border-color: var(--accent-primary) !important;
+  color: var(--accent-primary) !important;
+}
+
+.day-pill-btn.selected,
+.duration-pill-btn.selected,
+.floor-pill-btn.selected,
+.type-chip-btn.selected {
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+.floor-count-bubble {
+  background: rgba(20, 20, 22, 0.08) !important;
+  color: inherit !important;
+  border-radius: 0px !important;
+}
+
+.floor-filter-row {
+  border-top: 1px solid var(--border-hairline) !important;
+  border-bottom: 1px solid var(--border-hairline) !important;
+}
+
+/* ==========================================================================
+   CAMPUS FLOOR EXPLORER (04_Grafton_Mentors_Rooms_Figma.svg)
+   ========================================================================== */
+.campus-floor-explorer {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.campus-floor-explorer__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.campus-floor-explorer__title {
+  font-family: var(--font-heading);
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.campus-floor-explorer__meta {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  background: #DCEEE6;
+  border: 1px solid var(--status-ok);
+  color: #093B29;
+}
+
+.campus-floor-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 960px) {
+  .campus-floor-groups {
+    grid-template-columns: 1fr;
+  }
+}
+
+.campus-floor-band {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-hairline);
+  border-top: 2px solid var(--border-strong);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.campus-floor-band__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.campus-floor-band__title {
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.campus-floor-band__count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.campus-floor-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 8px;
+}
+
+.campus-room-chip {
+  padding: 7px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  cursor: pointer;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-hairline);
+}
+
+.campus-room-chip.is-free {
+  background: var(--bg-surface);
+  border-color: var(--status-ok);
+}
+.campus-room-chip.is-free:hover {
+  background: #DCEEE6;
+}
+
+.campus-room-chip.is-busy {
+  background: var(--bg-elevated);
+  border-color: var(--border-hairline);
+}
+
+.campus-room-chip__code {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.campus-room-chip.is-busy .campus-room-chip__code {
+  color: var(--text-muted);
+}
+
+.campus-room-chip__state {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--status-ok);
+}
+.campus-room-chip.is-busy .campus-room-chip__state {
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   CLASSROOM, PROFESSOR, MENTOR, COURSE DIRECTORY & SIDEBAR COURSE CARDS
+   ========================================================================== */
+.classroom-card,
+.professor-card,
+.mentor-card,
+.course-dir-card,
+.courses-cards-grid .course-card {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-top: 2px solid var(--border-strong) !important;
+  border-radius: 0px !important;
+  box-shadow: var(--shadow-tactile) !important;
+  color: var(--text-primary) !important;
+  content-visibility: visible !important;
+}
+
+.classroom-card:hover,
+.professor-card:hover,
+.mentor-card:hover,
+.course-dir-card:hover,
+.courses-cards-grid .course-card:hover {
+  border-color: var(--accent-primary) !important;
+  border-top-color: var(--border-strong) !important;
+  transform: none !important;
+  box-shadow: 3px 3px 0px rgba(24, 24, 26, 0.14) !important;
+  background: var(--bg-surface) !important;
+}
+
+/* Protect Schedule Left Sidebar .course-card from courses.css dark override */
+.course-list-scroll .course-card {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-top: 2px solid var(--border-strong) !important;
+  border-radius: 0px !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  content-visibility: visible !important;
+  contain: none !important;
+}
+
+.course-list-scroll .course-card:hover {
+  background: #F8F7F4 !important;
+  border-color: var(--accent-primary) !important;
+  border-top-color: var(--border-strong) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.course-list-scroll .course-card.course-card--selected {
+  background: #EDF4F7 !important;
+  border-color: var(--accent-primary) !important;
+  border-top: 2px solid var(--border-strong) !important;
+  border-left: 3px solid var(--accent-primary) !important;
+}
+
+.course-list-scroll .course-card .course-card-header {
+  padding: 10px 12px !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+.classroom-card-name,
+.prof-card-name,
+.course-dir-title,
+.results-section-header h2 {
+  font-family: var(--font-heading) !important;
+  color: var(--text-primary) !important;
+}
+
+.classroom-badge-code,
+.classroom-badge-floor,
+.occupancy-pill,
+.stat-pill {
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums !important;
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-secondary) !important;
+  border-radius: 0px !important;
+}
+
+.room-status-badge--free {
+  background: #DCEEE6 !important;
+  border: 1px solid var(--status-ok) !important;
+  color: #093B29 !important;
+  border-radius: 0px !important;
+}
+
+.room-status-badge--occupied {
+  background: #F5E8D3 !important;
+  border: 1px solid var(--status-warn) !important;
+  color: #4D2600 !important;
+  border-radius: 0px !important;
+}
+
+.classroom-info-banner,
+.info-banner-content,
+.prof-card-status-row,
+.course-card-status-row,
+.prof-card-email-row,
+.occupied-toggle-btn {
+  background: var(--bg-canvas) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-primary) !important;
+  border-radius: 0px !important;
+}
+
+.live-text-group strong,
+.prof-status-live-beacon {
+  color: var(--status-ok) !important;
+}
+
+.live-text-group span {
+  color: var(--text-secondary) !important;
+}
+
+.course-card-avatar {
+  border-radius: 0px !important;
+  box-shadow: none !important;
+  border: 1px solid var(--border-hairline) !important;
+}
+
+.course-card-code-badge,
+.course-card-dept-tag,
+.course-card-credits-tag,
+.prof-card-dept-tag span {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-secondary) !important;
+  border-radius: 0px !important;
+  font-family: var(--font-mono) !important;
+}
+
+.course-card-bookmark-btn {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-secondary) !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+.course-card-bookmark-btn--active {
+  background: #F5E8D3 !important;
+  border-color: var(--status-warn) !important;
+  color: var(--status-warn) !important;
+}
+
+.info-sub,
+.section-subtitle,
+.timeline-header-label {
+  color: var(--text-secondary) !important;
+}
+
+.highlight-text,
+.prof-email-link {
+  color: var(--accent-primary) !important;
+}
+
+.btn-view-schedule,
+.prof-view-btn,
+.prof-email-copy-btn {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-primary) !important;
+  border-radius: 0px !important;
+  font-weight: 600 !important;
+}
+.btn-view-schedule:hover,
+.prof-view-btn:hover {
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+  color: #FFFFFF !important;
+}
+
+/* ==========================================================================
+   MENTOR CLASH DETECTION & FULL COURSE NAME BADGES
+   ========================================================================== */
+.mentor-compat-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-left: 4px solid var(--status-ok);
+  padding: 10px 14px;
+}
+
+.mentor-compat-note {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.prof-card-avatar {
+  border-radius: 0px !important;
+  font-family: var(--font-heading) !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+.prof-card-dept-tag span,
+.mentor-dept-tag {
+  color: var(--text-muted) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.68rem !important;
+}
+
+.mentor-modality-pill {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-secondary) !important;
+  border-radius: 0px !important;
+}
+
+.mentor-courses-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mentor-course-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-primary) !important;
+  padding: 4px 8px !important;
+  border-radius: 0px !important;
+  font-size: 0.74rem !important;
+}
+
+.mentor-course-code {
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums !important;
+  font-weight: 700 !important;
+  color: var(--accent-primary) !important;
+}
+
+.mentor-course-sep {
+  color: var(--text-muted);
+}
+
+.mentor-course-name {
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+}
+
+.mentor-sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mentor-session-chip {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+  border-radius: 0px !important;
+}
+
+.mentor-session-chip.session-compatible {
+  background: #DCEEE6 !important;
+  border: 1.5px solid var(--status-ok) !important;
+  color: #093B29 !important;
+}
+
+.mentor-session-chip.session-clash {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-muted) !important;
+}
+
+.session-chip-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums !important;
+  font-size: 0.73rem !important;
+  color: inherit !important;
+}
+
+.session-day-name,
+.session-hours,
+.session-room-inline {
+  color: inherit !important;
+}
+
+.clash-pill {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.clash-pill--ok {
+  color: #093B29;
+}
+.clash-pill--warn {
+  color: var(--status-warn);
+}
+
+/* Detail Modals in Sub-Apps */
+.classroom-modal-overlay,
+.prof-modal-overlay,
+.course-modal-overlay {
+  background: rgba(20, 20, 22, 0.56) !important;
+}
+
+.classroom-modal-card,
+.prof-modal-card,
+.course-modal-card {
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-hairline) !important;
+  border-top: 3px solid var(--border-strong) !important;
+  border-radius: 0px !important;
+  box-shadow: 4px 4px 0px rgba(24, 24, 26, 0.2) !important;
+}
+

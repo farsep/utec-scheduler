@@ -12,18 +12,21 @@ export const ConflictBanner: React.FC<ConflictBannerProps> = ({ conflicts }) => 
 
   return (
     <div className="conflict-banner">
-      <AlertTriangle size={24} style={{ flexShrink: 0, marginTop: '2px' }} />
+      <AlertTriangle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
-        <div style={{ fontWeight: 800, fontSize: '0.95rem', fontFamily: 'var(--font-heading)' }}>
-          ¡Cruce de Horario Detectado! ({conflicts.length} conflicto{conflicts.length > 1 ? 's' : ''})
+        <div className="conflict-banner__title">
+          Cruce de horario detectado ({conflicts.length}{' '}
+          {conflicts.length > 1 ? 'conflictos' : 'conflicto'})
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem', opacity: 0.95 }}>
+        <div className="conflict-banner__list">
           {conflicts.map(c => (
-            <div key={c.id} style={{ background: 'rgba(0, 0, 0, 0.2)', padding: '6px 10px', borderRadius: '6px' }}>
-              <strong>{DAY_NAMES[c.day]} ({c.startTime} - {c.endTime})</strong>: {' '}
-              <span>[{c.course1Code}] {c.course1Name} (Sec {c.section1Number} - {c.session1Group})</span> {' '}
-              <span style={{ color: '#f87171', fontWeight: 700 }}>cruza con</span> {' '}
-              <span>[{c.course2Code}] {c.course2Name} (Sec {c.section2Number} - {c.session2Group})</span>
+            <div key={c.id} className="conflict-banner__item">
+              <strong>
+                {DAY_NAMES[c.day]} ({c.startTime}–{c.endTime})
+              </strong>
+              : [{c.course1Code}] {c.course1Name} (Sec {c.section1Number}){' '}
+              <strong style={{ color: 'var(--status-warn)' }}>cruza con</strong> [{c.course2Code}]{' '}
+              {c.course2Name} (Sec {c.section2Number})
             </div>
           ))}
         </div>

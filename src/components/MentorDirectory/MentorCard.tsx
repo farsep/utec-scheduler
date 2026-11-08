@@ -1,47 +1,46 @@
 import React, { useState } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
-import type { MentorInfo, MentorSession } from '../../types/mentor';
+import type { MentorInfo } from '../../types/mentor';
 import { evaluateMentorLiveStatus } from '../../utils/mentorUtils';
+import { getGraftonPigment } from '../../utils/graftonPigments';
 import {
   Clock,
   Building2,
   Video,
   Copy,
   Check,
-  Calendar,
   ChevronRight,
   Mail,
-  Award
 } from 'lucide-react';
+
+export interface ActiveUserBlock {
+  courseCode: string;
+  courseName: string;
+  day: DayOfWeek;
+  startMinutes: number;
+  endMinutes: number;
+}
 
 interface MentorCardProps {
   mentor: MentorInfo;
   currentDay: DayOfWeek;
   currentMinutes: number;
+  userScheduleBlocks?: ActiveUserBlock[];
   onSelect: (mentor: MentorInfo) => void;
-}
-
-function getAvatarGradient(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const h1 = Math.abs(hash % 360);
-  const h2 = (h1 + 40) % 360;
-  return `linear-gradient(135deg, hsl(${h1}, 70%, 52%) 0%, hsl(${h2}, 75%, 42%) 100%)`;
 }
 
 export const MentorCard: React.FC<MentorCardProps> = ({
   mentor,
   currentDay,
   currentMinutes,
-  onSelect
+  userScheduleBlocks = [],
+  onSelect,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
 
   const liveStatus = evaluateMentorLiveStatus(mentor, currentDay, currentMinutes);
   const isPresencial = mentor.modalities.includes('Presencial');
-  const avatarGradient = getAvatarGradient(mentor.name);
+  const pigment = getGraftonPigment(mentor.courses[0]?.code || mentor.departmentCode);
 
   const handleCopyEmail = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -63,7 +62,7 @@ export const MentorCard: React.FC<MentorCardProps> = ({
       onClick={() => onSelect(mentor)}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => {
+      onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           onSelect(mentor);
@@ -71,9 +70,16 @@ export const MentorCard: React.FC<MentorCardProps> = ({
       }}
       aria-label={`Ver asesorías del mentor ${mentor.name}`}
     >
-      {/* Top Header: Avatar, Name, Department & Modality tag */}
+      {/* Top Header */}
       <div className="prof-card-header">
-        <div className="prof-card-avatar" style={{ background: avatarGradient }}>
+        <div
+          className="prof-card-avatar"
+          style={{
+            background: pigment.bg,
+            color: pigment.text,
+            border: `1.5px solid ${pigment.border}`,
+          }}
+        >
           <span>{mentor.initials}</span>
         </div>
 
@@ -86,59 +92,108 @@ export const MentorCard: React.FC<MentorCardProps> = ({
           </h3>
         </div>
 
-        {/* Modality tag on top-right */}
         <div className="mentor-header-status">
-          <span className={`mentor-modality-pill ${isPresencial ? 'modality-presencial' : 'modality-virtual'}`}>
+          <span
+            className={`mentor-modality-pill ${isPresencial ? 'modality-presencial' : 'modality-virtual'}`}
+          >
             {isPresencial ? <Building2 size={12} /> : <Video size={12} />}
             <span>{mentor.modalities.join(' / ')}</span>
           </span>
         </div>
       </div>
 
-      {/* Live Status Row or Next Session */}
+      {/* Course Specialty Badges: ALWAYS CODE · FULL COURSE NAME */}
+      <div className="mentor-courses-strip">
+        {mentor.courses.map(course => (
+          <span key={course.code} className="mentor-course-badge">
+            <span className="mentor-course-code">{course.code}</span>
+            <span className="mentor-course-sep">·</span>
+            <span className="mentor-course-name">{course.name}</span>
+          </span>
+        ))}
+      </div>
+
+      {/* Live Status Row */}
       <div className="prof-card-status-row">
         {liveStatus.isMentoringNow && liveStatus.activeSession ? (
           <div className="prof-status-live-beacon">
-            <span className="live-dot-ping" />
             <span className="live-dot" />
             <div className="live-text-group">
               <strong>En mentoría ahora:</strong>
               <span>
-                {liveStatus.activeSession.courseCode} • {liveStatus.activeSession.modality === 'Presencial' ? liveStatus.activeSession.primaryRoom : 'Virtual'} ({liveStatus.activeSession.timeDisplay})
+                {liveStatus.activeSession.courseCode} · {liveStatus.activeSession.courseName} (
+                {liveStatus.activeSession.timeDisplay})
               </span>
             </div>
           </div>
-        ) : liveStatus.hasSessionToday && liveStatus.nextSession ? (
-          <div className="prof-status-next">
-            <Clock size={13} className="text-muted" />
-            <span>
-              Hoy: <strong>{liveStatus.nextSession.timeDisplay}</strong> ({liveStatus.nextSession.courseCode})
-            </span>
-          </div>
         ) : liveStatus.nextSession ? (
           <div className="prof-status-next">
-            <Clock size={13} className="text-muted" />
+            <Clock size={13} />
             <span>
-              Próxima: <strong>{liveStatus.nextSession.day} {liveStatus.nextSession.timeDisplay}</strong> ({liveStatus.nextSession.courseCode})
+              Próxima: <strong>{liveStatus.nextSession.day} {liveStatus.nextSession.timeDisplay}</strong>
             </span>
           </div>
         ) : (
           <div className="prof-status-idle">
-            <span>{mentor.totalSessions} sesión{mentor.totalSessions > 1 ? 'es' : ''} semanal{mentor.totalSessions > 1 ? 'es' : ''}</span>
+            <span>
+              {mentor.totalSessions} sesión{mentor.totalSessions > 1 ? 'es' : ''} semanal
+              {mentor.totalSessions > 1 ? 'es' : ''}
+            </span>
           </div>
         )}
       </div>
 
-      {/* Email Row with 1-click Copy and Mailto */}
+      {/* Sessions Schedule & Live Clash Detection Chips (04_Grafton_Mentors_Rooms_Figma.svg) */}
+      <div className="mentor-sessions-list">
+        {mentor.sessions.map(session => {
+          const clashingBlock = userScheduleBlocks.find(
+            ub =>
+              ub.day === session.day &&
+              Math.max(ub.startMinutes, session.startMinutes) <
+                Math.min(ub.endMinutes, session.endMinutes)
+          );
+          const hasClash = Boolean(clashingBlock);
+
+          return (
+            <div
+              key={session.id}
+              className={`mentor-session-chip ${hasClash ? 'session-clash' : 'session-compatible'}`}
+            >
+              <div className="session-chip-time">
+                <span className="session-day-name">{session.day}</span>
+                <span className="session-hours">{session.timeDisplay}</span>
+                <span className="session-room-inline">
+                  · {session.modality === 'Presencial' ? session.primaryRoom : 'Virtual'}
+                </span>
+              </div>
+
+              <div className="session-chip-clash-badge">
+                {hasClash && clashingBlock ? (
+                  <span
+                    className="clash-pill clash-pill--warn"
+                    title={`Cruza con ${clashingBlock.courseCode} · ${clashingBlock.courseName}`}
+                  >
+                    Cruza {clashingBlock.courseCode}
+                  </span>
+                ) : (
+                  <span className="clash-pill clash-pill--ok">● Libre</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Email Row */}
       {mentor.email && (
-        <div className="prof-card-email-row" onClick={(e) => e.stopPropagation()}>
+        <div className="prof-card-email-row" onClick={e => e.stopPropagation()}>
           <a
             href={`mailto:${mentor.email}`}
             className="prof-email-link"
             onClick={handleMailClick}
             title={`Enviar correo institucional a ${mentor.email}`}
           >
-            <Mail size={14} />
+            <Mail size={13} />
             <span className="prof-email-text">{mentor.email}</span>
           </a>
 
@@ -149,87 +204,28 @@ export const MentorCard: React.FC<MentorCardProps> = ({
             title={copied ? '¡Copiado!' : 'Copiar correo institucional'}
             aria-label="Copiar correo electrónico"
           >
-            {copied ? <Check size={13} /> : <Copy size={13} />}
+            {copied ? <Check size={12} /> : <Copy size={12} />}
             <span>{copied ? 'Copiado' : 'Copiar'}</span>
           </button>
         </div>
       )}
 
-      {/* Course Badges Strip */}
-      <div className="mentor-courses-strip">
-        {mentor.courses.map((course) => (
-          <span
-            key={course.code}
-            className="mentor-course-badge"
-            style={{
-              borderColor: `${course.color}55`,
-              background: `${course.color}15`,
-              color: '#f8fafc'
-            }}
-          >
-            <span className="mentor-course-code" style={{ color: course.color }}>
-              {course.code}
-            </span>
-            <span className="mentor-course-name">{course.name}</span>
-          </span>
-        ))}
-      </div>
-
-      {/* Sessions Schedule & Location Chips */}
-      <div className="mentor-sessions-list">
-        {mentor.sessions.map((session) => {
-          const isToday = session.day === currentDay;
-          const isLive =
-            isToday &&
-            currentMinutes >= session.startMinutes &&
-            currentMinutes < session.endMinutes;
-
-          return (
-            <div
-              key={session.id}
-              className={`mentor-session-chip ${isLive ? 'session-live' : isToday ? 'session-today' : ''}`}
-            >
-              <div className="session-chip-time">
-                <Clock size={13} className="session-clock-icon" />
-                <span className="session-day-name">{session.dayName}</span>
-                <span className="session-hours">{session.timeDisplay}</span>
-                <span className="session-duration">({session.durationHours}h)</span>
-              </div>
-
-              <div className="session-chip-location">
-                {session.modality === 'Presencial' ? (
-                  <span className="session-room-pill" title={`Aula asignada: ${session.primaryRoom}`}>
-                    <Building2 size={12} />
-                    <span>{session.primaryRoom}</span>
-                  </span>
-                ) : (
-                  <span className="session-virtual-pill" title="Sesión virtual vía Google Meet / Zoom">
-                    <Video size={12} />
-                    <span>Virtual</span>
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
       {/* Card Footer */}
       <div className="prof-card-footer mentor-card-footer">
         <span className="mentor-dept-tag">
-          {mentor.courses.length} curso{mentor.courses.length > 1 ? 's' : ''} a cargo
+          {mentor.courses.length} asignatura{mentor.courses.length > 1 ? 's' : ''}
         </span>
 
         <button
           type="button"
           className="prof-view-btn mentor-view-btn"
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onSelect(mentor);
           }}
         >
-          <span>Ver horarios y aulas</span>
-          <ChevronRight size={15} />
+          <span>Ver detalle</span>
+          <ChevronRight size={14} />
         </button>
       </div>
     </article>

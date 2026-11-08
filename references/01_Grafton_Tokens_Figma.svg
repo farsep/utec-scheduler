@@ -1,0 +1,99 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="900" fill="#E6E4DF"/>
+  <!-- Header Frame -->
+  <rect x="40" y="32" width="1360" height="76" fill="#F2F0EC" stroke="#C6C3BB"/>
+  <rect x="40" y="32" width="1360" height="3" fill="#18181A"/>
+  <rect x="64" y="56" width="14" height="14" fill="#00779E"/>
+  <text x="90" y="69" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="22" font-weight="700">MATRICULAB · SISTEMA DE DISEÑO GRAFTON SWISS CONCRETE</text>
+  <text x="90" y="92" fill="#4A4946" font-family="Inter, sans-serif" font-size="13">Paleta de Concreto Diurno UTEC, Tipografía Suiza y Bloques de Cursos (Capas 100% Editables en Figma)</text>
+
+  <!-- Card 1: Color Tokens -->
+  <rect x="40" y="132" width="880" height="340" fill="#F2F0EC" stroke="#C6C3BB"/>
+  <rect x="40" y="132" width="880" height="3" fill="#18181A"/>
+  <text x="64" y="170" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="16" font-weight="700">1. TOKENS DE COLOR ARQUITECTÓNICOS (CONCRETO &amp; SEÑALÉTICA)</text>
+
+  <g transform="translate(64, 194)">
+    <rect x="0" y="0" width="108" height="120" fill="#E6E4DF" stroke="#18181A"/>
+    <text x="0" y="144" fill="#141416" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600">#E6E4DF</text>
+    <text x="0" y="164" fill="#4A4946" font-family="Inter, sans-serif" font-size="12">bg-canvas</text>
+
+    <rect x="128" y="0" width="108" height="120" fill="#F2F0EC" stroke="#18181A"/>
+    <text x="128" y="144" fill="#141416" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600">#F2F0EC</text>
+    <text x="128" y="164" fill="#4A4946" font-family="Inter, sans-serif" font-size="12">bg-surface</text>
+
+    <rect x="256" y="0" width="108" height="120" fill="#DCD9D2" stroke="#18181A"/>
+    <text x="256" y="144" fill="#141416" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600">#DCD9D2</text>
+    <text x="256" y="164" fill="#4A4946" font-family="Inter, sans-serif" font-size="12">bg-elevated</text>
+
+    <rect x="384" y="0" width="108" height="120" fill="#18181A" stroke="#18181A"/>
+    <text x="384" y="144" fill="#141416" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600">#18181A</text>
+    <text x="384" y="164" fill="#4A4946" font-family="Inter, sans-serif" font-size="12">border-strong</text>
+
+    <rect x="512" y="0" width="108" height="120" fill="#00779E" stroke="#18181A"/>
+    <text x="512" y="144" fill="#141416" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600">#00779E</text>
+    <text x="512" y="164" fill="#4A4946" font-family="Inter, sans-serif" font-size="12">accent-utec</text>
+
+    <rect x="640" y="0" width="108" height="120" fill="#0D7A4E" stroke="#18181A"/>
+    <text x="640" y="144" fill="#141416" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600">#0D7A4E</text>
+    <text x="640" y="164" fill="#4A4946" font-family="Inter, sans-serif" font-size="12">status-ok</text>
+  </g>
+
+  <!-- Card 2: Typography -->
+  <rect x="944" y="132" width="456" height="340" fill="#F2F0EC" stroke="#C6C3BB"/>
+  <rect x="944" y="132" width="456" height="3" fill="#18181A"/>
+  <text x="968" y="170" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="16" font-weight="700">2. TIPOGRAFÍA &amp; GEOMETRÍA 0PX</text>
+  <text x="968" y="216" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="24" font-weight="700">Space Grotesk Bold</text>
+  <text x="968" y="242" fill="#4A4946" font-family="Inter, sans-serif" font-size="13">Títulos, encabezados y nombres de asignaturas</text>
+  <text x="968" y="290" fill="#141416" font-family="JetBrains Mono, monospace" font-size="17" font-weight="600">JetBrains Mono · CS2013 · A702</text>
+  <text x="968" y="314" fill="#4A4946" font-family="Inter, sans-serif" font-size="13">Códigos, secciones, créditos y horas tabulares</text>
+  <text x="968" y="366" fill="#0D7A4E" font-family="Inter, sans-serif" font-size="13" font-weight="600">✓ Radio de borde 0px en todos los componentes</text>
+  <text x="968" y="394" fill="#0D7A4E" font-family="Inter, sans-serif" font-size="13" font-weight="600">✓ Viga superior 2px solid #18181A en tarjetas</text>
+  <text x="968" y="422" fill="#A82032" font-family="Inter, sans-serif" font-size="13" font-weight="600">✗ Cero backdrop-blur y cero sombras de neón</text>
+
+  <!-- Card 3: Course Pigment Components -->
+  <rect x="40" y="496" width="1360" height="364" fill="#F2F0EC" stroke="#C6C3BB"/>
+  <rect x="40" y="496" width="1360" height="3" fill="#18181A"/>
+  <text x="64" y="534" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="16" font-weight="700">3. COMPONENTES DE BLOQUES DE CURSOS (PIGMENTOS MATE SÓLIDOS Y LABORATORIOS)</text>
+
+  <g transform="translate(64, 560)">
+    <rect x="0" y="0" width="240" height="260" fill="#E0EBF5" stroke="#006699" stroke-width="1.5"/>
+    <rect x="0" y="0" width="5" height="260" fill="#006699"/>
+    <rect x="176" y="14" width="50" height="24" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <text x="186" y="30" fill="#141416" font-family="JetBrains Mono, monospace" font-size="12" font-weight="600">A702</text>
+    <text x="18" y="64" fill="#0A2E46" font-family="Space Grotesk, Inter, sans-serif" font-size="17" font-weight="700">Programación III</text>
+    <text x="18" y="210" fill="#0A2E46" font-family="JetBrains Mono, monospace" font-size="13">CS2013 · Teoría</text>
+    <text x="18" y="234" fill="#0A2E46" font-family="JetBrains Mono, monospace" font-size="13">09:00 – 11:00</text>
+
+    <rect x="264" y="0" width="240" height="260" fill="#DCEEE6" stroke="#0F7652" stroke-width="1.5"/>
+    <rect x="264" y="0" width="5" height="260" fill="#0F7652"/>
+    <rect x="440" y="14" width="50" height="24" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <text x="450" y="30" fill="#141416" font-family="JetBrains Mono, monospace" font-size="12" font-weight="600">L604</text>
+    <text x="282" y="64" fill="#093B29" font-family="Space Grotesk, Inter, sans-serif" font-size="17" font-weight="700">Algoritmos y Estruct.</text>
+    <text x="282" y="210" fill="#093B29" font-family="JetBrains Mono, monospace" font-size="13">CS2023 · Laboratorio</text>
+    <text x="282" y="234" fill="#093B29" font-family="JetBrains Mono, monospace" font-size="13">09:00 – 11:00</text>
+
+    <rect x="528" y="0" width="240" height="260" fill="#F5E8D3" stroke="#B85D00" stroke-width="1.5"/>
+    <rect x="528" y="0" width="5" height="260" fill="#B85D00"/>
+    <rect x="704" y="14" width="50" height="24" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <text x="714" y="30" fill="#141416" font-family="JetBrains Mono, monospace" font-size="12" font-weight="600">A804</text>
+    <text x="546" y="64" fill="#4D2600" font-family="Space Grotesk, Inter, sans-serif" font-size="17" font-weight="700">Estadística y Prob. I</text>
+    <text x="546" y="210" fill="#4D2600" font-family="JetBrains Mono, monospace" font-size="13">IN2005 · Teoría</text>
+    <text x="546" y="234" fill="#4D2600" font-family="JetBrains Mono, monospace" font-size="13">11:00 – 13:00</text>
+
+    <rect x="792" y="0" width="240" height="260" fill="#E8E3F3" stroke="#553C9A" stroke-width="1.5"/>
+    <rect x="792" y="0" width="5" height="260" fill="#553C9A"/>
+    <rect x="968" y="14" width="50" height="24" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <text x="978" y="30" fill="#141416" font-family="JetBrains Mono, monospace" font-size="12" font-weight="600">L602</text>
+    <text x="810" y="64" fill="#2A1B4E" font-family="Space Grotesk, Inter, sans-serif" font-size="17" font-weight="700">Base de Datos I</text>
+    <text x="810" y="210" fill="#2A1B4E" font-family="JetBrains Mono, monospace" font-size="13">CS2041 · Laboratorio</text>
+    <text x="810" y="234" fill="#2A1B4E" font-family="JetBrains Mono, monospace" font-size="13">14:00 – 16:00</text>
+
+    <rect x="1056" y="0" width="240" height="260" fill="#F4E0E2" stroke="#A82032" stroke-width="1.5"/>
+    <rect x="1056" y="0" width="5" height="260" fill="#A82032"/>
+    <rect x="1232" y="14" width="50" height="24" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <text x="1242" y="30" fill="#141416" font-family="JetBrains Mono, monospace" font-size="12" font-weight="600">A403</text>
+    <text x="1074" y="64" fill="#520D17" font-family="Space Grotesk, Inter, sans-serif" font-size="17" font-weight="700">Cálculo Vectorial</text>
+    <text x="1074" y="210" fill="#520D17" font-family="JetBrains Mono, monospace" font-size="13">MA2001 · Teoría</text>
+    <text x="1074" y="234" fill="#520D17" font-family="JetBrains Mono, monospace" font-size="13">11:00 – 13:00</text>
+  </g>
+</svg>

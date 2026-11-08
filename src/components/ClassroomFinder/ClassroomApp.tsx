@@ -28,7 +28,34 @@ import {
   ArrowUp
 } from 'lucide-react';
 
-export const ClassroomApp: React.FC = () => {
+interface ClassroomAppProps {
+  hideTopNavbar?: boolean;
+}
+
+const UTEC_ARCHITECTURAL_FLOORS = [
+  {
+    id: 'f8-9',
+    title: 'Piso 8 & 9 · Computación, Ciencia de Datos y Salas de Estudio',
+    floors: [8, 9, 10],
+  },
+  {
+    id: 'f6-7',
+    title: 'Piso 6 & 7 · Laboratorios de Ingeniería y Electrónica',
+    floors: [6, 7],
+  },
+  {
+    id: 'f4-5',
+    title: 'Piso 4 & 5 · Aulas Magistrales y Ciencias Básicas',
+    floors: [4, 5],
+  },
+  {
+    id: 'f1-3',
+    title: 'Piso 1 al 3 · Auditorios, Talleres y Mesas Colaborativas',
+    floors: [1, 2, 3],
+  },
+];
+
+export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = false }) => {
   const initialTime = getCurrentDayAndMinutes();
   const cachedClassrooms = getSynchronousCachedClassrooms();
 
@@ -273,10 +300,12 @@ export const ClassroomApp: React.FC = () => {
   return (
     <div className="classroom-finder-root">
       {/* Top Navigation */}
-      <ClassroomNavbar
-        totalRooms={classrooms.length}
-        availableRooms={totalAvailableAllFloors}
-      />
+      {!hideTopNavbar && (
+        <ClassroomNavbar
+          totalRooms={classrooms.length}
+          availableRooms={totalAvailableAllFloors}
+        />
+      )}
 
       <main className="classroom-finder-main">
         {/* Hero Banner Section */}
@@ -360,6 +389,71 @@ export const ClassroomApp: React.FC = () => {
               Reintentar
             </button>
           </div>
+        )}
+
+        {/* UTEC Barranco Architectural Floor Explorer (Grafton Swiss Concrete) */}
+        {!isLoading && evaluatedClassrooms.length > 0 && (
+          <section className="grafton-card campus-floor-explorer" aria-label="Explorador por pisos UTEC Barranco">
+            <div className="campus-floor-explorer__head">
+              <div>
+                <div className="dag-eyebrow">CAMPUS VERTICAL GRAFTON ARCHITECTS · BARRANCO</div>
+                <h2 className="campus-floor-explorer__title">
+                  Aulas y Laboratorios por Niveles (Estado en Tiempo Real)
+                </h2>
+              </div>
+              <span className="campus-floor-explorer__meta">
+                {totalAvailableAllFloors} libres de {classrooms.length} espacios
+              </span>
+            </div>
+
+            <div className="campus-floor-groups">
+              {UTEC_ARCHITECTURAL_FLOORS.map(group => {
+                const groupRooms = evaluatedClassrooms
+                  .filter(item => group.floors.includes(item.classroom.floor))
+                  .sort((a, b) => {
+                    if (a.isAvailableForSearch !== b.isAvailableForSearch) {
+                      return a.isAvailableForSearch ? -1 : 1;
+                    }
+                    return a.classroom.code.localeCompare(b.classroom.code);
+                  });
+
+                if (groupRooms.length === 0) return null;
+
+                return (
+                  <div key={group.id} className="campus-floor-band">
+                    <div className="campus-floor-band__header">
+                      <span className="campus-floor-band__title">{group.title}</span>
+                      <span className="campus-floor-band__count">
+                        {groupRooms.filter(r => r.isAvailableForSearch).length} libres / {groupRooms.length}
+                      </span>
+                    </div>
+
+                    <div className="campus-floor-chips">
+                      {groupRooms.slice(0, 12).map(item => {
+                        const isFree = item.isAvailableForSearch;
+                        return (
+                          <button
+                            key={item.classroom.id}
+                            type="button"
+                            className={`campus-room-chip ${isFree ? 'is-free' : 'is-busy'}`}
+                            onClick={() => handleOpenDetail(item.classroom)}
+                            title={`${item.classroom.displayName} — Clic para ver horario semanal`}
+                          >
+                            <span className="campus-room-chip__code">
+                              {isFree ? '●' : '○'} {item.classroom.code}
+                            </span>
+                            <span className="campus-room-chip__state">
+                              {isFree ? 'Libre · Piso ' + item.classroom.floor : 'En clase'}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         )}
 
         {/* Filter Bar */}

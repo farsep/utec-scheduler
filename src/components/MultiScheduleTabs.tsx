@@ -12,21 +12,6 @@ interface MultiScheduleTabsProps {
   onReorderOptions: (dragIndex: number, dropIndex: number) => void;
 }
 
-const getSubscript = (numStr: string) => {
-  const map: Record<string, string> = { '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉' };
-  return numStr.split('').map(c => map[c] || c).join('');
-};
-
-const getTabLetter = (name: string) => {
-  const match = name.match(/Opci[oó]n\s+([A-Z0-9])/i);
-  const copyMatch = name.match(/\(Copia\s*(\d+)?\)/i);
-  
-  const letter = match ? match[1].toUpperCase() : name.charAt(0).toUpperCase();
-  const copyNum = copyMatch ? (copyMatch[1] || '1') : '';
-  
-  return letter + (copyNum ? getSubscript(copyNum) : '');
-};
-
 export const MultiScheduleTabs: React.FC<MultiScheduleTabsProps> = ({
   options,
   activeOptionId,
@@ -34,18 +19,17 @@ export const MultiScheduleTabs: React.FC<MultiScheduleTabsProps> = ({
   onAddOption,
   onDuplicateOption,
   onDeleteOption,
-  onReorderOptions
+  onReorderOptions,
 }) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
-    // Firefox requires setting data to drag
     e.dataTransfer.setData('text/plain', index.toString());
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
   };
@@ -62,80 +46,68 @@ export const MultiScheduleTabs: React.FC<MultiScheduleTabsProps> = ({
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 0 }}>
-      <div className="option-tabs">
+    <div className="multi-schedule-tabs-root">
+      <div className="option-tabs no-scrollbar">
         {options.map((opt, index) => {
           const count = Object.keys(opt.selectedSections).length;
           const isActive = opt.id === activeOptionId;
-          const letter = getTabLetter(opt.name);
           const isDragging = draggedIndex === index;
 
           return (
-            <div 
-              key={opt.id} 
+            <div
+              key={opt.id}
               className={`tab-wrapper ${isActive ? 'active' : ''}`}
               draggable
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDrop={(e) => handleDrop(e, index)}
+              onDragStart={e => handleDragStart(e, index)}
+              onDragOver={handleDragOver}
+              onDrop={e => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
-              style={{ opacity: isDragging ? 0.4 : 1, cursor: isDragging ? 'grabbing' : 'grab' }}
+              style={{ opacity: isDragging ? 0.45 : 1, cursor: isDragging ? 'grabbing' : 'grab' }}
             >
               <button
+                type="button"
                 className="tab-content-btn"
                 onClick={() => onSelectOption(opt.id)}
                 title={opt.name}
               >
-                <div 
-                  style={{ 
-                    flexShrink: 0, 
-                    width: '18px', 
-                    height: '18px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    borderRadius: '4px', 
-                    background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)', 
-                    fontSize: '11px', 
-                    fontWeight: 'bold',
-                    fontFamily: 'var(--font-heading)',
-                    position: 'relative'
-                  }}
-                >
-                  {letter}
-                </div>
                 <span className="tab-name">{opt.name}</span>
-                <span className="glass-pill pill-count" style={{ padding: '1px 6px', fontSize: '0.7rem', flexShrink: 0 }}>
-                  {count} {count === 1 ? 'curso' : 'cursos'}
-                </span>
+                <span className="pill-count">{count}c</span>
               </button>
             </div>
           );
         })}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, marginLeft: '12px' }}>
-        <button className="add-tab-btn" onClick={onAddOption} title="Crear nueva alternativa de horario">
-          <Plus size={16} />
+      <div className="option-tab-controls">
+        <button
+          type="button"
+          className="add-tab-btn"
+          onClick={onAddOption}
+          title="Crear nueva alternativa de horario"
+          aria-label="Nueva opción de horario"
+        >
+          <Plus size={14} />
         </button>
 
-        <div style={{ width: '1px', height: '16px', background: 'var(--border-color)', margin: '0 4px' }} />
-
         <button
+          type="button"
           className="add-tab-btn"
           onClick={() => onDuplicateOption(activeOptionId)}
           title="Duplicar la opción actual"
+          aria-label="Duplicar opción actual"
         >
-          <Copy size={14} />
+          <Copy size={13} />
         </button>
 
         {options.length > 1 && (
           <button
+            type="button"
             className="add-tab-btn"
             onClick={() => onDeleteOption(activeOptionId)}
             title="Eliminar la opción actual"
+            aria-label="Eliminar opción actual"
           >
-            <Trash2 size={14} />
+            <Trash2 size={13} />
           </button>
         )}
       </div>

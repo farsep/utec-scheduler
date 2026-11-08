@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ScheduleApp } from './ScheduleApp';
-import { CourseApp } from './CourseDirectory/CourseApp';
+import { CurricularDAGView } from './CurricularGraph/CurricularDAGView';
 import { ProfessorApp } from './ProfessorDirectory/ProfessorApp';
 import { ClassroomApp } from './ClassroomFinder/ClassroomApp';
 import { MentorApp } from './MentorDirectory/MentorApp';
+import { GraftonTopBar } from './GraftonTopBar';
 import { prewarmAllCatalogs } from '../utils/masterDataLoader';
+import type { Course } from '../types/schedule';
 
 export type TabKey = 'schedule' | 'courses' | 'professors' | 'classrooms' | 'mentors';
 
@@ -18,15 +20,15 @@ const PATH_TO_TAB: Record<string, TabKey> = {
   '/profesores': 'professors',
   '/docentes': 'professors',
   '/aulas': 'classrooms',
-  '/mentores': 'mentors'
+  '/mentores': 'mentors',
 };
 
 const TAB_TITLES: Record<TabKey, string> = {
-  schedule: 'MatrícuLAB - Armador de Horarios UTEC',
-  courses: 'Catálogo de Cursos UTEC - MatrícuLAB',
-  professors: 'Directorio de Docentes UTEC - MatrícuLAB',
-  classrooms: 'Buscador de Aulas Libres UTEC - MatrícuLAB',
-  mentors: 'Mentores Académicos UTEC 2026-2 - MatrícuLAB'
+  schedule: 'MatricuLAB · Armador de Horarios UTEC',
+  courses: 'Malla Curricular & 16 Carreras UTEC · MatricuLAB',
+  professors: 'Directorio de Docentes UTEC · MatricuLAB',
+  classrooms: 'Aulas y Laboratorios Libres UTEC · MatricuLAB',
+  mentors: 'Mentores Académicos UTEC 2026-2 · MatricuLAB',
 };
 
 const TAB_PATHS: Record<TabKey, string> = {
@@ -34,11 +36,10 @@ const TAB_PATHS: Record<TabKey, string> = {
   courses: '/cursos',
   professors: '/profesores',
   classrooms: '/aulas',
-  mentors: '/mentores'
+  mentors: '/mentores',
 };
 
 export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
-  // Determine active tab from URL or fallback to initialTab
   const getTabFromLocation = (): TabKey => {
     if (typeof window !== 'undefined') {
       let p = window.location.pathname.split('?')[0].split('#')[0];
@@ -51,48 +52,70 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
   };
 
   const [activeTab, setActiveTab] = useState<TabKey>(getTabFromLocation);
-  const [visitedTabs, setVisitedTabs] = useState<Set<TabKey>>(() => new Set([activeTab]));
+  // Keep schedule mounted so Export/Import & live clash detection across Malla and Mentors work immediately
+  const [visitedTabs, setVisitedTabs] = useState<Set<TabKey>>(
+    () => new Set<TabKey>(['schedule', activeTab])
+  );
   const scrollPositions = useRef<Partial<Record<TabKey, number>>>({});
 
-  // Kick off background prewarm for all data sets during idle time
+  // Mobile sidebar drawer state + external modal triggers for ScheduleApp
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
+  const [uploadTriggerCount, setUploadTriggerCount] = useState<number>(0);
+  const [exportTriggerCount, setExportTriggerCount] = useState<number>(0);
+  const [quickAddCourseCode, setQuickAddCourseCode] = useState<{ code: string; seq: number } | null>(null);
+
+  // Live synced schedule state for DAG & Mentors clash detection
+  const [scheduleCourses, setScheduleCourses] = useState<Course[]>([]);
+  const [selectedSections, setSelectedSections] = useState<Record<string, string>>({});
+
   useEffect(() => {
     prewarmAllCatalogs();
+    if (typeof window !== 'undefined' && !navigator.webdriver) {
+      const fontId = 'grafton-google-fonts';
+      if (!document.getElementById(fontId)) {
+        const link = document.createElement('link');
+        link.id = fontId;
+        link.rel = 'stylesheet';
+        link.href =
+          'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap';
+        document.head.appendChild(link);
+      }
+    }
   }, []);
 
-  const switchTab = useCallback((targetTab: TabKey, targetUrl?: string) => {
-    // 1. Save scroll position of current tab
-    if (typeof window !== 'undefined') {
-      scrollPositions.current[activeTab] = window.scrollY;
-    }
+  const switchTab = useCallback(
+    (targetTab: TabKey, targetUrl?: string) => {
+      if (typeof window !== 'undefined') {
+        scrollPositions.current[activeTab] = window.scrollY;
+      }
 
-    // 2. Mark target tab as visited so it mounts if not yet loaded
-    setVisitedTabs(prev => {
-      if (prev.has(targetTab)) return prev;
-      const next = new Set(prev);
-      next.add(targetTab);
-      return next;
-    });
+      setIsMobileSidebarOpen(false);
 
-    // 3. Switch active tab in React state (0ms instant transition)
-    setActiveTab(targetTab);
+      setVisitedTabs(prev => {
+        if (prev.has(targetTab)) return prev;
+        const next = new Set(prev);
+        next.add(targetTab);
+        return next;
+      });
 
-    // 4. Update browser history and page title
-    const nextPath = targetUrl || TAB_PATHS[targetTab] || '/';
-    if (typeof window !== 'undefined' && window.location.pathname !== nextPath) {
-      window.history.pushState({ tab: targetTab }, '', nextPath);
-    }
-    if (TAB_TITLES[targetTab]) {
-      document.title = TAB_TITLES[targetTab];
-    }
+      setActiveTab(targetTab);
 
-    // 5. Restore saved scroll position for target tab or scroll to top
-    requestAnimationFrame(() => {
-      const savedScroll = scrollPositions.current[targetTab] || 0;
-      window.scrollTo({ top: savedScroll, behavior: 'instant' });
-    });
-  }, [activeTab]);
+      const nextPath = targetUrl || TAB_PATHS[targetTab] || '/';
+      if (typeof window !== 'undefined' && window.location.pathname !== nextPath) {
+        window.history.pushState({ tab: targetTab }, '', nextPath);
+      }
+      if (TAB_TITLES[targetTab]) {
+        document.title = TAB_TITLES[targetTab];
+      }
 
-  // Handle browser Back / Forward buttons (popstate)
+      requestAnimationFrame(() => {
+        const savedScroll = scrollPositions.current[targetTab] || 0;
+        window.scrollTo({ top: savedScroll, behavior: 'instant' as ScrollBehavior });
+      });
+    },
+    [activeTab]
+  );
+
   useEffect(() => {
     const handlePopState = () => {
       let p = window.location.pathname.split('?')[0].split('#')[0];
@@ -106,7 +129,7 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
 
       requestAnimationFrame(() => {
         const savedScroll = scrollPositions.current[targetTab] || 0;
-        window.scrollTo({ top: savedScroll, behavior: 'instant' });
+        window.scrollTo({ top: savedScroll, behavior: 'instant' as ScrollBehavior });
       });
     };
 
@@ -114,21 +137,26 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Universal click interceptor: capture clicks on internal tab links for instant 0ms tab transitions
+  // Intercept internal route links for instant SPA tab switching
   useEffect(() => {
     const handleDocumentClick = (e: MouseEvent) => {
-      // Don't intercept middle clicks, ctrl+clicks, cmd+clicks, etc.
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
 
       const anchor = (e.target as HTMLElement).closest('a');
       if (!anchor) return;
 
       const rawHref = anchor.getAttribute('href');
-      if (!rawHref || rawHref.startsWith('#') || rawHref.startsWith('blob:') || rawHref.startsWith('data:') || anchor.target === '_blank') {
+      if (
+        !rawHref ||
+        rawHref.startsWith('#') ||
+        rawHref.startsWith('blob:') ||
+        rawHref.startsWith('data:') ||
+        rawHref.startsWith('mailto:') ||
+        anchor.target === '_blank'
+      ) {
         return;
       }
 
-      // Check if internal route
       let cleanPath = rawHref.split('?')[0].split('#')[0];
       if (cleanPath.length > 1 && cleanPath.endsWith('/')) {
         cleanPath = cleanPath.slice(0, -1);
@@ -136,14 +164,12 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
 
       const targetTab = PATH_TO_TAB[cleanPath];
       if (targetTab) {
-        // Prevent default browser / Astro navigation
         e.preventDefault();
         e.stopPropagation();
 
         if (targetTab !== activeTab) {
           switchTab(targetTab, rawHref);
         } else {
-          // If already on active tab, scroll smoothly to top
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       }
@@ -153,48 +179,72 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
     return () => document.removeEventListener('click', handleDocumentClick, { capture: true });
   }, [activeTab, switchTab]);
 
-  // Pre-mount tabs on hover/touchstart so they are already in DOM before the click finishes
-  useEffect(() => {
-    const handlePointerPreMount = (e: Event) => {
-      const anchor = (e.target as HTMLElement)?.closest?.('a');
-      if (!anchor) return;
+  const handleOpenUploadFromTopBar = useCallback(() => {
+    if (activeTab !== 'schedule') {
+      switchTab('schedule');
+    }
+    setUploadTriggerCount(c => c + 1);
+  }, [activeTab, switchTab]);
 
-      const rawHref = anchor.getAttribute('href');
-      if (!rawHref) return;
+  const handleOpenExportFromTopBar = useCallback(() => {
+    if (activeTab !== 'schedule') {
+      switchTab('schedule');
+    }
+    setExportTriggerCount(c => c + 1);
+  }, [activeTab, switchTab]);
 
-      let cleanPath = rawHref.split('?')[0].split('#')[0];
-      if (cleanPath.length > 1 && cleanPath.endsWith('/')) {
-        cleanPath = cleanPath.slice(0, -1);
-      }
+  const handleScheduleStateChange = useCallback(
+    (courses: Course[], sections: Record<string, string>) => {
+      setScheduleCourses(courses);
+      setSelectedSections(sections);
+    },
+    []
+  );
 
-      const targetTab = PATH_TO_TAB[cleanPath];
-      if (targetTab) {
-        setVisitedTabs(prev => {
-          if (prev.has(targetTab)) return prev;
-          const next = new Set(prev);
-          next.add(targetTab);
-          return next;
-        });
-      }
-    };
+  const handleSelectCourseFromDAG = useCallback(
+    (courseCode: string) => {
+      setQuickAddCourseCode(prev => ({ code: courseCode, seq: (prev?.seq || 0) + 1 }));
+      switchTab('schedule');
+    },
+    [switchTab]
+  );
 
-    document.addEventListener('pointerover', handlePointerPreMount, { passive: true, capture: true });
-    document.addEventListener('touchstart', handlePointerPreMount, { passive: true, capture: true });
-    return () => {
-      document.removeEventListener('pointerover', handlePointerPreMount, { capture: true });
-      document.removeEventListener('touchstart', handlePointerPreMount, { capture: true });
-    };
-  }, []);
+  const scheduledCourseCodes = useMemo(
+    () => new Set(Object.keys(selectedSections)),
+    [selectedSections]
+  );
+
+  const offeredCourseCodes = useMemo(
+    () => new Set(scheduleCourses.map(c => c.code)),
+    [scheduleCourses]
+  );
 
   return (
     <div className="app-shell-root">
+      <GraftonTopBar
+        activeTab={activeTab}
+        onSwitchTab={tab => switchTab(tab)}
+        onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)}
+        onOpenUploadModal={handleOpenUploadFromTopBar}
+        onOpenExportModal={handleOpenExportFromTopBar}
+      />
+
       {visitedTabs.has('schedule') && (
         <div
           id="matriculab-view-schedule"
           className="app-shell-tab-pane"
           style={{ display: activeTab === 'schedule' ? 'block' : 'none' }}
         >
-          <ScheduleApp />
+          <ScheduleApp
+            hideInternalNavbar
+            isMobileSidebarOpen={isMobileSidebarOpen}
+            onCloseMobileSidebar={() => setIsMobileSidebarOpen(false)}
+            onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
+            uploadTriggerCount={uploadTriggerCount}
+            exportTriggerCount={exportTriggerCount}
+            quickAddCourseRequest={quickAddCourseCode}
+            onScheduleStateChange={handleScheduleStateChange}
+          />
         </div>
       )}
 
@@ -204,7 +254,11 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
           className="app-shell-tab-pane"
           style={{ display: activeTab === 'courses' ? 'block' : 'none' }}
         >
-          <CourseApp />
+          <CurricularDAGView
+            scheduledCourseCodes={scheduledCourseCodes}
+            offeredCourseCodes={offeredCourseCodes}
+            onSelectCourseForSchedule={handleSelectCourseFromDAG}
+          />
         </div>
       )}
 
@@ -214,7 +268,7 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
           className="app-shell-tab-pane"
           style={{ display: activeTab === 'professors' ? 'block' : 'none' }}
         >
-          <ProfessorApp />
+          <ProfessorApp hideTopNavbar />
         </div>
       )}
 
@@ -224,7 +278,7 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
           className="app-shell-tab-pane"
           style={{ display: activeTab === 'classrooms' ? 'block' : 'none' }}
         >
-          <ClassroomApp />
+          <ClassroomApp hideTopNavbar />
         </div>
       )}
 
@@ -234,7 +288,11 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
           className="app-shell-tab-pane"
           style={{ display: activeTab === 'mentors' ? 'block' : 'none' }}
         >
-          <MentorApp />
+          <MentorApp
+            hideTopNavbar
+            scheduleCourses={scheduleCourses}
+            selectedSections={selectedSections}
+          />
         </div>
       )}
     </div>

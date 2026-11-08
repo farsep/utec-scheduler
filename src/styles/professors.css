@@ -13,8 +13,8 @@
   border-radius: var(--radius-lg);
   background: rgba(18, 24, 38, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+
+
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
   position: relative;
   z-index: 10;
@@ -2611,8 +2611,8 @@
     top: 0;
     z-index: 30;
     background: rgba(15, 21, 35, 0.96);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+
+
     padding: 6px 0 8px;
     margin: 0 -4px;
     padding-left: 4px;
@@ -2692,8 +2692,8 @@
   justify-content: space-between;
   padding: 16px 20px;
   background: rgba(16, 23, 40, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+
+
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
   min-width: 145px;

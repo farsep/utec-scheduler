@@ -683,9 +683,9 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       <div className="modal-card optimizer-modal-card" onClick={e => e.stopPropagation()}>
         
         {/* Header */}
-        <div className="modal-header" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.02)' }}>
+        <div className="modal-header" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-hairline)', background: 'var(--bg-elevated)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ background: 'var(--accent-gradient)', padding: '8px', borderRadius: '10px', display: 'flex', flexShrink: 0 }}>
+            <div style={{ background: 'var(--accent-primary)', padding: '8px', borderRadius: '0px', display: 'flex', flexShrink: 0 }}>
               <Sparkles size={20} color="white" />
             </div>
             <div>
@@ -718,32 +718,32 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   onClick={() => setIsAdvancedMode(!isAdvancedMode)}
                   style={{ 
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                    padding: '10px 12px', background: isAdvancedMode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(0,0,0,0.2)', 
-                    borderRadius: '8px', cursor: 'pointer', marginBottom: '16px',
-                    border: isAdvancedMode ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid var(--border-color)',
+                    padding: '10px 12px', background: isAdvancedMode ? 'var(--accent-soft)' : 'var(--bg-elevated)', 
+                    borderRadius: '0px', cursor: 'pointer', marginBottom: '16px',
+                    border: isAdvancedMode ? '1px solid var(--accent-primary)' : '1px solid var(--border-hairline)',
                     transition: 'all 0.2s'
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: isAdvancedMode ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: isAdvancedMode ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
                       Armador de Semestre (Modo Avanzado)
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>El algoritmo elegirá los cursos por ti</div>
                   </div>
                   <div style={{ 
-                    width: '36px', height: '20px', background: isAdvancedMode ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
-                    borderRadius: '10px', position: 'relative', transition: 'all 0.3s'
+                    width: '36px', height: '20px', background: isAdvancedMode ? 'var(--accent-primary)' : 'var(--border-hairline)',
+                    borderRadius: '0px', position: 'relative', transition: 'all 0.3s'
                   }}>
                     <div style={{
                       position: 'absolute', top: '2px', left: isAdvancedMode ? '18px' : '2px',
-                      width: '16px', height: '16px', background: 'white', borderRadius: '50%',
+                      width: '16px', height: '16px', background: 'white', borderRadius: '0px',
                       transition: 'all 0.3s'
                     }} />
                   </div>
                 </div>
 
                 {isAdvancedMode && (
-                  <div style={{ padding: '12px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ padding: '12px', background: 'var(--bg-elevated)', borderRadius: '0px', marginBottom: '16px', border: '1px solid var(--border-hairline)' }}>
                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
                       Cursos totales a llevar (incluyendo fijos): {maxCourses}
                     </label>
@@ -772,7 +772,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                       </div>
                     </div>
                     
-                    <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-hairline)' }}>
                       <div 
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', cursor: 'pointer' }}
                         onClick={() => setIsLunchEnabled(!isLunchEnabled)}
@@ -781,12 +781,12 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                           Garantizar Hora de Almuerzo
                         </label>
                         <div style={{ 
-                          width: '36px', height: '20px', background: isLunchEnabled ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
-                          borderRadius: '10px', position: 'relative', transition: 'all 0.3s', flexShrink: 0
+                          width: '36px', height: '20px', background: isLunchEnabled ? 'var(--accent-primary)' : 'var(--border-hairline)',
+                          borderRadius: '0px', position: 'relative', transition: 'all 0.3s', flexShrink: 0
                         }}>
                           <div style={{
                             position: 'absolute', top: '2px', left: isLunchEnabled ? '18px' : '2px',
-                            width: '16px', height: '16px', background: 'white', borderRadius: '50%',
+                            width: '16px', height: '16px', background: 'white', borderRadius: '0px',
                             transition: 'all 0.3s'
                           }} />
                         </div>
@@ -835,7 +835,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                 )}
 
                 {isAdvancedMode && (
-                  <div style={{ padding: '12px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ padding: '12px', background: 'var(--bg-elevated)', borderRadius: '0px', marginBottom: '16px', border: '1px solid var(--border-hairline)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                       <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
                         Calendario de Bloqueos (Restricciones Temporales)
@@ -845,12 +845,12 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                         <div 
                           onClick={() => setIsConstraintStrict(!isConstraintStrict)}
                           style={{ 
-                            width: '36px', height: '20px', background: isConstraintStrict ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
-                            borderRadius: '10px', position: 'relative', transition: 'all 0.3s', cursor: 'pointer', flexShrink: 0
+                            width: '36px', height: '20px', background: isConstraintStrict ? 'var(--accent-primary)' : 'var(--border-hairline)',
+                            borderRadius: '0px', position: 'relative', transition: 'all 0.3s', cursor: 'pointer', flexShrink: 0
                           }}>
                           <div style={{
                             position: 'absolute', top: '2px', left: isConstraintStrict ? '18px' : '2px',
-                            width: '16px', height: '16px', background: 'white', borderRadius: '50%',
+                            width: '16px', height: '16px', background: 'white', borderRadius: '0px',
                             transition: 'all 0.3s'
                           }} />
                         </div>
@@ -864,7 +864,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
 
                 {/* Selected Courses Tags */}
                 {selectedCourseCodes.length > 0 && !isAdvancedMode && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px', padding: '8px', background: 'rgba(0,0,0,0.15)', borderRadius: '8px', border: '1px solid var(--border-color)', maxHeight: '100px', overflowY: 'auto' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px', padding: '8px', background: 'var(--bg-elevated)', borderRadius: '0px', border: '1px solid var(--border-hairline)', maxHeight: '100px', overflowY: 'auto' }}>
                     {selectedCourseCodes.map(code => {
                       const courseColor = getCourseColor(code);
                       return (
@@ -872,16 +872,17 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                           key={code}
                           className="selected-course-pill"
                           style={{ 
-                            background: `rgba(${parseInt(courseColor.slice(1,3),16)}, ${parseInt(courseColor.slice(3,5),16)}, ${parseInt(courseColor.slice(5,7),16)}, 0.15)`,
-                            border: `1px solid ${courseColor}40`,
-                            color: courseColor
+                            background: 'var(--bg-surface)',
+                            border: '1px solid var(--border-hairline)',
+                            borderLeft: `3px solid ${courseColor}`,
+                            color: 'var(--text-primary)'
                           }}
                         >
                           {code}
                           <button 
                             className="selected-course-pill-close"
                             onClick={(e) => { e.stopPropagation(); toggleCourse(code); }}
-                            style={{ color: courseColor }}
+                            style={{ color: 'var(--text-secondary)' }}
                             title="Quitar curso"
                           >
                             <X size={10} />
@@ -906,11 +907,11 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                 {hasCourseTypeFilter && (
                   <div style={{ 
                     display: 'flex', 
-                    background: 'rgba(0,0,0,0.25)', 
-                    borderRadius: '8px', 
+                    background: 'var(--bg-elevated)', 
+                    borderRadius: '0px', 
                     padding: '4px', 
                     marginBottom: '12px',
-                    border: '1px solid var(--border-color)',
+                    border: '1px solid var(--border-hairline)',
                     position: 'relative'
                   }}>
                     {['ALL', 'Obligatorio', 'Electivo'].map((type) => (
@@ -922,14 +923,13 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                           textAlign: 'center',
                           padding: '6px 0',
                           fontSize: '0.7rem',
-                          fontWeight: typeFilter === type ? 600 : 400,
-                          color: typeFilter === type ? '#fff' : 'var(--text-muted)',
-                          background: typeFilter === type ? 'rgba(255,255,255,0.1)' : 'transparent',
-                          borderRadius: '6px',
+                          fontWeight: typeFilter === type ? 700 : 500,
+                          color: typeFilter === type ? '#FFFFFF' : 'var(--text-secondary)',
+                          background: typeFilter === type ? 'var(--border-strong)' : 'transparent',
+                          borderRadius: '0px',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease-in-out',
-                          boxShadow: typeFilter === type ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
-                          border: typeFilter === type ? '1px solid rgba(255,255,255,0.05)' : '1px solid transparent'
+                          border: '1px solid transparent'
                         }}
                       >
                         {type === 'ALL' ? 'Todos' : type}
@@ -940,15 +940,15 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
 
                 <div style={{ 
                   display: 'flex', 
-                  background: 'rgba(0,0,0,0.15)', 
-                  borderRadius: '8px', 
+                  background: 'var(--bg-elevated)', 
+                  borderRadius: '0px', 
                   padding: '4px', 
                   marginBottom: '12px',
-                  border: '1px solid rgba(255,255,255,0.05)',
+                  border: '1px solid var(--border-hairline)',
                 }}>
                   <button 
-                    style={{ flex: 1, padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-                    onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff'; }}
+                    style={{ flex: 1, padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '0px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                    onMouseOver={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
                     onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                     onClick={() => {
                       const visibleCodes = filteredCourses.map(c => c.code);
@@ -959,8 +959,8 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   </button>
                   {hasEligibleFilter && (
                     <button 
-                      style={{ flex: 1, padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.2s', borderLeft: '1px solid rgba(255,255,255,0.05)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-                      onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff'; }}
+                      style={{ flex: 1, padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '0px', transition: 'all 0.2s', borderLeft: '1px solid var(--border-hairline)', borderRight: '1px solid var(--border-hairline)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                      onMouseOver={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
                       onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                       onClick={() => {
                         const eligibleCodes = courses.filter(c => c.isEligible).map(c => c.code);
@@ -971,8 +971,8 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                     </button>
                   )}
                   <button 
-                    style={{ flex: 1, padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-                    onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff'; }}
+                    style={{ flex: 1, padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '0px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                    onMouseOver={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
                     onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                     onClick={() => {
                       const visibleCodes = new Set(filteredCourses.map(c => c.code));
@@ -989,18 +989,18 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                     style={{ 
                       display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', cursor: 'pointer',
                       userSelect: 'none', marginBottom: '8px', padding: '4px 6px',
-                      borderRadius: '6px', transition: 'all 0.2s ease',
-                      background: showOnlyEligible ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
-                      color: showOnlyEligible ? '#34d399' : 'var(--text-muted)'
+                      borderRadius: '0px', transition: 'all 0.2s ease',
+                      background: showOnlyEligible ? '#DCEEE6' : 'transparent',
+                      color: showOnlyEligible ? 'var(--status-ok)' : 'var(--text-muted)'
                     }}
                   >
-                    {showOnlyEligible ? <CheckSquare size={14} color="#34d399" /> : <Square size={14} color="var(--text-muted)" />}
+                    {showOnlyEligible ? <CheckSquare size={14} color="var(--status-ok)" /> : <Square size={14} color="var(--text-muted)" />}
                     <span>Mostrar únicamente cursos habilitados en esta lista</span>
                   </div>
                 )}
 
 
-                <div className="course-list-scroll" style={{ maxHeight: '200px', paddingRight: '8px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', padding: '8px', overflowY: 'auto' }}>
+                <div className="course-list-scroll" style={{ maxHeight: '200px', paddingRight: '8px', border: '1px solid var(--border-hairline)', borderRadius: '0px', background: 'var(--bg-canvas)', padding: '8px', overflowY: 'auto' }}>
                   {filteredCourses.map(course => {
                     const isSelected = selectedCourseCodes.includes(course.code);
                     return (
@@ -1198,10 +1198,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                           }}
                           style={{
                             display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', cursor: 'pointer',
-                            userSelect: 'none', padding: '6px 12px', borderRadius: '8px',
-                            background: isActive ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255,255,255,0.03)',
-                            border: isActive ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid transparent',
-                            color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
+                            userSelect: 'none', padding: '6px 12px', borderRadius: '0px',
+                            background: isActive ? 'var(--accent-soft)' : 'var(--bg-elevated)',
+                            border: isActive ? '1px solid var(--accent-primary)' : '1px solid var(--border-hairline)',
+                            color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                             transition: 'all 0.2s ease'
                           }}
                         >
@@ -1220,9 +1220,9 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                     onClick={() => setOptions({ ...options, onlyWithVacancies: !options.onlyWithVacancies })}
                     style={{ 
                       display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', cursor: 'pointer',
-                      background: options.onlyWithVacancies ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                      border: options.onlyWithVacancies ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid transparent',
-                      padding: '6px 10px', borderRadius: '8px', transition: 'all 0.2s ease',
+                      background: options.onlyWithVacancies ? 'var(--accent-soft)' : 'transparent',
+                      border: options.onlyWithVacancies ? '1px solid var(--accent-primary)' : '1px solid transparent',
+                      padding: '6px 10px', borderRadius: '0px', transition: 'all 0.2s ease',
                       marginLeft: '-10px', // slightly offset to align text with other labels
                       userSelect: 'none' // Prevent text selection on double click
                     }}
@@ -1252,15 +1252,16 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
               </div>
             </div>
 
-            <div style={{ padding: '20px', borderTop: '1px solid var(--border-color)', marginTop: 'auto', flexShrink: 0, background: 'rgba(0,0,0,0.2)' }}>
+            <div style={{ padding: '20px', borderTop: '1px solid var(--border-hairline)', marginTop: 'auto', flexShrink: 0, background: 'var(--bg-elevated)' }}>
               {!isGenerating ? (
                 <button 
                   className="btn btn-primary" 
                   style={{ 
                     width: '100%', padding: '12px', fontSize: '0.95rem', 
-                    background: (selectedCourseCodes.length === 0) ? 'var(--surface-light)' : 'var(--accent-gradient)', 
-                    border: 'none',
-                    opacity: (selectedCourseCodes.length === 0) ? 0.5 : 1,
+                    background: (selectedCourseCodes.length === 0) ? 'var(--bg-canvas)' : 'var(--accent-primary)', 
+                    color: (selectedCourseCodes.length === 0) ? 'var(--text-muted)' : '#FFFFFF',
+                    border: '1px solid var(--border-hairline)',
+                    opacity: (selectedCourseCodes.length === 0) ? 0.6 : 1,
                     cursor: (selectedCourseCodes.length === 0) ? 'not-allowed' : 'pointer',
                     pointerEvents: (selectedCourseCodes.length === 0) ? 'none' : 'auto'
                   }}
@@ -1275,7 +1276,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                     className="btn btn-secondary" 
                     style={{ 
                       width: '100%', padding: '12px', fontSize: '0.95rem', 
-                      borderColor: 'var(--accent-rose)', color: 'var(--accent-rose)' 
+                      borderColor: 'var(--status-warn)', color: 'var(--status-warn)' 
                     }}
                     onClick={cancelGeneration}
                   >
@@ -1293,7 +1294,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
           <div className="optimizer-right-panel" data-has-results={Boolean(results || isGenerating)}>
             {/* PREVIEW VIEW */}
             {previewSchedule && (
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', background: '#0a0d14', zIndex: 10 }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--bg-canvas)', zIndex: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Eye size={20} color="var(--accent-primary)" /> Vista Previa del Horario
@@ -1306,7 +1307,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                     ← Volver a resultados
                   </button>
                 </div>
-                <div style={{ flex: 1, minHeight: '500px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                <div style={{ flex: 1, minHeight: '500px', background: 'var(--bg-surface)', borderRadius: '0px', border: '1px solid var(--border-hairline)', overflow: 'hidden' }}>
                   <TimetableGrid 
                     courses={courses}
                     selectedSections={previewSchedule}
