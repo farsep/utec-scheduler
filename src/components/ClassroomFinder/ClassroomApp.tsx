@@ -571,7 +571,7 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
           onClick={scrollToTop}
           title="Subir a filtros y selección de pisos"
         >
-          <ArrowUp size={15} />
+          <span className="floating-top-arrow" style={{ color: '#00779E', fontWeight: 700 }}>↑</span>
           <span>Filtros y Pisos</span>
         </button>
       )}

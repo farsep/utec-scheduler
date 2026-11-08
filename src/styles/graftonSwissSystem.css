@@ -2026,4 +2026,113 @@
   color: #141416 !important;
 }
 
+/* ==========================================================================
+   FIX 1: MOBILE FLOATING BUTTON ("↑ FILTROS Y PISOS") & MOBILE VIEWPORT (393x852)
+   ========================================================================== */
+html,
+body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+
+.mobile-floating-top-btn {
+  border-radius: 0px !important;
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  background-image: none !important;
+  color: #141416 !important;
+  border: 1.5px solid #18181A !important;
+  border-top: 3px solid #00779E !important;
+  box-shadow: 3px 3px 0px #18181A !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  padding: 8px 14px !important;
+}
+
+.mobile-floating-top-btn .floating-top-arrow,
+.mobile-floating-top-btn svg {
+  color: #00779E !important;
+  stroke: #00779E !important;
+  font-weight: 700 !important;
+}
+
+@media (max-width: 640px) {
+  .classroom-hero-banner {
+    padding: 14px 12px !important;
+  }
+
+  .classroom-hero-kpi-badges,
+  .prof-hero-kpi-badges {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .classroom-hero-kpi-badges .prof-hero-kpi-card,
+  .classroom-hero-kpi-badges .hero-kpi-badge,
+  .prof-hero-kpi-badges .prof-hero-kpi-card,
+  .prof-hero-kpi-badges .hero-kpi-badge {
+    padding: 10px !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .room-type-chips {
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
+    max-width: 100% !important;
+  }
+
+  .floor-pills-scroll {
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+/* ==========================================================================
+   FIX 2: CURRICULAR GRAPH (DAG) GHOSTING (opacity: 0.38) & LINEAGE EMPHASIS (opacity: 1)
+   ========================================================================== */
+.dag-node-card.dag-node--ghost {
+  opacity: 0.38;
+  border: 1px solid #C6C3BB !important;
+  background: #F2F0EC !important;
+  box-shadow: none !important;
+}
+
+.dag-node-card.dag-node--ghost:hover {
+  opacity: 0.95;
+  border-color: #00779E !important;
+}
+
+.dag-node-card.dag-node--selected {
+  opacity: 1 !important;
+  background: #F2F0EC !important;
+  border: 2px solid #00779E !important;
+  box-shadow: 0 0 0 3px rgba(0, 119, 158, 0.16), 2px 2px 0px rgba(24, 24, 26, 0.08) !important;
+}
+
+.dag-node-card.dag-node--prereq,
+.dag-node-card.dag-node--prereq-direct,
+.dag-node-card.dag-node--prereq-base {
+  opacity: 1 !important;
+  background: #F2F0EC !important;
+  border: 2px solid #F59E0B !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.22) !important;
+}
+
+.dag-node-card.dag-node--unlock,
+.dag-node-card.dag-node--unlock-direct,
+.dag-node-card.dag-node--unlock-chain {
+  opacity: 1 !important;
+  background: #F2F0EC !important;
+  border: 2px solid #10B981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.22) !important;
+}
+
+
 

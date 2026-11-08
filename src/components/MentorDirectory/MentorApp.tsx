@@ -352,7 +352,7 @@ export const MentorApp: React.FC<MentorAppProps> = ({
           title="Subir a filtros y búsqueda"
           aria-label="Subir a filtros y búsqueda"
         >
-          <ArrowUp size={15} />
+          <span className="floating-top-arrow" style={{ color: '#00779E', fontWeight: 700 }}>↑</span>
           <span>Búsqueda</span>
         </button>
       )}

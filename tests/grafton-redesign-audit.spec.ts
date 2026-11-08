@@ -213,8 +213,33 @@ test.describe('MatricuLAB — Autonomous Self-Healing Visual, Responsive & Funct
       expect(count).toBeGreaterThanOrEqual(54);
     }
 
-    // Leave on Ciencia de la Computación for the main screenshot
+    // Leave on Ciencia de la Computación and click IN2005 (Estadística y Probabilidades I) to verify ghosting (opacity: 0.38) vs lineage emphasis (opacity: 1)
     await page.locator('.dag-career-btn', { hasText: 'Ciencia de la Computación' }).first().click();
+    await page.locator('#dag-node-IN2005').click();
+    await page.mouse.move(10, 10); // Ensure hover state is cleared so selectedCourseCode drives focusCode
+
+    const lineageAudit = await page.evaluate(() => {
+      const allNodes = Array.from(document.querySelectorAll('.dag-node-card'));
+      const relatedNodes = allNodes.filter(el => el.getAttribute('data-related') === 'true');
+      const unrelatedNodes = allNodes.filter(el => el.getAttribute('data-related') === 'false');
+      return {
+        relatedCount: relatedNodes.length,
+        unrelatedCount: unrelatedNodes.length,
+        relatedOpacities: relatedNodes.map(el => getComputedStyle(el).opacity),
+        unrelatedOpacities: unrelatedNodes.map(el => parseFloat(getComputedStyle(el).opacity)),
+        selectedRoleText: document.querySelector('#dag-node-IN2005 .dag-role-badge')?.textContent?.trim(),
+      };
+    });
+
+    expect(lineageAudit.relatedCount).toBeGreaterThanOrEqual(4); // IN2005 + upstream (MA1001, MA1002, CS1111) + downstream (CS3015, etc.)
+    expect(lineageAudit.unrelatedCount).toBeGreaterThanOrEqual(30);
+    for (const op of lineageAudit.relatedOpacities) {
+      expect(op).toBe('1');
+    }
+    for (const op of lineageAudit.unrelatedOpacities) {
+      expect(op).toBeLessThanOrEqual(0.45);
+    }
+    expect(lineageAudit.selectedRoleText).toBe('Seleccionado');
 
     await page.screenshot({
       path: 'audit-screenshots/03-curricular-dag-16-careers.png',
@@ -318,7 +343,48 @@ test.describe('MatricuLAB — Autonomous Self-Healing Visual, Responsive & Funct
 
     await page.screenshot({ path: 'audit-screenshots/05-classrooms-desktop.png', fullPage: true });
 
-    await page.setViewportSize({ width: 375, height: 812 });
+    // Mobile (393x852) at /aulas: verify zero horizontal overflow & Grafton Swiss 0px floating button ("↑ Filtros y Pisos")
+    await page.setViewportSize({ width: 393, height: 852 });
+    await page.goto('/aulas', { waitUntil: 'networkidle' });
+    await expect(page.locator('.classroom-card').first()).toBeVisible();
+
+    const aulasMobileOverflow = await page.evaluate(() => {
+      return document.documentElement.scrollWidth <= window.innerWidth;
+    });
+    expect(aulasMobileOverflow).toBe(true);
+
+    // Scroll down to trigger the floating "↑ Filtros y Pisos" button
+    await page.evaluate(() => window.scrollTo(0, 620));
+    const floatingBtn = page.locator('.mobile-floating-top-btn');
+    await expect(floatingBtn).toBeVisible();
+
+    const floatingBtnAudit = await floatingBtn.evaluate(el => {
+      const s = getComputedStyle(el);
+      const arrow = el.querySelector('.floating-top-arrow');
+      return {
+        borderRadius: s.borderRadius,
+        backgroundColor: s.backgroundColor,
+        backgroundImage: s.backgroundImage,
+        borderTopColor: s.borderTopColor,
+        borderTopWidth: s.borderTopWidth,
+        boxShadow: s.boxShadow,
+        text: el.textContent?.trim(),
+        arrowColor: arrow ? getComputedStyle(arrow).color : null,
+      };
+    });
+
+    expect(floatingBtnAudit.borderRadius).toBe('0px');
+    expect(floatingBtnAudit.backgroundColor).toBe('rgb(242, 240, 236)'); // #F2F0EC concrete, NOT #2563EB royal blue
+    expect(floatingBtnAudit.backgroundImage).toBe('none');
+    expect(floatingBtnAudit.borderTopColor).toBe('rgb(0, 119, 158)'); // #00779E top beam
+    expect(floatingBtnAudit.borderTopWidth).toBe('3px');
+    expect(floatingBtnAudit.arrowColor).toBe('rgb(0, 119, 158)');
+
+    await page.screenshot({
+      path: 'audit-screenshots/05c-classrooms-mobile-floating-btn.png',
+      fullPage: false,
+    });
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: 'audit-screenshots/05b-classrooms-mobile.png', fullPage: true });
 
     // Verify Grafton Swiss Concrete Tokens & 0px border-radius + zero backdrop-filter blur

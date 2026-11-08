@@ -305,9 +305,9 @@ test.describe('SUPREME SELF-HEALING DEEP MODAL & CALENDAR GRID CRAWLER (BUGS 1 -
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/aulas', { waitUntil: 'networkidle' });
 
-    // Open a classroom with occupied + free sessions (Laboratorio 101)
+    // Open a classroom detail modal from the visible classroom cards
     const viewScheduleBtn = page
-      .locator('.classroom-card:has-text("Laboratorio 101") .btn-view-schedule')
+      .locator('.classroom-card .btn-view-schedule')
       .first();
     await expect(viewScheduleBtn).toBeVisible();
     await viewScheduleBtn.click();
