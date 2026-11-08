@@ -30,7 +30,11 @@ import {
   GraduationCap
 } from 'lucide-react';
 
-export const CourseApp: React.FC = () => {
+interface CourseAppProps {
+  hideTopNavbar?: boolean;
+}
+
+export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) => {
   const initialTime = getCurrentDayAndMinutes();
   const cachedCourses = getSynchronousCachedCourses();
 
@@ -204,11 +208,13 @@ export const CourseApp: React.FC = () => {
   return (
     <div className="classroom-finder-root course-finder-root">
       {/* Top Navbar */}
-      <CourseNavbar
-        totalCourses={courses.length}
-        filteredCount={filteredCourses.length}
-        liveNowCount={liveNowCount}
-      />
+      {!hideTopNavbar && (
+        <CourseNavbar
+          totalCourses={courses.length}
+          filteredCount={filteredCourses.length}
+          liveNowCount={liveNowCount}
+        />
+      )}
 
       <main className="classroom-finder-main course-finder-main">
         {/* Hero Banner */}

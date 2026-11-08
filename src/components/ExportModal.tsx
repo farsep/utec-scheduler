@@ -54,7 +54,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(gridElem, {
         scale: 2,
-        backgroundColor: '#080b11',
+        backgroundColor: '#F2F0EC',
         logging: false,
         useCORS: true,
         allowTaint: true,
@@ -160,21 +160,22 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             <div
               className="export-card"
               style={{
-                background: 'linear-gradient(135deg, rgba(66, 133, 244, 0.12) 0%, rgba(52, 168, 83, 0.08) 100%)',
-                border: '1px solid rgba(66, 133, 244, 0.35)',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--accent-primary)',
+                borderLeft: '3px solid var(--accent-primary)',
                 cursor: 'pointer'
               }}
               onClick={() => setIsGCalModalOpen(true)}
             >
               <div className="export-card-row">
                 <div className="export-card-info">
-                  <div className="export-card-icon" style={{ background: 'rgba(255, 255, 255, 0.06)', border: '1px solid rgba(66, 133, 244, 0.3)' }}>
+                  <div className="export-card-icon" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-hairline)' }}>
                     <img src="/google-calendar-icon.svg" alt="Google Calendar" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <span className="export-card-title">Google Calendar</span>
-                      <span style={{ fontSize: '0.66rem', fontWeight: 700, background: '#10b981', color: '#ffffff', padding: '2px 7px', borderRadius: '10px', letterSpacing: '0.02em' }}>
+                      <span style={{ fontSize: '0.66rem', fontWeight: 700, background: 'var(--status-ok)', color: '#ffffff', padding: '2px 7px', borderRadius: '0px', letterSpacing: '0.02em' }}>
                         DIRECTO
                       </span>
                     </div>
@@ -191,8 +192,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     padding: '8px 16px',
                     fontSize: '0.82rem',
                     fontWeight: 600,
-                    background: '#4285F4',
-                    borderColor: '#4285F4',
+                    background: 'var(--accent-primary)',
+                    borderColor: 'var(--accent-primary)',
                     flexShrink: 0
                   }}
                 >
@@ -225,7 +226,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               </div>
 
               {/* Color Mode Selector */}
-              <div style={{ background: 'rgba(255, 255, 255, 0.02)', borderRadius: '10px', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid var(--border-color)', marginTop: '2px' }}>
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: '0px', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid var(--border-hairline)', marginTop: '2px' }}>
                 <div style={{ fontSize: '0.76rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
                   Esquema de colores de los eventos en el archivo .ics:
                 </div>
@@ -236,10 +237,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     style={{
                       padding: '8px 10px',
                       fontSize: '0.74rem',
-                      borderRadius: '8px',
-                      border: icsColorMode === 'prefix' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                      background: icsColorMode === 'prefix' ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
-                      color: icsColorMode === 'prefix' ? 'var(--accent-primary)' : 'var(--text-muted)',
+                      borderRadius: '0px',
+                      border: icsColorMode === 'prefix' ? '1px solid var(--accent-primary)' : '1px solid var(--border-hairline)',
+                      background: icsColorMode === 'prefix' ? 'var(--accent-soft)' : 'var(--bg-surface)',
+                      color: icsColorMode === 'prefix' ? 'var(--accent-primary)' : 'var(--text-secondary)',
                       fontWeight: icsColorMode === 'prefix' ? 700 : 500,
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
@@ -258,10 +259,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     style={{
                       padding: '8px 10px',
                       fontSize: '0.74rem',
-                      borderRadius: '8px',
-                      border: icsColorMode === 'course' ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                      background: icsColorMode === 'course' ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
-                      color: icsColorMode === 'course' ? 'var(--accent-primary)' : 'var(--text-muted)',
+                      borderRadius: '0px',
+                      border: icsColorMode === 'course' ? '1px solid var(--accent-primary)' : '1px solid var(--border-hairline)',
+                      background: icsColorMode === 'course' ? 'var(--accent-soft)' : 'var(--bg-surface)',
+                      color: icsColorMode === 'course' ? 'var(--accent-primary)' : 'var(--text-secondary)',
                       fontWeight: icsColorMode === 'course' ? 700 : 500,
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
@@ -280,7 +281,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 {Object.keys(selectedSections).length > 0 && (() => {
                   const colorMap = getScheduleColorMap(Object.keys(selectedSections), icsColorMode);
                   return (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '4px', paddingTop: '6px', borderTop: '1px dashed rgba(255, 255, 255, 0.08)' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '4px', paddingTop: '6px', borderTop: '1px dashed var(--border-hairline)' }}>
                       {Object.keys(selectedSections).sort().map((code) => {
                         const course = courses.find(c => c.code === code);
                         const prefix = getCoursePrefix(code);
@@ -294,14 +295,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                             gap: '5px',
                             fontSize: '0.7rem',
                             padding: '2px 7px',
-                            borderRadius: '6px',
-                            background: 'rgba(255, 255, 255, 0.04)',
-                            border: `1px solid ${color}77`,
+                            borderRadius: '0px',
+                            background: 'var(--bg-surface)',
+                            border: '1px solid var(--border-hairline)',
                             color: 'var(--text-primary)'
                           }}
                           title={`${course?.name || code} - Color: ${color}`}
                         >
-                          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: color, boxShadow: `0 0 5px ${color}` }} />
+                          <span style={{ width: '7px', height: '7px', borderRadius: '0px', background: color }} />
                           <span style={{ fontWeight: 600 }}>{code}</span>
                           {icsColorMode === 'prefix' && (
                             <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>({prefix})</span>

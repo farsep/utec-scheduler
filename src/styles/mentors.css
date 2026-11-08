@@ -78,8 +78,8 @@
   border-radius: var(--radius-lg);
   background: rgba(18, 24, 38, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+
+
   padding: 20px;
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
@@ -304,8 +304,8 @@
   width: 100vw !important;
   height: 100vh !important;
   background: rgba(4, 8, 16, 0.88) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
+
+
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;

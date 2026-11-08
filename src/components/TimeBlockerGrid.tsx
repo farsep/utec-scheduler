@@ -205,9 +205,10 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
         className="time-blocker-grid"
         style={{
           userSelect: 'none',
-          background: 'rgba(0,0,0,0.3)',
-          borderRadius: '12px',
-          border: '1px solid var(--border-color)',
+          background: 'var(--bg-surface)',
+          borderRadius: '0px',
+          border: '1px solid var(--border-hairline)',
+          borderTop: '2px solid var(--border-strong)',
           overflow: 'hidden',
           padding: '16px',
           height: '100%',
@@ -220,7 +221,7 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
         <div style={{ display: 'flex', marginBottom: '8px' }}>
           <div style={{ width: '50px' }} />
           {DAYS.map(day => (
-            <div key={day} style={{ flex: 1, textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>{day}</div>
+            <div key={day} style={{ flex: 1, textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 700 }}>{day}</div>
           ))}
         </div>
 
@@ -231,10 +232,10 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
             {/* Hour gridlines + labels */}
             {HOURS.map((hour, idx) => (
               <div key={hour} style={{ position: 'absolute', top: `${idx * 40}px`, left: 0, width: '100%', height: '40px', display: 'flex', pointerEvents: 'none' }}>
-                <div style={{ width: '50px', fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'right', paddingRight: '8px', transform: 'translateY(-6px)' }}>
+                <div style={{ width: '50px', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textAlign: 'right', paddingRight: '8px', transform: 'translateY(-6px)' }}>
                   {hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                 </div>
-                <div style={{ flex: 1, borderTop: '1px solid rgba(255,255,255,0.05)' }} />
+                <div style={{ flex: 1, borderTop: '1px solid var(--border-hairline)' }} />
               </div>
             ))}
 

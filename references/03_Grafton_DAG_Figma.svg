@@ -1,0 +1,77 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="900" fill="#E6E4DF"/>
+  <!-- Top Inspector Card -->
+  <rect x="40" y="36" width="1360" height="118" fill="#F2F0EC" stroke="#C6C3BB"/>
+  <rect x="40" y="36" width="1360" height="3" fill="#18181A"/>
+  <rect x="64" y="60" width="84" height="36" fill="#00779E"/>
+  <text x="78" y="83" fill="#FFFFFF" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700">CS2013</text>
+  <text x="164" y="80" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="20" font-weight="700">Programación III</text>
+  <text x="164" y="104" fill="#4A4946" font-family="JetBrains Mono, monospace" font-size="12">Ciclo 3 · 4 créditos · En tu horario actual</text>
+
+  <!-- Prereq Pill with Full Name -->
+  <text x="520" y="72" fill="#787670" font-family="Inter, sans-serif" font-size="12" font-weight="600">← Requiere aprobar antes:</text>
+  <rect x="520" y="84" width="280" height="36" fill="#F5E8D3" stroke="#B85D00" stroke-width="1.5"/>
+  <text x="536" y="107" fill="#4D2600" font-family="Inter, sans-serif" font-size="13" font-weight="600">● CS1112 · Programación II</text>
+
+  <!-- Unlocks Pill with Full Name -->
+  <text x="830" y="72" fill="#787670" font-family="Inter, sans-serif" font-size="12" font-weight="600">→ Desbloquea directamente:</text>
+  <rect x="830" y="84" width="330" height="36" fill="#DCEEE6" stroke="#0F7652" stroke-width="1.5"/>
+  <text x="846" y="107" fill="#093B29" font-family="Inter, sans-serif" font-size="13" font-weight="600">● CS2023 · Algoritmos y Estructuras</text>
+  <rect x="1172" y="84" width="204" height="36" fill="#DCEEE6" stroke="#0F7652" stroke-width="1.5"/>
+  <text x="1186" y="107" fill="#093B29" font-family="Inter, sans-serif" font-size="13" font-weight="600">● CS3015 · Machine Learning</text>
+
+  <!-- DAG Canvas Card -->
+  <rect x="40" y="180" width="1360" height="680" fill="#F2F0EC" stroke="#C6C3BB"/>
+  <rect x="40" y="180" width="1360" height="3" fill="#18181A"/>
+
+  <!-- Bezier Connector Paths -->
+  <path d="M 264 340 C 284 340, 284 340, 304 340" stroke="#F59E0B" stroke-width="3" fill="none"/>
+  <path d="M 504 340 C 524 340, 524 340, 544 340" stroke="#F59E0B" stroke-width="3" fill="none"/>
+  <path d="M 744 340 C 764 340, 764 340, 784 340" stroke="#10B981" stroke-width="3" fill="none"/>
+  <path d="M 744 340 C 884 340, 884 500, 1024 500" stroke="#10B981" stroke-width="3" fill="none"/>
+
+  <!-- Cycle 1 Node -->
+  <g transform="translate(64, 280)">
+    <rect x="0" y="0" width="200" height="120" fill="#F2F0EC" stroke="#F59E0B" stroke-width="2"/>
+    <rect x="0" y="0" width="200" height="2" fill="#18181A"/>
+    <text x="14" y="24" fill="#4A4946" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700">CS1111 · Ciclo 1</text>
+    <text x="14" y="56" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="15" font-weight="700">Programación I</text>
+    <text x="14" y="98" fill="#B85D00" font-family="Inter, sans-serif" font-size="12" font-weight="600">● Prerrequisito base</text>
+  </g>
+
+  <!-- Cycle 2 Node -->
+  <g transform="translate(304, 280)">
+    <rect x="0" y="0" width="200" height="120" fill="#F2F0EC" stroke="#F59E0B" stroke-width="2"/>
+    <rect x="0" y="0" width="200" height="2" fill="#18181A"/>
+    <text x="14" y="24" fill="#4A4946" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700">CS1112 · Ciclo 2</text>
+    <text x="14" y="56" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="15" font-weight="700">Programación II</text>
+    <text x="14" y="98" fill="#B85D00" font-family="Inter, sans-serif" font-size="12" font-weight="600">● Prerrequisito directo</text>
+  </g>
+
+  <!-- Cycle 3 Selected Node -->
+  <g transform="translate(544, 280)">
+    <rect x="0" y="0" width="200" height="120" fill="#E0EBF5" stroke="#00779E" stroke-width="2.5"/>
+    <rect x="0" y="0" width="200" height="3" fill="#18181A"/>
+    <text x="14" y="24" fill="#005A78" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700">CS2013 · Ciclo 3</text>
+    <text x="14" y="56" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="15" font-weight="700">Programación III</text>
+    <text x="14" y="98" fill="#005A78" font-family="Inter, sans-serif" font-size="12" font-weight="700">★ Curso Seleccionado</text>
+  </g>
+
+  <!-- Cycle 4 Unlocked Node -->
+  <g transform="translate(784, 280)">
+    <rect x="0" y="0" width="200" height="120" fill="#F2F0EC" stroke="#10B981" stroke-width="2"/>
+    <rect x="0" y="0" width="200" height="2" fill="#18181A"/>
+    <text x="14" y="24" fill="#4A4946" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700">CS2023 · Ciclo 4</text>
+    <text x="14" y="56" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="15" font-weight="700">Algoritmos y Estructuras</text>
+    <text x="14" y="98" fill="#0D7A4E" font-family="Inter, sans-serif" font-size="12" font-weight="600">● Se desbloquea</text>
+  </g>
+
+  <!-- Cycle 5 Unlocked Node -->
+  <g transform="translate(1024, 440)">
+    <rect x="0" y="0" width="200" height="120" fill="#F2F0EC" stroke="#10B981" stroke-width="2"/>
+    <rect x="0" y="0" width="200" height="2" fill="#18181A"/>
+    <text x="14" y="24" fill="#4A4946" font-family="JetBrains Mono, monospace" font-size="12" font-weight="700">CS3015 · Ciclo 5</text>
+    <text x="14" y="56" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="15" font-weight="700">Machine Learning</text>
+    <text x="14" y="98" fill="#0D7A4E" font-family="Inter, sans-serif" font-size="12" font-weight="600">● Se desbloquea</text>
+  </g>
+</svg>

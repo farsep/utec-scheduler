@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, FileSpreadsheet, FileText, Upload, CheckCircle2, Download, AlertCircle, Trash2, Loader2, Code2 } from 'lucide-react';
+import { X, FileSpreadsheet, FileText, Upload, CheckCircle2, Download, AlertCircle, Trash2, Loader2, Code2, Sparkles } from 'lucide-react';
 import { parseExcelFile } from '../utils/excelParser';
 import { parsePDFFile, type PDFParseResult } from '../utils/pdfParser';
 import { getClassroomsCatalog } from '../utils/masterDataLoader';
@@ -242,7 +242,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         </p>
 
         {/* Consolidado Automatic Flow Info Badge */}
-        <div style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(16, 185, 129, 0.1) 100%)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '12px 14px', borderRadius: '10px', fontSize: '0.78rem', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div style={{ background: 'var(--accent-soft)', border: '1px solid var(--accent-primary)', borderLeft: '3px solid var(--accent-primary)', padding: '12px 14px', borderRadius: '0px', fontSize: '0.78rem', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ fontWeight: 700, color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={15} color="var(--accent-primary)" />
             <span>Sincronización Automática con Consolidados:</span>
@@ -253,7 +253,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         </div>
 
         {errorMsg && (
-          <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#fca5a5', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ background: '#F8EDE1', border: '1px solid var(--status-warn)', borderLeft: '3px solid var(--status-warn)', color: '#7A3E00', padding: '10px 14px', borderRadius: '0px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <AlertCircle size={16} />
             <span>{errorMsg}</span>
           </div>
@@ -386,7 +386,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         </div>
 
         {/* Download Sample File Box (Excel Only) */}
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-color)', padding: '14px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-hairline)', padding: '14px', borderRadius: '0px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Archivo de muestra pública para prueba:</div>
           <div>
             <a href="/samples/Consulta_Horario.xlsx" download className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '6px 12px', textDecoration: 'none', display: 'inline-flex' }}>

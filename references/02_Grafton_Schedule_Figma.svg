@@ -1,0 +1,125 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="900" fill="#E6E4DF"/>
+  <!-- Top Navbar -->
+  <rect x="0" y="0" width="1440" height="56" fill="#F2F0EC" stroke="#C6C3BB"/>
+  <circle cx="28" cy="28" r="5" fill="#00779E"/>
+  <text x="42" y="33" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="16" font-weight="700">MatricuLAB</text>
+  <rect x="148" y="18" width="92" height="22" fill="#DCD9D2" stroke="#C6C3BB"/>
+  <text x="158" y="33" fill="#4A4946" font-family="JetBrains Mono, monospace" font-size="11">UTEC · 2026-2</text>
+
+  <!-- Center Switcher -->
+  <rect x="460" y="12" width="520" height="32" fill="#DCD9D2" stroke="#C6C3BB"/>
+  <rect x="464" y="15" width="84" height="26" fill="#F2F0EC"/>
+  <text x="484" y="32" fill="#141416" font-family="Inter, sans-serif" font-size="12" font-weight="600">Horario</text>
+  <text x="568" y="32" fill="#4A4946" font-family="Inter, sans-serif" font-size="12">Malla &amp; Cursos</text>
+  <text x="684" y="32" fill="#4A4946" font-family="Inter, sans-serif" font-size="12">Mentores</text>
+  <text x="768" y="32" fill="#4A4946" font-family="Inter, sans-serif" font-size="12">Aulas Libres</text>
+  <text x="868" y="32" fill="#4A4946" font-family="Inter, sans-serif" font-size="12">Importar Oferta</text>
+
+  <!-- Export Button -->
+  <rect x="1324" y="14" width="92" height="28" fill="#00779E"/>
+  <text x="1346" y="32" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="12" font-weight="600">Exportar</text>
+
+  <!-- Left Sidebar -->
+  <rect x="0" y="56" width="320" height="844" fill="#F2F0EC" stroke="#C6C3BB"/>
+  <text x="20" y="88" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="15" font-weight="700">Tus Asignaturas</text>
+  <text x="20" y="106" fill="#787670" font-family="Inter, sans-serif" font-size="11">Pasa el cursor sobre otra sección para previsualizar</text>
+  <rect x="260" y="74" width="42" height="22" fill="#DCD9D2" stroke="#C6C3BB"/>
+  <text x="268" y="89" fill="#4A4946" font-family="JetBrains Mono, monospace" font-size="11">20 cr</text>
+
+  <!-- Sidebar Course Card 1 -->
+  <g transform="translate(16, 126)">
+    <rect x="0" y="0" width="288" height="106" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <rect x="0" y="0" width="288" height="2" fill="#18181A"/>
+    <circle cx="18" cy="24" r="4" fill="#006699"/>
+    <text x="30" y="28" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Programación III</text>
+    <text x="30" y="46" fill="#787670" font-family="JetBrains Mono, monospace" font-size="11">CS2013 · 4 cr</text>
+    <rect x="14" y="62" width="124" height="30" fill="#DCD9D2" stroke="#18181A"/>
+    <text x="24" y="81" fill="#141416" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600">Sec 1 · J. Fiérez</text>
+    <rect x="146" y="62" width="128" height="30" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <text x="154" y="81" fill="#4A4946" font-family="JetBrains Mono, monospace" font-size="11">Sec 2 · E. Gutiérrez</text>
+  </g>
+
+  <!-- Sidebar Course Card 2 -->
+  <g transform="translate(16, 246)">
+    <rect x="0" y="0" width="288" height="106" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <rect x="0" y="0" width="288" height="2" fill="#18181A"/>
+    <circle cx="18" cy="24" r="4" fill="#553C9A"/>
+    <text x="30" y="28" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Base de Datos I</text>
+    <text x="30" y="46" fill="#787670" font-family="JetBrains Mono, monospace" font-size="11">CS2041 · 4 cr</text>
+    <rect x="14" y="62" width="124" height="30" fill="#DCD9D2" stroke="#18181A"/>
+    <text x="24" y="81" fill="#141416" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600">Sec 1 · P. Lozano</text>
+    <rect x="146" y="62" width="128" height="30" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <text x="154" y="81" fill="#4A4946" font-family="JetBrains Mono, monospace" font-size="11">Sec 2 · K. Villanueva</text>
+  </g>
+
+  <!-- Sidebar Course Card 3 -->
+  <g transform="translate(16, 366)">
+    <rect x="0" y="0" width="288" height="106" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <rect x="0" y="0" width="288" height="2" fill="#18181A"/>
+    <circle cx="18" cy="24" r="4" fill="#0F7652"/>
+    <text x="30" y="28" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Algoritmos y Estructuras</text>
+    <text x="30" y="46" fill="#787670" font-family="JetBrains Mono, monospace" font-size="11">CS2023 · 4 cr</text>
+    <rect x="14" y="62" width="124" height="30" fill="#DCD9D2" stroke="#18181A"/>
+    <text x="24" y="81" fill="#141416" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600">Sec 1 · C. Silva</text>
+    <rect x="146" y="62" width="128" height="30" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <text x="154" y="81" fill="#4A4946" font-family="JetBrains Mono, monospace" font-size="11">Sec 2 · H. Bustamante</text>
+  </g>
+
+  <!-- Timetable Sub-Toolbar -->
+  <rect x="320" y="56" width="1120" height="48" fill="#F2F0EC" stroke="#C6C3BB"/>
+  <text x="344" y="84" fill="#787670" font-family="Inter, sans-serif" font-size="12">Combinaciones sugeridas:</text>
+  <rect x="498" y="67" width="196" height="26" fill="#E0EBF5" stroke="#00779E"/>
+  <text x="512" y="84" fill="#005A78" font-family="Inter, sans-serif" font-size="12" font-weight="600">Opción 1 · Mañanas compactas</text>
+  <rect x="704" y="67" width="160" height="26" fill="#DCD9D2" stroke="#C6C3BB"/>
+  <text x="718" y="84" fill="#4A4946" font-family="Inter, sans-serif" font-size="12">Opción 2 · Tardes libres</text>
+  <circle cx="1320" cy="80" r="4" fill="#0D7A4E"/>
+  <text x="1332" y="84" fill="#4A4946" font-family="Inter, sans-serif" font-size="12" font-weight="600">Sin cruces</text>
+
+  <!-- Main Timetable Card -->
+  <rect x="348" y="128" width="1064" height="740" fill="#F2F0EC" stroke="#C6C3BB"/>
+  <rect x="348" y="128" width="1064" height="2" fill="#18181A"/>
+  <rect x="348" y="130" width="1064" height="40" fill="#DCD9D2" stroke="#C6C3BB"/>
+  <text x="364" y="154" fill="#787670" font-family="JetBrains Mono, monospace" font-size="11">HORA</text>
+  <text x="440" y="154" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Lunes (4h)</text>
+  <text x="636" y="154" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Martes (4h)</text>
+  <text x="832" y="154" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Miércoles (4h)</text>
+  <text x="1028" y="154" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Jueves (4h)</text>
+  <text x="1224" y="154" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Viernes (2h)</text>
+
+  <!-- Schedule Blocks -->
+  <g transform="translate(424, 240)">
+    <rect x="0" y="0" width="180" height="120" fill="#E0EBF5" stroke="#006699" stroke-width="1.5"/>
+    <rect x="0" y="0" width="4" height="120" fill="#006699"/>
+    <text x="14" y="26" fill="#0A2E46" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Programación III</text>
+    <text x="14" y="102" fill="#0A2E46" font-family="JetBrains Mono, monospace" font-size="11">CS2013 · A702 · 09–11</text>
+  </g>
+
+  <g transform="translate(620, 240)">
+    <rect x="0" y="0" width="180" height="120" fill="#DCEEE6" stroke="#0F7652" stroke-width="1.5"/>
+    <rect x="0" y="0" width="4" height="120" fill="#0F7652"/>
+    <text x="14" y="26" fill="#093B29" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Algoritmos y Estructuras</text>
+    <text x="14" y="102" fill="#093B29" font-family="JetBrains Mono, monospace" font-size="11">CS2023 · A902 · 09–11</text>
+  </g>
+
+  <g transform="translate(816, 240)">
+    <rect x="0" y="0" width="180" height="120" fill="#E0EBF5" stroke="#006699" stroke-width="1.5"/>
+    <rect x="0" y="0" width="4" height="120" fill="#006699"/>
+    <text x="14" y="26" fill="#0A2E46" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Programación III (Lab)</text>
+    <text x="14" y="102" fill="#0A2E46" font-family="JetBrains Mono, monospace" font-size="11">CS2013 · L604 · 09–11</text>
+  </g>
+
+  <g transform="translate(816, 376)">
+    <rect x="0" y="0" width="180" height="120" fill="#E8E3F3" stroke="#553C9A" stroke-width="1.5"/>
+    <rect x="0" y="0" width="4" height="120" fill="#553C9A"/>
+    <text x="14" y="26" fill="#2A1B4E" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Base de Datos I</text>
+    <text x="14" y="102" fill="#2A1B4E" font-family="JetBrains Mono, monospace" font-size="11">CS2041 · A702 · 11–13</text>
+  </g>
+
+  <!-- Ghost Diff Block -->
+  <g transform="translate(620, 376)">
+    <rect x="0" y="0" width="180" height="120" fill="#00779E" fill-opacity="0.12" stroke="#00779E" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="14" y="28" fill="#005A78" font-family="Space Grotesk, Inter, sans-serif" font-size="13" font-weight="700">Ghost: Prog. III (Sec 2)</text>
+    <text x="14" y="102" fill="#005A78" font-family="JetBrains Mono, monospace" font-size="11">11:00–13:00 · A801</text>
+  </g>
+</svg>

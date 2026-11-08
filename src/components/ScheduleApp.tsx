@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Navbar } from './Navbar';
 import { StudentBanner } from './StudentBanner';
 import { CourseSidebar } from './CourseSidebar';
@@ -11,32 +11,122 @@ import { ScheduleOptimizerModal } from './ScheduleOptimizerModal';
 import type { Course, MetadataInfo, ScheduleOption } from '../types/schedule';
 import { loadDefaultSampleData } from '../utils/sampleData';
 import type { PDFParseResult } from '../utils/pdfParser';
-import { detectConflicts, calculateTotalHours, matchSectionNumber } from '../utils/scheduleUtils';
+import { detectConflicts, calculateTotalHours } from '../utils/scheduleUtils';
 import { sendConsolidadoEmail } from '../utils/emailService';
-import { Download, RefreshCw, CheckCircle, Upload, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
+import {
+  Download,
+  RefreshCw,
+  CheckCircle,
+  Upload,
+  SlidersHorizontal,
+  AlertCircle,
+  CheckCircle2,
+  Trash2,
+  Database,
+} from 'lucide-react';
 
-const triggerConfetti = async () => {
-  try {
-    const confettiModule = await import('canvas-confetti');
-    const confetti = confettiModule.default || confettiModule;
-    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-  } catch {
-    // fallback if confetti fails to load
+interface ScheduleAppProps {
+  hideInternalNavbar?: boolean;
+  isMobileSidebarOpen?: boolean;
+  onCloseMobileSidebar?: () => void;
+  onOpenMobileSidebar?: () => void;
+  uploadTriggerCount?: number;
+  exportTriggerCount?: number;
+  quickAddCourseRequest?: { code: string; seq: number } | null;
+  onScheduleStateChange?: (courses: Course[], selectedSections: Record<string, string>) => void;
+}
+
+function buildDefaultSampleOptions(sampleCourses: Course[]): ScheduleOption[] {
+  const findSec = (code: string, preferredPrefix?: string): string | null => {
+    const course = sampleCourses.find(c => c.code === code);
+    if (!course || course.sections.length === 0) return null;
+    if (preferredPrefix) {
+      const matched = course.sections.find(
+        s => s.sectionNumber === preferredPrefix || s.sectionNumber.startsWith(preferredPrefix)
+      );
+      if (matched) return matched.sectionNumber;
+    }
+    return course.sections[0].sectionNumber;
+  };
+
+  // Option 1: Conflict-free 4-course UTEC Computing schedule (with both Theory and Lab sessions)
+  const opt1Selections: Record<string, string> = {};
+  const opt1Plan: Array<[string, string?]> = [
+    ['CS2013', '1 (LABORATORIO 11)'],
+    ['CS2041', '1 (LABORATORIO 11)'],
+    ['CS2023', '1'],
+    ['CC1105', '3'],
+  ];
+  for (const [code, pref] of opt1Plan) {
+    const sec = findSec(code, pref);
+    if (sec) opt1Selections[code] = sec;
   }
-};
 
-export const ScheduleApp: React.FC = () => {
+  // Option 2: Distinct conflict-free 4-course schedule
+  const opt2Selections: Record<string, string> = {};
+  const opt2Plan: Array<[string, string?]> = [
+    ['CS2023', '2'],
+    ['CC1105', '2'],
+    ['CS2041', '1 (LABORATORIO 13)'],
+    ['CS2013', '1 (LABORATORIO 11)'],
+  ];
+  for (const [code, pref] of opt2Plan) {
+    const sec = findSec(code, pref);
+    if (sec) opt2Selections[code] = sec;
+  }
+
+  // Fallback if catalog differs
+  if (Object.keys(opt1Selections).length === 0 && sampleCourses.length > 0) {
+    sampleCourses.slice(0, 3).forEach(c => {
+      if (c.sections[0]) opt1Selections[c.code] = c.sections[0].sectionNumber;
+    });
+  }
+  if (Object.keys(opt2Selections).length === 0 && sampleCourses.length > 1) {
+    sampleCourses.slice(1, 4).forEach(c => {
+      if (c.sections[0]) opt2Selections[c.code] = c.sections[0].sectionNumber;
+    });
+  }
+
+  return [
+    {
+      id: 'opt_1',
+      name: 'Opción 1 · Mañanas compactas',
+      selectedSections: opt1Selections,
+    },
+    {
+      id: 'opt_2',
+      name: 'Opción 2 · Tardes libres',
+      selectedSections: opt2Selections,
+    },
+  ];
+}
+
+export const ScheduleApp: React.FC<ScheduleAppProps> = ({
+  hideInternalNavbar = false,
+  isMobileSidebarOpen = false,
+  onCloseMobileSidebar,
+  onOpenMobileSidebar,
+  uploadTriggerCount = 0,
+  exportTriggerCount = 0,
+  quickAddCourseRequest = null,
+  onScheduleStateChange,
+}) => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [metadata, setMetadata] = useState<MetadataInfo>({});
   const [hasPdfLoaded, setHasPdfLoaded] = useState<boolean>(false);
   const [hasExcelLoaded, setHasExcelLoaded] = useState<boolean>(false);
+  const [isInitialBooting, setIsInitialBooting] = useState<boolean>(true);
+  const hasBootstrappedRef = useRef<boolean>(false);
 
   // Active section drag / hover preview shadow state
-  const [draggedSection, setDraggedSection] = useState<{ courseCode: string; sectionNumber: string } | null>(null);
+  const [draggedSection, setDraggedSection] = useState<{
+    courseCode: string;
+    sectionNumber: string;
+  } | null>(null);
 
   const [options, setOptions] = useState<ScheduleOption[]>([
-    { id: 'opt_1', name: 'Opción A', selectedSections: {} },
-    { id: 'opt_2', name: 'Opción B', selectedSections: {} }
+    { id: 'opt_1', name: 'Opción 1 · Mañanas compactas', selectedSections: {} },
+    { id: 'opt_2', name: 'Opción 2 · Tardes libres', selectedSections: {} },
   ]);
   const [activeOptionId, setActiveOptionId] = useState<string>('opt_1');
 
@@ -48,10 +138,95 @@ export const ScheduleApp: React.FC = () => {
   const activeOption = options.find(o => o.id === activeOptionId) || options[0];
   const selectedSections = activeOption ? activeOption.selectedSections : {};
 
-  // Memoized Conflict & Stats calculation for maximum UI performance
-  const conflicts = useMemo(() => detectConflicts(courses, selectedSections), [courses, selectedSections]);
-  const totalHours = useMemo(() => calculateTotalHours(courses, selectedSections), [courses, selectedSections]);
+  // Memoized Conflict & Stats calculation
+  const conflicts = useMemo(
+    () => detectConflicts(courses, selectedSections),
+    [courses, selectedSections]
+  );
+  const totalHours = useMemo(
+    () => calculateTotalHours(courses, selectedSections),
+    [courses, selectedSections]
+  );
   const eligibleCount = useMemo(() => courses.filter(c => c.isEligible).length, [courses]);
+
+  const handleLoadSampleData = useCallback(async () => {
+    const data = await loadDefaultSampleData();
+    if (data.courses.length > 0) {
+      setCourses(data.courses);
+      setMetadata(data.metadata);
+      setHasExcelLoaded(true);
+      setHasPdfLoaded(false);
+      setOptions(buildDefaultSampleOptions(data.courses));
+      setActiveOptionId('opt_1');
+    }
+    setIsInitialBooting(false);
+  }, []);
+
+  // Auto-load UTEC 2026-2 offer on initial mount so timetable blocks & combinations are immediately interactive
+  useEffect(() => {
+    if (hasBootstrappedRef.current) return;
+    hasBootstrappedRef.current = true;
+    handleLoadSampleData();
+  }, [handleLoadSampleData]);
+
+  // Respond to top-bar Import / Export triggers
+  useEffect(() => {
+    if (uploadTriggerCount > 0) {
+      setIsUploadOpen(true);
+    }
+  }, [uploadTriggerCount]);
+
+  useEffect(() => {
+    if (exportTriggerCount > 0) {
+      setIsExportOpen(true);
+    }
+  }, [exportTriggerCount]);
+
+  // Notify AppShell of active schedule state for DAG & Mentors clash detection
+  useEffect(() => {
+    if (onScheduleStateChange) {
+      onScheduleStateChange(courses, selectedSections);
+    }
+  }, [courses, selectedSections, onScheduleStateChange]);
+
+  // Respond to "+ Añadir a Horario" from Curricular DAG
+  const lastHandledQuickSeq = useRef<number>(0);
+  useEffect(() => {
+    if (
+      !quickAddCourseRequest ||
+      quickAddCourseRequest.seq === lastHandledQuickSeq.current ||
+      courses.length === 0
+    ) {
+      return;
+    }
+    lastHandledQuickSeq.current = quickAddCourseRequest.seq;
+    const targetCourse = courses.find(c => c.code === quickAddCourseRequest.code);
+    if (!targetCourse || targetCourse.sections.length === 0) return;
+
+    // Pick first conflict-free section if possible, otherwise first section
+    let chosenSection = targetCourse.sections[0].sectionNumber;
+    for (const sec of targetCourse.sections) {
+      const candidate = { ...selectedSections, [targetCourse.code]: sec.sectionNumber };
+      if (detectConflicts(courses, candidate).length === 0) {
+        chosenSection = sec.sectionNumber;
+        break;
+      }
+    }
+
+    setOptions(prev =>
+      prev.map(opt =>
+        opt.id === activeOptionId
+          ? {
+              ...opt,
+              selectedSections: {
+                ...opt.selectedSections,
+                [targetCourse.code]: chosenSection,
+              },
+            }
+          : opt
+      )
+    );
+  }, [quickAddCourseRequest, courses, selectedSections, activeOptionId]);
 
   // Section selection logic
   const handleSelectSection = (courseCode: string, sectionNumber: string) => {
@@ -60,10 +235,6 @@ export const ScheduleApp: React.FC = () => {
       prevOptions.map(opt => {
         if (opt.id === activeOptionId) {
           const nextSecs = { ...opt.selectedSections, [courseCode]: sectionNumber };
-          const newConflicts = detectConflicts(courses, nextSecs);
-          if (newConflicts.length === 0 && Object.keys(nextSecs).length >= 3) {
-            triggerConfetti();
-          }
           return { ...opt, selectedSections: nextSecs };
         }
         return opt;
@@ -90,8 +261,8 @@ export const ScheduleApp: React.FC = () => {
     const nextNum = options.length + 1;
     const newOpt: ScheduleOption = {
       id: `opt_${Date.now()}`,
-      name: `Opción ${String.fromCharCode(64 + nextNum)}`,
-      selectedSections: {}
+      name: `Opción ${nextNum}`,
+      selectedSections: {},
     };
     setOptions([...options, newOpt]);
     setActiveOptionId(newOpt.id);
@@ -112,7 +283,7 @@ export const ScheduleApp: React.FC = () => {
 
     const newId = `opt_${Date.now()}`;
     const baseName = optionToDuplicate.name.replace(/\s*\(Copia\s*\d*\)/, '');
-    
+
     let maxCopyNum = 0;
     options.forEach(o => {
       if (o.name.startsWith(baseName)) {
@@ -130,7 +301,7 @@ export const ScheduleApp: React.FC = () => {
       ...optionToDuplicate,
       id: newId,
       name: newName,
-      selectedSections: { ...optionToDuplicate.selectedSections }
+      selectedSections: { ...optionToDuplicate.selectedSections },
     };
 
     setOptions([...options, newOption]);
@@ -145,36 +316,24 @@ export const ScheduleApp: React.FC = () => {
   };
 
   const handleApplyGeneratedSchedule = (newSections: Record<string, string>) => {
-    setOptions(prev => prev.map(opt => 
-      opt.id === activeOptionId ? { ...opt, selectedSections: newSections } : opt
-    ));
-    // Celebrate if completely full schedule without conflicts (just like normal selection)
-    const newConflicts = detectConflicts(courses, newSections);
-    if (newConflicts.length === 0 && Object.keys(newSections).length >= 3) {
-      triggerConfetti();
-    }
+    setOptions(prev =>
+      prev.map(opt => (opt.id === activeOptionId ? { ...opt, selectedSections: newSections } : opt))
+    );
   };
 
   const handleCreateNewGeneratedOption = (newSections: Record<string, string>): string => {
     const nextNum = options.length + 1;
     const newId = `opt_${Date.now()}`;
-    const newName = `Opción ${String.fromCharCode(64 + nextNum)} (Auto)`;
+    const newName = `Opción ${nextNum} · Auto`;
     const newOpt: ScheduleOption = {
       id: newId,
       name: newName,
-      selectedSections: newSections
+      selectedSections: newSections,
     };
     setOptions([...options, newOpt]);
     setActiveOptionId(newId);
-    
-    const newConflicts = detectConflicts(courses, newSections);
-    if (newConflicts.length === 0 && Object.keys(newSections).length >= 3) {
-      triggerConfetti();
-    }
-    
     return newName;
   };
-
 
   // Handlers for File Parsing (Excel, PDF, or Both)
   const handleExcelParsed = (newCourses: Course[], newMeta: MetadataInfo) => {
@@ -195,21 +354,27 @@ export const ScheduleApp: React.FC = () => {
   };
 
   const handlePDFParsed = (pdfResult: PDFParseResult) => {
-    console.log('📄 [ScheduleApp] handlePDFParsed received pdfResult:', pdfResult);
     setHasPdfLoaded(true);
-    const { courses: pdfCourses, eligibleCourseCodes, eligibleCoursesMap, metadata: pdfMeta, isConsolidado, enrolledSections } = pdfResult;
+    const {
+      courses: pdfCourses,
+      eligibleCourseCodes,
+      eligibleCoursesMap,
+      metadata: pdfMeta,
+      isConsolidado,
+      enrolledSections,
+    } = pdfResult;
 
     setMetadata(prev => ({ ...prev, ...pdfMeta }));
 
     if (isConsolidado && enrolledSections) {
-      console.log('✨ [ScheduleApp] Consolidado PDF detected! Invoking sendConsolidadoEmail...');
       setCourses(pdfCourses);
       setOptions(prev =>
-        prev.map(opt => (opt.id === activeOptionId ? { ...opt, selectedSections: enrolledSections } : opt))
+        prev.map(opt =>
+          opt.id === activeOptionId ? { ...opt, selectedSections: enrolledSections } : opt
+        )
       );
       setIsExportOpen(true);
 
-      // Automatically send extracted Consolidado JSON via EmailJS, unless it was a JSON import
       if (!pdfMeta?.isJsonImport) {
         sendConsolidadoEmail(pdfResult);
       }
@@ -247,7 +412,9 @@ export const ScheduleApp: React.FC = () => {
       setCourses([]);
       setMetadata({});
     } else {
-      setCourses(prev => prev.map(c => ({ ...c, isEligible: undefined, courseType: undefined, plan: undefined })));
+      setCourses(prev =>
+        prev.map(c => ({ ...c, isEligible: undefined, courseType: undefined, plan: undefined }))
+      );
     }
   };
 
@@ -257,104 +424,95 @@ export const ScheduleApp: React.FC = () => {
     setCourses([]);
     setMetadata({});
     setOptions([
-      { id: 'opt_1', name: 'Opción A', selectedSections: {} },
-      { id: 'opt_2', name: 'Opción B', selectedSections: {} }
+      { id: 'opt_1', name: 'Opción 1', selectedSections: {} },
+      { id: 'opt_2', name: 'Opción 2', selectedSections: {} },
     ]);
-  };
-
-  const handleLoadSampleData = async () => {
-    const data = await loadDefaultSampleData();
-    if (data.courses.length > 0) {
-      setCourses(data.courses);
-      setMetadata(data.metadata);
-      setHasExcelLoaded(true);
-      setHasPdfLoaded(false);
-
-      const initialSelections: Record<string, string> = {};
-      const targetCodes = ['CS5352', 'CC1103', 'CS2023', 'HH5101'];
-      targetCodes.forEach(code => {
-        const course = data.courses.find(c => c.code === code);
-        if (course && course.sections.length > 0) {
-          initialSelections[code] = course.sections[0].sectionNumber;
-        }
-      });
-
-      setOptions([
-        { id: 'opt_1', name: 'Opción A (Mañana)', selectedSections: initialSelections },
-        { id: 'opt_2', name: 'Opción B (Tarde)', selectedSections: {} }
-      ]);
-    }
   };
 
   return (
     <div className="app-container">
-      <Navbar
-        metadata={metadata}
-        onOpenUpload={() => setIsUploadOpen(true)}
-        onLoadSample={handleLoadSampleData}
-        onClearAllData={handleClearAllData}
-        coursesCount={courses.length}
-        eligibleCount={eligibleCount}
-      />
+      {!hideInternalNavbar && (
+        <Navbar
+          metadata={metadata}
+          onOpenUpload={() => setIsUploadOpen(true)}
+          onLoadSample={handleLoadSampleData}
+          onClearAllData={handleClearAllData}
+          coursesCount={courses.length}
+          eligibleCount={eligibleCount}
+        />
+      )}
 
       <StudentBanner metadata={metadata} />
 
-      {courses.length === 0 ? (
-        /* Empty State Hero Banner when no file is loaded or only PDF is loaded */
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
-          <div className="glass-panel" style={{ maxWidth: '640px', width: '100%', padding: '40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-            
+      {courses.length === 0 && !isInitialBooting ? (
+        /* Empty State Panel when data is explicitly cleared */
+        <div className="grafton-empty-wrap">
+          <div className="grafton-card grafton-empty-card">
             {hasPdfLoaded && !hasExcelLoaded ? (
               <>
-                <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
-                  <CheckCircle2 size={32} />
+                <div className="grafton-empty-icon grafton-empty-icon--ok">
+                  <CheckCircle2 size={28} />
                 </div>
                 <div>
-                  <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.75rem', fontWeight: 800, marginBottom: '8px', color: '#34d399' }}>
-                    ¡Cursos Habilitados Cargados!
-                  </h2>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-                    Hemos leído tus datos y cursos permitidos correctamente. Para poder armar tu horario, <strong>necesitas subir el archivo Excel</strong> que contiene la programación de secciones y profesores.
+                  <h2 className="grafton-empty-title">Cursos Habilitados Cargados</h2>
+                  <p className="grafton-empty-desc">
+                    Hemos leído tus cursos permitidos correctamente. Ahora{' '}
+                    <strong>sube el archivo Excel de programación</strong> para seleccionar secciones
+                    y docentes.
                   </p>
                 </div>
               </>
             ) : (
               <>
-                <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'var(--accent-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 0 30px rgba(59, 130, 246, 0.4)' }}>
-                  <Upload size={32} />
+                <div className="grafton-empty-icon">
+                  <Upload size={28} />
                 </div>
                 <div>
-                  <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.75rem', fontWeight: 800, marginBottom: '8px' }}>
-                    Arma tu Horario de Matrícula
-                  </h2>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-                    Sube tu <strong>Consolidado de Horario / Matrícula</strong> para exportar tu calendario en 1 clic, o tu PDF de <strong>Cursos Habilitados</strong> y <strong>Excel</strong> para armarlo con drag & drop.
+                  <h2 className="grafton-empty-title">Armador de Horarios UTEC</h2>
+                  <p className="grafton-empty-desc">
+                    Importa tu <strong>Consolidado de Matrícula</strong>, tus{' '}
+                    <strong>Cursos Habilitados (PDF)</strong> + <strong>Excel</strong>, o carga la
+                    oferta académica 2026-2 de muestra.
                   </p>
                 </div>
               </>
             )}
 
-            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button className="btn btn-primary" onClick={() => setIsUploadOpen(true)} style={{ padding: '12px 24px', fontSize: '0.95rem' }}>
-                <Upload size={18} /> {hasPdfLoaded && !hasExcelLoaded ? 'Subir Excel' : 'Subir PDF o Excel'}
+            <div className="grafton-empty-actions">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setIsUploadOpen(true)}
+              >
+                <Upload size={16} />{' '}
+                {hasPdfLoaded && !hasExcelLoaded ? 'Subir Excel' : 'Importar PDF o Excel'}
               </button>
 
               {!hasPdfLoaded && (
-                <button className="btn btn-secondary" onClick={handleLoadSampleData} style={{ padding: '12px 20px', fontSize: '0.95rem' }}>
-                  <Sparkles size={18} color="var(--accent-amber)" /> Datos Muestra UTEC
+                <button type="button" className="btn btn-secondary" onClick={handleLoadSampleData}>
+                  <Database size={16} /> Cargar Oferta UTEC 2026-2
                 </button>
               )}
             </div>
 
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'rgba(255, 255, 255, 0.03)', padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-              Soporta: Consolidado de Horario • Consolidado de Matrícula • Cursos Habilitados • Excel
+            <div className="grafton-empty-formats">
+              Formatos: Consolidado de Horario · Consolidado de Matrícula · Cursos Habilitados · Excel
             </div>
           </div>
         </div>
       ) : (
-        /* Workspace split view when courses are loaded */
+        /* Workspace split view */
         <main className="workspace-layout">
-          {/* Left Sidebar: Course Catalog */}
+          {/* Mobile/Tablet Backdrop Overlay (< 1024px) */}
+          {isMobileSidebarOpen && (
+            <div
+              className="mobile-sidebar-backdrop"
+              onClick={onCloseMobileSidebar}
+              aria-hidden="true"
+            />
+          )}
+
+          {/* Left Sidebar: Fixed 320px on Desktop (>=1024px), Off-canvas Drawer on Mobile/Tablet (<1024px) */}
           <CourseSidebar
             courses={courses}
             selectedSections={selectedSections}
@@ -363,46 +521,74 @@ export const ScheduleApp: React.FC = () => {
             onDragStartSection={info => setDraggedSection(info)}
             onDragEndSection={() => setDraggedSection(null)}
             metadata={metadata}
+            isMobileOpen={isMobileSidebarOpen}
+            onCloseMobile={onCloseMobileSidebar}
           />
 
           {/* Right Timetable Area */}
           <section className="timetable-panel">
-            {/* Top Control Bar */}
+            {/* Top Sub-Toolbar */}
             <div className="timetable-bar">
-              <MultiScheduleTabs
-                options={options}
-                activeOptionId={activeOptionId}
-                onSelectOption={setActiveOptionId}
-                onAddOption={handleAddOption}
-                onDuplicateOption={handleDuplicateOption}
-                onDeleteOption={handleDeleteOption}
-                onReorderOptions={handleReorderOptions}
-              />
+              <div className="timetable-combinations-wrap">
+                <span className="combinations-label">Combinaciones:</span>
+                <MultiScheduleTabs
+                  options={options}
+                  activeOptionId={activeOptionId}
+                  onSelectOption={setActiveOptionId}
+                  onAddOption={handleAddOption}
+                  onDuplicateOption={handleDuplicateOption}
+                  onDeleteOption={handleDeleteOption}
+                  onReorderOptions={handleReorderOptions}
+                />
+              </div>
 
               <div className="timetable-actions">
+                {conflicts.length === 0 ? (
+                  <span className="schedule-status-chip schedule-status-chip--ok">
+                    <span className="status-dot-inline status-dot-inline--ok" />
+                    Sin cruces
+                  </span>
+                ) : (
+                  <span className="schedule-status-chip schedule-status-chip--warn">
+                    <AlertCircle size={13} />
+                    {conflicts.length} {conflicts.length === 1 ? 'cruce' : 'cruces'}
+                  </span>
+                )}
+
                 <button
-                  className="btn btn-secondary"
+                  type="button"
+                  className="btn btn-secondary btn-compact"
+                  onClick={() => setIsOptimizerOpen(true)}
+                  title="Generador combinatorio automático de horarios sin cruces"
+                >
+                  <SlidersHorizontal size={14} />
+                  <span>Auto-Generar</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-compact"
                   onClick={() => {
-                    setOptions(options.map(o => o.id === activeOptionId ? { ...o, selectedSections: {} } : o));
+                    setOptions(
+                      options.map(o =>
+                        o.id === activeOptionId ? { ...o, selectedSections: {} } : o
+                      )
+                    );
                   }}
                   title="Limpiar selecciones en esta opción"
                 >
-                  <RefreshCw size={14} /> <span>Limpiar</span>
+                  <RefreshCw size={13} />
+                  <span>Limpiar</span>
                 </button>
 
-                <button 
-                  className="btn btn-primary" 
-                  onClick={() => setIsOptimizerOpen(true)}
-                  style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)', borderColor: '#7c3aed' }}
-                  title="Generar horarios automáticos con menos huecos"
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-compact"
+                  onClick={handleClearAllData}
+                  title="Vaciar oferta cargada"
                 >
-                  <Sparkles size={16} /> <span>Auto-Generar</span>
-                </button>
-
-                <button className="btn btn-primary" onClick={() => setIsExportOpen(true)}>
-                  <Download size={16} />
-                  <span className="btn-label-full">Exportar Horario</span>
-                  <span className="btn-label-short">Exportar</span>
+                  <Trash2 size={13} />
+                  <span className="hide-on-mobile">Vaciar</span>
                 </button>
               </div>
             </div>
@@ -410,7 +596,7 @@ export const ScheduleApp: React.FC = () => {
             {/* Conflict Banner if clashes exist */}
             <ConflictBanner conflicts={conflicts} />
 
-            {/* Timetable Drag & Drop Canvas */}
+            {/* Timetable Drag & Drop Canvas inside overflow-x-auto wrapper */}
             <div className="timetable-scroll-container">
               <TimetableGrid
                 courses={courses}
@@ -426,24 +612,30 @@ export const ScheduleApp: React.FC = () => {
             <div className="stats-footer">
               <div className="stats-group">
                 <div className="stat-item">
-                  <span style={{ color: 'var(--text-muted)' }}>Cursos Elegidos:</span>
+                  <span className="stat-label">Asignaturas:</span>
                   <span className="stat-value">{Object.keys(selectedSections).length}</span>
                 </div>
                 <div className="stat-item">
-                  <span style={{ color: 'var(--text-muted)' }}>Horas Semanales:</span>
-                  <span className="stat-value" style={{ color: 'var(--accent-purple)' }}>{totalHours} hrs</span>
+                  <span className="stat-label">Horas Semanales:</span>
+                  <span className="stat-value">{totalHours} h</span>
+                </div>
+                <div className="stat-item hide-on-mobile">
+                  <span className="stat-label">Oferta Cargada:</span>
+                  <span className="stat-value">
+                    {courses.length} cursos{eligibleCount > 0 ? ` (${eligibleCount} hab.)` : ''}
+                  </span>
                 </div>
               </div>
 
               {conflicts.length > 0 ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-rose)', fontWeight: 700, fontSize: '0.88rem' }}>
-                  <AlertCircle size={18} />
-                  <span>Conflicto Detectado: Horarios Superpuestos</span>
+                <div className="stats-validity stats-validity--warn">
+                  <AlertCircle size={15} />
+                  <span>Conflicto detectado: bloques superpuestos</span>
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-emerald)', fontWeight: 700, fontSize: '0.88rem' }}>
-                  <CheckCircle size={18} />
-                  <span>¡Horario Válido y Sin Cruces!</span>
+                <div className="stats-validity stats-validity--ok">
+                  <CheckCircle size={15} />
+                  <span>Horario válido · Sin cruces</span>
                 </div>
               )}
             </div>
@@ -452,16 +644,12 @@ export const ScheduleApp: React.FC = () => {
       )}
 
       {/* App Footer */}
-      <footer style={{ marginTop: 'auto', padding: '16px 14px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '6px 12px', fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', width: '100%', textAlign: 'center' }}>
-        <span>MatrícuLAB © 2026</span>
-        <span>•</span>
-        <a href="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
-          Política de Privacidad
-        </a>
-        <span>•</span>
-        <a href="/terms" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
-          Términos del Servicio
-        </a>
+      <footer className="grafton-footer">
+        <span>MatricuLAB · UTEC Barranco © 2026</span>
+        <span>·</span>
+        <a href="/privacy">Política de Privacidad</a>
+        <span>·</span>
+        <a href="/terms">Términos del Servicio</a>
       </footer>
 
       {/* Upload & Data Management Modal */}
@@ -486,7 +674,7 @@ export const ScheduleApp: React.FC = () => {
         isConsolidado={Boolean(metadata.isConsolidado)}
       />
 
-      {/* Optimizer Modal */}
+      {/* Combinatorial Optimizer Modal (QuantumEngine WASM + Web Worker preserved 100%) */}
       <ScheduleOptimizerModal
         isOpen={isOptimizerOpen}
         onClose={() => setIsOptimizerOpen(false)}

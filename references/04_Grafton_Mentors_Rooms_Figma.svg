@@ -1,0 +1,40 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="900" fill="#E6E4DF"/>
+  <!-- Left Column: Peer Mentors -->
+  <rect x="40" y="40" width="660" height="820" fill="#F2F0EC" stroke="#C6C3BB"/>
+  <rect x="40" y="40" width="660" height="3" fill="#18181A"/>
+  <text x="68" y="84" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="18" font-weight="700">MENTORES &amp; ASESORÍAS (COMPATIBLES CON TU HORARIO)</text>
+
+  <g transform="translate(68, 114)">
+    <rect x="0" y="0" width="604" height="190" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <rect x="0" y="0" width="604" height="2" fill="#18181A"/>
+    <text x="20" y="34" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="16" font-weight="700">Arnie S. · ★ 4.98</text>
+    <text x="20" y="56" fill="#4A4946" font-family="Inter, sans-serif" font-size="13">Estructuras de Datos, C++ &amp; Algoritmos · Cubículo B-402</text>
+    <rect x="20" y="72" width="260" height="28" fill="#DCD9D2" stroke="#C6C3BB"/>
+    <text x="30" y="90" fill="#141416" font-family="JetBrains Mono, monospace" font-size="11">CS2013 · Programación III</text>
+    <rect x="20" y="122" width="270" height="44" fill="#DCEEE6" stroke="#0D7A4E" stroke-width="1.5"/>
+    <text x="36" y="149" fill="#093B29" font-family="JetBrains Mono, monospace" font-size="12" font-weight="600">Lun 14:00–16:00 · ● Libre</text>
+    <rect x="306" y="122" width="278" height="44" fill="#DCD9D2" stroke="#C6C3BB"/>
+    <text x="322" y="149" fill="#787670" font-family="JetBrains Mono, monospace" font-size="12">Lun 09:00–11:00 · Cruza CS2013</text>
+  </g>
+
+  <!-- Right Column: Campus Floors -->
+  <rect x="740" y="40" width="660" height="820" fill="#F2F0EC" stroke="#C6C3BB"/>
+  <rect x="740" y="40" width="660" height="3" fill="#18181A"/>
+  <text x="768" y="84" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="18" font-weight="700">AULAS Y LABORATORIOS LIBRES (PISOS UTEC BARRANCO)</text>
+
+  <g transform="translate(768, 114)">
+    <rect x="0" y="0" width="604" height="150" fill="#F2F0EC" stroke="#C6C3BB"/>
+    <rect x="0" y="0" width="604" height="2" fill="#18181A"/>
+    <text x="20" y="34" fill="#141416" font-family="Space Grotesk, Inter, sans-serif" font-size="16" font-weight="700">Piso 8 &amp; 9 · Computación y Ciencia de Datos</text>
+    <rect x="20" y="64" width="176" height="58" fill="#F2F0EC" stroke="#0D7A4E" stroke-width="1.5"/>
+    <text x="34" y="90" fill="#141416" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700">● A902</text>
+    <text x="34" y="110" fill="#0D7A4E" font-family="Inter, sans-serif" font-size="12">Libre · 40 sitios</text>
+    <rect x="212" y="64" width="176" height="58" fill="#F2F0EC" stroke="#0D7A4E" stroke-width="1.5"/>
+    <text x="226" y="90" fill="#141416" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700">● A904</text>
+    <text x="226" y="110" fill="#0D7A4E" font-family="Inter, sans-serif" font-size="12">Libre · 40 sitios</text>
+    <rect x="404" y="64" width="176" height="58" fill="#DCD9D2" stroke="#C6C3BB"/>
+    <text x="418" y="90" fill="#787670" font-family="JetBrains Mono, monospace" font-size="13">○ A801</text>
+    <text x="418" y="110" fill="#787670" font-family="Inter, sans-serif" font-size="12">En clase ahora</text>
+  </g>
+</svg>

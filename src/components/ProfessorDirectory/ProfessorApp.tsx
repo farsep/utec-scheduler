@@ -28,7 +28,11 @@ import {
   Radio
 } from 'lucide-react';
 
-export const ProfessorApp: React.FC = () => {
+interface ProfessorAppProps {
+  hideTopNavbar?: boolean;
+}
+
+export const ProfessorApp: React.FC<ProfessorAppProps> = ({ hideTopNavbar = false }) => {
   const initialTime = getCurrentDayAndMinutes();
   const cachedProfessors = getSynchronousCachedProfessors();
 
@@ -160,11 +164,13 @@ export const ProfessorApp: React.FC = () => {
   return (
     <div className="classroom-finder-root professor-finder-root">
       {/* Top Navbar */}
-      <ProfessorNavbar
-        totalProfessors={professors.length}
-        filteredCount={filteredProfessors.length}
-        teachingNowCount={teachingNowCount}
-      />
+      {!hideTopNavbar && (
+        <ProfessorNavbar
+          totalProfessors={professors.length}
+          filteredCount={filteredProfessors.length}
+          teachingNowCount={teachingNowCount}
+        />
+      )}
 
       <main className="classroom-finder-main professor-finder-main">
         {/* Hero Banner */}

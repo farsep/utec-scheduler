@@ -1,19 +1,43 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, ChevronDown, ChevronRight, Plus, Trash2, GripVertical, CheckCircle2, MapPin, User, Users, Check } from 'lucide-react';
+import {
+  Search,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  Trash2,
+  CheckCircle2,
+  MapPin,
+  User,
+  Check,
+  X,
+} from 'lucide-react';
 import type { Course, Section, Session, FilterState } from '../types/schedule';
 import { normalizeString, formatLocation } from '../utils/scheduleUtils';
+import { getGraftonPigment } from '../utils/graftonPigments';
 
 interface CourseSidebarProps {
   courses: Course[];
-  selectedSections: Record<string, string>; // courseCode -> sectionNumber
+  selectedSections: Record<string, string>;
   onSelectSection: (courseCode: string, sectionNumber: string) => void;
   onRemoveSection: (courseCode: string) => void;
   onDragStartSection: (dragInfo: { courseCode: string; sectionNumber: string }) => void;
   onDragEndSection: () => void;
   metadata?: import('../types/schedule').MetadataInfo;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
-const CustomSelect = ({ value, options, onChange, placeholder }: { value: string, options: string[], onChange: (val: string) => void, placeholder: string }) => {
+const CustomSelect = ({
+  value,
+  options,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  options: string[];
+  onChange: (val: string) => void;
+  placeholder: string;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -29,77 +53,44 @@ const CustomSelect = ({ value, options, onChange, placeholder }: { value: string
 
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
-      <div 
+      <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          background: 'rgba(0,0,0,0.3)',
-          border: isOpen ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)',
-          color: 'var(--text-primary)',
-          padding: '6px 10px',
-          borderRadius: '6px',
-          fontSize: '0.85rem',
-          cursor: 'pointer',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          transition: 'all 0.2s',
-          boxShadow: isOpen ? '0 0 0 2px rgba(59, 130, 246, 0.2)' : 'none'
-        }}
+        className="grafton-custom-select-trigger"
       >
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {value === 'ALL' ? placeholder : value}
         </span>
-        <ChevronDown size={14} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-      </div>
+        <ChevronDown
+          size={14}
+          style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}
+        />
+      </button>
 
       {isOpen && (
-        <div style={{
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          marginTop: '4px',
-          background: 'var(--bg-secondary)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: '6px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
-          zIndex: 100,
-          maxHeight: '220px',
-          overflowY: 'auto'
-        }}>
-          <div 
-            onClick={() => { onChange('ALL'); setIsOpen(false); }}
-            style={{
-              padding: '10px 12px',
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              background: value === 'ALL' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-              color: value === 'ALL' ? 'var(--accent-primary)' : 'var(--text-primary)',
-              transition: 'background 0.15s'
+        <div className="grafton-custom-select-menu">
+          <button
+            type="button"
+            className={`grafton-custom-select-opt ${value === 'ALL' ? 'is-active' : ''}`}
+            onClick={() => {
+              onChange('ALL');
+              setIsOpen(false);
             }}
-            onMouseEnter={e => { if(value !== 'ALL') e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
-            onMouseLeave={e => { if(value !== 'ALL') e.currentTarget.style.background = 'transparent' }}
           >
             {placeholder}
-          </div>
+          </button>
           {options.map((opt: string) => (
-            <div 
+            <button
               key={opt}
-              onClick={() => { onChange(opt); setIsOpen(false); }}
-              style={{
-                padding: '10px 12px',
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                background: value === opt ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                color: value === opt ? 'var(--accent-primary)' : 'var(--text-primary)',
-                borderTop: '1px solid rgba(255,255,255,0.04)',
-                transition: 'background 0.15s'
+              type="button"
+              className={`grafton-custom-select-opt ${value === opt ? 'is-active' : ''}`}
+              onClick={() => {
+                onChange(opt);
+                setIsOpen(false);
               }}
-              onMouseEnter={e => { if(value !== opt) e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
-              onMouseLeave={e => { if(value !== opt) e.currentTarget.style.background = 'transparent' }}
             >
               {opt}
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -125,7 +116,9 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
   onRemoveSection,
   onDragStartSection,
   onDragEndSection,
-  metadata
+  metadata,
+  isMobileOpen = false,
+  onCloseMobile,
 }) => {
   const [filterState, setFilterState] = useState<FilterState>({
     searchQuery: '',
@@ -133,21 +126,21 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
     onlySelected: false,
     modalityFilter: 'ALL',
     dayFilter: 'ALL',
-    typeFilter: 'ALL'
+    typeFilter: 'ALL',
   });
 
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
+  // Collapse selected sample courses initially on compact cards? No, let's keep compact section switcher or expandable cleanly!
   const [collapsedCourses, setCollapsedCourses] = useState<Set<string>>(new Set());
   const [professorFilters, setProfessorFilters] = useState<Record<string, string>>({});
 
   const hasEligibleFilter = courses.some(c => c.isEligible) && courses.some(c => !c.isEligible);
   const hasCourseTypeData = courses.some(c => c.courseType !== undefined);
 
-  // Handle filtering
   const filteredCourses = useMemo(() => {
     const q = filterState.searchQuery ? normalizeString(filterState.searchQuery) : '';
 
-    return courses.filter(course => {
+    const list = courses.filter(course => {
       if (q) {
         const normCode = normalizeString(course.code);
         const normName = normalizeString(course.name);
@@ -175,7 +168,27 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
       return true;
     });
-  }, [courses, filterState.searchQuery, filterState.onlyEligible, filterState.onlySelected, filterState.typeFilter, hasEligibleFilter, selectedSections]);
+
+    // Put currently selected courses at the top when no search query is typed so the user sees their active schedule courses immediately
+    if (!q) {
+      return [...list].sort((a, b) => {
+        const aSel = selectedSections[a.code] ? 1 : 0;
+        const bSel = selectedSections[b.code] ? 1 : 0;
+        if (aSel !== bSel) return bSel - aSel;
+        return 0;
+      });
+    }
+
+    return list;
+  }, [
+    courses,
+    filterState.searchQuery,
+    filterState.onlyEligible,
+    filterState.onlySelected,
+    filterState.typeFilter,
+    hasEligibleFilter,
+    selectedSections,
+  ]);
 
   const toggleCourseExpand = (code: string, currentlyExpanded: boolean) => {
     if (currentlyExpanded) {
@@ -203,13 +216,14 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
     }
   };
 
-  const isAllFilteredExpanded = filteredCourses.length > 0 && filteredCourses.every(course => {
-    const isSelected = !!selectedSections[course.code];
-    let isExpanded = (expandedCourses.has(course.code) || isSelected || !!filterState.searchQuery);
-    if (collapsedCourses.has(course.code)) isExpanded = false;
-    if (expandedCourses.has(course.code)) isExpanded = true;
-    return isExpanded;
-  });
+  const isAllFilteredExpanded =
+    filteredCourses.length > 0 &&
+    filteredCourses.every(course => {
+      let isExpanded = expandedCourses.has(course.code) || !!filterState.searchQuery;
+      if (collapsedCourses.has(course.code)) isExpanded = false;
+      if (expandedCourses.has(course.code)) isExpanded = true;
+      return isExpanded;
+    });
 
   const toggleExpandAll = () => {
     if (isAllFilteredExpanded) {
@@ -237,7 +251,6 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
     }
   };
 
-  // Helper to group sections into main sections
   const getCourseMainSectionGroups = (course: Course): MainSectionGroup[] => {
     const groupsMap = new Map<string, Section[]>();
 
@@ -252,64 +265,71 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
     const result: MainSectionGroup[] = [];
 
     groupsMap.forEach((subsections, mainSecNum) => {
-      // Always sort subsections alphanumerically
       subsections.sort((a, b) =>
-        a.sectionNumber.localeCompare(b.sectionNumber, undefined, { numeric: true, sensitivity: 'base' })
+        a.sectionNumber.localeCompare(b.sectionNumber, undefined, {
+          numeric: true,
+          sensitivity: 'base',
+        })
       );
 
       const hasSubsections = subsections.length > 1;
 
-      // Shared sessions across all subsections
       let sharedSessions: Session[] = [];
       if (subsections.length > 0) {
         sharedSessions = subsections[0].sessions.filter(sess0 =>
           subsections.every(sub =>
-            sub.sessions.some(s => s.day === sess0.day && s.startTime === sess0.startTime && s.endTime === sess0.endTime && s.sessionGroup === sess0.sessionGroup)
+            sub.sessions.some(
+              s =>
+                s.day === sess0.day &&
+                s.startTime === sess0.startTime &&
+                s.endTime === sess0.endTime &&
+                s.sessionGroup === sess0.sessionGroup
+            )
           )
         );
       }
 
-      // Collect Teoría / Main professors ONLY for main card
       const teoriaProfs: string[] = [];
-
-      // Check shared sessions first
       sharedSessions.forEach(sess => {
-        if (sess.professor && sess.professor !== 'Por asignar' && !teoriaProfs.includes(sess.professor)) {
+        if (
+          sess.professor &&
+          sess.professor !== 'Por asignar' &&
+          !teoriaProfs.includes(sess.professor)
+        ) {
           teoriaProfs.push(sess.professor);
         }
       });
 
-      // Check any session with sessionType === 'Teoría'
       if (teoriaProfs.length === 0) {
         subsections.forEach(sub => {
           sub.sessions.forEach(sess => {
-            if (sess.sessionType === 'Teoría' && sess.professor && sess.professor !== 'Por asignar' && !teoriaProfs.includes(sess.professor)) {
+            if (
+              sess.sessionType === 'Teoría' &&
+              sess.professor &&
+              sess.professor !== 'Por asignar' &&
+              !teoriaProfs.includes(sess.professor)
+            ) {
               teoriaProfs.push(sess.professor);
             }
           });
         });
       }
 
-      // Fallback if no specific theory professor found
       if (teoriaProfs.length === 0 && subsections[0]?.professors.length > 0) {
         subsections[0].professors.forEach(p => {
           if (p && p !== 'Por asignar' && !teoriaProfs.includes(p)) teoriaProfs.push(p);
         });
       }
 
-      // Collect all modalities
       const modSet = new Set<string>();
-      subsections.forEach(s => s.sessions.forEach(sess => {
-        if (sess.modality) modSet.add(sess.modality);
-      }));
+      subsections.forEach(s =>
+        s.sessions.forEach(sess => {
+          if (sess.modality) modSet.add(sess.modality);
+        })
+      );
 
-      let totalVacancies = 0;
-      let totalEnrolled = 0;
-
-      if (subsections.length > 0) {
-        totalVacancies = subsections.reduce((acc, sub) => acc + (sub.vacancies || 0), 0);
-        totalEnrolled = subsections.reduce((acc, sub) => acc + (sub.enrolled || 0), 0);
-      }
+      const totalVacancies = subsections.reduce((acc, sub) => acc + (sub.vacancies || 0), 0);
+      const totalEnrolled = subsections.reduce((acc, sub) => acc + (sub.enrolled || 0), 0);
 
       result.push({
         mainSecNum,
@@ -319,11 +339,10 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
         modalities: Array.from(modSet),
         teoriaProfessors: teoriaProfs,
         totalVacancies,
-        totalEnrolled
+        totalEnrolled,
       });
     });
 
-    // Sort main sections numerically / alphanumerically
     result.sort((a, b) =>
       a.mainSecNum.localeCompare(b.mainSecNum, undefined, { numeric: true, sensitivity: 'base' })
     );
@@ -331,57 +350,46 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
     return result;
   };
 
-  // Helper to extract Laboratorio / Subgroup professors ONLY for a specific subsection card
-  const getSubsectionLabProfessors = (subSec: Section, sharedSessions: Session[]): string[] => {
-    const profs: string[] = [];
-
-    subSec.sessions.forEach(sess => {
-      const isShared = sharedSessions.some(s => s.day === sess.day && s.startTime === sess.startTime && s.sessionGroup === sess.sessionGroup);
-      if (!isShared && sess.professor && sess.professor !== 'Por asignar' && !profs.includes(sess.professor)) {
-        profs.push(sess.professor);
-      }
-    });
-
-    if (profs.length === 0) {
-      subSec.professors.forEach(p => {
-        if (p && p !== 'Por asignar' && !profs.includes(p)) profs.push(p);
-      });
-    }
-
-    return profs;
-  };
+  const selectedCount = Object.keys(selectedSections).length;
 
   return (
-    <aside className="glass-panel sidebar-panel">
+    <aside
+      id="course-sidebar-drawer"
+      className={`sidebar-panel ${isMobileOpen ? 'is-mobile-open' : ''}`}
+      aria-label="Panel de asignaturas y secciones"
+    >
       <div className="sidebar-header">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 700 }}>
-              Cursos Disponibles
-            </h3>
-            <span className="glass-pill" style={{ background: 'rgba(59, 130, 246, 0.18)', color: 'var(--accent-primary)', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
-              {filteredCourses.length}
-            </span>
+        <div className="sidebar-title-row">
+          <div className="sidebar-title-group">
+            <h2 className="sidebar-title">Tus Asignaturas</h2>
+            <span className="sidebar-count-badge">{filteredCourses.length}</span>
           </div>
 
-          <button
-            onClick={toggleExpandAll}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-muted)',
-              fontSize: '0.76rem',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            <span className="btn-text">{isAllFilteredExpanded ? 'Colapsar Todo' : 'Expandir Todo'}</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button type="button" onClick={toggleExpandAll} className="sidebar-expand-btn">
+              {isAllFilteredExpanded ? 'Colapsar' : 'Expandir'}
+            </button>
+
+            {onCloseMobile && (
+              <button
+                type="button"
+                className="sidebar-mobile-close-btn"
+                onClick={onCloseMobile}
+                aria-label="Cerrar panel de Cursos"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
         </div>
+
+        <p className="sidebar-hint">
+          Pasa el cursor sobre otra sección para previsualizar en horario
+        </p>
 
         {/* Search input bar */}
         <div className="search-bar">
-          <Search size={16} color="var(--text-muted)" />
+          <Search size={15} color="var(--text-muted)" />
           <input
             type="text"
             className="search-input"
@@ -394,41 +402,64 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
         {/* Filter Pills */}
         <div className="filter-pills">
           <button
+            type="button"
             className={`filter-pill-btn ${filterState.onlySelected ? 'active' : ''}`}
             onClick={() => setFilterState(prev => ({ ...prev, onlySelected: !prev.onlySelected }))}
-            style={filterState.onlySelected ? { background: 'rgba(59, 130, 246, 0.15)', borderColor: 'rgba(59, 130, 246, 0.4)', color: '#60a5fa' } : {}}
           >
-            {filterState.onlySelected 
-              ? `✓ Seleccionados (${Object.keys(selectedSections).length})` 
-              : `Seleccionados ${Object.keys(selectedSections).length > 0 ? `(${Object.keys(selectedSections).length})` : ''}`}
+            {filterState.onlySelected
+              ? `✓ En horario (${selectedCount})`
+              : `En horario ${selectedCount > 0 ? `(${selectedCount})` : ''}`}
           </button>
+
           {hasEligibleFilter && (
             <button
+              type="button"
               className={`filter-pill-btn ${filterState.onlyEligible ? 'active' : ''}`}
-              onClick={() => setFilterState(prev => ({ ...prev, onlyEligible: !prev.onlyEligible }))}
+              onClick={() =>
+                setFilterState(prev => ({ ...prev, onlyEligible: !prev.onlyEligible }))
+              }
             >
               {filterState.onlyEligible ? '✓ Habilitados PDF' : 'Habilitados PDF'}
             </button>
           )}
-          
+
           {hasCourseTypeData && (
             <>
               <button
+                type="button"
                 className={`filter-pill-btn ${filterState.typeFilter === 'Obligatorio' ? 'active' : ''}`}
-                onClick={() => setFilterState(prev => ({ ...prev, typeFilter: prev.typeFilter === 'Obligatorio' ? 'ALL' : 'Obligatorio' }))}
+                onClick={() =>
+                  setFilterState(prev => ({
+                    ...prev,
+                    typeFilter: prev.typeFilter === 'Obligatorio' ? 'ALL' : 'Obligatorio',
+                  }))
+                }
               >
                 Obligatorios
               </button>
               <button
+                type="button"
                 className={`filter-pill-btn ${filterState.typeFilter === 'Electivo' ? 'active' : ''}`}
-                onClick={() => setFilterState(prev => ({ ...prev, typeFilter: prev.typeFilter === 'Electivo' ? 'ALL' : 'Electivo' }))}
+                onClick={() =>
+                  setFilterState(prev => ({
+                    ...prev,
+                    typeFilter: prev.typeFilter === 'Electivo' ? 'ALL' : 'Electivo',
+                  }))
+                }
               >
                 Electivos
               </button>
               {metadata?.documentType === 'Consolidado de Horario' && (
                 <button
+                  type="button"
                   className={`filter-pill-btn ${filterState.typeFilter === 'Otros (Malla Nueva)' ? 'active' : ''}`}
-                  onClick={() => setFilterState(prev => ({ ...prev, typeFilter: prev.typeFilter === 'Otros (Malla Nueva)' ? 'ALL' : 'Otros (Malla Nueva)' }))}
+                  onClick={() =>
+                    setFilterState(prev => ({
+                      ...prev,
+                      typeFilter:
+                        prev.typeFilter === 'Otros (Malla Nueva)' ? 'ALL' : 'Otros (Malla Nueva)',
+                    }))
+                  }
                 >
                   Malla Nueva
                 </button>
@@ -441,17 +472,14 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
       {/* Course List Scroll */}
       <div className="course-list-scroll">
         {filteredCourses.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            No hay cursos que coincidan con la búsqueda.
-          </div>
+          <div className="sidebar-empty-msg">No hay cursos que coincidan con la búsqueda.</div>
         ) : (
           filteredCourses.map(course => {
             const isSelected = !!selectedSections[course.code];
             const activeSectionNum = selectedSections[course.code];
-            
-            // A course is expanded if it's explicitly expanded, selected, or we are searching
-            // BUT it can be explicitly overridden by collapsedCourses
-            let isExpanded = (expandedCourses.has(course.code) || isSelected || !!filterState.searchQuery);
+            const pigment = getGraftonPigment(course.code);
+
+            let isExpanded = expandedCourses.has(course.code) || !!filterState.searchQuery;
             if (collapsedCourses.has(course.code)) {
               isExpanded = false;
             }
@@ -461,28 +489,36 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
             const mainSectionGroups = getCourseMainSectionGroups(course);
 
-            const courseProfessors = Array.from(new Set(
-              course.sections.flatMap(sec => sec.professors)
-                .filter(p => p && p !== 'Por asignar')
-            )).sort();
+            const courseProfessors = Array.from(
+              new Set(
+                course.sections
+                  .flatMap(sec => sec.professors)
+                  .filter(p => p && p !== 'Por asignar')
+              )
+            ).sort();
 
             const currentProfFilter = professorFilters[course.code];
             let displayMainGroups = mainSectionGroups;
-            
+
             if (currentProfFilter && currentProfFilter !== 'ALL') {
-              displayMainGroups = mainSectionGroups.map(group => {
-                const matchingSubsections = group.subsections.filter(sub => 
-                  sub.professors.includes(currentProfFilter)
-                );
-                if (matchingSubsections.length > 0) {
-                  return { ...group, subsections: matchingSubsections };
-                }
-                return null;
-              }).filter(Boolean) as MainSectionGroup[];
+              displayMainGroups = mainSectionGroups
+                .map(group => {
+                  const matchingSubsections = group.subsections.filter(sub =>
+                    sub.professors.includes(currentProfFilter)
+                  );
+                  if (matchingSubsections.length > 0) {
+                    return { ...group, subsections: matchingSubsections };
+                  }
+                  return null;
+                })
+                .filter(Boolean) as MainSectionGroup[];
             }
 
             return (
-              <div key={course.code} className="course-card">
+              <div
+                key={course.code}
+                className={`course-card ${isSelected ? 'course-card--selected' : ''}`}
+              >
                 {/* Course Header Row */}
                 <div
                   className="course-card-header"
@@ -490,46 +526,92 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                 >
                   <div className="course-info">
                     <div className="course-code-row">
-                      <span className="course-code" style={{ color: course.color }}>{course.code}</span>
-                      <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                        • {mainSectionGroups.length} {mainSectionGroups.length === 1 ? 'sección' : 'secciones'}
+                      <span
+                        className="course-pigment-dot"
+                        style={{ background: pigment.bar }}
+                        aria-hidden="true"
+                      />
+                      <span className="course-code">{course.code}</span>
+                      <span className="course-sec-count">
+                        · {mainSectionGroups.length}{' '}
+                        {mainSectionGroups.length === 1 ? 'sec' : 'secs'}
                       </span>
                       {course.isEligible && <span className="eligible-badge">Habilitado</span>}
                     </div>
-                    {/* Full Untruncated Course Name */}
                     <div className="course-name">{course.name}</div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="course-card-chevron">
                     {isSelected && (
-                      <span className="glass-pill" style={{ color: '#60a5fa', borderColor: 'rgba(96, 165, 250, 0.4)', background: 'rgba(96, 165, 250, 0.15)' }}>
-                        <CheckCircle2 size={12} style={{ display: 'inline', marginRight: '3px' }} />
-                        Sec {activeSectionNum}
+                      <span className="selected-sec-pill">
+                        <CheckCircle2 size={11} />
+                        Sec {activeSectionNum.split(' ')[0]}
                       </span>
                     )}
-                    {isExpanded ? <ChevronDown size={18} color="var(--text-muted)" /> : <ChevronRight size={18} color="var(--text-muted)" />}
+                    {isExpanded ? (
+                      <ChevronDown size={16} color="var(--text-secondary)" />
+                    ) : (
+                      <ChevronRight size={16} color="var(--text-muted)" />
+                    )}
                   </div>
                 </div>
 
+                {/* Quick Compact Section Pills when Selected & Collapsed (matches 02_Grafton_Schedule_Figma.svg) */}
+                {isSelected && !isExpanded && course.sections.length > 0 && (
+                  <div className="quick-sec-strip">
+                    {course.sections.slice(0, 3).map(sec => {
+                      const isThisSec = activeSectionNum === sec.sectionNumber;
+                      const shortSec = sec.sectionNumber.replace(/LABORATORIO\s*/i, 'Lab ');
+                      const shortProf = sec.professors[0]
+                        ? sec.professors[0].split(',')[0].slice(0, 12)
+                        : '';
+                      return (
+                        <button
+                          key={sec.sectionNumber}
+                          type="button"
+                          className={`quick-sec-btn ${isThisSec ? 'is-active' : ''}`}
+                          onClick={e => {
+                            e.stopPropagation();
+                            if (!isThisSec) onSelectSection(course.code, sec.sectionNumber);
+                          }}
+                          onMouseEnter={() => {
+                            if (!isThisSec) {
+                              onDragStartSection({
+                                courseCode: course.code,
+                                sectionNumber: sec.sectionNumber,
+                              });
+                            }
+                          }}
+                          onMouseLeave={() => onDragEndSection()}
+                          title={`Cambiar a Sección ${sec.sectionNumber}`}
+                        >
+                          Sec {shortSec}
+                          {shortProf ? ` · ${shortProf}` : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {/* Expanded Sections Breakdown */}
                 {isExpanded && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px', background: 'rgba(0, 0, 0, 0.25)' }}>
+                  <div className="course-sections-drawer">
                     {courseProfessors.length > 1 && (
-                      <div className="course-prof-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                        <User size={16} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
-                        <CustomSelect 
+                      <div className="course-prof-filter">
+                        <User size={14} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
+                        <CustomSelect
                           value={currentProfFilter || 'ALL'}
                           options={courseProfessors}
                           placeholder={`Todos los docentes (${courseProfessors.length})`}
-                          onChange={val => setProfessorFilters(prev => ({ ...prev, [course.code]: val }))}
+                          onChange={val =>
+                            setProfessorFilters(prev => ({ ...prev, [course.code]: val }))
+                          }
                         />
                       </div>
                     )}
-                    
+
                     {displayMainGroups.length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '10px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                        No hay secciones con este docente.
-                      </div>
+                      <div className="sidebar-empty-msg">No hay secciones con este docente.</div>
                     )}
 
                     {displayMainGroups.map(mainGroup => {
@@ -544,41 +626,50 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                           onDragStart={e => {
                             if (mainGroup.hasSubsections || !singleSubSec) return;
                             e.dataTransfer.effectAllowed = 'copy';
-                            e.dataTransfer.setData('text/plain', JSON.stringify({
+                            e.dataTransfer.setData(
+                              'text/plain',
+                              JSON.stringify({
+                                courseCode: course.code,
+                                sectionNumber: singleSubSec.sectionNumber,
+                              })
+                            );
+                            onDragStartSection({
                               courseCode: course.code,
-                              sectionNumber: singleSubSec.sectionNumber
-                            }));
-                            onDragStartSection({ courseCode: course.code, sectionNumber: singleSubSec.sectionNumber });
+                              sectionNumber: singleSubSec.sectionNumber,
+                            });
                           }}
                           onDragEnd={() => {
                             if (!mainGroup.hasSubsections) onDragEndSection();
                           }}
                           onMouseEnter={() => {
                             if (!mainGroup.hasSubsections && singleSubSec) {
-                              onDragStartSection({ courseCode: course.code, sectionNumber: singleSubSec.sectionNumber });
+                              onDragStartSection({
+                                courseCode: course.code,
+                                sectionNumber: singleSubSec.sectionNumber,
+                              });
                             }
                           }}
                           onMouseLeave={() => {
                             if (!mainGroup.hasSubsections) onDragEndSection();
                           }}
                         >
-                          {/* Main Section Header Row */}
                           <div className="main-section-header">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span className="main-section-title">
                                 Sección {mainGroup.mainSecNum}
                               </span>
                               {mainGroup.hasSubsections && (
                                 <span className="subsections-count-badge">
-                                  {mainGroup.subsections.length} subsecciones
+                                  {mainGroup.subsections.length} subsecs
                                 </span>
                               )}
                             </div>
 
-                            {/* Standard Selection Button beside section title if NO subsecciones exist */}
-                            {!mainGroup.hasSubsections && singleSubSec && (
-                              isSingleSelected ? (
+                            {!mainGroup.hasSubsections &&
+                              singleSubSec &&
+                              (isSingleSelected ? (
                                 <button
+                                  type="button"
                                   className="select-btn remove"
                                   onClick={e => {
                                     e.stopPropagation();
@@ -589,57 +680,59 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                                 </button>
                               ) : (
                                 <button
+                                  type="button"
                                   className="select-btn"
                                   onClick={e => {
                                     e.stopPropagation();
                                     onSelectSection(course.code, singleSubSec.sectionNumber);
                                   }}
                                 >
-                                  <Plus size={12} /> Seleccionar
+                                  <Plus size={12} /> Elegir
                                 </button>
-                              )
-                            )}
+                              ))}
                           </div>
 
-                          {/* Modality & Enrollment Info */}
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          <div className="section-modality-row">
                             <span>{mainGroup.modalities.join(' / ') || 'Presencial'}</span>
-                            <span style={{ color: 'var(--text-muted)' }}>({mainGroup.totalEnrolled}/{mainGroup.totalVacancies} matriculados)</span>
+                            <span className="section-vacancies">
+                              {mainGroup.totalEnrolled}/{mainGroup.totalVacancies} mat.
+                            </span>
                           </div>
 
-                          {/* Docente / Teoría Professor ONLY (For sections with subsections) */}
                           {mainGroup.hasSubsections && mainGroup.teoriaProfessors.length > 0 && (
-                            <div style={{ fontSize: '0.84rem', color: 'var(--text-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <User size={13} color="var(--accent-primary)" />
-                              {mainGroup.teoriaProfessors.join(', ')}
+                            <div className="section-prof-row">
+                              <User size={12} color="var(--accent-primary)" />
+                              <span>{mainGroup.teoriaProfessors.join(', ')}</span>
                             </div>
                           )}
 
-                          {/* CASE A: Single Section - Render clean session breakdown list directly */}
                           {!mainGroup.hasSubsections && singleSubSec && (
                             <>
-                              {/* Single Section Professors Formatted */}
                               {(() => {
-                                const profMap = new Map<string, string[]>(); // professor -> sessionTypes
+                                const profMap = new Map<string, string[]>();
                                 singleSubSec.sessions.forEach(sess => {
                                   if (sess.professor && sess.professor !== 'Por asignar') {
-                                    const type = sess.sessionType || sess.sessionGroup.split(' ')[0] || 'Docente';
+                                    const type =
+                                      sess.sessionType ||
+                                      sess.sessionGroup.split(' ')[0] ||
+                                      'Docente';
                                     const prof = sess.professor;
                                     if (!profMap.has(prof)) profMap.set(prof, []);
-                                    if (!profMap.get(prof)!.includes(type)) profMap.get(prof)!.push(type);
+                                    if (!profMap.get(prof)!.includes(type))
+                                      profMap.get(prof)!.push(type);
                                   }
                                 });
-                                
+
                                 const hasMultipleProfs = profMap.size > 1;
-                                
+
                                 return (
                                   <>
                                     {profMap.size > 0 && (
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', marginBottom: '8px' }}>
+                                      <div className="section-profs-stack">
                                         {Array.from(profMap.keys()).map((prof, idx) => (
-                                          <div key={idx} style={{ fontSize: '0.84rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <User size={13} color="var(--accent-primary)" />
-                                            <span style={{ fontWeight: 600 }}>{prof}</span>
+                                          <div key={idx} className="section-prof-row">
+                                            <User size={12} color="var(--accent-primary)" />
+                                            <span>{prof}</span>
                                           </div>
                                         ))}
                                       </div>
@@ -647,28 +740,28 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
                                     <div className="session-tag-list">
                                       {singleSubSec.sessions.map((sess, idx) => (
-                                        <div key={idx} className="session-tag" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
-                                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                              <span className="session-tag-type">{sess.sessionGroup}</span>
-                                              {sess.modality && (
-                                                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                                  ({sess.modality})
-                                                </span>
-                                              )}
-                                              <span><strong>{sess.day}</strong> {sess.startTime}-{sess.endTime}</span>
-                                            </div>
-                                            {sess.location && (
-                                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                                <MapPin size={11} /> {formatLocation(sess.location)}
-                                              </span>
-                                            )}
+                                        <div key={idx} className="session-tag">
+                                          <div className="session-tag-main">
+                                            <span className="session-tag-type">
+                                              {sess.sessionGroup}
+                                            </span>
+                                            <span className="session-tag-time">
+                                              <strong>{sess.day}</strong> {sess.startTime}–
+                                              {sess.endTime}
+                                            </span>
                                           </div>
-                                          {hasMultipleProfs && sess.professor && sess.professor !== 'Por asignar' && (
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                              <User size={12} opacity={0.7} /> {sess.professor}
-                                            </div>
+                                          {sess.location && (
+                                            <span className="session-tag-loc">
+                                              <MapPin size={10} /> {formatLocation(sess.location)}
+                                            </span>
                                           )}
+                                          {hasMultipleProfs &&
+                                            sess.professor &&
+                                            sess.professor !== 'Por asignar' && (
+                                              <div className="session-tag-subprof">
+                                                <User size={11} /> {sess.professor}
+                                              </div>
+                                            )}
                                         </div>
                                       ))}
                                     </div>
@@ -678,57 +771,44 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                             </>
                           )}
 
-                          {/* CASE B: Multi-Subsecciones - Render Obligatorio & Subsecciones breakdown */}
                           {mainGroup.hasSubsections && (
                             <>
-                              {/* Shared Obligatorio Sessions (e.g. TEORÍA VIRTUAL 1) */}
                               {mainGroup.sharedSessions.length > 0 && (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
-                                  <div className="obligatorio-label">OBLIGATORIO:</div>
+                                <div className="shared-sessions-block">
+                                  <div className="obligatorio-label">TEORÍA COMPARTIDA:</div>
                                   {mainGroup.sharedSessions.map((sSess, sIdx) => (
-                                    <div key={sIdx} className="obligatorio-session-pill" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                          <span>{sSess.sessionGroup}</span>
-                                          {sSess.modality && (
-                                            <span style={{ fontSize: '0.72rem', opacity: 0.8 }}>({sSess.modality})</span>
-                                          )}
-                                        </div>
-                                        <span><strong>{sSess.day}</strong> {sSess.startTime}-{sSess.endTime}</span>
-                                      </div>
-                                      {sSess.professor && sSess.professor !== 'Por asignar' && (
-                                        <div style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.9 }}>
-                                          <User size={12} /> {sSess.professor}
-                                        </div>
-                                      )}
+                                    <div key={sIdx} className="obligatorio-session-pill">
+                                      <span>{sSess.sessionGroup}</span>
+                                      <span className="mono-time">
+                                        <strong>{sSess.day}</strong> {sSess.startTime}–
+                                        {sSess.endTime}
+                                      </span>
                                     </div>
                                   ))}
                                 </div>
                               )}
 
-                              {/* Subsections Selection Area */}
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-                                <div className="obligatorio-label" style={{ color: 'var(--text-muted)' }}>
-                                  ELIGE UNA SUBSECCIÓN:
-                                </div>
+                              <div className="subsections-list">
+                                <div className="obligatorio-label">ELIGE SUBSECCIÓN:</div>
 
                                 {mainGroup.subsections.map(subSec => {
                                   const isSubSelected = activeSectionNum === subSec.sectionNumber;
 
-                                  // Extract subsection sub-label (e.g. "Laboratorio 11")
                                   let subTitle = `Sección ${subSec.sectionNumber}`;
                                   const matchParen = subSec.sectionNumber.match(/\((.*?)\)/);
                                   if (matchParen && matchParen[1]) {
                                     subTitle = matchParen[1];
                                   }
 
-                                  // Specific non-shared sessions
-                                  const specificSessions = subSec.sessions.filter(sess =>
-                                    !mainGroup.sharedSessions.some(s => s.day === sess.day && s.startTime === sess.startTime && s.sessionGroup === sess.sessionGroup)
+                                  const specificSessions = subSec.sessions.filter(
+                                    sess =>
+                                      !mainGroup.sharedSessions.some(
+                                        s =>
+                                          s.day === sess.day &&
+                                          s.startTime === sess.startTime &&
+                                          s.sessionGroup === sess.sessionGroup
+                                      )
                                   );
-
-                                  // Laboratorio / Subgroup professors ONLY
-                                  const labProfs = getSubsectionLabProfessors(subSec, mainGroup.sharedSessions);
 
                                   return (
                                     <div
@@ -737,78 +817,75 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
                                       draggable={true}
                                       onDragStart={e => {
                                         e.dataTransfer.effectAllowed = 'copy';
-                                        e.dataTransfer.setData('text/plain', JSON.stringify({
+                                        e.dataTransfer.setData(
+                                          'text/plain',
+                                          JSON.stringify({
+                                            courseCode: course.code,
+                                            sectionNumber: subSec.sectionNumber,
+                                          })
+                                        );
+                                        onDragStartSection({
                                           courseCode: course.code,
-                                          sectionNumber: subSec.sectionNumber
-                                        }));
-                                        onDragStartSection({ courseCode: course.code, sectionNumber: subSec.sectionNumber });
+                                          sectionNumber: subSec.sectionNumber,
+                                        });
                                       }}
-                                      onDragEnd={() => {
-                                        onDragEndSection();
-                                      }}
-                                      onMouseEnter={() => {
-                                        onDragStartSection({ courseCode: course.code, sectionNumber: subSec.sectionNumber });
-                                      }}
-                                      onMouseLeave={() => {
-                                        onDragEndSection();
-                                      }}
+                                      onDragEnd={onDragEndSection}
+                                      onMouseEnter={() =>
+                                        onDragStartSection({
+                                          courseCode: course.code,
+                                          sectionNumber: subSec.sectionNumber,
+                                        })
+                                      }
+                                      onMouseLeave={onDragEndSection}
                                     >
-                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.92rem' }}>
-                                          {subTitle}
-                                        </span>
+                                      <div className="subsection-card-head">
+                                        <span className="subsection-title">{subTitle}</span>
                                         {isSubSelected && (
-                                          <span style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                            <Check size={12} /> SELECCIONADO
+                                          <span className="subsection-selected-tag">
+                                            <Check size={11} /> ELEGIDA
                                           </span>
                                         )}
                                       </div>
 
-                                      {/* Specific Session Time, Modality & Location */}
                                       {specificSessions.map((spSess, spIdx) => (
-                                        <div key={spIdx} style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '2px' }}>
-                                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <span><strong>{spSess.day}</strong> {spSess.startTime}-{spSess.endTime}</span>
-                                            {spSess.modality && (
-                                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>({spSess.modality})</span>
-                                            )}
-                                          </div>
-                                          {spSess.professor && spSess.professor !== 'Por asignar' && (
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                              <User size={12} opacity={0.7} /> {spSess.professor}
-                                            </div>
+                                        <div key={spIdx} className="subsection-sess-row">
+                                          <span className="mono-time">
+                                            <strong>{spSess.day}</strong> {spSess.startTime}–
+                                            {spSess.endTime}
+                                          </span>
+                                          {spSess.location && (
+                                            <span className="session-tag-loc">
+                                              {formatLocation(spSess.location)}
+                                            </span>
                                           )}
                                         </div>
                                       ))}
 
-                                      {/* Vacancies */}
-                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                                        <span>({subSec.enrolled}/{subSec.vacancies} matriculados)</span>
-                                      </div>
-
-                                      {/* Action Button */}
-                                      <div style={{ marginTop: '4px' }}>
+                                      <div className="subsection-footer">
+                                        <span className="section-vacancies">
+                                          {subSec.enrolled}/{subSec.vacancies} mat.
+                                        </span>
                                         {isSubSelected ? (
                                           <button
+                                            type="button"
                                             className="select-btn remove"
                                             onClick={e => {
                                               e.stopPropagation();
                                               onRemoveSection(course.code);
                                             }}
-                                            style={{ width: '100%', justifyContent: 'center' }}
                                           >
-                                            <Trash2 size={12} /> Quitar
+                                            <Trash2 size={11} /> Quitar
                                           </button>
                                         ) : (
                                           <button
+                                            type="button"
                                             className="select-btn"
                                             onClick={e => {
                                               e.stopPropagation();
                                               onSelectSection(course.code, subSec.sectionNumber);
                                             }}
-                                            style={{ width: '100%', justifyContent: 'center' }}
                                           >
-                                            <Plus size={12} /> Seleccionar
+                                            <Plus size={11} /> Elegir
                                           </button>
                                         )}
                                       </div>
