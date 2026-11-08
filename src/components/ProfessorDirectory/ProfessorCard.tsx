@@ -3,16 +3,14 @@ import type { DayOfWeek } from '../../types/schedule';
 import type { ProfessorInfo } from '../../types/professor';
 import { ALL_DAYS } from '../../utils/classroomUtils';
 import { evaluateProfessorLiveStatus } from '../../utils/professorUtils';
+import { getGraftonPigment } from '../../utils/graftonPigments';
 import {
   Mail,
   Copy,
   Check,
   Clock,
-  BookOpen,
   MapPin,
   ChevronRight,
-  Sparkles,
-  Radio
 } from 'lucide-react';
 
 interface ProfessorCardProps {
@@ -20,16 +18,6 @@ interface ProfessorCardProps {
   nowDay: DayOfWeek;
   nowMinutes: number;
   onOpenDetail: (prof: ProfessorInfo) => void;
-}
-
-function getAvatarGradient(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const h1 = Math.abs(hash % 360);
-  const h2 = (h1 + 40) % 360;
-  return `linear-gradient(135deg, hsl(${h1}, 70%, 52%) 0%, hsl(${h2}, 75%, 42%) 100%)`;
 }
 
 export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
@@ -45,8 +33,6 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
     nowDay,
     nowMinutes
   );
-
-  const avatarGradient = getAvatarGradient(professor.displayName);
 
   const handleCopyEmail = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -79,7 +65,7 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
     >
       {/* Top Header Row: Avatar, Names, Department badge */}
       <div className="prof-card-header">
-        <div className="prof-card-avatar" style={{ background: avatarGradient }}>
+        <div className="prof-card-avatar">
           <span>{professor.initials}</span>
         </div>
 
@@ -97,13 +83,19 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
       </div>
 
       {/* Live Status Banner or Next Class Indicator */}
-      <div className="prof-card-status-row">
+      <div
+        className={`prof-card-status-row ${
+          isTeachingNow && currentSession
+            ? 'prof-card-status-row--live'
+            : nextSession
+            ? 'prof-card-status-row--next'
+            : 'prof-card-status-row--idle'
+        }`}
+      >
         {isTeachingNow && currentSession ? (
           <div className="prof-status-live-beacon">
-            <span className="live-dot-ping" />
-            <span className="live-dot" />
             <div className="live-text-group">
-              <strong>Dictando ahora:</strong>
+              <strong>● Dictando ahora:</strong>
               <span>
                 {currentSession.courseCode} en {currentSession.roomCode} ({currentSession.startTime} - {currentSession.endTime})
               </span>
@@ -111,9 +103,9 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
           </div>
         ) : nextSession ? (
           <div className="prof-status-next">
-            <Clock size={13} className="text-muted" />
+            <Clock size={13} />
             <span>
-              Próxima: <strong>{nextSession.day} {nextSession.startTime}</strong> en {nextSession.roomCode}
+              Próxima clase: <strong>{nextSession.day} {nextSession.startTime}</strong> en {nextSession.roomCode}
             </span>
           </div>
         ) : (
@@ -149,32 +141,32 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
         </div>
       )}
 
-      {/* KPI Stats Highlights Bar */}
+      {/* 4-Column Swiss Orthogonal Metric Grid */}
       <div className="prof-card-kpis">
         <div className="prof-kpi-item" title="Horas semanales de clase">
-          <span className="prof-kpi-val text-accent">{professor.totalHoursPerWeek}h</span>
-          <span className="prof-kpi-label">Semanales</span>
+          <span className="prof-kpi-val prof-kpi-val--hours">{professor.totalHoursPerWeek}h</span>
+          <span className="prof-kpi-label">SEMANALES</span>
         </div>
 
         <div className="prof-kpi-item" title="Cursos distintos que dicta">
-          <span className="prof-kpi-val text-emerald">{professor.uniqueCoursesCount}</span>
-          <span className="prof-kpi-label">Cursos</span>
+          <span className="prof-kpi-val">{professor.uniqueCoursesCount}</span>
+          <span className="prof-kpi-label">CURSOS</span>
         </div>
 
         <div className="prof-kpi-item" title="Secciones a cargo">
-          <span className="prof-kpi-val text-purple">{professor.uniqueSectionsCount}</span>
-          <span className="prof-kpi-label">Secciones</span>
+          <span className="prof-kpi-val">{professor.uniqueSectionsCount}</span>
+          <span className="prof-kpi-label">SECCIONES</span>
         </div>
 
         <div className="prof-kpi-item" title="Aulas donde dicta">
-          <span className="prof-kpi-val text-amber">{professor.uniqueRooms.length}</span>
-          <span className="prof-kpi-label">Aulas</span>
+          <span className="prof-kpi-val">{professor.uniqueRooms.length}</span>
+          <span className="prof-kpi-label">AULAS</span>
         </div>
       </div>
 
       {/* Days of Week Mini Matrix */}
       <div className="prof-card-days-row">
-        <span className="prof-card-section-label">Días:</span>
+        <span className="prof-card-section-label">DÍAS:</span>
         <div className="prof-days-chips">
           {ALL_DAYS.map(day => {
             const hasClass = professor.daysTaught.includes(day);
@@ -194,25 +186,27 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
         </div>
       </div>
 
-      {/* Courses Tags Preview */}
+      {/* Courses Tags Preview — Always CODE · Full Course Name */}
       <div className="prof-card-courses-row">
-        <span className="prof-card-section-label">Cursos:</span>
+        <span className="prof-card-section-label">CURSOS:</span>
         <div className="prof-courses-chips">
-          {professor.courses.slice(0, 3).map(course => (
-            <span
-              key={course.code}
-              className="prof-course-tag"
-              style={{
-                borderColor: `${course.color}40`,
-                backgroundColor: `${course.color}14`,
-                color: course.color
-              }}
-              title={`${course.code}: ${course.name} (${course.sectionsCount} secciones, ${course.totalWeeklyHours}h/sem)`}
-            >
-              <strong>{course.code}</strong>
-              <span className="prof-course-tag-name">{course.name}</span>
-            </span>
-          ))}
+          {professor.courses.slice(0, 3).map(course => {
+            const pigment = getGraftonPigment(course.code);
+            return (
+              <span
+                key={course.code}
+                className="prof-course-tag"
+                style={{
+                  borderLeftColor: pigment.bar,
+                }}
+                title={`${course.code} · ${course.name} (${course.sectionsCount} secciones, ${course.totalWeeklyHours}h/sem)`}
+              >
+                <strong className="prof-course-tag-code">{course.code}</strong>
+                <span className="prof-course-tag-sep">·</span>
+                <span className="prof-course-tag-name">{course.name}</span>
+              </span>
+            );
+          })}
           {professor.courses.length > 3 && (
             <span className="prof-course-tag prof-course-tag--more">
               +{professor.courses.length - 3} más
@@ -224,7 +218,7 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
       {/* Classrooms Tags Preview */}
       {professor.uniqueRooms.length > 0 && (
         <div className="prof-card-rooms-row">
-          <span className="prof-card-section-label">Aulas:</span>
+          <span className="prof-card-section-label">AULAS:</span>
           <div className="prof-rooms-chips">
             {professor.uniqueRooms.slice(0, 5).map(room => (
               <span key={room} className="prof-room-tag">

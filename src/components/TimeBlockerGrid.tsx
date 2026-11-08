@@ -195,9 +195,9 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
         @keyframes pulse-ghost {
           0% { opacity: 0.4; } 50% { opacity: 0.8; } 100% { opacity: 0.4; }
         }
-        .tbg-resize-handle { opacity: 0.6; transition: opacity 0.15s, background 0.15s; }
-        .tbg-resize-handle:hover { opacity: 1 !important; background: rgba(239,68,68,0.6) !important; }
-        .tbg-block-body { opacity: 0.85; transition: opacity 0.15s; }
+        .tbg-resize-handle { opacity: 0.85; transition: opacity 0.15s, background 0.15s; }
+        .tbg-resize-handle:hover { opacity: 1 !important; background: rgba(168,32,50,0.28) !important; }
+        .tbg-block-body { opacity: 0.96; transition: opacity 0.15s; }
         .tbg-block-body:hover { opacity: 1; }
       `}</style>
 
@@ -207,8 +207,8 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
           userSelect: 'none',
           background: 'var(--bg-surface)',
           borderRadius: '0px',
-          border: '1px solid var(--border-hairline)',
-          borderTop: '2px solid var(--border-strong)',
+          border: '1px solid #18181A',
+          borderTop: '2px solid #18181A',
           overflow: 'hidden',
           padding: '16px',
           height: '100%',
@@ -218,24 +218,40 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
         onMouseLeave={commit}
       >
         {/* Day headers */}
-        <div style={{ display: 'flex', marginBottom: '8px' }}>
-          <div style={{ width: '50px' }} />
-          {DAYS.map(day => (
-            <div key={day} style={{ flex: 1, textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-primary)', fontWeight: 700 }}>{day}</div>
+        <div style={{ display: 'flex', marginBottom: '0px', background: '#DCD9D2', border: '1px solid #C6C3BB', borderBottom: '1px solid #18181A' }}>
+          <div style={{ width: '50px', borderRight: '1px solid #C6C3BB', padding: '6px 4px', fontSize: '0.68rem', fontFamily: 'var(--font-mono)', color: '#4A4946', textAlign: 'center', fontWeight: 700 }}>HORA</div>
+          {DAYS.map((day, idx) => (
+            <div
+              key={day}
+              className="tbg-day-header"
+              style={{
+                flex: 1,
+                textAlign: 'center',
+                fontSize: '0.82rem',
+                fontFamily: 'var(--font-heading)',
+                color: '#141416',
+                fontWeight: 700,
+                padding: '6px 4px',
+                borderLeft: idx === 0 ? '1px solid #C6C3BB' : 'none',
+                borderRight: '1px solid #C6C3BB',
+              }}
+            >
+              {day}
+            </div>
           ))}
         </div>
 
         {/* Scrollable content */}
-        <div ref={scrollRef} style={{ position: 'relative', flex: 1, overflowY: 'auto', paddingBottom: '20px', paddingTop: `${GRID_PAD_TOP}px` }}>
+        <div ref={scrollRef} style={{ position: 'relative', flex: 1, overflowY: 'auto', paddingBottom: '20px', paddingTop: `${GRID_PAD_TOP}px`, borderLeft: '1px solid #C6C3BB', borderRight: '1px solid #C6C3BB', borderBottom: '1px solid #C6C3BB' }}>
           <div style={{ position: 'relative', height: `${HOURS.length * 40}px` }}>
 
             {/* Hour gridlines + labels */}
             {HOURS.map((hour, idx) => (
               <div key={hour} style={{ position: 'absolute', top: `${idx * 40}px`, left: 0, width: '100%', height: '40px', display: 'flex', pointerEvents: 'none' }}>
-                <div style={{ width: '50px', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textAlign: 'right', paddingRight: '8px', transform: 'translateY(-6px)' }}>
-                  {hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+                <div style={{ width: '50px', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: '#4A4946', fontWeight: 600, textAlign: 'right', paddingRight: '8px', transform: 'translateY(-6px)' }}>
+                  {String(hour).padStart(2, '0')}:00
                 </div>
-                <div style={{ flex: 1, borderTop: '1px solid var(--border-hairline)' }} />
+                <div className="tbg-hour-row-line" style={{ flex: 1, borderTop: '1px solid #D4D1C9', borderBottom: '1px solid #D4D1C9' }} />
               </div>
             ))}
 
@@ -246,16 +262,20 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
               {courseBlocks.map((b, i) => (
                 <div key={`course-${i}`} style={{
                   position: 'absolute',
-                  left: `calc(${(b.dayIdx * 100) / 6}% + 4px)`,
-                  width: `calc(${100 / 6}% - 8px)`,
+                  left: `calc(${(b.dayIdx * 100) / 6}% + 2px)`,
+                  width: `calc(${100 / 6}% - 4px)`,
                   top: `${(b.startSlot / 4) * 40}px`,
                   height: `${((b.endSlot - b.startSlot + 1) / 4) * 40}px`,
-                  background: `repeating-linear-gradient(45deg, ${b.color}20, ${b.color}20 10px, ${b.color}40 10px, ${b.color}40 20px)`,
-                  border: `1px solid ${b.color}60`, borderRadius: '6px', boxSizing: 'border-box', zIndex: 2,
+                  background: `repeating-linear-gradient(-45deg, #F4E0E2, #F4E0E2 6px, #EBD0D3 6px, #EBD0D3 12px)`,
+                  border: `1px solid #A82032`,
+                  borderLeft: `3px solid #A82032`,
+                  borderRadius: '0px',
+                  boxSizing: 'border-box',
+                  zIndex: 2,
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4px',
                 }}>
-                  <div style={{ fontSize: '0.65rem', fontWeight: 600, color: b.color, textAlign: 'center', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>🚫 {b.title}</div>
-                  <div style={{ fontSize: '0.6rem', textAlign: 'center', textShadow: '0 1px 2px rgba(0,0,0,0.8)', color: 'rgba(255,255,255,0.7)' }}>{b.subtitle}</div>
+                  <div style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#520D17', textAlign: 'center' }}>{b.title}</div>
+                  <div style={{ fontSize: '0.6rem', fontFamily: 'var(--font-mono)', textAlign: 'center', color: '#751523' }}>{b.subtitle}</div>
                 </div>
               ))}
 
@@ -263,12 +283,15 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
               {ghostBlocks.map((b, i) => (
                 <div key={`ghost-${i}`} style={{
                   position: 'absolute',
-                  left: `calc(${(b.dayIdx * 100) / 6}% + 4px)`,
-                  width: `calc(${100 / 6}% - 8px)`,
+                  left: `calc(${(b.dayIdx * 100) / 6}% + 2px)`,
+                  width: `calc(${100 / 6}% - 4px)`,
                   top: `${(b.startSlot / 4) * 40}px`,
                   height: `${((b.endSlot - b.startSlot + 1) / 4) * 40}px`,
-                  background: 'rgba(59,130,246,0.4)', border: '1px solid rgba(59,130,246,0.8)',
-                  borderRadius: '6px', zIndex: 2, animation: 'pulse-ghost 2s infinite ease-in-out',
+                  background: 'rgba(0, 119, 158, 0.22)',
+                  border: '1.5px solid #00779E',
+                  borderRadius: '0px',
+                  zIndex: 2,
+                  animation: 'pulse-ghost 2s infinite ease-in-out',
                 }} />
               ))}
 
@@ -279,49 +302,53 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
                 const isParent = b.isParent ?? (density >= 0.75);
                 const isLocked = b.subtitle?.startsWith('🔒');
                 const bw  = isLocked ? '2px'  : isParent ? '1.5px' : '1px';
-                const ba  = isLocked ? 'CC'   : isParent ? '88'    : '44';
-                const bgA = isLocked ? '28'   : isParent ? '18'    : '0D';
-                const op  = isLocked ? 1      : isParent ? 0.85    : 0.55;
-                const icon = isLocked ? '🔒'  : isParent ? '🔗'    : '◔';
+                const op  = isLocked ? 1      : isParent ? 0.9     : 0.7;
                 return (
                   <div key={`pinned-${i}`} style={{
                     position: 'absolute',
-                    left: `calc(${(b.dayIdx * 100) / 6}% + 4px)`,
-                    width: `calc(${100 / 6}% - 8px)`,
+                    left: `calc(${(b.dayIdx * 100) / 6}% + 2px)`,
+                    width: `calc(${100 / 6}% - 4px)`,
                     top: `${(b.startSlot / 4) * 40}px`,
                     height: `${h}px`,
-                    background: `${b.color}${bgA}`,
-                    border: `${bw} dashed ${b.color}${ba}`,
-                    borderRadius: '8px', boxSizing: 'border-box', zIndex: 4,
+                    background: '#E0EBF5',
+                    border: `${bw} dashed #006699`,
+                    borderLeft: '3px solid #006699',
+                    borderRadius: '0px',
+                    boxSizing: 'border-box',
+                    zIndex: 4,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     gap: '1px', overflow: 'hidden', opacity: op,
                   }}>
-                    {h > 20 && <span style={{ fontSize: '0.6rem', lineHeight: 1 }}>{icon}</span>}
-                    {h > 34 && <span style={{ fontSize: '0.58rem', fontWeight: 700, color: b.color, textShadow: '0 1px 3px rgba(0,0,0,0.9)', textAlign: 'center' }}>{b.title}</span>}
-                    {h > 52 && <span style={{ fontSize: '0.5rem', color: b.color, opacity: 0.8, textAlign: 'center' }}>{b.subtitle}</span>}
+                    {h > 24 && <span style={{ fontSize: '0.62rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#0A2E46', textAlign: 'center' }}>{b.title}</span>}
+                    {h > 44 && <span style={{ fontSize: '0.55rem', fontFamily: 'var(--font-mono)', color: '#005A78', textAlign: 'center' }}>{b.subtitle}</span>}
                   </div>
                 );
               })}
             </div>
 
-            {/* ── Interactive blocked blocks (with resize handles) ── */}
-            {/* z-index 6: above decoration, below cell grid (z-8 with pass-through for blocked cells) */}
+            {/* ── Interactive blocked blocks (Orthogonal 0px Swiss Restriction Blocks) ── */}
             <div style={{ position: 'absolute', top: 0, left: '50px', right: 0, bottom: 0, pointerEvents: 'none' }}>
               {blockedBlocks.map((block, i) => {
                 const h = ((block.endSlot - block.startSlot + 1) / 4) * 40;
+                const startMins = START_HOUR * 60 + block.startSlot * 15;
+                const endMins = START_HOUR * 60 + (block.endSlot + 1) * 15;
+                const fmt = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
                 return (
                   <div
                     key={`block-${i}`}
+                    className="tbg-blocked-slot"
                     style={{
                       position: 'absolute',
-                      left: `calc(${(block.dayIdx * 100) / 6}% + 4px)`,
-                      width: `calc(${100 / 6}% - 8px)`,
+                      left: `calc(${(block.dayIdx * 100) / 6}% + 2px)`,
+                      width: `calc(${100 / 6}% - 4px)`,
                       top: `${(block.startSlot / 4) * 40}px`,
                       height: `${h}px`,
-                      background: 'rgba(239,68,68,0.22)',
-                      border: '1px solid rgba(239,68,68,0.55)',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 14px rgba(239,68,68,0.1)',
+                      backgroundColor: '#F4E0E2',
+                      backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(168,32,50,0.08) 6px, rgba(168,32,50,0.08) 12px)',
+                      border: '1.5px solid #A82032',
+                      borderLeft: '4px solid #A82032',
+                      borderRadius: '0px',
+                      boxShadow: 'none',
                       zIndex: 6,
                       pointerEvents: 'auto',
                       boxSizing: 'border-box',
@@ -338,13 +365,10 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
                         setDrag({ kind: 'resize-top', dayIdx: block.dayIdx, origStart: block.startSlot, origEnd: block.endSlot, currentSlot: block.startSlot });
                       }}
                       style={{
-                        height: '8px', flexShrink: 0, cursor: 'ns-resize',
-                        background: 'rgba(239,68,68,0.35)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        height: '6px', flexShrink: 0, cursor: 'ns-resize',
+                        background: 'rgba(168,32,50,0.16)',
                       }}
-                    >
-                      <div style={{ width: '18px', height: '2px', background: 'rgba(255,255,255,0.45)', borderRadius: '1px' }} />
-                    </div>
+                    />
 
                     {/* Block body — click to delete */}
                     <div
@@ -356,12 +380,35 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
                       style={{
                         flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
                         cursor: 'pointer',
-                        flexDirection: 'column', gap: '4px',
+                        flexDirection: 'column', gap: '2px',
+                        padding: '2px 4px',
                       }}
                     >
-                      {h > 30 && <div style={{ width: '20px', height: '3px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px' }} />}
-                      {h > 50 && <Clock size={13} color="rgba(255,255,255,0.45)" />}
-                      {h > 30 && <div style={{ width: '20px', height: '3px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px' }} />}
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          color: '#520D17',
+                          lineHeight: 1.1,
+                          textAlign: 'center',
+                        }}
+                      >
+                        BLOQUEADO
+                      </span>
+                      {h >= 38 && (
+                        <span
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '10px',
+                            fontWeight: 600,
+                            color: '#751523',
+                            lineHeight: 1,
+                          }}
+                        >
+                          {fmt(startMins)}–{fmt(endMins)}
+                        </span>
+                      )}
                     </div>
 
                     {/* ↓ Bottom resize handle */}
@@ -372,49 +419,45 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
                         setDrag({ kind: 'resize-bot', dayIdx: block.dayIdx, origStart: block.startSlot, origEnd: block.endSlot, currentSlot: block.endSlot });
                       }}
                       style={{
-                        height: '8px', flexShrink: 0, cursor: 'ns-resize',
-                        background: 'rgba(239,68,68,0.35)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        height: '6px', flexShrink: 0, cursor: 'ns-resize',
+                        background: 'rgba(168,32,50,0.16)',
                       }}
-                    >
-                      <div style={{ width: '18px', height: '2px', background: 'rgba(255,255,255,0.45)', borderRadius: '1px' }} />
-                    </div>
+                    />
                   </div>
                 );
               })}
             </div>
 
-            {/* ── Transparent interactive cell grid (z-8, click-to-create) ── */}
-            {/* Container + columns: pointer-events NONE so events fall through to blocks below.
-                Only individual empty cells get pointer-events:auto. */}
+            {/* ── Transparent interactive cell grid (z-8, click-to-create) with explicit vertical & horizontal Swiss lines ── */}
             <div style={{ display: 'flex', position: 'absolute', top: 0, left: '50px', right: 0, bottom: 0, zIndex: 8, pointerEvents: 'none' }}>
               {DAYS.map((_, dayIdx) => (
                 <div
                   key={dayIdx}
+                  className="tbg-day-column"
                   style={{
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    borderLeft: dayIdx === 0 ? 'none' : '1px solid rgba(255,255,255,0.05)',
-                    pointerEvents: 'none', // day columns don't intercept — only cells do
+                    borderLeft: dayIdx === 0 ? '1px solid #C6C3BB' : 'none',
+                    borderRight: '1px solid #C6C3BB',
+                    pointerEvents: 'none',
                   }}
                 >
-                  {/* Exactly 60 slots, each SLOT_PX (10px) tall — matches block positioning */}
                   {Array.from({ length: 60 }).map((_, slotIdx) => {
                     const blocked = isSlotBlocked(dayIdx, slotIdx);
                     const pinned  = isPinned(dayIdx, slotIdx);
                     return (
                       <div
                         key={slotIdx}
+                        className="tbg-slot-cell"
                         onMouseDown={() => handleCellDown(dayIdx, slotIdx)}
                         style={{
-                          height: `${SLOT_PX}px`,  // fixed 10px = 40px/hour ÷ 4 slots
+                          height: `${SLOT_PX}px`,
                           flexShrink: 0,
-                          // Empty cells receive events; blocked/pinned cells pass events
-                          // through to the interactive block below (z-6)
                           pointerEvents: (blocked || pinned) ? 'none' : 'auto',
                           cursor: 'default',
-                          borderBottom: slotIdx % 4 === 3 ? '1px solid rgba(255,255,255,0.02)' : 'none',
+                          borderBottom: slotIdx % 4 === 3 ? '1px solid #D4D1C9' : 'none',
+                          borderRight: '1px solid #C6C3BB',
                           boxSizing: 'border-box',
                         }}
                       />
@@ -423,7 +466,6 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
                 </div>
               ))}
             </div>
-
 
           </div>
         </div>

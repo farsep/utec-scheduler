@@ -214,7 +214,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
           onTouchEnd={handleTouchEnd}
         >
           <div className="prof-modal-profile-group">
-            <div className="prof-modal-avatar" style={{ background: avatarGradient }}>
+            <div className="prof-modal-avatar">
               <span>{professor.initials}</span>
             </div>
 
@@ -223,7 +223,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                 <span className="prof-dept-badge">{professor.departmentLabel}</span>
                 {isTeachingNow && (
                   <span className="prof-live-badge">
-                    <span className="live-dot" /> EN CLASE AHORA
+                    ● EN CLASE AHORA
                   </span>
                 )}
               </div>

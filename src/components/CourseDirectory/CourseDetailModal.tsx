@@ -206,14 +206,7 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
         >
           <div className="course-modal-header-info">
             <div className="course-modal-badges-row">
-              <span
-                className="course-modal-code-badge"
-                style={{
-                  backgroundColor: `${course.departmentColor}25`,
-                  color: course.departmentColor,
-                  borderColor: `${course.departmentColor}50`
-                }}
-              >
+              <span className="course-modal-code-badge">
                 {course.code}
               </span>
               <span className="course-modal-dept-badge">{course.departmentLabel}</span>

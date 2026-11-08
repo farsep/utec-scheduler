@@ -299,7 +299,7 @@ export const MentorApp: React.FC<MentorAppProps> = ({
         />
 
         {filteredMentors.length > 0 ? (
-          <div className="prof-grid mentor-grid">
+          <div className="professors-cards-grid prof-grid mentor-grid">
             {filteredMentors.map(mentor => (
               <MentorCard
                 key={mentor.id}

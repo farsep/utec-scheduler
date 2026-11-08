@@ -30,7 +30,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
   const [subMode, setSubMode] = useState<'dag' | 'catalog'>('dag');
   const [selectedFaculty, setSelectedFaculty] = useState<'ALL' | FacultyId>('ALL');
   const [selectedCareerId, setSelectedCareerId] = useState<string>('ciencia-computacion');
-  const [selectedCourseCode, setSelectedCourseCode] = useState<string>('CS2013');
+  const [selectedCourseCode, setSelectedCourseCode] = useState<string>('CS1042');
   const [svgEdges, setSvgEdges] = useState<SvgEdge[]>([]);
 
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -113,13 +113,17 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
     };
   }, [activeCareer, activeCourse]);
 
-  // Group courses into 6 cycle columns
+  // Group courses into all 10 cycle columns (Ciclo 1 to Ciclo 10 — 200 credits)
   const cycles = useMemo(() => {
-    return ([1, 2, 3, 4, 5, 6] as const).map(cycleNum => {
+    return ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const).map(cycleNum => {
       const items = activeCareer.courses.filter(c => c.cycle === cycleNum);
       const totalCredits = items.reduce((acc, c) => acc + c.credits, 0);
       return { cycleNum, items, totalCredits };
     });
+  }, [activeCareer]);
+
+  const careerTotalCredits = useMemo(() => {
+    return activeCareer.totalCredits ?? activeCareer.courses.reduce((acc, c) => acc + c.credits, 0);
   }, [activeCareer]);
 
   // Recompute SVG Bezier connector coordinates whenever career, selected course, or stage size changes
@@ -310,6 +314,8 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                 <h2 className="dag-inspector-name">{activeCourse.name}</h2>
                 <div className="dag-inspector-sub">
                   <span>{activeCareer.name}</span>
+                  <span>·</span>
+                  <span>10 Ciclos ({careerTotalCredits} cr)</span>
                   <span>·</span>
                   <span>Ciclo {activeCourse.cycle}</span>
                   <span>·</span>

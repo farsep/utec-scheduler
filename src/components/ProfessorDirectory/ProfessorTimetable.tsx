@@ -521,8 +521,6 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                               left: totalCols > 1 ? `calc(${leftPercent}% + 2px)` : '3px',
                               width: totalCols > 1 ? `calc(${colWidthPercent}% - 4px)` : 'calc(100% - 6px)',
                               right: 'auto',
-                              borderLeftColor: session.courseColor || '#3b82f6',
-                              background: `linear-gradient(135deg, ${session.courseColor || '#3b82f6'}26 0%, #0d1527 100%)`
                             }}
                             onClick={() => onSelectSession(isSelected ? null : session)}
                             title={`${session.courseCode}: ${session.courseName}\n${session.sessionGroup}\n${session.startTime} - ${session.endTime}\nAula: ${session.roomDisplayName}`}
@@ -531,10 +529,7 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                               /* Compact 2-row layout with AutoAdvanceCarousel ticker */
                               <div className="prof-session-short-inner">
                                 <div className="prof-session-short-row-top">
-                                  <span
-                                    className="prof-session-code"
-                                    style={{ color: session.courseColor || '#60a5fa' }}
-                                  >
+                                  <span className="prof-session-code">
                                     {session.courseCode}
                                   </span>
                                   <AutoAdvanceCarousel className="prof-session-short-title-wrap">
@@ -570,10 +565,7 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                               /* Structured layout for standard / long sessions */
                               <div className="prof-session-block-inner">
                                 <div className="prof-session-block-header">
-                                  <span
-                                    className="prof-session-code"
-                                    style={{ color: session.courseColor || '#60a5fa' }}
-                                  >
+                                  <span className="prof-session-code">
                                     {session.courseCode}
                                   </span>
                                   <span className="prof-session-time">

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ClassroomAvailability, OccupiedBlock, FreeBlock } from '../../types/classroom';
+import type { ClassroomAvailability } from '../../types/classroom';
 import { UNIVERSITY_START_MINUTES, UNIVERSITY_END_MINUTES } from '../../utils/classroomUtils';
 
 interface ClassroomTimelineProps {
@@ -9,13 +9,15 @@ interface ClassroomTimelineProps {
   selectedRange?: { startMinutes: number; endMinutes: number } | null;
 }
 
+const SWISS_HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] as const;
+
 export const ClassroomTimeline: React.FC<ClassroomTimelineProps> = React.memo(({
   availability,
   nowMinutes,
   isToday,
   selectedRange
 }) => {
-  const totalRange = UNIVERSITY_END_MINUTES - UNIVERSITY_START_MINUTES; // 900 minutes
+  const totalRange = UNIVERSITY_END_MINUTES - UNIVERSITY_START_MINUTES; // 900 minutes (07:00 to 22:00)
 
   const getPercent = (minutes: number) => {
     const clamped = Math.max(UNIVERSITY_START_MINUTES, Math.min(UNIVERSITY_END_MINUTES, minutes));
@@ -30,43 +32,41 @@ export const ClassroomTimeline: React.FC<ClassroomTimelineProps> = React.memo(({
 
   return (
     <div className="classroom-timeline-wrap">
-      {/* Timeline track container */}
-      <div className="classroom-timeline-track" title="Línea de tiempo 07:00 a 22:00">
-        {/* Free blocks (Green tint) */}
-        {availability.freeBlocksToday.map((block, idx) => {
-          const left = getPercent(block.startMinutes);
-          const width = getWidthPercent(block.startMinutes, block.endMinutes);
+      {/* 15-Segment Discrete Swiss Hourly Strip (07:00 to 22:00) */}
+      <div className="classroom-timeline-track swiss-hourly-strip" title="Línea de tiempo 07:00 a 22:00 (15 bloques de 1h)">
+        {SWISS_HOURS.map((hour) => {
+          const slotStart = hour * 60;
+          const slotEnd = (hour + 1) * 60;
+          const hourLabel = `${String(hour).padStart(2, '0')}:00–${String(hour + 1).padStart(2, '0')}:00`;
+
+          const occupiedBlock = availability.occupiedBlocksToday.find(
+            b => Math.max(b.startMinutes, slotStart) < Math.min(b.endMinutes, slotEnd)
+          );
+
+          if (occupiedBlock) {
+            return (
+              <div
+                key={hour}
+                className="swiss-hour-cell swiss-hour-cell--occupied"
+                title={`${hourLabel} · Ocupada: ${occupiedBlock.session.courseCode} · ${occupiedBlock.session.courseName} (${occupiedBlock.startTime} - ${occupiedBlock.endTime})`}
+              >
+                <span className="swiss-hour-cell-code">
+                  {occupiedBlock.session.courseCode}
+                </span>
+              </div>
+            );
+          }
+
           return (
             <div
-              key={`free-${idx}`}
-              className="timeline-block timeline-block--free"
-              style={{ left: `${left}%`, width: `${width}%` }}
-              title={`Libre: ${block.startTime} - ${block.endTime} (${block.durationMinutes} min)`}
+              key={hour}
+              className="swiss-hour-cell swiss-hour-cell--free"
+              title={`${hourLabel} · Libre`}
             />
           );
         })}
 
-        {/* Occupied blocks (Crimson / Violet blocks) */}
-        {availability.occupiedBlocksToday.map((block, idx) => {
-          const left = getPercent(block.startMinutes);
-          const width = getWidthPercent(block.startMinutes, block.endMinutes);
-          return (
-            <div
-              key={`occ-${idx}`}
-              className="timeline-block timeline-block--occupied"
-              style={{ left: `${left}%`, width: `${width}%` }}
-              title={`En clase: ${block.session.courseCode} - ${block.session.courseName} (${block.startTime} - ${block.endTime}) • ${block.session.professor || 'Docente'}`}
-            >
-              {width >= 6.5 && (
-                <span className="timeline-block-label">
-                  {block.session.courseCode}
-                </span>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Highlighted Search Window (Cyan border glow if custom search active) */}
+        {/* Highlighted Search Window (if custom search active) */}
         {selectedRange && (
           <div
             className="timeline-search-window"
@@ -78,16 +78,13 @@ export const ClassroomTimeline: React.FC<ClassroomTimelineProps> = React.memo(({
           />
         )}
 
-        {/* Current Time Needle (if today and within 07:00 - 22:00) */}
+        {/* Current Time Needle (Sharp 2px solid #18181A vertical needle) */}
         {isToday && nowMinutes !== undefined && nowMinutes >= UNIVERSITY_START_MINUTES && nowMinutes <= UNIVERSITY_END_MINUTES && (
           <div
             className="timeline-now-marker"
             style={{ left: `${getPercent(nowMinutes)}%` }}
             title="Hora actual"
-          >
-            <div className="timeline-now-dot" />
-            <div className="timeline-now-line" />
-          </div>
+          />
         )}
       </div>
 

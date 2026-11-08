@@ -72,14 +72,7 @@ export const MentorCard: React.FC<MentorCardProps> = ({
     >
       {/* Top Header */}
       <div className="prof-card-header">
-        <div
-          className="prof-card-avatar"
-          style={{
-            background: pigment.bg,
-            color: pigment.text,
-            border: `1.5px solid ${pigment.border}`,
-          }}
-        >
+        <div className="prof-card-avatar">
           <span>{mentor.initials}</span>
         </div>
 
@@ -104,22 +97,36 @@ export const MentorCard: React.FC<MentorCardProps> = ({
 
       {/* Course Specialty Badges: ALWAYS CODE · FULL COURSE NAME */}
       <div className="mentor-courses-strip">
-        {mentor.courses.map(course => (
-          <span key={course.code} className="mentor-course-badge">
-            <span className="mentor-course-code">{course.code}</span>
-            <span className="mentor-course-sep">·</span>
-            <span className="mentor-course-name">{course.name}</span>
-          </span>
-        ))}
+        {mentor.courses.map(course => {
+          const coursePigment = getGraftonPigment(course.code);
+          return (
+            <span
+              key={course.code}
+              className="mentor-course-badge"
+              style={{ borderLeftColor: coursePigment.bar }}
+            >
+              <span className="mentor-course-code">{course.code}</span>
+              <span className="mentor-course-sep">·</span>
+              <span className="mentor-course-name">{course.name}</span>
+            </span>
+          );
+        })}
       </div>
 
       {/* Live Status Row */}
-      <div className="prof-card-status-row">
+      <div
+        className={`prof-card-status-row ${
+          liveStatus.isMentoringNow && liveStatus.activeSession
+            ? 'prof-card-status-row--live'
+            : liveStatus.nextSession
+            ? 'prof-card-status-row--next'
+            : 'prof-card-status-row--idle'
+        }`}
+      >
         {liveStatus.isMentoringNow && liveStatus.activeSession ? (
           <div className="prof-status-live-beacon">
-            <span className="live-dot" />
             <div className="live-text-group">
-              <strong>En mentoría ahora:</strong>
+              <strong>● En mentoría ahora:</strong>
               <span>
                 {liveStatus.activeSession.courseCode} · {liveStatus.activeSession.courseName} (
                 {liveStatus.activeSession.timeDisplay})
@@ -130,7 +137,7 @@ export const MentorCard: React.FC<MentorCardProps> = ({
           <div className="prof-status-next">
             <Clock size={13} />
             <span>
-              Próxima: <strong>{liveStatus.nextSession.day} {liveStatus.nextSession.timeDisplay}</strong>
+              Próxima asesoría: <strong>{liveStatus.nextSession.day} {liveStatus.nextSession.timeDisplay}</strong>
             </span>
           </div>
         ) : (
@@ -141,6 +148,29 @@ export const MentorCard: React.FC<MentorCardProps> = ({
             </span>
           </div>
         )}
+      </div>
+
+      {/* 4-Column Swiss Orthogonal Metric Grid */}
+      <div className="prof-card-kpis">
+        <div className="prof-kpi-item" title="Sesiones de asesoría por semana">
+          <span className="prof-kpi-val prof-kpi-val--hours">{mentor.totalSessions}</span>
+          <span className="prof-kpi-label">SESIONES</span>
+        </div>
+
+        <div className="prof-kpi-item" title="Cursos que asesora">
+          <span className="prof-kpi-val">{mentor.courses.length}</span>
+          <span className="prof-kpi-label">CURSOS</span>
+        </div>
+
+        <div className="prof-kpi-item" title="Días de atención">
+          <span className="prof-kpi-val">{mentor.daysTaught.length}</span>
+          <span className="prof-kpi-label">DÍAS</span>
+        </div>
+
+        <div className="prof-kpi-item" title="Modalidades disponibles">
+          <span className="prof-kpi-val">{mentor.modalities.length}</span>
+          <span className="prof-kpi-label">MODALIDAD</span>
+        </div>
       </div>
 
       {/* Sessions Schedule & Live Clash Detection Chips (04_Grafton_Mentors_Rooms_Figma.svg) */}

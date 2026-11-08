@@ -273,17 +273,14 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
           onMouseDown={handleMouseDown}
         >
           <div className="classroom-modal-title-group">
-            <div className="classroom-type-icon classroom-type-icon--large" style={{ color: typeMeta.color, background: `${typeMeta.color}20` }}>
-              {classroom.type === 'laboratorio' ? <Laptop size={24} /> :
-               classroom.type === 'mesas' ? <Users size={24} /> :
-               classroom.type === 'auditorio' ? <Building size={24} /> :
-               <GraduationCap size={24} />}
+            <div className="classroom-type-icon classroom-type-icon--large">
+              <span>{classroom.code}</span>
             </div>
             <div>
               <div className="classroom-modal-badge-row">
                 <span className="classroom-badge-code">{classroom.code}</span>
                 <span className="classroom-badge-floor">Piso {classroom.floor}</span>
-                <span className="classroom-badge-type" style={{ color: typeMeta.color }}>{typeMeta.label}</span>
+                <span className="classroom-badge-type">{typeMeta.label}</span>
               </div>
               <h2 className="classroom-modal-title">{classroom.displayName}</h2>
             </div>
