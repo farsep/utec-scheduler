@@ -411,7 +411,7 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
           onClick={scrollToTop}
           title="Subir a filtros y búsqueda"
         >
-          <ArrowUp size={15} />
+          <span className="floating-top-arrow" style={{ color: '#00779E', fontWeight: 700 }}>↑</span>
           <span>Búsqueda</span>
         </button>
       )}

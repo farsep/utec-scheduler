@@ -2843,30 +2843,35 @@
     margin-top: 8px;
   }
 
-  /* Floating Back to Top Button */
+  /* Floating Back to Top Button (Grafton Swiss Concrete 0px) */
   .mobile-floating-top-btn {
     display: inline-flex;
     align-items: center;
     gap: 7px;
     position: fixed;
-    bottom: calc(76px + env(safe-area-inset-bottom));
+    bottom: calc(20px + env(safe-area-inset-bottom));
     right: 14px;
-    padding: 9px 14px;
-    border-radius: 30px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    color: #ffffff;
-    font-size: 0.78rem;
-    font-weight: 700;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
-    z-index: 50;
+    padding: 8px 14px !important;
+    border-radius: 0px !important;
+    background: #F2F0EC !important;
+    background-color: #F2F0EC !important;
+    background-image: none !important;
+    color: #141416 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    border: 1.5px solid #18181A !important;
+    border-top: 3px solid #00779E !important;
+    box-shadow: 3px 3px 0px #18181A !important;
+    z-index: 55;
     cursor: pointer;
-    animation: fadeInScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     -webkit-tap-highlight-color: transparent;
   }
 
   .mobile-floating-top-btn:active {
-    transform: scale(0.96);
+    transform: translate(1px, 1px);
   }
 
   @keyframes fadeInScale {
