@@ -20,7 +20,7 @@ test.describe('MatricuLAB — Autonomous Self-Healing Visual, Responsive & Funct
       });
 
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto('http://localhost:4321', { waitUntil: 'networkidle' });
+      await page.goto('/', { waitUntil: 'networkidle' });
 
       // 1. Assert Header is visible and document body does not horizontally overflow viewport
       await expect(page.locator('header').first()).toBeVisible();
@@ -59,7 +59,7 @@ test.describe('MatricuLAB — Autonomous Self-Healing Visual, Responsive & Funct
     });
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('http://localhost:4321', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'networkidle' });
 
     // Verify schedule blocks render with valid non-zero geometry
     const blocks = page.locator(
@@ -98,7 +98,7 @@ test.describe('MatricuLAB — Autonomous Self-Healing Visual, Responsive & Funct
     expect(consoleErrors).toEqual([]);
   });
 
-  test('3. All 16 UTEC Careers Curricular DAG & Full Course Name + Code Verification', async ({
+  test('3. All 16 UTEC Careers 10-Cycle Verbatim 2026 Curricular DAG (200 Credits) & Matemáticas Discretas Verification', async ({
     page,
   }) => {
     const consoleErrors: string[] = [];
@@ -108,7 +108,7 @@ test.describe('MatricuLAB — Autonomous Self-Healing Visual, Responsive & Funct
     });
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('http://localhost:4321', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'networkidle' });
 
     // Navigate to Malla & 16 Carreras view
     const mallaBtn = page.getByRole('button', { name: /Malla|Cursos|Carreras/i }).first();
@@ -118,33 +118,108 @@ test.describe('MatricuLAB — Autonomous Self-Healing Visual, Responsive & Funct
     const careerButtons = page.locator('.dag-career-btn');
     await expect(careerButtons).toHaveCount(16);
 
+    // Verify all 10 Cycle columns (Ciclo 1 to Ciclo 10) render
+    const cycleColumns = page.locator('.dag-cycle-column');
+    await expect(cycleColumns).toHaveCount(10);
+
     // Assert DAG nodes render BOTH course code AND full course name (never just code)
     const dagNodes = page.locator('[id^="dag-node-"]');
     const nodeCount = await dagNodes.count();
-    expect(nodeCount).toBeGreaterThan(6);
+    expect(nodeCount).toBeGreaterThanOrEqual(55);
 
     for (let i = 0; i < Math.min(nodeCount, 8); i++) {
       const text = (await dagNodes.nth(i).innerText()).trim();
       expect(text.length).toBeGreaterThan(10); // Code (6 chars) + Full Course Name
     }
 
+    // 1. Verify Administración y Negocios Digitales (200 cr: 21, 21, 21, 20, 21, 22, 22, 17, 17, 18)
+    const andBtn = page.getByRole('button', { name: /Administración y Negocios Digitales/i }).first();
+    await expect(andBtn).toBeVisible();
+    await andBtn.click();
+    await expect(page.locator('.dag-inspector-sub')).toContainText('10 Ciclos (200 cr)');
+    const andCycleCredits = await page.locator('.dag-cycle-credits').allInnerTexts();
+    expect(andCycleCredits).toEqual([
+      '21 cr',
+      '21 cr',
+      '21 cr',
+      '20 cr',
+      '21 cr',
+      '22 cr',
+      '22 cr',
+      '17 cr',
+      '17 cr',
+      '18 cr',
+    ]);
+    await expect(page.locator('#dag-node-AD1001')).toContainText(
+      'Introducción a los Negocios y la Innovación Empresarial'
+    );
+    await expect(page.locator('#dag-node-GH1001')).toContainText(
+      'Taller de Planeamiento y Estrategias de Aprendizaje'
+    );
+    await expect(page.locator('#dag-node-MA1000')).toContainText('Pensamiento Matemático');
+    await expect(page.locator('#dag-node-AD5005')).toContainText(
+      'Proyecto Final de Administración y Negocios Digitales'
+    );
+    // Ensure zero invented course names
+    await expect(page.getByText(/Fintech & Blockchain Business/i)).toHaveCount(0);
+
     await page.screenshot({
-      path: 'audit-screenshots/03a-curricular-dag-computacion.png',
+      path: 'audit-screenshots/03c-curricular-dag-administracion-200cr.png',
       fullPage: true,
     });
 
-    // Test switching across faculties (Ciberseguridad, Business Analytics, Ingeniería Mecatrónica, Física)
-    for (const careerName of [
-      'Ciberseguridad',
+    // 2. Select Ciencia de Datos e Inteligencia Artificial and verify CS1040 & CS1042
+    const dsBtn = page.getByRole('button', { name: /Ciencia de Datos e Inteligencia Artificial/i }).first();
+    await expect(dsBtn).toBeVisible();
+    await dsBtn.click();
+    await expect(page.locator('.dag-inspector-sub')).toContainText('10 Ciclos (200 cr)');
+
+    await expect(page.locator('#dag-node-CS1040')).toContainText('Matemáticas Discretas I');
+    await expect(page.locator('#dag-node-CS1042')).toContainText('Matemáticas Discretas II');
+    await page.locator('#dag-node-CS1042').click();
+
+    await page.screenshot({
+      path: 'audit-screenshots/03a-curricular-dag-ciencia-datos.png',
+      fullPage: true,
+    });
+
+    // 3. Iterate across ALL 16 UTEC Careers and verify 10 cycles + 200 cr on every single career
+    const all16CareerNames = [
+      'Administración y Negocios Digitales',
       'Business Analytics',
+      'Ciencia de la Computación',
+      'Ciencia de Datos e Inteligencia Artificial',
+      'Sistemas de Información',
+      'Ciberseguridad',
+      'Ingeniería Industrial',
+      'Bioingeniería',
+      'Ingeniería de la Energía',
+      'Ingeniería Mecánica',
+      'Ingeniería Química',
+      'Ingeniería Ambiental',
+      'Ingeniería Civil',
+      'Ingeniería Electrónica',
       'Ingeniería Mecatrónica',
       'Física',
-    ]) {
-      const careerBtn = page.getByRole('button', { name: new RegExp(careerName, 'i') }).first();
+    ];
+
+    for (const careerName of all16CareerNames) {
+      const careerBtn = page.locator('.dag-career-btn', { hasText: careerName }).first();
       await expect(careerBtn).toBeVisible();
       await careerBtn.click();
-      await expect(dagNodes.first()).toBeVisible();
+      await expect(cycleColumns).toHaveCount(10);
+      await expect(page.locator('.dag-inspector-sub')).toContainText('10 Ciclos (200 cr)');
+      const count = await dagNodes.count();
+      expect(count).toBeGreaterThanOrEqual(54);
     }
+
+    // Leave on Ciencia de la Computación for the main screenshot
+    await page.locator('.dag-career-btn', { hasText: 'Ciencia de la Computación' }).first().click();
+
+    await page.screenshot({
+      path: 'audit-screenshots/03-curricular-dag-16-careers.png',
+      fullPage: true,
+    });
 
     // Check zero overflow on mobile inside DAG view as well
     await page.setViewportSize({ width: 375, height: 812 });
@@ -157,16 +232,12 @@ test.describe('MatricuLAB — Autonomous Self-Healing Visual, Responsive & Funct
       fullPage: true,
     });
 
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.screenshot({
-      path: 'audit-screenshots/03-curricular-dag-16-careers.png',
-      fullPage: true,
-    });
-
     expect(consoleErrors).toEqual([]);
   });
 
-  test('4. Peer Mentors Clash Detection & Free Classrooms Floor Explorer', async ({ page }) => {
+  test('4. Peer Mentors, Docentes & Free Classrooms 15-Hour Swiss Timeline Audit (Desktop & Mobile)', async ({
+    page,
+  }) => {
     const consoleErrors: string[] = [];
     page.on('pageerror', err => consoleErrors.push(err.message));
     page.on('console', msg => {
@@ -174,17 +245,81 @@ test.describe('MatricuLAB — Autonomous Self-Healing Visual, Responsive & Funct
     });
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('http://localhost:4321', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'networkidle' });
 
+    // 1. Mentores View (1440x900 & 375x812)
     const mentorsBtn = page.getByRole('button', { name: /Mentores/i }).first();
     await mentorsBtn.click();
     await expect(page.locator('.mentor-card').first()).toBeVisible();
     await page.screenshot({ path: 'audit-screenshots/04-mentors-desktop.png', fullPage: true });
 
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.screenshot({ path: 'audit-screenshots/04b-mentors-mobile.png', fullPage: true });
+
+    // 2. Docentes View (1440x900 & 375x812) — Verify 4-Column Swiss Orthogonal Metric Grid & Zero Dark Gray #6B7075 Box
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const docentesTab = page.getByRole('button', { name: /^Docentes$/i }).first();
+    await expect(docentesTab).toBeVisible();
+    await docentesTab.click();
+    await expect(page.locator('.professor-card').first()).toBeVisible();
+
+    const profCardAudit = await page.evaluate(() => {
+      const kpiBox = document.querySelector('.prof-card-kpis');
+      const avatar = document.querySelector('.prof-card-avatar');
+      if (!kpiBox || !avatar) return null;
+      const kpiStyle = getComputedStyle(kpiBox);
+      const avatarStyle = getComputedStyle(avatar);
+      return {
+        kpiBg: kpiStyle.backgroundColor,
+        kpiRadius: kpiStyle.borderRadius,
+        avatarBg: avatarStyle.backgroundColor,
+        avatarRadius: avatarStyle.borderRadius,
+      };
+    });
+    expect(profCardAudit).not.toBeNull();
+    expect(profCardAudit?.kpiBg).toBe('rgb(220, 217, 210)'); // #DCD9D2 concrete (NOT dark gray #6B7075)
+    expect(profCardAudit?.kpiRadius).toBe('0px');
+    expect(profCardAudit?.avatarBg).toBe('rgb(220, 217, 210)');
+    expect(profCardAudit?.avatarRadius).toBe('0px');
+
+    await page.screenshot({ path: 'audit-screenshots/04c-docentes-desktop.png', fullPage: true });
+
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.screenshot({ path: 'audit-screenshots/04d-docentes-mobile.png', fullPage: true });
+
+    // 3. Aulas Libres View (1440x900 & 375x812) — Verify 15-Hour Swiss Timeline & Single Structural Banner
+    await page.setViewportSize({ width: 1440, height: 900 });
     const roomsBtn = page.getByRole('button', { name: /Aulas/i }).first();
     await roomsBtn.click();
     await expect(page.locator('.campus-floor-explorer')).toBeVisible();
+    await expect(page.locator('.classroom-card').first()).toBeVisible();
+
+    const classroomAudit = await page.evaluate(() => {
+      const firstCard = document.querySelector('.classroom-card');
+      if (!firstCard) return null;
+      const cells = firstCard.querySelectorAll('.swiss-hour-cell');
+      const track = firstCard.querySelector('.classroom-timeline-track');
+      const innerBanner = firstCard.querySelector('.info-banner-content');
+      const monogram = firstCard.querySelector('.classroom-code-monogram');
+      return {
+        hourCellsCount: cells.length,
+        trackRadius: track ? getComputedStyle(track).borderRadius : null,
+        innerBannerBorderWidth: innerBanner ? getComputedStyle(innerBanner).borderTopWidth : null,
+        monogramBg: monogram ? getComputedStyle(monogram).backgroundColor : null,
+        monogramRadius: monogram ? getComputedStyle(monogram).borderRadius : null,
+      };
+    });
+    expect(classroomAudit).not.toBeNull();
+    expect(classroomAudit?.hourCellsCount).toBe(15); // 15-hour strip (07:00 to 22:00)
+    expect(classroomAudit?.trackRadius).toBe('0px');
+    expect(classroomAudit?.innerBannerBorderWidth).toBe('0px'); // No double border!
+    expect(classroomAudit?.monogramBg).toBe('rgb(220, 217, 210)'); // #DCD9D2 orthogonal monogram
+    expect(classroomAudit?.monogramRadius).toBe('0px');
+
     await page.screenshot({ path: 'audit-screenshots/05-classrooms-desktop.png', fullPage: true });
+
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.screenshot({ path: 'audit-screenshots/05b-classrooms-mobile.png', fullPage: true });
 
     // Verify Grafton Swiss Concrete Tokens & 0px border-radius + zero backdrop-filter blur
     const tokenAudit = await page.evaluate(() => {

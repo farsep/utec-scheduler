@@ -82,20 +82,13 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
     >
       {/* Top Header: Avatar Monogram, Department, Code, Credits, Bookmark Star */}
       <div className="course-card-header">
-        <div className="course-card-avatar" style={{ background: avatarGradient }}>
+        <div className="course-card-avatar">
           <span>{monogram}</span>
         </div>
 
         <div className="course-card-identity">
           <div className="course-card-badge-row">
-            <span
-              className="course-card-code-badge"
-              style={{
-                borderColor: `${course.departmentColor}45`,
-                backgroundColor: `${course.departmentColor}18`,
-                color: course.departmentColor
-              }}
-            >
+            <span className="course-card-code-badge">
               {course.code}
             </span>
 
@@ -128,13 +121,19 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
       </div>
 
       {/* Live Status Banner or Next Class Indicator */}
-      <div className="course-card-status-row">
+      <div
+        className={`course-card-status-row ${
+          isCurrentlyLive && liveSession
+            ? 'course-card-status-row--live'
+            : nextSession
+            ? 'course-card-status-row--next'
+            : 'course-card-status-row--idle'
+        }`}
+      >
         {isCurrentlyLive && liveSession ? (
           <div className="course-status-live-beacon">
-            <span className="live-dot-ping" />
-            <span className="live-dot" />
             <div className="live-text-group">
-              <strong>En clase ahora:</strong>
+              <strong>● En clase ahora:</strong>
               <span>
                 Sec. {liveSession.sectionNumber} en {liveSession.room} ({liveSession.startTime} - {liveSession.endTime})
               </span>
@@ -142,7 +141,7 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
           </div>
         ) : nextSession ? (
           <div className="course-status-next">
-            <Clock size={13} className="text-muted" />
+            <Clock size={13} />
             <span>
               Próxima sesión:{' '}
               <strong>
@@ -158,26 +157,26 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
         )}
       </div>
 
-      {/* 4-column KPI Stats Highlights Bar */}
+      {/* 4-column Swiss Orthogonal KPI Metric Grid */}
       <div className="course-card-kpis">
         <div className="course-kpi-item" title="Horas de clase por semana">
-          <span className="course-kpi-val text-accent">{course.totalWeeklyHours}h</span>
-          <span className="course-kpi-label">Semanales</span>
+          <span className="course-kpi-val course-kpi-val--hours">{course.totalWeeklyHours}h</span>
+          <span className="course-kpi-label">SEMANALES</span>
         </div>
 
         <div className="course-kpi-item" title="Secciones aperturadas">
-          <span className="course-kpi-val text-emerald">{course.totalSectionsCount}</span>
-          <span className="course-kpi-label">Secciones</span>
+          <span className="course-kpi-val">{course.totalSectionsCount}</span>
+          <span className="course-kpi-label">SECCIONES</span>
         </div>
 
         <div className="course-kpi-item" title="Docentes a cargo del curso">
-          <span className="course-kpi-val text-purple">{course.uniqueProfessors.length}</span>
-          <span className="course-kpi-label">Docentes</span>
+          <span className="course-kpi-val">{course.uniqueProfessors.length}</span>
+          <span className="course-kpi-label">DOCENTES</span>
         </div>
 
         <div className="course-kpi-item" title="Aulas asignadas en campus">
-          <span className="course-kpi-val text-amber">{course.uniqueRooms.length}</span>
-          <span className="course-kpi-label">Aulas</span>
+          <span className="course-kpi-val">{course.uniqueRooms.length}</span>
+          <span className="course-kpi-label">AULAS</span>
         </div>
       </div>
 

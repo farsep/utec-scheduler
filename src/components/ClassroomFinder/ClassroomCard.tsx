@@ -3,16 +3,8 @@ import type { ClassroomAvailability, ClassroomFilterState } from '../../types/cl
 import { ClassroomTimeline } from './ClassroomTimeline';
 import { ROOM_TYPE_LABELS, formatDurationHuman } from '../../utils/classroomUtils';
 import {
-  GraduationCap,
-  Laptop,
-  Users,
-  Building,
-  MapPin,
   Clock,
-  Calendar,
   ChevronRight,
-  User,
-  Sparkles,
   CheckCircle2,
   XCircle
 } from 'lucide-react';
@@ -35,21 +27,9 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
   const { classroom, liveStatus, currentSession, nextSession, minutesUntilNextSession, minutesUntilCurrentSessionEnds, isAvailableForSearch, occupancyPercentage } = availability;
   const typeMeta = ROOM_TYPE_LABELS[classroom.type] || ROOM_TYPE_LABELS.otro;
 
-  const renderTypeIcon = () => {
-    switch (classroom.type) {
-      case 'laboratorio':
-        return <Laptop size={18} />;
-      case 'mesas':
-        return <Users size={18} />;
-      case 'auditorio':
-        return <Building size={18} />;
-      case 'aula':
-      default:
-        return <GraduationCap size={18} />;
-    }
-  };
-
   const isLiveMode = filter.mode === 'live_now';
+  const isFreeBanner = isLiveMode ? liveStatus === 'free_now' : isAvailableForSearch;
+  const isBusyBanner = isLiveMode ? liveStatus === 'occupied_now' : !isAvailableForSearch;
 
   return (
     <div
@@ -59,15 +39,15 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
       {/* Top Header */}
       <div className="classroom-card-header">
         <div className="classroom-card-title-group">
-          <div className="classroom-type-icon" style={{ color: typeMeta.color, background: `${typeMeta.color}15` }}>
-            {renderTypeIcon()}
+          <div className="classroom-type-icon classroom-code-monogram">
+            <span>{classroom.code}</span>
           </div>
           <div>
             <h3 className="classroom-card-name">{classroom.displayName}</h3>
             <div className="classroom-card-meta">
               <span className="classroom-badge-code">{classroom.code}</span>
               <span className="classroom-badge-floor">Piso {classroom.floor}</span>
-              <span className="classroom-badge-type" style={{ color: typeMeta.color }}>{typeMeta.short}</span>
+              <span className="classroom-badge-type">{typeMeta.short}</span>
             </div>
           </div>
         </div>
@@ -77,13 +57,11 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
           {isLiveMode ? (
             liveStatus === 'free_now' ? (
               <span className="room-status-badge room-status-badge--free">
-                <span className="status-dot-pulse" />
-                <span>Libre Ahora</span>
+                <span>● Libre Ahora</span>
               </span>
             ) : liveStatus === 'occupied_now' ? (
               <span className="room-status-badge room-status-badge--occupied">
-                <span className="status-dot status-dot--red" />
-                <span>En Clase</span>
+                <span>■ En Clase</span>
               </span>
             ) : (
               <span className="room-status-badge room-status-badge--closed">
@@ -106,13 +84,20 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
         </div>
       </div>
 
-      {/* Primary Availability Info Box */}
-      <div className="classroom-info-banner">
+      {/* Primary Availability Info Box — Single Clean Structural Banner (NO double border) */}
+      <div
+        className={`classroom-info-banner ${
+          isFreeBanner
+            ? 'classroom-info-banner--free'
+            : isBusyBanner
+            ? 'classroom-info-banner--busy'
+            : 'classroom-info-banner--neutral'
+        }`}
+      >
         {isLiveMode ? (
           liveStatus === 'free_now' ? (
-            <div className="info-banner-content info-banner-content--free">
+            <div className="info-banner-content">
               <div className="info-primary">
-                <Sparkles size={16} className="text-emerald" />
                 <span>
                   <strong>Libre por {formatDurationHuman(minutesUntilNextSession ?? 0)}</strong>
                   {nextSession ? ` (hasta las ${nextSession.startTime})` : ' (hasta el cierre 22:00)'}
@@ -120,14 +105,13 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
               </div>
               {nextSession && (
                 <div className="info-sub">
-                  Próxima clase: <span className="highlight-text">{nextSession.courseCode} - {nextSession.courseName}</span>
+                  Próxima clase: <span className="highlight-text">{nextSession.courseCode} · {nextSession.courseName}</span>
                 </div>
               )}
             </div>
           ) : liveStatus === 'occupied_now' ? (
-            <div className="info-banner-content info-banner-content--busy">
+            <div className="info-banner-content">
               <div className="info-primary">
-                <Clock size={16} className="text-rose" />
                 <span>
                   <strong>Se libera a las {currentSession?.endTime}</strong>
                   {minutesUntilCurrentSessionEnds !== undefined && ` (en ${formatDurationHuman(minutesUntilCurrentSessionEnds)})`}
@@ -135,33 +119,27 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
               </div>
               {currentSession && (
                 <div className="info-sub">
-                  Clase actual: <span className="highlight-text">{currentSession.courseCode} - {currentSession.courseName}</span>
+                  Clase actual: <span className="highlight-text">{currentSession.courseCode} · {currentSession.courseName}</span>
                 </div>
               )}
             </div>
           ) : (
-            <div className="info-banner-content info-banner-content--neutral">
+            <div className="info-banner-content">
               <span>Campus fuera del horario de clases (07:00 - 22:00)</span>
             </div>
           )
         ) : (
-          <div className={`info-banner-content ${isAvailableForSearch ? 'info-banner-content--free' : 'info-banner-content--busy'}`}>
+          <div className="info-banner-content">
             <div className="info-primary">
               {isAvailableForSearch ? (
-                <>
-                  <CheckCircle2 size={16} className="text-emerald" />
-                  <span><strong>Totalmente libre</strong> en tu horario ({filter.startTime} - {filter.endTime})</span>
-                </>
+                <span><strong>Totalmente libre</strong> en tu horario ({filter.startTime} - {filter.endTime})</span>
               ) : (
-                <>
-                  <XCircle size={16} className="text-rose" />
-                  <span><strong>Tiene clases</strong> durante el bloque seleccionado</span>
-                </>
+                <span><strong>Tiene clases</strong> durante el bloque seleccionado</span>
               )}
             </div>
             {nextSession && isAvailableForSearch && (
               <div className="info-sub">
-                Próxima sesión en este día: {nextSession.courseCode} a las {nextSession.startTime}
+                Próxima sesión en este día: <span className="highlight-text">{nextSession.courseCode} · {nextSession.courseName}</span> a las {nextSession.startTime}
               </div>
             )}
           </div>

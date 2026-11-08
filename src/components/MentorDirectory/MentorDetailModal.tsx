@@ -195,7 +195,7 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
           onTouchEnd={handleTouchEnd}
         >
           <div className="prof-modal-profile-group">
-            <div className="prof-modal-avatar" style={{ background: avatarGradient }}>
+            <div className="prof-modal-avatar">
               <span>{mentor.initials}</span>
             </div>
 
@@ -208,7 +208,7 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
                 </span>
                 {liveStatus.isMentoringNow && (
                   <span className="prof-live-badge live-pulse-pill">
-                    <span className="live-dot" /> EN VIVO AHORA
+                    ● EN VIVO AHORA
                   </span>
                 )}
               </div>
@@ -294,14 +294,14 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
             {/* Quick Metrics */}
             <div className="mentor-modal-metrics">
               <div className="metric-box">
-                <span className="metric-lbl">Modalidad</span>
+                <span className="metric-lbl">MODALIDAD</span>
                 <span className="metric-val">
                   {isPresencial ? (
-                    <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ color: '#0D7A4E', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       <Building2 size={15} /> Presencial
                     </span>
                   ) : (
-                    <span style={{ color: '#818cf8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ color: '#00779E', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       <Video size={15} /> Virtual
                     </span>
                   )}
@@ -309,20 +309,20 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
               </div>
 
               <div className="metric-box">
-                <span className="metric-lbl">Aula Principal</span>
-                <span className="metric-val" style={{ color: 'var(--accent-primary)' }}>
+                <span className="metric-lbl">AULA PRINCIPAL</span>
+                <span className="metric-val" style={{ color: '#00779E' }}>
                   {mentor.primaryRoom}
                 </span>
               </div>
 
               <div className="metric-box">
-                <span className="metric-lbl">Sesiones por semana</span>
+                <span className="metric-lbl">SESIONES POR SEMANA</span>
                 <span className="metric-val">{mentor.totalSessions} sesión{mentor.totalSessions > 1 ? 'es' : ''}</span>
               </div>
 
               <div className="metric-box">
-                <span className="metric-lbl">Estado Actual</span>
-                <span className="metric-val" style={{ color: liveStatus.isMentoringNow ? '#10b981' : '#94a3b8' }}>
+                <span className="metric-lbl">ESTADO ACTUAL</span>
+                <span className="metric-val" style={{ color: liveStatus.isMentoringNow ? '#0D7A4E' : '#141416' }}>
                   {liveStatus.statusLabel}
                 </span>
               </div>
@@ -353,9 +353,8 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
                             <div
                               key={session.id}
                               className="mentor-session-block"
-                              style={{ borderLeftColor: session.courseColor }}
                             >
-                              <div className="session-block-course" style={{ color: session.courseColor }}>
+                              <div className="session-block-course">
                                 {session.courseCode}
                               </div>
                               <div className="session-block-name" title={session.courseName}>

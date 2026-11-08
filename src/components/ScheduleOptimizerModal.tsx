@@ -1057,7 +1057,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                           )}
                         </div>
                         {isAdvancedMode && isSelected && pinnedCourseCodes.includes(course.code) && (
-                          <div style={{ padding: '4px 8px 8px 32px', background: 'rgba(255,255,255,0.01)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <div style={{ padding: '4px 8px 8px 32px', background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-hairline)' }}>
                             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Fijar sección específica (Opcional):</div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '8px' }}>
                               {course.sections.map(sec => {
@@ -1080,11 +1080,11 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                                     onMouseLeave={() => setHoveredSectionForPreview(null)}
                                     style={{
                                       padding: '8px 12px',
-                                      borderRadius: '6px',
+                                      borderRadius: '0px',
                                       cursor: 'pointer',
-                                      border: isPinned ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.05)',
-                                      background: isPinned ? 'rgba(59,130,246,0.1)' : 'rgba(0,0,0,0.3)',
-                                      color: isPinned ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                      border: isPinned ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-hairline)',
+                                      background: isPinned ? '#E0EBF5' : 'var(--bg-surface)',
+                                      color: 'var(--text-primary)',
                                       display: 'flex',
                                       flexDirection: 'column',
                                       gap: '4px',
@@ -1101,9 +1101,9 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                                       <div style={{ 
                                         fontSize: '0.7rem', 
                                         padding: '2px 6px', 
-                                        borderRadius: '4px', 
-                                        background: full ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                                        color: full ? '#ef4444' : '#10b981',
+                                        borderRadius: '0px', 
+                                        background: full ? '#F4E0E2' : '#DCEEE6',
+                                        color: full ? '#520D17' : '#093B29',
                                         fontWeight: 600
                                       }}>
                                         {sec.enrolled} / {sec.vacancies}
@@ -1115,7 +1115,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                                     <div style={{ display: 'flex', gap: '4px', marginTop: '4px', alignItems: 'center', justifyContent: 'space-between' }}>
                                       <div style={{ display: 'flex', gap: '4px' }}>
                                         {Array.from(new Set(sec.sessions.map(s => s.sessionType))).map((type, i) => (
-                                          <span key={i} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-muted)' }}>
+                                          <span key={i} style={{ fontSize: '0.65rem', background: 'var(--bg-elevated)', padding: '2px 6px', borderRadius: '0px', color: 'var(--text-secondary)', border: '1px solid var(--border-hairline)' }}>
                                             {type}
                                           </span>
                                         ))}
@@ -1126,20 +1126,12 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                                           handleBlockSection(course.code, secName);
                                         }}
                                         style={{ 
-                                          background: isSectionBlocked ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
-                                          border: isSectionBlocked ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)', 
-                                          borderRadius: '4px', color: isSectionBlocked ? '#10b981' : '#ef4444', fontSize: '0.65rem', padding: '3px 8px', 
+                                          background: isSectionBlocked ? '#DCEEE6' : '#F4E0E2', 
+                                          border: isSectionBlocked ? '1px solid #0D7A4E' : '1px solid #A82032', 
+                                          borderRadius: '0px', color: isSectionBlocked ? '#093B29' : '#520D17', fontSize: '0.65rem', padding: '3px 8px', 
                                           cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, transition: 'all 0.2s' 
                                         }}
                                         title={isSectionBlocked ? "Desbloquear el horario de esta sección en el calendario" : "Bloquear el horario de esta sección en el calendario"}
-                                        onMouseEnter={(e) => { 
-                                          e.currentTarget.style.background = isSectionBlocked ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'; 
-                                          e.currentTarget.style.borderColor = isSectionBlocked ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)'; 
-                                        }}
-                                        onMouseLeave={(e) => { 
-                                          e.currentTarget.style.background = isSectionBlocked ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'; 
-                                          e.currentTarget.style.borderColor = isSectionBlocked ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'; 
-                                        }}
                                       >
                                         {isSectionBlocked ? '✅ Desbloquear' : '🚫 Bloquear'}
                                       </button>

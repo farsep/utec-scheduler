@@ -597,6 +597,7 @@
 
 .classroom-badge-code,
 .classroom-badge-floor,
+.classroom-badge-type,
 .occupancy-pill,
 .stat-pill {
   font-family: var(--font-mono) !important;
@@ -605,6 +606,31 @@
   border: 1px solid var(--border-hairline) !important;
   color: var(--text-secondary) !important;
   border-radius: 0px !important;
+  padding: 1px 6px !important;
+}
+
+/* 40x40px Orthogonal Room Code Monogram (FIX 3) */
+.classroom-type-icon,
+.classroom-type-icon.classroom-code-monogram {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  border: 1.5px solid #18181A !important;
+  background: #DCD9D2 !important;
+  color: #141416 !important;
+  font-family: var(--font-mono) !important;
+  font-weight: 700 !important;
+  font-size: 0.78rem !important;
+  border-radius: 0px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: none !important;
+}
+
+.room-status-badge {
+  border-radius: 0px !important;
+  font-family: var(--font-mono) !important;
 }
 
 .room-status-badge--free {
@@ -615,22 +641,374 @@
 }
 
 .room-status-badge--occupied {
-  background: #F5E8D3 !important;
-  border: 1px solid var(--status-warn) !important;
-  color: #4D2600 !important;
+  background: #F4E0E2 !important;
+  border: 1px solid #A82032 !important;
+  color: #520D17 !important;
   border-radius: 0px !important;
 }
 
-.classroom-info-banner,
-.info-banner-content,
+.room-status-badge--closed {
+  background: #DCD9D2 !important;
+  border: 1px solid #C6C3BB !important;
+  color: #4A4946 !important;
+  border-radius: 0px !important;
+}
+
+/* Single Clean Structural Banner on Classroom Cards (NO Double Border) (FIX 3) */
+.classroom-info-banner {
+  background: #DCD9D2 !important;
+  border: 1px solid #C6C3BB !important;
+  border-left: 3px solid #0D7A4E !important;
+  padding: 8px 12px !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+}
+
+.classroom-info-banner--free {
+  background: #DCD9D2 !important;
+  border-left: 3px solid #0D7A4E !important;
+}
+
+.classroom-info-banner--busy {
+  background: #DCD9D2 !important;
+  border-left: 3px solid #A82032 !important;
+}
+
+.classroom-info-banner--neutral {
+  background: #DCD9D2 !important;
+  border-left: 3px solid #787670 !important;
+}
+
+.info-banner-content {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+}
+
+.info-sub {
+  padding-left: 0 !important;
+  color: #4A4946 !important;
+}
+
+/* 15-Segment Discrete Swiss Hourly Strip (07:00 to 22:00) (FIX 3) */
+.classroom-timeline-track,
+.classroom-timeline-track.swiss-hourly-strip {
+  display: flex !important;
+  position: relative !important;
+  width: 100% !important;
+  height: 28px !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  background: #DCD9D2 !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+}
+
+.swiss-hour-cell {
+  height: 28px !important;
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  border-right: 1px solid #C6C3BB !important;
+  border-radius: 0px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.swiss-hour-cell:last-of-type {
+  border-right: none !important;
+}
+
+.swiss-hour-cell--free {
+  background: #DCEEE6 !important;
+  border-bottom: 2px solid #0D7A4E !important;
+}
+
+.swiss-hour-cell--occupied {
+  background: #F4E0E2 !important;
+  border-bottom: 2px solid #A82032 !important;
+}
+
+.swiss-hour-cell-code {
+  font-family: var(--font-mono) !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  color: #520D17 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.04em !important;
+  white-space: nowrap !important;
+}
+
+.timeline-search-window {
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  border: 1.5px dashed #00779E !important;
+  background: rgba(0, 119, 158, 0.14) !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+  z-index: 3 !important;
+}
+
+.timeline-now-marker {
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 0 !important;
+  border-left: 2px solid #18181A !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+  z-index: 4 !important;
+}
+
+.classroom-timeline-axis {
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums !important;
+  color: #4A4946 !important;
+}
+
+/* ==========================================================================
+   PROFESSOR, MENTOR & COURSE STATUS BANNERS, AVATARS & 4-COLUMN SWISS KPI GRID (FIX 2)
+   ========================================================================== */
+.prof-card-avatar,
+.course-card-avatar {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border-radius: 0px !important;
+  border: 1.5px solid #18181A !important;
+  background: #DCD9D2 !important;
+  color: #141416 !important;
+  font-family: var(--font-heading) !important;
+  font-weight: 700 !important;
+  font-size: 1.05rem !important;
+  box-shadow: none !important;
+}
+
+.live-dot-ping,
+.live-dot {
+  display: none !important;
+}
+
 .prof-card-status-row,
-.course-card-status-row,
+.course-card-status-row {
+  background: #DCD9D2 !important;
+  border: 1px solid #C6C3BB !important;
+  border-left: 3px solid #787670 !important;
+  color: #141416 !important;
+  border-radius: 0px !important;
+  padding: 8px 10px !important;
+}
+
+.prof-card-status-row--live,
+.course-card-status-row--live {
+  background: #DCEEE6 !important;
+  border-color: #C6C3BB !important;
+  border-left: 3px solid #0D7A4E !important;
+}
+
+.prof-card-status-row--next,
+.course-card-status-row--next {
+  background: #DCD9D2 !important;
+  border-color: #C6C3BB !important;
+  border-left: 3px solid #00779E !important;
+}
+
 .prof-card-email-row,
 .occupied-toggle-btn {
   background: var(--bg-canvas) !important;
   border: 1px solid var(--border-hairline) !important;
   color: var(--text-primary) !important;
   border-radius: 0px !important;
+}
+
+/* 4-Column Swiss Orthogonal Metric Grid (FIX 2) */
+.prof-card-kpis,
+.course-card-kpis {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 0px !important;
+  padding: 0px !important;
+  border: 1px solid #18181A !important;
+  background: #DCD9D2 !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+.prof-kpi-item,
+.course-kpi-item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 8px 4px !important;
+  background: #DCD9D2 !important;
+  border: none !important;
+  border-right: 1px solid #C6C3BB !important;
+  border-radius: 0px !important;
+  transform: none !important;
+}
+
+.prof-kpi-item:last-child,
+.course-kpi-item:last-child {
+  border-right: none !important;
+}
+
+.prof-kpi-item:hover,
+.course-kpi-item:hover {
+  background: #E6E4DF !important;
+  transform: none !important;
+}
+
+.prof-kpi-val,
+.course-kpi-val {
+  font-family: var(--font-heading) !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1.15 !important;
+  color: #141416 !important;
+}
+
+.prof-kpi-val--hours,
+.course-kpi-val--hours {
+  color: #00779E !important;
+}
+
+.prof-kpi-label,
+.course-kpi-label {
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  color: #4A4946 !important;
+  margin-top: 3px !important;
+}
+
+/* Days Matrix, Course Badges & Room Chips inside Professor & Course Cards (FIX 2) */
+.prof-card-section-label,
+.course-card-section-label {
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  color: #4A4946 !important;
+}
+
+.prof-day-chip,
+.course-day-chip {
+  border-radius: 0px !important;
+  background: #EAE8E3 !important;
+  border: 1px solid #C6C3BB !important;
+  color: #787670 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+.prof-day-chip--active,
+.course-day-chip--active {
+  background: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  font-weight: 700 !important;
+}
+
+.prof-day-chip--today,
+.course-day-chip--today {
+  border-bottom: 2px solid #00779E !important;
+  box-shadow: none !important;
+}
+
+.prof-day-chip--live,
+.course-day-chip--live {
+  background: #DCEEE6 !important;
+  border: 1px solid #0D7A4E !important;
+  color: #093B29 !important;
+  box-shadow: none !important;
+}
+
+.prof-course-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 4px 8px !important;
+  border-radius: 0px !important;
+  border-top: 1px solid #C6C3BB !important;
+  border-right: 1px solid #C6C3BB !important;
+  border-bottom: 1px solid #C6C3BB !important;
+  border-left-width: 3px !important;
+  border-left-style: solid !important;
+  border-left-color: #00779E;
+  background: #DCD9D2 !important;
+  color: #141416 !important;
+  font-size: 0.73rem !important;
+  max-width: 100% !important;
+}
+
+.prof-course-tag-code {
+  font-family: var(--font-mono) !important;
+  font-weight: 700 !important;
+  color: #141416 !important;
+}
+
+.prof-course-tag-sep {
+  color: #787670 !important;
+}
+
+.prof-course-tag-name {
+  font-weight: 600 !important;
+  color: #141416 !important;
+  max-width: none !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.prof-room-tag,
+.course-room-tag,
+.course-sec-tag,
+.course-prof-tag,
+.prof-course-tag--more,
+.prof-room-tag--more,
+.course-sec-tag--more,
+.course-prof-tag--more,
+.course-room-tag--more {
+  border-radius: 0px !important;
+  background: #DCD9D2 !important;
+  border: 1px solid #C6C3BB !important;
+  color: #141416 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+}
+
+.prof-card-footer,
+.course-card-footer,
+.classroom-card-footer {
+  border-top: 1px solid #C6C3BB !important;
+}
+
+.prof-view-detail-btn,
+.course-view-detail-btn {
+  font-family: var(--font-mono) !important;
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
+  color: #00779E !important;
+  transform: none !important;
+}
+
+.professor-card:hover .prof-view-detail-btn,
+.course-card:hover .course-view-detail-btn {
+  color: #141416 !important;
+  transform: none !important;
 }
 
 .live-text-group strong,
@@ -640,12 +1018,6 @@
 
 .live-text-group span {
   color: var(--text-secondary) !important;
-}
-
-.course-card-avatar {
-  border-radius: 0px !important;
-  box-shadow: none !important;
-  border: 1px solid var(--border-hairline) !important;
 }
 
 .course-card-code-badge,
@@ -715,6 +1087,23 @@
   padding: 10px 14px;
 }
 
+.mentor-grid,
+.prof-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)) !important;
+  gap: 18px !important;
+  width: 100% !important;
+}
+
+@media (max-width: 640px) {
+  .mentor-grid,
+  .prof-grid,
+  .professors-cards-grid,
+  .classroom-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 .mentor-compat-note {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -753,8 +1142,13 @@
   display: inline-flex !important;
   align-items: center !important;
   gap: 5px !important;
-  background: var(--bg-elevated) !important;
-  border: 1px solid var(--border-hairline) !important;
+  background: #DCD9D2 !important;
+  border-top: 1px solid #C6C3BB !important;
+  border-right: 1px solid #C6C3BB !important;
+  border-bottom: 1px solid #C6C3BB !important;
+  border-left-width: 3px !important;
+  border-left-style: solid !important;
+  border-left-color: #00779E;
   color: var(--text-primary) !important;
   padding: 4px 8px !important;
   border-radius: 0px !important;
@@ -834,21 +1228,802 @@
   color: var(--status-warn);
 }
 
-/* Detail Modals in Sub-Apps */
-.classroom-modal-overlay,
-.prof-modal-overlay,
-.course-modal-overlay {
-  background: rgba(20, 20, 22, 0.56) !important;
+/* ==========================================================================
+   SUPREME SELF-HEALING MODAL & CALENDAR GRID OVERRIDES (BUGS 1 - 5)
+   ========================================================================== */
+
+/* BUG 1: Explicit Vertical Day Dividers & Horizontal Hour Lines in ALL Calendar Grids */
+.day-col-header,
+.day-column-canvas,
+.tbg-day-header,
+.tbg-day-column,
+.tbg-slot-cell,
+.prof-timetable-day-col-header,
+.prof-timetable-day-column,
+.mentor-day-col {
+  border-right: 1px solid #C6C3BB !important;
 }
 
+.day-col-header:first-child,
+.day-column-canvas:first-child,
+.tbg-day-header:first-of-type,
+.tbg-day-column:first-of-type,
+.prof-timetable-day-col-header:first-child,
+.prof-timetable-day-column:first-of-type,
+.mentor-day-col:first-child {
+  border-left: 1px solid #C6C3BB !important;
+}
+
+.time-label-slot,
+.prof-grid-hour-line,
+.tbg-hour-row-line {
+  border-bottom: 1px solid #D4D1C9 !important;
+}
+
+.prof-grid-hour-line {
+  background: transparent !important;
+  height: 1px !important;
+}
+
+/* BUG 1.2: Orthogonal 0px Blocked Time Slots in "Calendario de Bloqueos" */
+.tbg-blocked-slot {
+  border-radius: 0px !important;
+  background-color: #F4E0E2 !important;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 6px,
+    rgba(168, 32, 50, 0.08) 6px,
+    rgba(168, 32, 50, 0.08) 12px
+  ) !important;
+  border: 1.5px solid #A82032 !important;
+  border-left: 4px solid #A82032 !important;
+  color: #520D17 !important;
+  box-shadow: none !important;
+}
+
+/* BUG 2.3: Fix "Ver Horarios y Aulas >" Button on /cursos Cards */
+.course-view-detail-btn {
+  border-radius: 0px !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  padding: 4px 10px !important;
+  box-shadow: none !important;
+  font-family: var(--font-mono) !important;
+}
+
+.course-card:hover .course-view-detail-btn {
+  background: #18181A !important;
+  background-color: #18181A !important;
+  border-color: #18181A !important;
+  color: #F2F0EC !important;
+  box-shadow: none !important;
+}
+
+/* Modal Overlays (All Sub-Apps) */
+.course-modal-backdrop,
+.visitor-modal-backdrop,
+.mentor-modal-overlay,
+.classroom-modal-overlay,
+.prof-modal-overlay,
+.classroom-modal-overlay.prof-modal-overlay {
+  background: rgba(20, 20, 22, 0.56) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Modal Dialog Surfaces (BUGS 2, 3, 4, 5) */
+.course-modal-dialog,
+.visitor-modal-dialog,
+.mentor-modal,
+.classroom-modal,
+.prof-modal,
+.classroom-modal.prof-modal,
+.classroom-modal.prof-modal.mentor-modal,
 .classroom-modal-card,
 .prof-modal-card,
 .course-modal-card {
-  background: var(--bg-surface) !important;
-  color: var(--text-primary) !important;
-  border: 1px solid var(--border-hairline) !important;
-  border-top: 3px solid var(--border-strong) !important;
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  color: #141416 !important;
+  border: 2px solid #18181A !important;
+  border-top: 4px solid #18181A !important;
   border-radius: 0px !important;
   box-shadow: 4px 4px 0px rgba(24, 24, 26, 0.2) !important;
 }
+
+/* BUG 2: Course Detail Modal Header, Tabs, Body, Visitor Banner & Section Cards */
+.course-modal-header,
+.visitor-modal-header {
+  background: #EAE8E3 !important;
+  background-color: #EAE8E3 !important;
+  border-bottom: 1px solid #18181A !important;
+  color: #141416 !important;
+}
+
+.course-modal-code-badge {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  border-radius: 0px !important;
+  font-family: var(--font-mono) !important;
+}
+
+.course-modal-dept-badge,
+.course-modal-credits-badge,
+.course-modal-plan-badge {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #C6C3BB !important;
+  color: #141416 !important;
+  border-radius: 0px !important;
+  font-family: var(--font-mono) !important;
+}
+
+.course-modal-title,
+.visitor-modal-title,
+.classroom-modal-title,
+.prof-modal-title {
+  color: #141416 !important;
+  font-family: var(--font-heading) !important;
+}
+
+.course-modal-star-btn,
+.course-modal-close-btn,
+.visitor-modal-close-btn,
+.modal-close-btn,
+.inspector-close-btn,
+.prof-inspector-close-btn {
+  border-radius: 0px !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  box-shadow: none !important;
+}
+
+.course-modal-nav-tabs,
+.prof-modal-nav-tabs {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border-bottom: 1px solid #18181A !important;
+}
+
+.course-modal-tab-btn,
+.prof-modal-tab-btn {
+  border-radius: 0px !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  color: #4A4946 !important;
+  border: 1px solid #C6C3BB !important;
+  box-shadow: none !important;
+  font-family: var(--font-mono) !important;
+}
+
+.course-modal-tab-btn--active,
+.prof-modal-tab-btn--active {
+  background: #18181A !important;
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+  border-color: #18181A !important;
+  box-shadow: none !important;
+}
+
+.course-modal-body,
+.visitor-modal-body {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  color: #141416 !important;
+}
+
+.course-modal-footer,
+.visitor-modal-footer {
+  background: #EAE8E3 !important;
+  background-color: #EAE8E3 !important;
+  border-top: 1px solid #C6C3BB !important;
+  color: #4A4946 !important;
+}
+
+/* BUG 2.1: Unreadable Yellow "Visitante / Oyente" Banner Fix */
+.course-modal-visitor-banner {
+  background: #F5E8D3 !important;
+  background-color: #F5E8D3 !important;
+  background-image: none !important;
+  border: 1px solid #B85D00 !important;
+  border-left: 4px solid #B85D00 !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+}
+
+.visitor-banner-icon {
+  background: #EED4B0 !important;
+  background-color: #EED4B0 !important;
+  border: 1px solid #B85D00 !important;
+  color: #4D2600 !important;
+  border-radius: 0px !important;
+}
+
+.visitor-banner-title {
+  color: #4D2600 !important;
+  font-weight: 700 !important;
+}
+
+.visitor-banner-desc {
+  color: #141416 !important;
+}
+
+.visitor-action-btn {
+  border-radius: 0px !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+.visitor-action-btn--primary,
+.visitor-btn--active {
+  background: #18181A !important;
+  background-color: #18181A !important;
+  border-color: #18181A !important;
+  color: #F2F0EC !important;
+}
+
+/* BUG 2.2: Sección Container & Inner Session Cards (TEORÍA / LABORATORIO) */
+.course-section-card {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+}
+
+.course-section-header,
+.section-title {
+  color: #141416 !important;
+}
+
+.section-hours-badge,
+.section-days-badge {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+  font-family: var(--font-mono) !important;
+}
+
+.course-session-pill {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  border: 1px solid #C6C3BB !important;
+  border-top: 2px solid #18181A !important;
+  border-left: 3px solid #00779E !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+}
+
+.course-session-pill .session-group-tag,
+.course-session-pill .session-day-name,
+.course-session-pill .session-hours {
+  color: #141416 !important;
+}
+
+.course-session-pill .session-room-link {
+  color: #0D7A4E !important;
+  font-weight: 700 !important;
+}
+
+.course-session-pill .session-prof-link,
+.course-session-pill .session-prof-unassigned,
+.course-session-pill .session-floor-tag {
+  color: #4A4946 !important;
+}
+
+.course-session-pill .session-floor-tag {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #C6C3BB !important;
+  border-radius: 0px !important;
+}
+
+.session-modality-badge.modality--presencial {
+  background: #DCEEE6 !important;
+  background-color: #DCEEE6 !important;
+  border: 1px solid #0D7A4E !important;
+  color: #093B29 !important;
+  border-radius: 0px !important;
+}
+
+.session-modality-badge.modality--virtual {
+  background: #E0EBF5 !important;
+  background-color: #E0EBF5 !important;
+  border: 1px solid #006699 !important;
+  color: #0A2E46 !important;
+  border-radius: 0px !important;
+}
+
+/* BUG 3: Mentor Detail Modal & BUG 5: Professor Detail Modal Shared Elements */
+.prof-modal-avatar {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  border-radius: 0px !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  background-image: none !important;
+  border: 1.5px solid #18181A !important;
+  color: #141416 !important;
+  box-shadow: none !important;
+  font-size: 1.1rem !important;
+  font-family: var(--font-mono) !important;
+}
+
+.mentor-modal-metrics .metric-box,
+.modal-kpi-card {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+  box-shadow: none !important;
+}
+
+.mentor-modal-metrics .metric-lbl,
+.kpi-card-label {
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  color: #4A4946 !important;
+}
+
+.mentor-modal-metrics .metric-val,
+.kpi-card-value {
+  font-family: var(--font-heading) !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  color: #141416 !important;
+}
+
+.modal-kpi-card .kpi-card-value.text-accent {
+  color: #00779E !important;
+}
+
+.modal-kpi-card .kpi-card-value.text-emerald {
+  color: #0D7A4E !important;
+}
+
+.mentor-schedule-table-wrap,
+.mentor-schedule-grid {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+}
+
+.mentor-day-col {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  border-right: 1px solid #C6C3BB !important;
+}
+
+.mentor-day-col-header,
+.is-today-col .mentor-day-col-header {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border-bottom: 1px solid #18181A !important;
+  color: #141416 !important;
+  font-family: var(--font-mono) !important;
+}
+
+.mentor-session-block {
+  background: #E0EBF5 !important;
+  background-color: #E0EBF5 !important;
+  border: 1px solid #006699 !important;
+  border-left: 3px solid #006699 !important;
+  border-radius: 0px !important;
+  color: #0A2E46 !important;
+}
+
+.mentor-session-block *,
+.mentor-session-block .session-block-course,
+.mentor-session-block .session-block-name,
+.mentor-session-block .session-block-time,
+.mentor-session-block .session-block-loc,
+.mentor-session-block .loc-presencial,
+.mentor-session-block .loc-virtual {
+  color: #0A2E46 !important;
+}
+
+.mentor-reservations-card,
+.mentor-modal-course-card,
+.mentor-tips-banner {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+}
+
+.reservations-card-header,
+.reservations-table th {
+  background: #EAE8E3 !important;
+  background-color: #EAE8E3 !important;
+  color: #141416 !important;
+  border-bottom: 1px solid #C6C3BB !important;
+}
+
+.reservations-table td {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  color: #141416 !important;
+  border-bottom: 1px solid #C6C3BB !important;
+}
+
+.room-tag-room {
+  background: #DCEEE6 !important;
+  border: 1px solid #0D7A4E !important;
+  color: #093B29 !important;
+  border-radius: 0px !important;
+}
+
+.room-tag-virtual {
+  background: #E0EBF5 !important;
+  border: 1px solid #006699 !important;
+  color: #0A2E46 !important;
+  border-radius: 0px !important;
+}
+
+/* BUG 4: Classroom Detail Modal (/aulas -> "Ver Horario >") */
+.classroom-type-icon--large {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 0px !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1.5px solid #18181A !important;
+  color: #141416 !important;
+}
+
+.classroom-modal-day-tabs {
+  border-bottom: 1px solid #C6C3BB !important;
+}
+
+.modal-day-tab {
+  border-radius: 0px !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  color: #141416 !important;
+  border: 1px solid #C6C3BB !important;
+  box-shadow: none !important;
+}
+
+.modal-day-tab.active {
+  background: #00779E !important;
+  background-color: #00779E !important;
+  color: #FFFFFF !important;
+  border: 1px solid #18181A !important;
+  box-shadow: none !important;
+}
+
+.modal-day-count-badge {
+  background: #EAE8E3 !important;
+  background-color: #EAE8E3 !important;
+  color: #4A4946 !important;
+  border-radius: 0px !important;
+}
+
+.modal-day-tab.active .modal-day-count-badge {
+  background: #005A78 !important;
+  background-color: #005A78 !important;
+  color: #FFFFFF !important;
+  border-radius: 0px !important;
+}
+
+.agenda-card--free {
+  background: #DCEEE6 !important;
+  background-color: #DCEEE6 !important;
+  border: 1px solid #0D7A4E !important;
+  border-left: 4px solid #0D7A4E !important;
+  border-radius: 0px !important;
+  color: #093B29 !important;
+}
+
+.agenda-card--free *,
+.badge-free-pill,
+.free-duration-text,
+.agenda-free-sub {
+  color: #093B29 !important;
+}
+
+.badge-free-pill {
+  background: #B8DEC9 !important;
+  border: 1px solid #0D7A4E !important;
+  border-radius: 0px !important;
+}
+
+.agenda-card--occupied {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #C6C3BB !important;
+  border-left: 4px solid #18181A !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+}
+
+.agenda-course-code {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  border-radius: 0px !important;
+  font-family: var(--font-mono) !important;
+}
+
+.agenda-course-name {
+  color: #141416 !important;
+  font-weight: 700 !important;
+}
+
+.agenda-prof,
+.agenda-enrolled,
+.agenda-session-group,
+.agenda-sec-num {
+  color: #4A4946 !important;
+}
+
+.agenda-session-inspector {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+}
+
+.empty-day-banner {
+  background: #DCEEE6 !important;
+  background-color: #DCEEE6 !important;
+  border: 1px solid #0D7A4E !important;
+  border-left: 4px solid #0D7A4E !important;
+  border-radius: 0px !important;
+  color: #093B29 !important;
+}
+
+.empty-day-banner h4,
+.empty-day-banner p {
+  color: #093B29 !important;
+}
+
+.empty-day-icon-badge {
+  background: #B8DEC9 !important;
+  background-color: #B8DEC9 !important;
+  border: 1px solid #0D7A4E !important;
+  border-radius: 0px !important;
+  color: #093B29 !important;
+  box-shadow: none !important;
+}
+
+.classroom-modal-kpis.prof-modal-kpis {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+@media (max-width: 640px) {
+  .classroom-modal-kpis.prof-modal-kpis {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+.today-chip {
+  border-radius: 0px !important;
+  background: #00779E !important;
+  background-color: #00779E !important;
+  color: #FFFFFF !important;
+}
+
+.prof-modal-live-banner .live-dot-ping {
+  display: none !important;
+}
+
+.prof-modal-live-banner .live-dot {
+  border-radius: 0px !important;
+  background: #0D7A4E !important;
+  background-color: #0D7A4E !important;
+}
+
+.prof-time-mark:first-child {
+  transform: translateY(2px) !important;
+}
+
+/* BUG 5: Professor Detail Modal & Timetable Matrix (/profesores -> "Ver Horario Completo >") */
+.prof-dept-badge {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  border-radius: 0px !important;
+  font-family: var(--font-mono) !important;
+}
+
+.prof-live-badge {
+  background: #DCEEE6 !important;
+  background-color: #DCEEE6 !important;
+  border: 1px solid #0D7A4E !important;
+  color: #093B29 !important;
+  border-radius: 0px !important;
+  font-family: var(--font-mono) !important;
+}
+
+.prof-modal-email-link,
+.prof-modal-copy-btn {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  border-radius: 0px !important;
+}
+
+.prof-modal-next-banner,
+.prof-modal-live-banner {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  border-left: 4px solid #00779E !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+}
+
+.prof-modal-next-banner *,
+.prof-modal-live-banner *,
+.prof-room-link {
+  color: #141416 !important;
+}
+
+.prof-day-jump-pills,
+.prof-view-mode-toggle,
+.course-timetable-toolbar {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+.prof-day-jump-pill,
+.prof-view-toggle-btn,
+.course-day-jump-chip {
+  border-radius: 0px !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  color: #141416 !important;
+  border: 1px solid #C6C3BB !important;
+  box-shadow: none !important;
+}
+
+.prof-day-jump-pill--active,
+.prof-view-toggle-btn.active {
+  background: #18181A !important;
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+  border-color: #18181A !important;
+  box-shadow: none !important;
+}
+
+.prof-timetable-container {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+.prof-timetable-time-col {
+  background: #EAE8E3 !important;
+  background-color: #EAE8E3 !important;
+  border-right: 1px solid #C6C3BB !important;
+  box-shadow: none !important;
+  color: #4A4946 !important;
+}
+
+.prof-timetable-time-corner {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border-bottom: 1px solid #18181A !important;
+  color: #141416 !important;
+}
+
+.prof-timetable-days-header-row {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border-bottom: 1px solid #18181A !important;
+}
+
+.prof-timetable-day-col-header,
+.prof-timetable-day-col-header--empty,
+.course-timetable-wrap .prof-timetable-day-col-header--empty {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border-right: 1px solid #C6C3BB !important;
+  color: #141416 !important;
+  opacity: 1 !important;
+}
+
+.prof-day-abbr,
+.prof-day-full {
+  color: #141416 !important;
+}
+
+.prof-day-badge {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  border: 1px solid #C6C3BB !important;
+  color: #141416 !important;
+  border-radius: 0px !important;
+}
+
+.prof-timetable-day-column,
+.prof-timetable-day-column--empty,
+.course-timetable-wrap .prof-timetable-day-column--empty {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  background-image: none !important;
+  border-right: 1px solid #C6C3BB !important;
+}
+
+.prof-session-block,
+.course-session-card {
+  background: #E0EBF5 !important;
+  background-color: #E0EBF5 !important;
+  background-image: none !important;
+  border: 1px solid #006699 !important;
+  border-left: 3px solid #006699 !important;
+  color: #0A2E46 !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+.prof-session-block *,
+.course-session-card * {
+  color: #0A2E46 !important;
+  text-shadow: none !important;
+}
+
+.prof-session-group-tag,
+.prof-session-room-tag,
+.prof-session-duration-tag,
+.prof-session-modality-tag {
+  background: rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid #006699 !important;
+  color: #0A2E46 !important;
+  border-radius: 0px !important;
+}
+
+.prof-course-detail-card,
+.prof-section-card,
+.prof-room-detail-card,
+.prof-agenda-card,
+.prof-session-inspector,
+.course-agenda-view,
+.agenda-session-card {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+  box-shadow: none !important;
+}
+
+.prof-section-session-item,
+.prof-course-session-row,
+.prof-room-mini-session {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  border: 1px solid #C6C3BB !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+}
+
 

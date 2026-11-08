@@ -1392,7 +1392,8 @@ input[type="range"]::-webkit-slider-thumb {
   font-weight: 700;
   font-size: 0.84rem;
   color: var(--text-primary);
-  border-left: 1px solid var(--border-hairline);
+  border-left: 1px solid #C6C3BB !important;
+  border-right: 1px solid #C6C3BB !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1424,6 +1425,7 @@ input[type="range"]::-webkit-slider-thumb {
   display: flex;
   flex-direction: column;
   background: #ECEAE4;
+  border-right: 1px solid #C6C3BB !important;
 }
 
 .time-label-slot {
@@ -1436,7 +1438,7 @@ input[type="range"]::-webkit-slider-thumb {
   font-size: 0.7rem;
   font-weight: 500;
   color: var(--text-muted);
-  border-bottom: 1px solid #DFDCD4;
+  border-bottom: 1px solid #D4D1C9 !important;
 }
 
 .days-canvas-grid {
@@ -1448,9 +1450,10 @@ input[type="range"]::-webkit-slider-thumb {
 
 .day-column-canvas {
   position: relative;
-  border-left: 1px solid var(--border-hairline);
+  border-left: 1px solid #C6C3BB !important;
+  border-right: 1px solid #C6C3BB !important;
   height: 100%;
-  background-image: linear-gradient(to bottom, #DFDCD4 1px, transparent 1px);
+  background-image: linear-gradient(to bottom, #D4D1C9 1px, transparent 1px);
   background-size: 100% 54px;
 }
 
@@ -2115,7 +2118,7 @@ input[type="range"]::-webkit-slider-thumb {
   background: #C6E4D6;
 }
 
-/* 6-Cycle Horizontal Scroll DAG Stage (min-width: 1140px) */
+/* 10-Cycle Horizontal Scroll DAG Stage (min-width: 2150px) */
 .dag-canvas-card {
   padding: 0;
   overflow: hidden;
@@ -2130,7 +2133,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .dag-stage-inner {
-  min-width: 1140px;
+  min-width: 2150px;
   width: 100%;
   position: relative;
 }
@@ -2148,8 +2151,8 @@ input[type="range"]::-webkit-slider-thumb {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(6, minmax(172px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(10, minmax(202px, 1fr));
+  gap: 16px;
   align-items: start;
 }
 
