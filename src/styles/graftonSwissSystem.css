@@ -2095,43 +2095,112 @@ body {
 }
 
 /* ==========================================================================
-   FIX 2: CURRICULAR GRAPH (DAG) GHOSTING (opacity: 0.38) & LINEAGE EMPHASIS (opacity: 1)
+   CURRICULAR GRAPH (DAG) — OPAQUE GHOSTING, LOCKED INSPECTOR HEIGHT &
+   1ST-DEGREE vs. 2ND-DEGREE LINEAGE HIERARCHY
    ========================================================================== */
+.dag-inspector-card {
+  min-height: 132px !important;
+}
+
+.dag-inspector-main {
+  min-height: 48px !important;
+}
+
+.dag-relation-pills {
+  min-height: 68px !important;
+  align-content: flex-start !important;
+}
+
+.dag-svg-layer {
+  z-index: 0 !important;
+}
+
+.dag-columns-grid {
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+.dag-node,
+.dag-node-card {
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 10 !important;
+  background-color: #F2F0EC !important;
+}
+
+.dag-node.is-ghosted,
 .dag-node-card.dag-node--ghost {
-  opacity: 0.38;
-  border: 1px solid #C6C3BB !important;
-  background: #F2F0EC !important;
+  opacity: 1 !important;
+  background-color: #ECEAE4 !important;
+  border: 1px solid #D2CFC6 !important;
   box-shadow: none !important;
 }
 
-.dag-node-card.dag-node--ghost:hover {
-  opacity: 0.95;
-  border-color: #00779E !important;
+.dag-node.is-ghosted > *,
+.dag-node-card.dag-node--ghost > * {
+  opacity: 0.35;
+  transition: opacity 160ms ease;
 }
 
+.dag-node.is-ghosted:hover,
+.dag-node-card.dag-node--ghost:hover {
+  transform: translateY(-1px);
+  border-color: #18181A !important;
+}
+
+.dag-node.is-ghosted:hover > *,
+.dag-node-card.dag-node--ghost:hover > * {
+  opacity: 0.88;
+}
+
+.dag-node.is-selected,
 .dag-node-card.dag-node--selected {
   opacity: 1 !important;
-  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
   border: 2px solid #00779E !important;
   box-shadow: 0 0 0 3px rgba(0, 119, 158, 0.16), 2px 2px 0px rgba(24, 24, 26, 0.08) !important;
 }
 
-.dag-node-card.dag-node--prereq,
-.dag-node-card.dag-node--prereq-direct,
-.dag-node-card.dag-node--prereq-base {
+.dag-node.is-prereq-direct,
+.dag-node-card.dag-node--prereq-direct {
   opacity: 1 !important;
-  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
   border: 2px solid #F59E0B !important;
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.22) !important;
 }
 
-.dag-node-card.dag-node--unlock,
-.dag-node-card.dag-node--unlock-direct,
-.dag-node-card.dag-node--unlock-chain {
+.dag-node.is-prereq-transitive,
+.dag-node-card.dag-node--prereq-base {
   opacity: 1 !important;
-  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  border: 1.5px dashed #F59E0B !important;
+  box-shadow: none !important;
+}
+
+.dag-node.is-prereq-transitive > *,
+.dag-node-card.dag-node--prereq-base > * {
+  opacity: 0.78 !important;
+}
+
+.dag-node.is-unlock-direct,
+.dag-node-card.dag-node--unlock-direct {
+  opacity: 1 !important;
+  background-color: #F2F0EC !important;
   border: 2px solid #10B981 !important;
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.22) !important;
+}
+
+.dag-node.is-unlock-transitive,
+.dag-node-card.dag-node--unlock-chain {
+  opacity: 1 !important;
+  background-color: #F2F0EC !important;
+  border: 1.5px dashed #10B981 !important;
+  box-shadow: none !important;
+}
+
+.dag-node.is-unlock-transitive > *,
+.dag-node-card.dag-node--unlock-chain > * {
+  opacity: 0.78 !important;
 }
 
 
