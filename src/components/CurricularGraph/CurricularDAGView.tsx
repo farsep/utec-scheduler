@@ -19,7 +19,7 @@ interface CurricularDAGViewProps {
 interface SvgEdge {
   key: string;
   d: string;
-  kind: 'prereq' | 'unlock' | 'muted';
+  kind: 'prereq-direct' | 'prereq-transitive' | 'unlock-direct' | 'unlock-transitive' | 'muted';
 }
 
 function getDepartmentDotColor(code: string, name: string): string {
@@ -71,7 +71,6 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
   const [selectedFaculty, setSelectedFaculty] = useState<'ALL' | FacultyId>('ALL');
   const [selectedCareerId, setSelectedCareerId] = useState<string>('ciencia-computacion');
   const [selectedCourseCode, setSelectedCourseCode] = useState<string>('CS1042');
-  const [hoveredCourseCode, setHoveredCourseCode] = useState<string | null>(null);
   const [svgEdges, setSvgEdges] = useState<SvgEdge[]>([]);
 
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -88,23 +87,19 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
 
   const handleSelectCareer = (career: CareerCurriculum) => {
     setSelectedCareerId(career.id);
-    setHoveredCourseCode(null);
     if (!career.courses.some(c => c.code === selectedCourseCode)) {
       setSelectedCourseCode(career.defaultSelectedCode);
     }
   };
 
-  const focusCode = hoveredCourseCode || selectedCourseCode;
-
-  // Ensure focusCode / selectedCourseCode exists in activeCareer
+  // Ensure selectedCourseCode exists in activeCareer (Click-to-Select ONLY; no hover hijacking)
   const activeCourse: CurricularCourseNode = useMemo(() => {
     return (
-      activeCareer.courses.find(c => c.code === focusCode) ||
       activeCareer.courses.find(c => c.code === selectedCourseCode) ||
       activeCareer.courses.find(c => c.code === activeCareer.defaultSelectedCode) ||
       activeCareer.courses[0]
     );
-  }, [activeCareer, focusCode, selectedCourseCode]);
+  }, [activeCareer, selectedCourseCode]);
 
   // Compute full recursive upstream ancestors and downstream descendants for activeCourse
   const graphRelations = useMemo(() => {
@@ -202,17 +197,20 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
         const d = `M ${x1.toFixed(1)} ${y1.toFixed(1)} C ${(x1 + dx).toFixed(1)} ${y1.toFixed(1)}, ${(x2 - dx).toFixed(1)} ${y2.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}`;
 
         let kind: SvgEdge['kind'] = 'muted';
-        const isPrereqEdge =
-          (target.code === activeCourse.code || graphRelations.ancestors.has(target.code)) &&
-          graphRelations.ancestors.has(sourceCode);
-        const isUnlockEdge =
-          (sourceCode === activeCourse.code || graphRelations.descendants.has(sourceCode)) &&
-          graphRelations.descendants.has(target.code);
-
-        if (isPrereqEdge) {
-          kind = 'prereq';
-        } else if (isUnlockEdge) {
-          kind = 'unlock';
+        if (target.code === activeCourse.code && graphRelations.directPrereqs.has(sourceCode)) {
+          kind = 'prereq-direct';
+        } else if (
+          graphRelations.ancestors.has(target.code) &&
+          graphRelations.ancestors.has(sourceCode)
+        ) {
+          kind = 'prereq-transitive';
+        } else if (sourceCode === activeCourse.code && graphRelations.directUnlocks.has(target.code)) {
+          kind = 'unlock-direct';
+        } else if (
+          graphRelations.descendants.has(sourceCode) &&
+          graphRelations.descendants.has(target.code)
+        ) {
+          kind = 'unlock-transitive';
         }
 
         nextEdges.push({
@@ -223,8 +221,15 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
       }
     }
 
-    // Paint muted edges first, active highlighted edges on top
-    nextEdges.sort((a, b) => (a.kind === 'muted' ? -1 : b.kind === 'muted' ? 1 : 0));
+    // Paint muted edges first, then 2nd-degree transitive edges, then 1st-degree direct edges on top
+    const edgeOrder: Record<SvgEdge['kind'], number> = {
+      muted: 0,
+      'prereq-transitive': 1,
+      'unlock-transitive': 1,
+      'prereq-direct': 2,
+      'unlock-direct': 2,
+    };
+    nextEdges.sort((a, b) => edgeOrder[a.kind] - edgeOrder[b.kind]);
     setSvgEdges(nextEdges);
   }, [activeCareer, activeCourse.code, graphRelations]);
 
@@ -351,8 +356,11 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
             </div>
           </section>
 
-          {/* 2. Top Course Inspector Card (Full Course Name + Code on every pill) */}
-          <section className="grafton-card dag-inspector-card" aria-label="Inspector de asignatura seleccionada">
+          {/* 2. Top Course Inspector Card (Locked min-h-[132px] & min-h-[68px] pill rows for CLS = 0) */}
+          <section
+            className="grafton-card dag-inspector-card min-h-[132px]"
+            aria-label="Inspector de asignatura seleccionada"
+          >
             <div className="dag-inspector-main">
               <span className="dag-inspector-code">{activeCourse.code}</span>
               <div className="dag-inspector-titles">
@@ -394,7 +402,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                 <span className="dag-relation-label">
                   <ArrowLeft size={13} /> Requiere aprobar antes:
                 </span>
-                <div className="dag-relation-pills">
+                <div className="dag-relation-pills min-h-[68px] content-start">
                   {activeCourse.prereqs.length === 0 ? (
                     <span className="dag-relation-empty">
                       Ingreso directo · Sin prerrequisitos previos
@@ -405,10 +413,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                         key={prereqCode}
                         type="button"
                         className="dag-pill dag-pill--prereq"
-                        onClick={() => {
-                          setHoveredCourseCode(null);
-                          setSelectedCourseCode(prereqCode);
-                        }}
+                        onClick={() => setSelectedCourseCode(prereqCode)}
                       >
                         ● {getCourseFullLabel(prereqCode, activeCareer)}
                       </button>
@@ -422,7 +427,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                 <span className="dag-relation-label">
                   <ArrowRight size={13} /> Desbloquea directamente:
                 </span>
-                <div className="dag-relation-pills">
+                <div className="dag-relation-pills min-h-[68px] content-start">
                   {graphRelations.directUnlocks.size === 0 ? (
                     <span className="dag-relation-empty">
                       Asignatura terminal de ruta especializada
@@ -433,10 +438,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                         key={unlockCode}
                         type="button"
                         className="dag-pill dag-pill--unlock"
-                        onClick={() => {
-                          setHoveredCourseCode(null);
-                          setSelectedCourseCode(unlockCode);
-                        }}
+                        onClick={() => setSelectedCourseCode(unlockCode)}
                       >
                         ● {getCourseFullLabel(unlockCode, activeCareer)}
                       </button>
@@ -451,21 +453,32 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
           <section className="grafton-card dag-canvas-card" aria-label="Grafo curricular por ciclos">
             <div className="dag-scroll-container">
               <div className="dag-stage-inner" ref={stageRef}>
-                {/* SVG Bezier Connectors Layer */}
+                {/* SVG Bezier Connectors Layer (z-index: 0, behind 100% opaque .dag-node cards) */}
                 <svg className="dag-svg-layer" aria-hidden="true">
                   {svgEdges.map(edge => {
                     let stroke = 'rgba(24, 24, 26, 0.14)';
                     let strokeWidth = 1.1;
+                    let strokeDasharray: string | undefined = undefined;
                     let opacity = 0.22;
 
-                    if (edge.kind === 'prereq') {
+                    if (edge.kind === 'prereq-direct') {
                       stroke = '#F59E0B';
-                      strokeWidth = 2.4;
+                      strokeWidth = 2.5;
                       opacity = 1;
-                    } else if (edge.kind === 'unlock') {
+                    } else if (edge.kind === 'prereq-transitive') {
+                      stroke = '#F59E0B';
+                      strokeWidth = 1.6;
+                      strokeDasharray = '4 3';
+                      opacity = 0.55;
+                    } else if (edge.kind === 'unlock-direct') {
                       stroke = '#10B981';
-                      strokeWidth = 2.4;
+                      strokeWidth = 2.5;
                       opacity = 1;
+                    } else if (edge.kind === 'unlock-transitive') {
+                      stroke = '#10B981';
+                      strokeWidth = 1.6;
+                      strokeDasharray = '4 3';
+                      opacity = 0.55;
                     }
 
                     return (
@@ -475,6 +488,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                         fill="none"
                         stroke={stroke}
                         strokeWidth={strokeWidth}
+                        strokeDasharray={strokeDasharray}
                         opacity={opacity}
                       />
                     );
@@ -494,19 +508,47 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                         {items.map(node => {
                           const unlocks = graphRelations.childrenMap.get(node.code) || [];
                           const isSelected = node.code === activeCourse.code;
-                          const isPrereq = !isSelected && graphRelations.ancestors.has(node.code);
-                          const isUnlock = !isSelected && graphRelations.descendants.has(node.code);
+                          const isDirectPrereq =
+                            !isSelected && graphRelations.directPrereqs.has(node.code);
+                          const isTransitivePrereq =
+                            !isSelected &&
+                            !isDirectPrereq &&
+                            graphRelations.ancestors.has(node.code);
+                          const isPrereq = isDirectPrereq || isTransitivePrereq;
+
+                          const isDirectUnlock =
+                            !isSelected && graphRelations.directUnlocks.has(node.code);
+                          const isTransitiveUnlock =
+                            !isSelected &&
+                            !isDirectUnlock &&
+                            graphRelations.descendants.has(node.code);
+                          const isUnlock = isDirectUnlock || isTransitiveUnlock;
+
                           const isRelated = isSelected || isPrereq || isUnlock;
                           const isInSchedule = scheduledCourseCodes.has(node.code);
                           const deptColor = getDepartmentDotColor(node.code, node.name);
 
-                          let stateClass = 'dag-node--ghost';
+                          let stateClass = 'is-ghosted dag-node--ghost';
+                          let degreeAttr = 'unrelated';
                           if (isSelected) {
-                            stateClass = 'dag-node--selected dag-node--related';
-                          } else if (isPrereq) {
-                            stateClass = 'dag-node--prereq dag-node--prereq-direct dag-node--related';
-                          } else if (isUnlock) {
-                            stateClass = 'dag-node--unlock dag-node--unlock-direct dag-node--related';
+                            stateClass = 'is-selected dag-node--selected dag-node--related';
+                            degreeAttr = 'selected';
+                          } else if (isDirectPrereq) {
+                            stateClass =
+                              'is-prereq-direct dag-node--prereq dag-node--prereq-direct dag-node--related';
+                            degreeAttr = '1st-prereq';
+                          } else if (isTransitivePrereq) {
+                            stateClass =
+                              'is-prereq-transitive dag-node--prereq dag-node--prereq-base dag-node--related';
+                            degreeAttr = '2nd-prereq';
+                          } else if (isDirectUnlock) {
+                            stateClass =
+                              'is-unlock-direct dag-node--unlock dag-node--unlock-direct dag-node--related';
+                            degreeAttr = '1st-unlock';
+                          } else if (isTransitiveUnlock) {
+                            stateClass =
+                              'is-unlock-transitive dag-node--unlock dag-node--unlock-chain dag-node--related';
+                            degreeAttr = '2nd-unlock';
                           }
 
                           return (
@@ -518,21 +560,22 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                               }}
                               type="button"
                               data-related={isRelated ? 'true' : 'false'}
+                              data-degree={degreeAttr}
                               data-role={
                                 isSelected
                                   ? 'selected'
-                                  : isPrereq
-                                    ? 'prereq'
-                                    : isUnlock
-                                      ? 'unlock'
-                                      : 'unrelated'
+                                  : isDirectPrereq
+                                    ? 'prereq-direct'
+                                    : isTransitivePrereq
+                                      ? 'prereq-transitive'
+                                      : isDirectUnlock
+                                        ? 'unlock-direct'
+                                        : isTransitiveUnlock
+                                          ? 'unlock-transitive'
+                                          : 'unrelated'
                               }
-                              className={`dag-node-card ${stateClass}`}
+                              className={`dag-node dag-node-card ${stateClass}`}
                               onClick={() => setSelectedCourseCode(node.code)}
-                              onMouseEnter={() => setHoveredCourseCode(node.code)}
-                              onMouseLeave={() =>
-                                setHoveredCourseCode(prev => (prev === node.code ? null : prev))
-                              }
                             >
                               {/* Top Row: 8px Department Dot + Bold Code (Left) & Quiet Credits (Right) */}
                               <div className="dag-node-top">
@@ -556,13 +599,21 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                                     <span className="dag-role-badge dag-role-badge--selected px-1.5 py-0.5 text-[10px] font-semibold bg-[#00779E]/15 text-[#005A78]">
                                       Seleccionado
                                     </span>
-                                  ) : isPrereq ? (
+                                  ) : isDirectPrereq ? (
                                     <span className="dag-role-badge dag-role-badge--prereq px-1.5 py-0.5 text-[10px] font-semibold bg-amber-500/15 text-[#B85D00]">
                                       Prerrequisito
                                     </span>
-                                  ) : isUnlock ? (
+                                  ) : isTransitivePrereq ? (
+                                    <span className="dag-role-badge dag-role-badge--prereq-transitive px-1.5 py-0.5 text-[10px] font-medium bg-amber-500/10 text-[#B85D00]">
+                                      Ruta previa
+                                    </span>
+                                  ) : isDirectUnlock ? (
                                     <span className="dag-role-badge dag-role-badge--unlock px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-500/15 text-[#0D7A4E]">
                                       Se desbloquea
+                                    </span>
+                                  ) : isTransitiveUnlock ? (
+                                    <span className="dag-role-badge dag-role-badge--unlock-transitive px-1.5 py-0.5 text-[10px] font-medium bg-emerald-500/10 text-[#0D7A4E]">
+                                      Ruta posterior
                                     </span>
                                   ) : node.cycle <= 2 ? (
                                     <span className="dag-node-status dag-node-status--passed">

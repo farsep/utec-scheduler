@@ -213,33 +213,104 @@ test.describe('MatricuLAB — Autonomous Self-Healing Visual, Responsive & Funct
       expect(count).toBeGreaterThanOrEqual(54);
     }
 
-    // Leave on Ciencia de la Computación and click IN2005 (Estadística y Probabilidades I) to verify ghosting (opacity: 0.38) vs lineage emphasis (opacity: 1)
+    // 4. Verify SUPREME CURRICULAR GRAPH UX REMEDIATION (FIXES 1, 2, 3, 4) on Ciencia de la Computación
     await page.locator('.dag-career-btn', { hasText: 'Ciencia de la Computación' }).first().click();
-    await page.locator('#dag-node-IN2005').click();
-    await page.mouse.move(10, 10); // Ensure hover state is cleared so selectedCourseCode drives focusCode
+    await page.locator('#dag-node-CS1042').click();
+    await expect(page.locator('.dag-inspector-code')).toHaveText('CS1042');
+
+    // FIX 1: Hovering intermediate cards (CS2014, CS2013) MUST NOT hijack the active course or change the Inspector
+    await page.locator('#dag-node-CS2014').hover();
+    await expect(page.locator('.dag-inspector-code')).toHaveText('CS1042');
+    await page.locator('#dag-node-CS2013').hover();
+    await expect(page.locator('.dag-inspector-code')).toHaveText('CS1042');
+
+    // FIX 2: Switching between 2-row unlock pills (CS1042) and 1-row unlock pills (CS2014) produces 0px vertical layout jump (CLS = 0)
+    const layoutWithCS1042 = await page.evaluate(() => {
+      const canvas = document.querySelector('.dag-canvas-card') as HTMLElement;
+      const inspector = document.querySelector('.dag-inspector-card') as HTMLElement;
+      return {
+        canvasOffsetTop: canvas.offsetTop,
+        inspectorHeight: inspector.offsetHeight,
+      };
+    });
+    await page.locator('#dag-node-CS2014').click();
+    await expect(page.locator('.dag-inspector-code')).toHaveText('CS2014');
+    const layoutWithCS2014 = await page.evaluate(() => {
+      const canvas = document.querySelector('.dag-canvas-card') as HTMLElement;
+      const inspector = document.querySelector('.dag-inspector-card') as HTMLElement;
+      return {
+        canvasOffsetTop: canvas.offsetTop,
+        inspectorHeight: inspector.offsetHeight,
+      };
+    });
+    expect(Math.abs(layoutWithCS2014.canvasOffsetTop - layoutWithCS1042.canvasOffsetTop)).toBe(0);
+    expect(Math.abs(layoutWithCS2014.inspectorHeight - layoutWithCS1042.inspectorHeight)).toBe(0);
+
+    // Select CS1042 again, reset horizontal scroll to 0, move mouse away, and wait for 160ms opacity transition to settle
+    await page.evaluate(() => {
+      const scroller = document.querySelector('.dag-scroll-container');
+      if (scroller) scroller.scrollLeft = 0;
+    });
+    await page.locator('#dag-node-CS1042').click();
+    await page.mouse.move(10, 10);
+    await page.waitForTimeout(220);
 
     const lineageAudit = await page.evaluate(() => {
-      const allNodes = Array.from(document.querySelectorAll('.dag-node-card'));
-      const relatedNodes = allNodes.filter(el => el.getAttribute('data-related') === 'true');
-      const unrelatedNodes = allNodes.filter(el => el.getAttribute('data-related') === 'false');
+      const ghostCards = Array.from(document.querySelectorAll('.dag-node.is-ghosted'));
+      const directUnlock = document.querySelector('#dag-node-CS2020');
+      const transitiveUnlock = document.querySelector('#dag-node-CS3024');
+
       return {
-        relatedCount: relatedNodes.length,
-        unrelatedCount: unrelatedNodes.length,
-        relatedOpacities: relatedNodes.map(el => getComputedStyle(el).opacity),
-        unrelatedOpacities: unrelatedNodes.map(el => parseFloat(getComputedStyle(el).opacity)),
-        selectedRoleText: document.querySelector('#dag-node-IN2005 .dag-role-badge')?.textContent?.trim(),
+        ghostCount: ghostCards.length,
+        // Card containers themselves must be 100% opaque (#ECEAE4, opacity: 1, z-index: 10) to block SVG bleed-through
+        ghostContainerOpacities: ghostCards.map(el => getComputedStyle(el).opacity),
+        ghostContainerBgs: ghostCards.map(el => getComputedStyle(el).backgroundColor),
+        ghostContainerZIndices: ghostCards.map(el => getComputedStyle(el).zIndex),
+        // Inner children (> *) must carry the 0.35 ghosting opacity
+        ghostChildOpacities: ghostCards.map(el =>
+          el.firstElementChild ? parseFloat(getComputedStyle(el.firstElementChild).opacity) : 1
+        ),
+        selectedRoleText: document
+          .querySelector('#dag-node-CS1042 .dag-role-badge')
+          ?.textContent?.trim(),
+        directUnlockDegree: directUnlock?.getAttribute('data-degree'),
+        directUnlockBorderStyle: directUnlock ? getComputedStyle(directUnlock).borderTopStyle : null,
+        directUnlockBadge: directUnlock?.querySelector('.dag-role-badge')?.textContent?.trim(),
+        transitiveUnlockDegree: transitiveUnlock?.getAttribute('data-degree'),
+        transitiveUnlockBorderStyle: transitiveUnlock
+          ? getComputedStyle(transitiveUnlock).borderTopStyle
+          : null,
+        transitiveUnlockChildOpacity:
+          transitiveUnlock && transitiveUnlock.firstElementChild
+            ? parseFloat(getComputedStyle(transitiveUnlock.firstElementChild).opacity)
+            : null,
+        transitiveUnlockBadge: transitiveUnlock
+          ?.querySelector('.dag-role-badge')
+          ?.textContent?.trim(),
       };
     });
 
-    expect(lineageAudit.relatedCount).toBeGreaterThanOrEqual(4); // IN2005 + upstream (MA1001, MA1002, CS1111) + downstream (CS3015, etc.)
-    expect(lineageAudit.unrelatedCount).toBeGreaterThanOrEqual(30);
-    for (const op of lineageAudit.relatedOpacities) {
+    expect(lineageAudit.ghostCount).toBeGreaterThanOrEqual(35);
+    for (const op of lineageAudit.ghostContainerOpacities) {
       expect(op).toBe('1');
     }
-    for (const op of lineageAudit.unrelatedOpacities) {
-      expect(op).toBeLessThanOrEqual(0.45);
+    for (const bg of lineageAudit.ghostContainerBgs) {
+      expect(bg).toBe('rgb(236, 234, 228)'); // #ECEAE4 opaque concrete
+    }
+    for (const z of lineageAudit.ghostContainerZIndices) {
+      expect(z).toBe('10');
+    }
+    for (const childOp of lineageAudit.ghostChildOpacities) {
+      expect(childOp).toBeCloseTo(0.35, 2);
     }
     expect(lineageAudit.selectedRoleText).toBe('Seleccionado');
+    expect(lineageAudit.directUnlockDegree).toBe('1st-unlock');
+    expect(lineageAudit.directUnlockBorderStyle).toBe('solid');
+    expect(lineageAudit.directUnlockBadge).toBe('Se desbloquea');
+    expect(lineageAudit.transitiveUnlockDegree).toBe('2nd-unlock');
+    expect(lineageAudit.transitiveUnlockBorderStyle).toBe('dashed');
+    expect(lineageAudit.transitiveUnlockChildOpacity).toBeCloseTo(0.78, 2);
+    expect(lineageAudit.transitiveUnlockBadge).toBe('Ruta posterior');
 
     await page.screenshot({
       path: 'audit-screenshots/03-curricular-dag-16-careers.png',
