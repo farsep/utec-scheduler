@@ -3,6 +3,9 @@ import type { DayOfWeek } from '../../types/schedule';
 import type { ProfessorInfo, ProfessorSession } from '../../types/professor';
 import { ALL_DAYS, DAY_LABELS } from '../../utils/classroomUtils';
 import { minutesToTime } from '../../utils/scheduleUtils';
+import { abbreviateSessionGroup } from '../../utils/professorUtils';
+import { BroadcastIcon } from '../common/BroadcastIcon';
+import { DynamicSessionBadge } from '../common/DynamicSessionBadge';
 import {
   MapPin,
   Clock,
@@ -21,16 +24,6 @@ interface ProfessorTimetableProps {
   onSelectSession: (session: ProfessorSession | null) => void;
   nowDay?: DayOfWeek;
   nowMinutes?: number;
-}
-
-function abbreviateSessionGroup(group: string): string {
-  if (!group) return '';
-  return group
-    .replace(/LABORATORIO/gi, 'LAB')
-    .replace(/PRÁCTICA/gi, 'PRÁC')
-    .replace(/PRACTICA/gi, 'PRÁC')
-    .replace(/TEORÍA/gi, 'TEO')
-    .replace(/TEORIA/gi, 'TEO');
 }
 
 interface AutoAdvanceCarouselProps {
@@ -545,9 +538,7 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                                       <span className="prof-session-short-time">
                                         {session.startTime} - {session.endTime}
                                       </span>
-                                      <span className="prof-session-group-tag" title={session.sessionGroup}>
-                                        {abbreviateSessionGroup(session.sessionGroup)}
-                                      </span>
+                                      <DynamicSessionBadge sessionGroup={session.sessionGroup} />
                                       <span className="prof-session-room-tag" title={session.roomDisplayName}>
                                         <MapPin size={9} />
                                         {session.roomCode}
@@ -591,9 +582,7 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                                 )}
 
                                 <div className="prof-session-footer">
-                                  <span className="prof-session-group-tag" title={session.sessionGroup}>
-                                    {isNarrowBlock ? abbreviateSessionGroup(session.sessionGroup) : session.sessionGroup}
-                                  </span>
+                                  <DynamicSessionBadge sessionGroup={session.sessionGroup} />
 
                                   <span className="prof-session-room-tag" title={session.roomDisplayName}>
                                     <MapPin size={11} />
@@ -631,7 +620,7 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
             </div>
             {nowDay === agendaDay && (
               <span className="prof-live-badge">
-                <span className="live-dot" /> HOY
+                <BroadcastIcon className="w-3 h-3 shrink-0 inline mr-1 text-[#0D7A4E]" /> HOY
               </span>
             )}
           </div>
@@ -695,7 +684,7 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                       <div className="prof-agenda-meta-row">
                         <span className="prof-agenda-meta-pill">
                           <Users size={12} />
-                          <span>Sección {session.sectionNumber} • {session.sessionGroup}</span>
+                          <span>Sección {session.sectionNumber} • <DynamicSessionBadge sessionGroup={session.sessionGroup} /></span>
                         </span>
 
                         <span className="prof-agenda-meta-pill">

@@ -17,6 +17,8 @@ import { CourseNavbar } from './CourseNavbar';
 import { CourseFilterBar } from './CourseFilterBar';
 import { CourseCard } from './CourseCard';
 import { CourseDetailModal } from './CourseDetailModal';
+import { BroadcastIcon } from '../common/BroadcastIcon';
+import { ArchitecturalEmptyState } from '../common/ArchitecturalEmptyState';
 import {
   BookOpen,
   Sparkles,
@@ -305,7 +307,7 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
                 <span className={`prof-kpi-badge-pill ${liveNowCount > 0 ? 'prof-kpi-badge-pill--live' : ''}`}>
                   {liveNowCount > 0 ? (
                     <>
-                      <span className="live-dot-mini" /> En Vivo
+                      <BroadcastIcon className="w-3.5 h-3.5 shrink-0 inline mr-1" /> En Vivo
                     </>
                   ) : (
                     'En Vivo'
@@ -385,32 +387,24 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
         {!isLoading && !loadError && (
           <div className="courses-content-container">
             {filteredCourses.length === 0 ? (
-              <div className="no-rooms-card glass-card">
-                <div className="no-rooms-icon-wrap">
-                  <BookOpen size={44} />
-                </div>
-                <h3>No se encontraron cursos con estos criterios</h3>
-                <p>
-                  Prueba buscando por otra palabra clave, cambiando de carrera o desactivando el filtro de oyente.
-                </p>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() =>
-                    setFilter({
-                      searchQuery: '',
-                      selectedDepartment: 'ALL',
-                      selectedDay: 'ALL',
-                      selectedModality: 'ALL',
-                      onlyLiveNow: false,
-                      onlyVisitor: false,
-                      sortBy: 'code_asc'
-                    })
-                  }
-                >
-                  Restablecer todos los filtros
-                </button>
-              </div>
+              <ArchitecturalEmptyState
+                icon={<BookOpen size={24} />}
+                title="No se encontraron cursos con estos criterios"
+                description="Prueba buscando por otra palabra clave, cambiando de carrera o desactivando el filtro de oyente."
+                query={filter.searchQuery || undefined}
+                resetLabel="Restablecer todos los filtros"
+                onReset={() =>
+                  setFilter({
+                    searchQuery: '',
+                    selectedDepartment: 'ALL',
+                    selectedDay: 'ALL',
+                    selectedModality: 'ALL',
+                    onlyLiveNow: false,
+                    onlyVisitor: false,
+                    sortBy: 'code_asc'
+                  })
+                }
+              />
             ) : (
               <div className="courses-cards-grid">
                 {displayedCourses.map(course => (

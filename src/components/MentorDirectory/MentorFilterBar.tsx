@@ -3,6 +3,7 @@ import type { DayOfWeek } from '../../types/schedule';
 import type { MentorFilterState, MentorSortOption } from '../../types/mentor';
 import { ALL_DAYS, DAY_LABELS } from '../../utils/classroomUtils';
 import { CustomSelect } from '../common/CustomSelect';
+import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
   Search,
   X,
@@ -210,7 +211,7 @@ export const MentorFilterBar: React.FC<MentorFilterBarProps> = ({
             onClick={() => onFilterChange({ onlyLiveNow: !filter.onlyLiveNow })}
             title="Mostrar únicamente mentores que se encuentran en sesión en este momento"
           >
-            <span className="live-beacon-dot" />
+            <BroadcastIcon className="w-3.5 h-3.5 shrink-0" />
             <span className="prof-toggle-txt-full">En Mentoría Ahora</span>
             <span className="prof-toggle-txt-short">En Vivo</span>
             {liveNowCount > 0 && (

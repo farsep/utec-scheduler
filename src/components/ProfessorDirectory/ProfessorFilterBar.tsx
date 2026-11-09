@@ -4,6 +4,7 @@ import type { ProfessorFilterState, ProfessorSortOption } from '../../types/prof
 import { ALL_DAYS, DAY_LABELS } from '../../utils/classroomUtils';
 import { DEPARTMENT_CONFIG } from '../../utils/professorUtils';
 import { CustomSelect, type SelectOption } from '../common/CustomSelect';
+import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
   Search,
   X,
@@ -181,7 +182,7 @@ export const ProfessorFilterBar: React.FC<ProfessorFilterBarProps> = ({
             onClick={() => onFilterChange({ onlyLiveNow: !filter.onlyLiveNow })}
             title="Mostrar únicamente docentes que se encuentran dictando clase en este momento"
           >
-            <span className="live-beacon-dot" />
+            <BroadcastIcon className="w-3.5 h-3.5 shrink-0" />
             <span className="prof-toggle-txt-full">Dictando Ahora</span>
             <span className="prof-toggle-txt-short">En Clase</span>
             {teachingNowCount > 0 && (

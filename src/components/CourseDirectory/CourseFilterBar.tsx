@@ -4,6 +4,7 @@ import type { CourseFilterState, CourseSortOption } from '../../types/courseDire
 import { ALL_DAYS, DAY_LABELS } from '../../utils/classroomUtils';
 import { DEPARTMENT_CONFIG } from '../../utils/professorUtils';
 import { CustomSelect, type SelectOption } from '../common/CustomSelect';
+import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
   Search,
   X,
@@ -206,7 +207,7 @@ export const CourseFilterBar: React.FC<CourseFilterBarProps> = ({
             onClick={() => onFilterChange({ onlyLiveNow: !filter.onlyLiveNow })}
             title="Mostrar únicamente cursos con clases en este momento"
           >
-            <Radio size={14} className={filter.onlyLiveNow ? 'live-spin' : ''} />
+            <BroadcastIcon className={`w-3.5 h-3.5 shrink-0 ${filter.onlyLiveNow ? 'live-spin' : ''}`} />
             <span>En vivo ahora</span>
             {liveNowCount > 0 && <span className="pill-count-bubble">{liveNowCount}</span>}
           </button>

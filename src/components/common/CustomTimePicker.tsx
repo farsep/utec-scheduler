@@ -7,15 +7,15 @@ export interface CustomTimePickerProps {
   prefix?: string; // e.g. "De:" or "A:"
   minHour?: number; // default 7
   maxHour?: number; // default 22
-  minuteStep?: number; // default 15
   className?: string;
   disabled?: boolean;
   size?: 'sm' | 'md';
   align?: 'left' | 'right';
+  customTrigger?: (formattedDisplay: string, onClick: (e?: React.MouseEvent) => void, isOpen: boolean) => React.ReactNode;
 }
 
 const FREQUENT_HOURS = ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00'];
-const MINUTES_LIST = [0, 15, 30, 45];
+const MINUTES_LIST = [0, 10, 15, 20, 30, 40, 45, 50];
 
 export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
   value,
@@ -25,10 +25,18 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
   maxHour = 22,
   className = '',
   disabled = false,
-  align = 'right'
+  size = 'md',
+  align = 'left',
+  customTrigger
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [manualTime, setManualTime] = useState(value || '');
+
+  // Keep manual input in sync with external value
+  useEffect(() => {
+    setManualTime(value || '');
+  }, [value]);
 
   // Parse current hour and minute from value (e.g. "10:48")
   const { currentHour, currentMinute } = useMemo(() => {
@@ -91,6 +99,16 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
     };
   }, [isOpen]);
 
+  const toggleOpen = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!disabled) {
+      setIsOpen(prev => !prev);
+    }
+  };
+
   const handleSelectHour = (h: number) => {
     const newTime = `${String(h).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
     onChange(newTime);
@@ -105,23 +123,40 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
     onChange(preset);
   };
 
+  const handleManualTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setManualTime(val);
+    const match = val.match(/^([01]?[0-9]|2[0-3]):([0-5][0-9])$/);
+    if (match) {
+      onChange(val);
+    }
+  };
+
   return (
-    <div ref={containerRef} className={`relative inline-block ${className}`}>
-      {/* Trigger Button - Single line horizontal button */}
-      <button
-        type="button"
-        className="h-9 px-3.5 inline-flex items-center gap-2 whitespace-nowrap bg-[#F2F0EC] border border-[#18181A] border-t-2 border-t-[#00779E] font-mono text-xs font-bold text-[#141416] hover:bg-[#00779E] hover:text-white rounded-none shadow-[2px_2px_0px_rgba(24,24,26,0.12)] cursor-pointer transition-colors"
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        aria-haspopup="dialog"
-        aria-expanded={isOpen}
-        disabled={disabled}
-      >
-        <Clock size={14} className="shrink-0" />
-        <span className="whitespace-nowrap flex items-center gap-1">
-          {prefix && <span className="text-[#5A5852] font-mono">{prefix}</span>}
-          <span>{formattedDisplay}</span>
-        </span>
-      </button>
+    <div
+      ref={containerRef}
+      className={`grafton-time-picker-wrapper ${className}`}
+      style={{ position: 'relative', display: 'inline-block' }}
+    >
+      {/* Trigger Button or Custom Trigger */}
+      {customTrigger ? (
+        customTrigger(formattedDisplay, toggleOpen, isOpen)
+      ) : (
+        <button
+          type="button"
+          className={`grafton-time-trigger-btn ${size === 'sm' ? 'grafton-time-trigger-btn--sm' : ''} ${isOpen ? 'grafton-time-trigger-btn--open' : ''}`}
+          onClick={toggleOpen}
+          aria-haspopup="dialog"
+          aria-expanded={isOpen}
+          disabled={disabled}
+        >
+          <Clock size={13} className="shrink-0" />
+          <span className="gtp-trigger-text">
+            {prefix && <span className="gtp-prefix">{prefix}</span>}
+            <span className="gtp-val">{formattedDisplay}</span>
+          </span>
+        </button>
+      )}
 
       {/* Floating Grafton Swiss Popover */}
       {isOpen && (
@@ -131,36 +166,37 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
           className="grafton-time-picker-popover"
           style={{
             position: 'absolute',
-            top: 'calc(100% + 8px)',
+            top: 'calc(100% + 6px)',
             right: align === 'right' ? 0 : 'auto',
             left: align === 'left' ? 0 : 'auto',
-            zIndex: 60,
-            width: '360px',
-            maxWidth: 'calc(100vw - 24px)',
-            backgroundColor: '#F2F0EC',
-            border: '2px solid #18181A',
-            borderTop: '4px solid #18181A',
-            borderRadius: '0px',
-            boxShadow: '6px 6px 0px rgba(24, 24, 26, 0.24)',
-            padding: '14px'
+            zIndex: 9999
           }}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Popover Header */}
-          <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#C6C3BB]">
-            <div className="flex items-center gap-2">
-              <Clock size={14} className="text-[#141416]" />
-              <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#141416]">
-                SELECCIONAR HORA
-              </span>
+          <div className="gtp-header">
+            <div className="gtp-title">
+              <Clock size={13} />
+              <span>SELECCIONAR HORA</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="bg-[#00779E] text-white px-2 py-0.5 font-mono text-xs font-bold rounded-none">
+            <div className="gtp-manual-box">
+              {/* Direct manual input */}
+              <input
+                type="text"
+                value={manualTime}
+                onChange={handleManualTimeChange}
+                placeholder="HH:MM"
+                maxLength={5}
+                className="gtp-input"
+                title="Escribe la hora exacta en formato 24h (ej: 11:40)"
+              />
+              <span className="gtp-badge-preview">
                 {formattedDisplay}
               </span>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1 text-[#5A5852] hover:text-[#141416] hover:bg-[#DCD9D2] rounded-none cursor-pointer transition-colors"
+                className="gtp-close-btn"
                 aria-label="Cerrar selector de hora"
               >
                 <X size={15} />
@@ -168,24 +204,18 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
             </div>
           </div>
 
-          {/* Section 1: HORAS FRECUENTES */}
-          <div className="mb-3">
-            <div className="font-mono text-[10px] uppercase text-[#5A5852] mb-1.5 font-bold tracking-wider">
-              HORAS FRECUENTES
-            </div>
-            <div className="grid grid-cols-4 gap-1">
-              {FREQUENT_HOURS.map((preset) => {
-                const isActive = value === preset;
+          {/* Quick Presets */}
+          <div style={{ marginBottom: '10px' }}>
+            <span className="gtp-section-label">HORAS FRECUENTES</span>
+            <div className="gtp-grid-4">
+              {FREQUENT_HOURS.map(preset => {
+                const isSelected = value === preset;
                 return (
                   <button
                     key={preset}
                     type="button"
+                    className={`gtp-chip ${isSelected ? 'gtp-chip--active' : ''}`}
                     onClick={() => handleSelectPreset(preset)}
-                    className={`py-1 text-center font-mono text-[11px] font-bold rounded-none cursor-pointer transition-colors ${
-                      isActive
-                        ? 'bg-[#00779E] text-white border border-[#18181A]'
-                        : 'bg-[#DCD9D2] border border-[#C6C3BB] text-[#141416] hover:border-[#18181A] hover:bg-[#00779E] hover:text-white'
-                    }`}
                   >
                     {preset}
                   </button>
@@ -194,73 +224,72 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
             </div>
           </div>
 
-          {/* Section 2: HORA (07:00 – 22:00) */}
-          <div className="mb-3">
-            <div className="font-mono text-[10px] uppercase text-[#5A5852] mb-1.5 font-bold tracking-wider">
-              HORA (07:00 – 22:00)
+          {/* Hour Selector Grid */}
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
+              <span className="gtp-section-label" style={{ marginBottom: 0 }}>HORA ({minHour}:00 - {maxHour}:00)</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#787670' }}>
+                Actual: {String(currentHour).padStart(2, '0')}:00
+              </span>
             </div>
-            <div className="grid grid-cols-4 gap-1.5 max-h-[140px] overflow-y-auto pr-0.5">
-              {hoursList.map((h) => {
-                const isActive = h === currentHour;
-                const label = `${String(h).padStart(2, '0')}:00`;
+            <div className="gtp-hours-grid">
+              {hoursList.map(h => {
+                const isSelected = currentHour === h;
+                const h12 = h % 12 === 0 ? 12 : h % 12;
+                const ampm = h >= 12 ? 'PM' : 'AM';
                 return (
                   <button
                     key={h}
                     type="button"
+                    className={`gtp-chip ${isSelected ? 'gtp-chip--active' : ''}`}
                     onClick={() => handleSelectHour(h)}
-                    className={`py-1.5 text-center font-mono text-xs rounded-none cursor-pointer transition-colors ${
-                      isActive
-                        ? 'bg-[#18181A] text-[#F2F0EC] border border-[#18181A] font-bold'
-                        : 'bg-[#FFFFFF] text-[#141416] border border-[#C6C3BB] hover:border-[#18181A]'
-                    }`}
+                    title={`${String(h).padStart(2, '0')}:00 (${h12} ${ampm})`}
                   >
-                    {label}
+                    {String(h).padStart(2, '0')}:00
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Section 3: MINUTOS */}
-          <div className="mb-3">
-            <div className="font-mono text-[10px] uppercase text-[#5A5852] mb-1.5 font-bold tracking-wider">
-              MINUTOS
+          {/* Minute Selector */}
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
+              <span className="gtp-section-label" style={{ marginBottom: 0 }}>MINUTOS</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#787670' }}>
+                Actual: :{String(currentMinute).padStart(2, '0')} min
+              </span>
             </div>
-            <div className="grid grid-cols-4 gap-1.5">
-              {MINUTES_LIST.map((m) => {
-                const isActive = m === currentMinute;
-                const label = `:${String(m).padStart(2, '0')} min`;
+            <div className="gtp-grid-4">
+              {MINUTES_LIST.map(m => {
+                const isSelected = currentMinute === m;
                 return (
                   <button
                     key={m}
                     type="button"
+                    className={`gtp-chip ${isSelected ? 'gtp-chip--active' : ''}`}
                     onClick={() => handleSelectMinute(m)}
-                    className={`py-1.5 text-center font-mono text-xs rounded-none cursor-pointer transition-colors ${
-                      isActive
-                        ? 'bg-[#00779E] text-white border border-[#18181A] font-bold'
-                        : 'bg-[#FFFFFF] text-[#141416] border border-[#C6C3BB] hover:border-[#18181A]'
-                    }`}
                   >
-                    {label}
+                    :{String(m).padStart(2, '0')} min
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Footer Apply Button */}
-          <div>
-            <button
-              type="button"
-              className="w-full py-2 bg-[#0D7A4E] hover:bg-[#095939] text-white border border-[#18181A] font-mono text-xs font-bold uppercase tracking-wider rounded-none shadow-[2px_2px_0px_#18181A] cursor-pointer transition-colors flex items-center justify-center gap-1.5"
-              onClick={() => setIsOpen(false)}
-            >
-              <Check size={14} />
-              <span>✓ APLICAR ({formattedDisplay})</span>
-            </button>
-          </div>
+          {/* Confirm Button */}
+          <button
+            type="button"
+            className="gtp-apply-btn"
+            onClick={() => setIsOpen(false)}
+          >
+            <Check size={13} />
+            <span>APLICAR ({formattedDisplay})</span>
+          </button>
         </div>
       )}
     </div>
   );
 };
+
+export default CustomTimePicker;

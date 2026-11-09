@@ -15,6 +15,8 @@ import { ClassroomNavbar } from './ClassroomNavbar';
 import { ClassroomFilterBar } from './ClassroomFilterBar';
 import { ClassroomCard } from './ClassroomCard';
 import { ClassroomDetailModal } from './ClassroomDetailModal';
+import { BroadcastIcon } from '../common/BroadcastIcon';
+import { ArchitecturalEmptyState } from '../common/ArchitecturalEmptyState';
 import {
   Sparkles,
   Building2,
@@ -397,7 +399,7 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
                   <CheckCircle2 size={16} />
                 </div>
                 <span className="prof-kpi-badge-pill prof-kpi-badge-pill--live">
-                  <span className="live-dot-mini" /> En Vivo
+                  <BroadcastIcon className="w-3.5 h-3.5 shrink-0 inline mr-1" /> En Vivo
                 </span>
               </div>
               <span className="kpi-num text-emerald">{totalAvailable}</span>
@@ -547,16 +549,13 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
             </div>
 
             {availableRoomsList.length === 0 ? (
-              <div className="no-rooms-card glass-card">
-                <Building2 size={40} className="no-rooms-icon" />
-                <h3>No hay aulas disponibles con estos criterios</h3>
-                <p>
-                  Prueba ampliando el rango de tiempo, seleccionando otro piso o reduciendo las horas mínimas requeridas.
-                </p>
-                <button className="btn btn-primary" onClick={handleResetFilters}>
-                  Restablecer Filtros
-                </button>
-              </div>
+              <ArchitecturalEmptyState
+                icon={<Building2 size={24} />}
+                title="No hay aulas disponibles con estos criterios"
+                description="Prueba ampliando el rango de tiempo, seleccionando otro piso o reduciendo las horas mínimas requeridas."
+                resetLabel="Restablecer Filtros"
+                onReset={handleResetFilters}
+              />
             ) : (
               <div className="classroom-cards-grid">
                 {availableRoomsList.map(item => (

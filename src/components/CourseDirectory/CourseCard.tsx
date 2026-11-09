@@ -3,6 +3,7 @@ import type { DayOfWeek } from '../../types/schedule';
 import type { CourseExtendedInfo } from '../../types/courseDirectory';
 import { ALL_DAYS, DAY_LABELS, resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { evaluateCourseLiveStatus } from '../../utils/courseDirectoryUtils';
+import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
   BookOpen,
   Star,
@@ -133,7 +134,9 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
         {isCurrentlyLive && liveSession ? (
           <div className="course-status-live-beacon">
             <div className="live-text-group">
-              <strong>● En clase ahora:</strong>
+              <span className="inline-flex items-center gap-1 font-bold">
+                <BroadcastIcon className="w-3.5 h-3.5 shrink-0 text-[#0D7A4E]" /> En clase ahora:
+              </span>
               <span>
                 Sec. {liveSession.sectionNumber} en{' '}
                 <a

@@ -18,6 +18,7 @@ import type {
 import { ALL_DAYS, DAY_LABELS, resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { formatProfessorName } from '../../utils/professorUtils';
 import { CustomSelect, type SelectOption } from '../common/CustomSelect';
+import { DynamicSessionBadge } from '../common/DynamicSessionBadge';
 import {
   generateGoogleCalendarUrlForSession,
   getSectionColor
@@ -750,9 +751,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                                   +{overflowCount}
                                 </span>
                               ) : totalCols === 1 ? (
-                                <span className="course-card-block-type">
-                                  {abbreviateSessionType(s.sessionType)}
-                                </span>
+                                <DynamicSessionBadge type={s.sessionType} sessionGroup={s.sessionGroup} />
                               ) : null}
                             </div>
 
