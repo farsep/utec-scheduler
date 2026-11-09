@@ -161,25 +161,26 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
             <span className="live-day-tag">{DAY_LABELS[filter.selectedDay]}</span>
           </div>
 
-          <div className="live-time-actions">
+          <div className="live-time-actions relative inline-flex items-center gap-1.5">
             <button
               type="button"
-              className="btn-time-step"
+              className="h-9 px-2.5 bg-[#F2F0EC] border border-[#18181A] font-mono text-xs font-bold text-[#141416] hover:bg-[#18181A] hover:text-[#F2F0EC] rounded-none cursor-pointer transition-colors"
               onClick={() => onStepLiveTime(-15)}
               title="Retroceder 15 minutos en tiempo real"
             >
               -15m
             </button>
-            <div className="live-time-input-wrap">
+            <div className="live-time-input-wrap relative">
               <CustomTimePicker
                 size="sm"
                 value={activeLiveTimeStr}
                 onChange={(val) => onSetLiveTime(val)}
+                align="right"
               />
             </div>
             <button
               type="button"
-              className="btn-time-step"
+              className="h-9 px-2.5 bg-[#F2F0EC] border border-[#18181A] font-mono text-xs font-bold text-[#141416] hover:bg-[#18181A] hover:text-[#F2F0EC] rounded-none cursor-pointer transition-colors"
               onClick={() => onStepLiveTime(15)}
               title="Avanzar 15 minutos en tiempo real"
             >

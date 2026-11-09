@@ -7,7 +7,8 @@ import { getProfessorsCatalog, getSynchronousCachedProfessors } from '../../util
 import {
   extractProfessorsFromCourses,
   filterAndSortProfessors,
-  evaluateProfessorLiveStatus
+  evaluateProfessorLiveStatus,
+  resolveCanonicalProfessor
 } from '../../utils/professorUtils';
 import { mutuallyEnrichCoursesWithScrapedData } from '../../utils/courseDirectoryUtils';
 import { ProfessorNavbar } from './ProfessorNavbar';
@@ -118,26 +119,7 @@ export const ProfessorApp: React.FC<ProfessorAppProps> = ({ hideTopNavbar = fals
       const profParam = params.get('profesor') || params.get('p') || params.get('docente');
       if (!profParam) return;
 
-      const clean = (s: string) =>
-        s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-      const q = clean(profParam);
-      const qTokens = q.split(/\s+/).filter(Boolean);
-
-      const targetProf = professors.find(p => {
-        const dName = clean(p.displayName);
-        const lName = clean(p.lastNameFirst);
-        const rName = clean(p.rawName);
-        const email = clean(p.email || '');
-        const id = clean(p.id);
-
-        if (dName === q || lName === q || rName === q || id === q) return true;
-        if (dName.includes(q) || lName.includes(q) || rName.includes(q) || id.includes(q) || email.includes(q)) return true;
-        
-        // Multi-word token match across all identity names
-        const combined = `${dName} ${lName} ${rName} ${id}`;
-        if (qTokens.length > 1 && qTokens.every(tok => combined.includes(tok))) return true;
-        return false;
-      });
+      const targetProf = resolveCanonicalProfessor(profParam, professors);
 
       if (targetProf) {
         setFilter(prev => ({
