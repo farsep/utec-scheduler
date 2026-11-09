@@ -7,6 +7,7 @@ import {
 } from '../utils/graftonPigments';
 import type { Course, DayOfWeek, Conflict } from '../types/schedule';
 import { X, AlertTriangle } from 'lucide-react';
+import { DynamicSessionBadge } from './common/DynamicSessionBadge';
 
 interface TimetableGridProps {
   courses: Course[];
@@ -290,8 +291,10 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
                           <div className="block-course-title">{block.course.name}</div>
 
                           {durationMinutes > 60 && (
-                            <div className="block-meta-mono">
-                              {block.course.code} · {sessionKind}
+                            <div className="block-meta-mono flex items-center gap-1">
+                              <span>{block.course.code}</span>
+                              <span>·</span>
+                              <DynamicSessionBadge type={sessionKind} />
                             </div>
                           )}
 

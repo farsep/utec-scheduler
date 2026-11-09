@@ -4,6 +4,7 @@ import type { ProfessorInfo } from '../../types/professor';
 import { ALL_DAYS, resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { evaluateProfessorLiveStatus } from '../../utils/professorUtils';
 import { getGraftonPigment } from '../../utils/graftonPigments';
+import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
   Mail,
   Copy,
@@ -95,7 +96,9 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
         {isTeachingNow && currentSession ? (
           <div className="prof-status-live-beacon">
             <div className="live-text-group">
-              <strong>● Dictando ahora:</strong>
+              <span className="inline-flex items-center gap-1 font-bold">
+                <BroadcastIcon className="w-3.5 h-3.5 shrink-0 text-[#0D7A4E]" /> Dictando ahora:
+              </span>
               <span>
                 <a
                   href={`/cursos?curso=${currentSession.courseCode}`}

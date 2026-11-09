@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { ProfessorInfo, ProfessorSession } from '../../types/professor';
 import { ALL_DAYS, DAY_LABELS, parseLocationInfo, resolveCanonicalRoom } from '../../utils/classroomUtils';
-import { evaluateProfessorLiveStatus } from '../../utils/professorUtils';
+import { evaluateProfessorLiveStatus, abbreviateSessionGroup } from '../../utils/professorUtils';
 import { ProfessorTimetable } from './ProfessorTimetable';
+import { BroadcastIcon } from '../common/BroadcastIcon';
+import { DynamicSessionBadge } from '../common/DynamicSessionBadge';
 import {
   X,
   Mail,
@@ -270,7 +272,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
         {/* Live / Next Class Banner */}
         {isTeachingNow && currentSession ? (
           <div className="prof-modal-live-banner">
-            <span className="live-beacon-dot" />
+            <BroadcastIcon className="w-4 h-4 shrink-0 text-[#093B29]" />
             <div>
               <strong>Dictando en este momento:</strong>{' '}
               <a href={`/cursos?curso=${currentSession.courseCode}`} className="prof-entity-link">
@@ -435,7 +437,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                     <div className="prof-inspector-item">
                       <Users size={14} className="text-muted" />
                       <span>
-                        <strong>Sección:</strong> {selectedSession.sectionNumber} • {selectedSession.sessionGroup}
+                        <strong>Sección:</strong> {selectedSession.sectionNumber} • <DynamicSessionBadge sessionGroup={selectedSession.sessionGroup} />
                       </span>
                     </div>
 
@@ -512,9 +514,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                               {sec.sessions.map(sess => (
                                 <div key={sess.id} className="prof-section-session-item">
                                   <div className="prof-sess-type-col">
-                                    <span className={`prof-sess-badge-group prof-sess-badge-group--${sess.sessionType.toLowerCase()}`}>
-                                      {sess.sessionGroup}
-                                    </span>
+                                    <DynamicSessionBadge sessionGroup={sess.sessionGroup} />
                                   </div>
 
                                   <div className="prof-sess-col-time">
@@ -550,7 +550,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                           {professor.sessions.filter(s => s.courseCode === course.code).map(sess => (
                             <div key={sess.id} className="prof-course-session-row">
                               <div className="prof-sess-col-group">
-                                <span className="prof-sess-badge-group">{sess.sessionGroup}</span>
+                                <DynamicSessionBadge sessionGroup={sess.sessionGroup} />
                                 <span className="prof-sess-sec">Sec. {sess.sectionNumber}</span>
                               </div>
                               <div className="prof-sess-col-time">
@@ -624,7 +624,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                                 >
                                   {s.courseCode}
                                 </a>{' '}
-                                ({s.sessionGroup})
+                                <DynamicSessionBadge sessionGroup={s.sessionGroup} />
                               </span>
                             </div>
                           ))}

@@ -8,6 +8,7 @@ import { MentorNavbar } from './MentorNavbar';
 import { MentorFilterBar } from './MentorFilterBar';
 import { MentorCard, type ActiveUserBlock } from './MentorCard';
 import { MentorDetailModal } from './MentorDetailModal';
+import { ArchitecturalEmptyState } from '../common/ArchitecturalEmptyState';
 import {
   Award,
   Search,
@@ -348,35 +349,26 @@ export const MentorApp: React.FC<MentorAppProps> = ({
             ))}
           </div>
         ) : (
-          <div className="prof-empty-state glass-card">
-            <div className="empty-icon-wrap">
-              <Search size={32} />
-            </div>
-            <h3 className="empty-title">No se encontraron mentores</h3>
-            <p className="empty-desc">
-              No hay mentores que coincidan con los filtros seleccionados
-              {filter.searchQuery && <strong> "{filter.searchQuery}"</strong>}.
-            </p>
-            <button
-              type="button"
-              className="btn btn-secondary empty-reset-btn"
-              onClick={() => {
-                setOnlyCompatibleSchedule(false);
-                setFilter({
-                  searchQuery: '',
-                  selectedDay: 'ALL',
-                  selectedModality: 'ALL',
-                  selectedCourse: 'ALL',
-                  selectedDepartment: 'ALL',
-                  onlyLiveNow: false,
-                  onlyToday: false,
-                  sortBy: 'name_asc',
-                });
-              }}
-            >
-              Restablecer Filtros
-            </button>
-          </div>
+          <ArchitecturalEmptyState
+            icon={<Search size={24} />}
+            title="No se encontraron mentores"
+            description="No hay mentores que coincidan con los filtros seleccionados"
+            query={filter.searchQuery || undefined}
+            resetLabel="Restablecer Filtros"
+            onReset={() => {
+              setOnlyCompatibleSchedule(false);
+              setFilter({
+                searchQuery: '',
+                selectedDay: 'ALL',
+                selectedModality: 'ALL',
+                selectedCourse: 'ALL',
+                selectedDepartment: 'ALL',
+                onlyLiveNow: false,
+                onlyToday: false,
+                sortBy: 'name_asc',
+              });
+            }}
+          />
         )}
       </main>
 

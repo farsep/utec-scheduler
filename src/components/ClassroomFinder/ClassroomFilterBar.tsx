@@ -4,6 +4,7 @@ import type { ClassroomFilterState, RoomType } from '../../types/classroom';
 import { ALL_DAYS, DAY_LABELS, ROOM_TYPE_LABELS } from '../../utils/classroomUtils';
 import { CustomSelect } from '../common/CustomSelect';
 import { CustomTimePicker } from '../common/CustomTimePicker';
+import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
   Zap,
   Clock,
@@ -122,7 +123,7 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
             className={`mode-toggle-btn ${filter.mode === 'live_now' ? 'active active--live' : ''}`}
             onClick={() => onChangeFilter({ mode: 'live_now', selectedDay: systemDay })}
           >
-            <Zap size={15} />
+            <BroadcastIcon className="w-3.5 h-3.5 shrink-0" />
             <span>Libres Ahora</span>
             <span className="live-pulse-badge">
               <span className="live-badge-full">
@@ -153,24 +154,42 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
       {!isCustomTime && (
         <div className="live-time-controller">
           <div className="live-time-info">
-            <span className={`live-status-dot ${isSimulatedTime ? 'live-status-dot--simulated' : 'live-status-dot--pulse'}`} />
+            <BroadcastIcon className={`w-3.5 h-3.5 shrink-0 ${isSimulatedTime ? 'text-[#C44D00]' : 'text-[#0D7A4E]'}`} />
             <span className="live-time-title">
               {isSimulatedTime ? 'Simulando Horario en Vivo:' : 'Hora Actual del Campus (En Vivo):'}
             </span>
-            <span className="live-time-badge">{activeLiveTimeStr}</span>
+            <CustomTimePicker
+              value={activeLiveTimeStr}
+              onChange={(val) => onSetLiveTime(val)}
+              align="left"
+              customTrigger={(_formatted, onClick, isOpen) => (
+                <button
+                  type="button"
+                  className="live-time-badge cursor-pointer hover:bg-[#18181A] hover:text-[#F2F0EC] transition-colors inline-flex items-center gap-1.5"
+                  onClick={onClick}
+                  title="Clic para cambiar hora exacta del campus"
+                  aria-label={`Hora actual del campus: ${activeLiveTimeStr}. Clic para cambiar hora.`}
+                  aria-haspopup="dialog"
+                  aria-expanded={isOpen}
+                >
+                  <Clock size={12} className="opacity-70 shrink-0 inline" />
+                  <span>{activeLiveTimeStr}</span>
+                </button>
+              )}
+            />
             <span className="live-day-tag">{DAY_LABELS[filter.selectedDay]}</span>
           </div>
 
-          <div className="live-time-actions relative inline-flex items-center gap-1.5">
+          <div className="live-time-actions">
             <button
               type="button"
-              className="h-9 px-2.5 bg-[#F2F0EC] border border-[#18181A] font-mono text-xs font-bold text-[#141416] hover:bg-[#18181A] hover:text-[#F2F0EC] rounded-none cursor-pointer transition-colors"
+              className="grafton-step-btn"
               onClick={() => onStepLiveTime(-15)}
               title="Retroceder 15 minutos en tiempo real"
             >
               -15m
             </button>
-            <div className="live-time-input-wrap relative">
+            <div className="live-time-input-wrap">
               <CustomTimePicker
                 size="sm"
                 value={activeLiveTimeStr}
@@ -180,7 +199,7 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
             </div>
             <button
               type="button"
-              className="h-9 px-2.5 bg-[#F2F0EC] border border-[#18181A] font-mono text-xs font-bold text-[#141416] hover:bg-[#18181A] hover:text-[#F2F0EC] rounded-none cursor-pointer transition-colors"
+              className="grafton-step-btn"
               onClick={() => onStepLiveTime(15)}
               title="Avanzar 15 minutos en tiempo real"
             >
@@ -237,6 +256,7 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
                 onChange={(val) => handleTimeChange('start', val)}
                 minHour={7}
                 maxHour={22}
+                align="left"
               />
 
               <span className="time-separator">—</span>
@@ -247,6 +267,7 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
                 onChange={(val) => handleTimeChange('end', val)}
                 minHour={7}
                 maxHour={22}
+                align="left"
               />
             </div>
 

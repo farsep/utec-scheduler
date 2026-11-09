@@ -574,6 +574,21 @@ export function enrichCoursesWithIntranetData(courses: Course[], intranetClassro
 }
 
 /**
+ * Standardizes academic session group strings to canonical abbreviations:
+ * e.g. "TEORÍA 11" -> "TEO 11", "LABORATORIO 14" -> "LAB 14", "PRÁCTICA 2" -> "PRÁC 2".
+ */
+export function abbreviateSessionGroup(group: string): string {
+  if (!group) return '';
+  return group
+    .replace(/\bLABORATORIO\b/gi, 'LAB')
+    .replace(/\bTEOR[ÍI]A\b/gi, 'TEO')
+    .replace(/\bPR[ÁA]CTICA\b/gi, 'PRÁC')
+    .replace(/\bTALLER\b/gi, 'TAL')
+    .replace(/\bSEMINARIO\b/gi, 'SEM')
+    .trim();
+}
+
+/**
  * Normalizes text for deterministic canonical professor matching:
  * decomposes diacritics, lowercase, trims spaces.
  */

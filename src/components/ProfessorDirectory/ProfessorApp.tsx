@@ -15,6 +15,8 @@ import { ProfessorNavbar } from './ProfessorNavbar';
 import { ProfessorFilterBar } from './ProfessorFilterBar';
 import { ProfessorCard } from './ProfessorCard';
 import { ProfessorDetailModal } from './ProfessorDetailModal';
+import { BroadcastIcon } from '../common/BroadcastIcon';
+import { ArchitecturalEmptyState } from '../common/ArchitecturalEmptyState';
 import {
   GraduationCap,
   Sparkles,
@@ -257,7 +259,7 @@ export const ProfessorApp: React.FC<ProfessorAppProps> = ({ hideTopNavbar = fals
                 <span className={`prof-kpi-badge-pill ${teachingNowCount > 0 ? 'prof-kpi-badge-pill--live' : ''}`}>
                   {teachingNowCount > 0 ? (
                     <>
-                      <span className="live-dot-mini" /> En Vivo
+                      <BroadcastIcon className="w-3.5 h-3.5 shrink-0 inline mr-1" /> En Vivo
                     </>
                   ) : (
                     'En Vivo'
@@ -316,32 +318,24 @@ export const ProfessorApp: React.FC<ProfessorAppProps> = ({ hideTopNavbar = fals
         {!isLoading && !loadError && (
           <div className="professors-content-container">
             {filteredProfessors.length === 0 ? (
-              <div className="no-rooms-card glass-card">
-                <div className="no-rooms-icon-wrap">
-                  <GraduationCap size={44} />
-                </div>
-                <h3>No se encontraron docentes con estos criterios</h3>
-                <p>
-                  Prueba modificando el texto de búsqueda, desactivando el filtro de día o restableciendo los filtros.
-                </p>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() =>
-                    setFilter({
-                      searchQuery: '',
-                      selectedDay: 'ALL',
-                      selectedDepartment: 'ALL',
-                      selectedModality: 'ALL',
-                      onlyLiveNow: false,
-                      onlyToday: false,
-                      sortBy: 'name_asc'
-                    })
-                  }
-                >
-                  Restablecer todos los filtros
-                </button>
-              </div>
+              <ArchitecturalEmptyState
+                icon={<GraduationCap size={24} />}
+                title="No se encontraron docentes con estos criterios"
+                description="Prueba modificando el texto de búsqueda, desactivando el filtro de día o restableciendo los filtros."
+                query={filter.searchQuery || undefined}
+                resetLabel="Restablecer todos los filtros"
+                onReset={() =>
+                  setFilter({
+                    searchQuery: '',
+                    selectedDay: 'ALL',
+                    selectedDepartment: 'ALL',
+                    selectedModality: 'ALL',
+                    onlyLiveNow: false,
+                    onlyToday: false,
+                    sortBy: 'name_asc'
+                  })
+                }
+              />
             ) : (
               <div className="professors-cards-grid">
                 {displayedProfessors.map(prof => (

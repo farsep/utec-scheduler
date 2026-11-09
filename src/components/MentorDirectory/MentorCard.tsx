@@ -4,6 +4,7 @@ import type { MentorInfo } from '../../types/mentor';
 import { evaluateMentorLiveStatus } from '../../utils/mentorUtils';
 import { getGraftonPigment } from '../../utils/graftonPigments';
 import { resolveCanonicalRoom } from '../../utils/classroomUtils';
+import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
   Clock,
   Building2,
@@ -130,7 +131,9 @@ export const MentorCard: React.FC<MentorCardProps> = ({
         {liveStatus.isMentoringNow && liveStatus.activeSession ? (
           <div className="prof-status-live-beacon">
             <div className="live-text-group">
-              <strong>● En mentoría ahora:</strong>
+              <span className="inline-flex items-center gap-1 font-bold">
+                <BroadcastIcon className="w-3.5 h-3.5 shrink-0 text-[#0D7A4E]" /> En mentoría ahora:
+              </span>
               <span>
                 {liveStatus.activeSession.courseCode} · {liveStatus.activeSession.courseName} (
                 {liveStatus.activeSession.timeDisplay})
