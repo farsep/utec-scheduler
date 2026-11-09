@@ -538,7 +538,12 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                                       <span className="prof-session-short-time">
                                         {session.startTime} - {session.endTime}
                                       </span>
-                                      <DynamicSessionBadge sessionGroup={session.sessionGroup} />
+                                      <DynamicSessionBadge
+                                        sessionGroup={session.sessionGroup}
+                                        durationMinutes={durationMinutes}
+                                        isShort={true}
+                                        isNarrow={isNarrowBlock}
+                                      />
                                       <span className="prof-session-room-tag" title={session.roomDisplayName}>
                                         <MapPin size={9} />
                                         {session.roomCode}
@@ -582,7 +587,12 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                                 )}
 
                                 <div className="prof-session-footer">
-                                  <DynamicSessionBadge sessionGroup={session.sessionGroup} />
+                                  <DynamicSessionBadge
+                                    sessionGroup={session.sessionGroup}
+                                    durationMinutes={durationMinutes}
+                                    isShort={isShortBlock}
+                                    isNarrow={isNarrowBlock}
+                                  />
 
                                   <span className="prof-session-room-tag" title={session.roomDisplayName}>
                                     <MapPin size={11} />
