@@ -146,7 +146,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           {selectedOption?.badge && (
             <span
               className="custom-select-badge"
-              style={selectedOption.badgeColor ? { borderColor: selectedOption.badgeColor, color: selectedOption.badgeColor } : undefined}
+              style={selectedOption.badgeColor ? ({ '--badge-accent': selectedOption.badgeColor, borderLeftColor: selectedOption.badgeColor } as React.CSSProperties) : undefined}
             >
               {selectedOption.badge}
             </span>
@@ -219,7 +219,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                       {option.badge && (
                         <span
                           className="custom-select-badge"
-                          style={option.badgeColor ? { borderColor: option.badgeColor, color: option.badgeColor } : undefined}
+                          style={option.badgeColor ? ({ '--badge-accent': option.badgeColor, borderLeftColor: option.badgeColor } as React.CSSProperties) : undefined}
                         >
                           {option.badge}
                         </span>

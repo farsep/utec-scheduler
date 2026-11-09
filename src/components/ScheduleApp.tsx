@@ -16,6 +16,7 @@ import { sendConsolidadoEmail } from '../utils/emailService';
 import {
   Download,
   RefreshCw,
+  RotateCcw,
   CheckCircle,
   Upload,
   SlidersHorizontal,
@@ -575,10 +576,10 @@ export const ScheduleApp: React.FC<ScheduleAppProps> = ({
                       )
                     );
                   }}
-                  title="Limpiar selecciones en esta opción"
+                  title="Restablecer selecciones en esta opción"
                 >
-                  <RefreshCw size={13} />
-                  <span>Limpiar</span>
+                  <RotateCcw size={13} />
+                  <span>Restablecer</span>
                 </button>
 
                 <button

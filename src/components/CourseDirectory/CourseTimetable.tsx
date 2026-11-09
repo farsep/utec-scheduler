@@ -15,7 +15,7 @@ import type {
   CourseExtendedInfo,
   CourseExtendedSession
 } from '../../types/courseDirectory';
-import { ALL_DAYS, DAY_LABELS } from '../../utils/classroomUtils';
+import { ALL_DAYS, DAY_LABELS, resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { formatProfessorName } from '../../utils/professorUtils';
 import { CustomSelect, type SelectOption } from '../common/CustomSelect';
 import {
@@ -892,11 +892,11 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                       <div className="agenda-info-item">
                         <MapPin size={14} className="text-emerald" />
                         <a
-                          href={`/aulas?search=${encodeURIComponent(s.roomCode || s.roomDisplayName)}`}
-                          className="session-room-link"
-                          title="Ver ocupación y mapa en Buscador de Aulas"
+                          href={`/aulas?aula=${resolveCanonicalRoom(s.roomCode || s.roomDisplayName).code}`}
+                          className="session-room-link room-entity-link"
+                          title="Ver ocupación y disponibilidad en Aulas Libres"
                         >
-                          {s.roomDisplayName}
+                          {resolveCanonicalRoom(s.roomCode || s.roomDisplayName).displayName}
                           <ExternalLink size={11} />
                         </a>
                         {s.floor > 1 && (
@@ -908,8 +908,8 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                         <GraduationCap size={14} className="text-purple" />
                         {s.professor && !/docente\s*utec/i.test(s.professor) ? (
                           <a
-                            href={`/profesores?search=${encodeURIComponent(s.professor)}`}
-                            className="session-prof-link"
+                            href={`/profesores?profesor=${encodeURIComponent(s.professor)}`}
+                            className="session-prof-link prof-entity-link"
                             title="Ver perfil del docente"
                           >
                             {formatProfessorName(s.professor).displayName}
@@ -1004,10 +1004,11 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
             <div className="inspector-item">
               <MapPin size={14} className="text-emerald" />
               <a
-                href={`/aulas?search=${encodeURIComponent(selectedSessionItem.session.roomCode || selectedSessionItem.session.roomDisplayName)}`}
-                className="session-room-link"
+                href={`/aulas?aula=${resolveCanonicalRoom(selectedSessionItem.session.roomCode || selectedSessionItem.session.roomDisplayName).code}`}
+                className="session-room-link room-entity-link"
+                title="Ver ocupación y disponibilidad en Aulas Libres"
               >
-                {selectedSessionItem.session.roomDisplayName}
+                {resolveCanonicalRoom(selectedSessionItem.session.roomCode || selectedSessionItem.session.roomDisplayName).displayName}
                 <ExternalLink size={11} />
               </a>
               {selectedSessionItem.session.floor > 1 && (
@@ -1018,9 +1019,17 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
             <div className="inspector-item">
               <GraduationCap size={14} className="text-purple" />
               <span>
-                {selectedSessionItem.session.professor && !/docente\s*utec/i.test(selectedSessionItem.session.professor)
-                  ? formatProfessorName(selectedSessionItem.session.professor).displayName
-                  : 'Docente UTEC'}
+                {selectedSessionItem.session.professor && !/docente\s*utec/i.test(selectedSessionItem.session.professor) ? (
+                  <a
+                    href={`/profesores?profesor=${encodeURIComponent(selectedSessionItem.session.professor)}`}
+                    className="session-prof-link prof-entity-link"
+                    title="Ver perfil del docente"
+                  >
+                    {formatProfessorName(selectedSessionItem.session.professor).displayName}
+                  </a>
+                ) : (
+                  'Docente UTEC'
+                )}
               </span>
             </div>
           </div>

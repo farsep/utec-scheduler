@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { MentorInfo, MentorSession } from '../../types/mentor';
 import { evaluateMentorLiveStatus } from '../../utils/mentorUtils';
+import { resolveCanonicalRoom } from '../../utils/classroomUtils';
 import {
   X,
   Mail,
@@ -311,7 +312,18 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
               <div className="metric-box">
                 <span className="metric-lbl">AULA PRINCIPAL</span>
                 <span className="metric-val" style={{ color: '#00779E' }}>
-                  {mentor.primaryRoom}
+                  {mentor.primaryRoom.startsWith('Virtual') ? (
+                    'Virtual'
+                  ) : (
+                    <a
+                      href={`/aulas?aula=${resolveCanonicalRoom(mentor.primaryRoom).code}`}
+                      className="room-entity-link"
+                      style={{ color: '#00779E' }}
+                      title={`Ver disponibilidad de ${resolveCanonicalRoom(mentor.primaryRoom).displayName}`}
+                    >
+                      {resolveCanonicalRoom(mentor.primaryRoom).code}
+                    </a>
+                  )}
                 </span>
               </div>
 
@@ -440,7 +452,17 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
                                 <td className="res-room-col">
                                   <span className={`room-tag ${isVirtualNote ? 'room-tag-virtual' : 'room-tag-room'}`}>
                                     {isVirtualNote ? <Video size={12} /> : <Building2 size={12} />}
-                                    <span>{res.room}</span>
+                                    {isVirtualNote ? (
+                                      <span>{res.room}</span>
+                                    ) : (
+                                      <a
+                                        href={`/aulas?aula=${resolveCanonicalRoom(res.room).code}`}
+                                        className="room-entity-link"
+                                        title={`Ver disponibilidad de ${resolveCanonicalRoom(res.room).displayName}`}
+                                      >
+                                        {resolveCanonicalRoom(res.room).code}
+                                      </a>
+                                    )}
                                   </span>
                                 </td>
                                 <td className="res-loc-col">
@@ -491,16 +513,18 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
 
             <div className="mentor-modal-courses-list">
               {mentor.courses.map((course) => (
-                <div
+                <a
                   key={course.code}
-                  className="mentor-modal-course-card"
+                  href={`/cursos?curso=${course.code}`}
+                  className="mentor-modal-course-card course-entity-link"
                   style={{ borderLeftColor: course.color }}
+                  title={`Ver detalle oficial de ${course.code}`}
                 >
-                  <div className="course-code-badge" style={{ background: `${course.color}22`, color: course.color }}>
+                  <div className="course-code-badge" style={{ background: '#18181A', color: '#F2F0EC' }}>
                     {course.code}
                   </div>
                   <div className="course-name-text">{course.name}</div>
-                </div>
+                </a>
               ))}
             </div>
 

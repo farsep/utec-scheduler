@@ -33,16 +33,189 @@ export const ROOM_TYPE_LABELS: Record<RoomType, { label: string; short: string; 
   otro: { label: 'Otros Espacios', short: 'Espacio', color: '#94a3b8', iconName: 'MapPin' }
 };
 
+export interface CanonicalRoomResult {
+  code: string;
+  displayName: string;
+  type: RoomType;
+  floor: number;
+}
+
+export const CANONICAL_ROOMS_DATA: CanonicalRoomResult[] = [
+  { code: 'A1001', displayName: 'Aula 1001', type: 'aula', floor: 10 },
+  { code: 'A1002', displayName: 'Aula 1002', type: 'aula', floor: 10 },
+  { code: 'A1003', displayName: 'Aula 1003', type: 'aula', floor: 10 },
+  { code: 'A201', displayName: 'Aula 201', type: 'aula', floor: 2 },
+  { code: 'A202', displayName: 'Aula 202', type: 'aula', floor: 2 },
+  { code: 'A301', displayName: 'Aula 301', type: 'aula', floor: 3 },
+  { code: 'A302', displayName: 'Aula 302', type: 'aula', floor: 3 },
+  { code: 'A303', displayName: 'Aula 303', type: 'aula', floor: 3 },
+  { code: 'A304', displayName: 'Aula 304', type: 'aula', floor: 3 },
+  { code: 'A401', displayName: 'Aula 401', type: 'aula', floor: 4 },
+  { code: 'A402', displayName: 'Aula 402', type: 'aula', floor: 4 },
+  { code: 'A403', displayName: 'Aula 403', type: 'aula', floor: 4 },
+  { code: 'A404', displayName: 'Aula 404', type: 'aula', floor: 4 },
+  { code: 'A501', displayName: 'Aula 501', type: 'aula', floor: 5 },
+  { code: 'A502', displayName: 'Aula 502', type: 'aula', floor: 5 },
+  { code: 'A601', displayName: 'Aula 601', type: 'aula', floor: 6 },
+  { code: 'A602', displayName: 'Aula 602', type: 'aula', floor: 6 },
+  { code: 'A701', displayName: 'Aula 701', type: 'aula', floor: 7 },
+  { code: 'A702', displayName: 'Aula 702', type: 'aula', floor: 7 },
+  { code: 'A703', displayName: 'Aula 703', type: 'aula', floor: 7 },
+  { code: 'A704', displayName: 'Aula 704', type: 'aula', floor: 7 },
+  { code: 'A705', displayName: 'Aula 705', type: 'aula', floor: 7 },
+  { code: 'A706', displayName: 'Aula 706', type: 'aula', floor: 7 },
+  { code: 'A707', displayName: 'Aula 707', type: 'aula', floor: 7 },
+  { code: 'A708', displayName: 'Aula 708', type: 'aula', floor: 7 },
+  { code: 'A801', displayName: 'Aula 801', type: 'aula', floor: 8 },
+  { code: 'A802', displayName: 'Aula 802', type: 'aula', floor: 8 },
+  { code: 'A803', displayName: 'Aula 803', type: 'aula', floor: 8 },
+  { code: 'A804', displayName: 'Aula 804', type: 'aula', floor: 8 },
+  { code: 'A901', displayName: 'Aula 901', type: 'aula', floor: 9 },
+  { code: 'A902', displayName: 'Aula 902', type: 'aula', floor: 9 },
+  { code: 'A903', displayName: 'Aula 903', type: 'aula', floor: 9 },
+  { code: 'A904', displayName: 'Aula 904', type: 'aula', floor: 9 },
+  { code: 'A905', displayName: 'Aula 905', type: 'aula', floor: 9 },
+  { code: 'A906', displayName: 'Aula 906', type: 'aula', floor: 9 },
+  { code: 'A907', displayName: 'Aula 907', type: 'aula', floor: 9 },
+  { code: 'A908', displayName: 'Aula 908', type: 'aula', floor: 9 },
+  { code: 'AUDITORIO', displayName: 'Auditorio Principal', type: 'auditorio', floor: 1 },
+  { code: 'AULAMAGNA', displayName: 'Aula Magna', type: 'auditorio', floor: 1 },
+  { code: 'FUTSAL', displayName: 'Futsal', type: 'otro', floor: 1 },
+  { code: 'L021', displayName: 'Laboratorio 021', type: 'laboratorio', floor: 1 },
+  { code: 'L022', displayName: 'Laboratorio 022', type: 'laboratorio', floor: 1 },
+  { code: 'L101', displayName: 'Laboratorio 101', type: 'laboratorio', floor: 1 },
+  { code: 'L102', displayName: 'Laboratorio 102', type: 'laboratorio', floor: 1 },
+  { code: 'L104', displayName: 'Laboratorio 104', type: 'laboratorio', floor: 1 },
+  { code: 'L105', displayName: 'Laboratorio 105', type: 'laboratorio', floor: 1 },
+  { code: 'L106', displayName: 'Laboratorio 106', type: 'laboratorio', floor: 1 },
+  { code: 'L107', displayName: 'Laboratorio 107', type: 'laboratorio', floor: 1 },
+  { code: 'L108', displayName: 'Laboratorio 108', type: 'laboratorio', floor: 1 },
+  { code: 'L201', displayName: 'Laboratorio 201', type: 'laboratorio', floor: 2 },
+  { code: 'L202', displayName: 'Laboratorio 202', type: 'laboratorio', floor: 2 },
+  { code: 'L204', displayName: 'Laboratorio 204', type: 'laboratorio', floor: 2 },
+  { code: 'L205', displayName: 'Laboratorio 205', type: 'laboratorio', floor: 2 },
+  { code: 'L206', displayName: 'Laboratorio 206', type: 'laboratorio', floor: 2 },
+  { code: 'L207', displayName: 'Laboratorio 207', type: 'laboratorio', floor: 2 },
+  { code: 'L208', displayName: 'Laboratorio 208', type: 'laboratorio', floor: 2 },
+  { code: 'L209', displayName: 'Laboratorio 209', type: 'laboratorio', floor: 2 },
+  { code: 'L210', displayName: 'Laboratorio 210', type: 'laboratorio', floor: 2 },
+  { code: 'L211', displayName: 'Laboratorio 211', type: 'laboratorio', floor: 2 },
+  { code: 'L212', displayName: 'Laboratorio 212', type: 'laboratorio', floor: 2 },
+  { code: 'L402', displayName: 'Laboratorio 402', type: 'laboratorio', floor: 4 },
+  { code: 'L403', displayName: 'Laboratorio 403', type: 'laboratorio', floor: 4 },
+  { code: 'L404', displayName: 'Laboratorio 404', type: 'laboratorio', floor: 4 },
+  { code: 'L405', displayName: 'Laboratorio 405', type: 'laboratorio', floor: 4 },
+  { code: 'L406', displayName: 'Laboratorio 406', type: 'laboratorio', floor: 4 },
+  { code: 'L407', displayName: 'Laboratorio 407', type: 'laboratorio', floor: 4 },
+  { code: 'L408', displayName: 'Laboratorio 408', type: 'laboratorio', floor: 4 },
+  { code: 'L409', displayName: 'Laboratorio 409', type: 'laboratorio', floor: 4 },
+  { code: 'L410', displayName: 'Laboratorio 410', type: 'laboratorio', floor: 4 },
+  { code: 'L412', displayName: 'Laboratorio 412', type: 'laboratorio', floor: 4 },
+  { code: 'L413', displayName: 'Laboratorio 413', type: 'laboratorio', floor: 4 },
+  { code: 'L414', displayName: 'Laboratorio 414', type: 'laboratorio', floor: 4 },
+  { code: 'L415', displayName: 'Laboratorio 415', type: 'laboratorio', floor: 4 },
+  { code: 'L416', displayName: 'Laboratorio 416', type: 'laboratorio', floor: 4 },
+  { code: 'L417', displayName: 'Laboratorio 417', type: 'laboratorio', floor: 4 },
+  { code: 'L418', displayName: 'Laboratorio 418', type: 'laboratorio', floor: 4 },
+  { code: 'L419', displayName: 'Laboratorio 419', type: 'laboratorio', floor: 4 },
+  { code: 'L420', displayName: 'Laboratorio 420', type: 'laboratorio', floor: 4 },
+  { code: 'L501', displayName: 'Laboratorio 501', type: 'laboratorio', floor: 5 },
+  { code: 'L502', displayName: 'Laboratorio 502', type: 'laboratorio', floor: 5 },
+  { code: 'L503', displayName: 'Laboratorio 503', type: 'laboratorio', floor: 5 },
+  { code: 'L504', displayName: 'Laboratorio 504', type: 'laboratorio', floor: 5 },
+  { code: 'L505', displayName: 'Laboratorio 505', type: 'laboratorio', floor: 5 },
+  { code: 'L506', displayName: 'Laboratorio 506', type: 'laboratorio', floor: 5 },
+  { code: 'L507', displayName: 'Laboratorio 507', type: 'laboratorio', floor: 5 },
+  { code: 'L508', displayName: 'Laboratorio 508', type: 'laboratorio', floor: 5 },
+  { code: 'L601', displayName: 'Laboratorio 601', type: 'laboratorio', floor: 6 },
+  { code: 'M1001', displayName: 'Mesas 1001', type: 'mesas', floor: 10 },
+  { code: 'M301', displayName: 'Mesas 301', type: 'mesas', floor: 3 },
+  { code: 'M401', displayName: 'Mesas 401', type: 'mesas', floor: 4 },
+  { code: 'M601', displayName: 'Mesas 601', type: 'mesas', floor: 6 },
+  { code: 'M602', displayName: 'Mesas 602', type: 'mesas', floor: 6 },
+  { code: 'M603', displayName: 'Mesas 603', type: 'mesas', floor: 6 },
+  { code: 'M604', displayName: 'Mesas 604', type: 'mesas', floor: 6 },
+  { code: 'M801', displayName: 'Mesas 801', type: 'mesas', floor: 8 },
+  { code: 'M802', displayName: 'Mesas 802', type: 'mesas', floor: 8 },
+  { code: 'M803', displayName: 'Mesas 803', type: 'mesas', floor: 8 },
+  { code: 'M804', displayName: 'Mesas 804', type: 'mesas', floor: 8 },
+  { code: 'S111', displayName: 'S111', type: 'otro', floor: 1 },
+];
+
+const CANONICAL_ROOMS_MAP = new Map<string, CanonicalRoomResult>();
+CANONICAL_ROOMS_DATA.forEach(r => {
+  CANONICAL_ROOMS_MAP.set(r.code.toUpperCase(), r);
+  CANONICAL_ROOMS_MAP.set(r.displayName.replace(/\s+/g, '').toUpperCase(), r);
+  CANONICAL_ROOMS_MAP.set(r.displayName.toUpperCase(), r);
+});
+
+/**
+ * Strict canonical room resolver that guarantees zero string mutation.
+ * Normalizes M301, Mesas 301, A201, L106 to their authoritative UTEC metadata.
+ */
+export function resolveCanonicalRoom(
+  input?: string | { code?: string; codigo?: string; name?: string; displayName?: string } | null
+): CanonicalRoomResult {
+  if (!input) {
+    return { code: 'UTEC', displayName: 'Campus UTEC', type: 'otro', floor: 1 };
+  }
+
+  let raw = '';
+  if (typeof input === 'object') {
+    raw = input.codigo || input.code || input.displayName || input.name || '';
+  } else {
+    raw = String(input);
+  }
+
+  raw = raw.trim();
+  if (!raw) {
+    return { code: 'UTEC', displayName: 'Campus UTEC', type: 'otro', floor: 1 };
+  }
+
+  // Strip accidental 'A' prefixed before 'M' (Mesas) or 'L' (Laboratorio), e.g. AM301 -> M301
+  if (/^A(M\d{3,4}|L\d{3,4})$/i.test(raw)) {
+    raw = raw.substring(1);
+  }
+
+  const cleanNoSpaces = raw.replace(/\s+/g, '').toUpperCase();
+  if (CANONICAL_ROOMS_MAP.has(cleanNoSpaces)) {
+    return CANONICAL_ROOMS_MAP.get(cleanNoSpaces)!;
+  }
+  if (CANONICAL_ROOMS_MAP.has(raw.toUpperCase())) {
+    return CANONICAL_ROOMS_MAP.get(raw.toUpperCase())!;
+  }
+
+  // Dynamic fallback via parseLocationInfo
+  const parsed = parseLocationInfo(raw);
+  if (parsed) {
+    const parsedKey = parsed.code.toUpperCase();
+    if (CANONICAL_ROOMS_MAP.has(parsedKey)) {
+      return CANONICAL_ROOMS_MAP.get(parsedKey)!;
+    }
+    return parsed;
+  }
+
+  return {
+    code: raw.toUpperCase(),
+    displayName: raw,
+    type: 'otro',
+    floor: 1
+  };
+}
+
 /**
  * Normalizes and extracts room code, type, floor and display name
  */
 export function parseLocationInfo(rawLoc?: string): { code: string; displayName: string; type: RoomType; floor: number } | null {
   if (!rawLoc) return null;
-  const clean = rawLoc
+  let clean = rawLoc
     .replace(/UTEC[\s-]*/gi, '')
     .replace(/[\s-]*\bBA\b[\s-]*/gi, ' ')
     .replace(/^-+|-+$/g, '')
     .trim();
+
+  // Strip accidental 'A' prefixed before 'M' (Mesas) or 'L' (Laboratorio), e.g. AM301 -> M301
+  clean = clean.replace(/^A(?=[ML]\d{3,4})/i, '');
 
   if (!clean || clean.toLowerCase().includes('virtual')) return null;
 

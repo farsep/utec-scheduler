@@ -109,6 +109,56 @@ export const ProfessorApp: React.FC<ProfessorAppProps> = ({ hideTopNavbar = fals
     loadMasterSchedule();
   }, [loadMasterSchedule]);
 
+  // Deep-link auto-open via ?profesor=QUERY URL parameter (and on popstate)
+  useEffect(() => {
+    if (!professors.length || typeof window === 'undefined') return;
+
+    const checkUrlParam = () => {
+      const params = new URLSearchParams(window.location.search);
+      const profParam = params.get('profesor') || params.get('p') || params.get('docente');
+      if (!profParam) return;
+
+      const clean = (s: string) =>
+        s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+      const q = clean(profParam);
+      const qTokens = q.split(/\s+/).filter(Boolean);
+
+      const targetProf = professors.find(p => {
+        const dName = clean(p.displayName);
+        const lName = clean(p.lastNameFirst);
+        const rName = clean(p.rawName);
+        const email = clean(p.email || '');
+        const id = clean(p.id);
+
+        if (dName === q || lName === q || rName === q || id === q) return true;
+        if (dName.includes(q) || lName.includes(q) || rName.includes(q) || id.includes(q) || email.includes(q)) return true;
+        
+        // Multi-word token match across all identity names
+        const combined = `${dName} ${lName} ${rName} ${id}`;
+        if (qTokens.length > 1 && qTokens.every(tok => combined.includes(tok))) return true;
+        return false;
+      });
+
+      if (targetProf) {
+        setFilter(prev => ({
+          ...prev,
+          searchQuery: '',
+          selectedDay: 'ALL',
+          selectedDepartment: 'ALL',
+          selectedModality: 'ALL',
+          onlyLiveNow: false,
+          onlyToday: false
+        }));
+
+        setSelectedProf(targetProf);
+      }
+    };
+
+    checkUrlParam();
+    window.addEventListener('popstate', checkUrlParam);
+    return () => window.removeEventListener('popstate', checkUrlParam);
+  }, [professors]);
+
   const handleFilterChange = (updates: Partial<ProfessorFilterState>) => {
     setFilter(prev => ({ ...prev, ...updates }));
   };

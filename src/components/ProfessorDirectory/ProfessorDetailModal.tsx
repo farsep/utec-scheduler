@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { ProfessorInfo, ProfessorSession } from '../../types/professor';
-import { ALL_DAYS, DAY_LABELS, parseLocationInfo } from '../../utils/classroomUtils';
+import { ALL_DAYS, DAY_LABELS, parseLocationInfo, resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { evaluateProfessorLiveStatus } from '../../utils/professorUtils';
 import { ProfessorTimetable } from './ProfessorTimetable';
 import {
@@ -272,13 +272,17 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
           <div className="prof-modal-live-banner">
             <span className="live-beacon-dot" />
             <div>
-              <strong>Dictando en este momento:</strong> {currentSession.courseCode} - {currentSession.courseName} en{' '}
+              <strong>Dictando en este momento:</strong>{' '}
+              <a href={`/cursos?curso=${currentSession.courseCode}`} className="prof-entity-link">
+                {currentSession.courseCode} - {currentSession.courseName}
+              </a>{' '}
+              en{' '}
               <a
-                href={`/aulas`}
-                className="prof-room-link"
+                href={`/aulas?aula=${resolveCanonicalRoom(currentSession.roomCode).code}`}
+                className="prof-room-link prof-entity-link"
                 title="Ver aula en buscador de aulas"
               >
-                {currentSession.roomCode}
+                {resolveCanonicalRoom(currentSession.roomCode).code}
               </a>{' '}
               ({currentSession.startTime} a {currentSession.endTime})
             </div>
@@ -287,7 +291,18 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
           <div className="prof-modal-next-banner">
             <Clock size={15} />
             <div>
-              <strong>Próxima clase:</strong> {nextSession.day} {nextSession.startTime} - {nextSession.endTime} ({nextSession.courseCode}) en {nextSession.roomCode}
+              <strong>Próxima clase:</strong> {nextSession.day} {nextSession.startTime} - {nextSession.endTime} (
+              <a href={`/cursos?curso=${nextSession.courseCode}`} className="prof-entity-link">
+                {nextSession.courseCode}
+              </a>
+              ) en{' '}
+              <a
+                href={`/aulas?aula=${resolveCanonicalRoom(nextSession.roomCode).code}`}
+                className="prof-room-link prof-entity-link"
+                title="Ver aula en buscador de aulas"
+              >
+                {resolveCanonicalRoom(nextSession.roomCode).code}
+              </a>
             </div>
           </div>
         ) : null}
@@ -452,16 +467,13 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                     {/* Course Header Banner */}
                     <div className="prof-course-detail-header">
                       <div className="prof-course-header-left">
-                        <span
-                          className="prof-course-code-pill"
-                          style={{
-                            backgroundColor: `${course.color}22`,
-                            color: course.color,
-                            borderColor: `${course.color}55`
-                          }}
+                        <a
+                          href={`/cursos?curso=${course.code}`}
+                          className="prof-course-code-pill prof-course-code-link prof-entity-link"
+                          title={`Ver detalle oficial de ${course.code}`}
                         >
                           {course.code}
-                        </span>
+                        </a>
                         <div className="prof-course-title-col">
                           <h4 className="prof-course-name">{course.name}</h4>
                           <span className="prof-course-meta-sub">
@@ -513,7 +525,13 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
 
                                   <div className="prof-sess-col-room">
                                     <MapPin size={13} className="text-muted" />
-                                    <span className="prof-sess-room-code">{sess.roomCode}</span>
+                                    <a
+                                      href={`/aulas?aula=${resolveCanonicalRoom(sess.roomCode).code}`}
+                                      className="prof-sess-room-code prof-entity-link"
+                                      title={`Ver disponibilidad de ${resolveCanonicalRoom(sess.roomCode).displayName}`}
+                                    >
+                                      {resolveCanonicalRoom(sess.roomCode).code}
+                                    </a>
                                     <span className="prof-sess-floor">P{getSessionFloor(sess)}</span>
                                   </div>
 
@@ -542,7 +560,13 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                               </div>
                               <div className="prof-sess-col-room">
                                 <MapPin size={13} className="text-muted" />
-                                <span>{sess.roomCode}</span>
+                                <a
+                                  href={`/aulas?aula=${resolveCanonicalRoom(sess.roomCode).code}`}
+                                  className="prof-sess-room-code prof-entity-link"
+                                  title={`Ver disponibilidad de ${resolveCanonicalRoom(sess.roomCode).displayName}`}
+                                >
+                                  {resolveCanonicalRoom(sess.roomCode).code}
+                                </a>
                                 <span className="prof-sess-floor">P{getSessionFloor(sess)}</span>
                               </div>
                               <div className="prof-sess-col-enrolled">
@@ -565,18 +589,20 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
             <div className="prof-tab-pane prof-tab-pane--rooms">
               <div className="prof-rooms-grid">
                 {professor.uniqueRooms.map(roomCode => {
-                  const roomSessions = professor.sessions.filter(s => s.roomCode === roomCode);
+                  const canonical = resolveCanonicalRoom(roomCode);
+                  const roomSessions = professor.sessions.filter(
+                    s => resolveCanonicalRoom(s.roomCode).code === canonical.code
+                  );
                   const firstSess = roomSessions[0];
-                  const parsedLoc = parseLocationInfo(firstSess?.rawLocation || firstSess?.roomDisplayName || roomCode);
-                  const floor = getSessionFloor(firstSess) || parsedLoc?.floor || 1;
-                  const roomName = parsedLoc?.displayName || firstSess?.roomDisplayName || roomCode;
-                  const displayCode = parsedLoc?.code || roomCode;
+                  const floor = canonical.floor || getSessionFloor(firstSess) || 1;
+                  const roomName = canonical.displayName;
+                  const displayCode = canonical.code;
 
                   return (
-                    <div key={roomCode} className="prof-room-detail-card glass-card">
+                    <div key={displayCode} className="prof-room-detail-card glass-card">
                       <div className="prof-room-card-top">
-                        <div className="prof-room-icon-wrap">
-                          <MapPin size={20} />
+                        <div className="prof-room-monogram-box">
+                          <span>{displayCode}</span>
                         </div>
                         <div>
                           <h4 className="prof-room-title">{roomName}</h4>
@@ -590,16 +616,25 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                           {roomSessions.map(s => (
                             <div key={s.id} className="prof-room-mini-session">
                               <strong>{DAY_LABELS[s.day]} {s.startTime} - {s.endTime}</strong>
-                              <span>{s.courseCode} ({s.sessionGroup})</span>
+                              <span>
+                                <a
+                                  href={`/cursos?curso=${s.courseCode}`}
+                                  className="prof-entity-link"
+                                  title={`Ver curso ${s.courseCode}`}
+                                >
+                                  {s.courseCode}
+                                </a>{' '}
+                                ({s.sessionGroup})
+                              </span>
                             </div>
                           ))}
                         </div>
                       </div>
 
                       <a
-                        href="/aulas"
+                        href={`/aulas?aula=${displayCode}`}
                         className="prof-room-explore-link"
-                        title="Ver disponibilidad de esta aula"
+                        title={`Ver disponibilidad de ${roomName}`}
                       >
                         <span>Ver en Aulas Libres</span>
                         <ExternalLink size={13} />

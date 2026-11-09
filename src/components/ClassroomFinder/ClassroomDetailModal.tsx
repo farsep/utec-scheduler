@@ -407,17 +407,37 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                         </div>
                         <div className="agenda-card agenda-card--occupied">
                           <div className="agenda-occ-header">
-                            <span className="agenda-course-code">{session.courseCode}</span>
+                            <a
+                              href={`/cursos?curso=${session.courseCode}`}
+                              onClick={e => e.stopPropagation()}
+                              className="agenda-course-code course-entity-link"
+                              title={`Ver detalle de ${session.courseCode}`}
+                            >
+                              {session.courseCode}
+                            </a>
                             <span className="agenda-session-group">{session.sessionGroup}</span>
                             <span className="agenda-sec-num">Sec. {session.sectionNumber}</span>
                           </div>
-                          <h5 className="agenda-course-name">{session.courseName}</h5>
+                          <h5 className="agenda-course-name">
+                            <a
+                              href={`/cursos?curso=${session.courseCode}`}
+                              onClick={e => e.stopPropagation()}
+                              className="course-entity-link"
+                            >
+                              {session.courseName}
+                            </a>
+                          </h5>
                           {session.professor && (
                             <div className="agenda-occ-meta">
-                              <span className="agenda-prof">
+                              <a
+                                href={`/profesores?profesor=${encodeURIComponent(session.professor)}`}
+                                onClick={e => e.stopPropagation()}
+                                className="agenda-prof prof-entity-link"
+                                title={`Ver perfil de ${session.professor}`}
+                              >
                                 <User size={13} />
                                 <span>{session.professor}</span>
-                              </span>
+                              </a>
                             </div>
                           )}
                         </div>
@@ -447,11 +467,24 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
 
               <div className="inspector-body">
                 <div className="inspector-course-id">
-                  <span className="course-code-pill">{selectedSession.courseCode}</span>
+                  <a
+                    href={`/cursos?curso=${selectedSession.courseCode}`}
+                    className="course-code-pill course-entity-link"
+                    title={`Ver curso ${selectedSession.courseCode}`}
+                  >
+                    {selectedSession.courseCode}
+                  </a>
                   <span className="group-pill">{selectedSession.sessionGroup}</span>
                   <span className="group-pill">Sec. {selectedSession.sectionNumber}</span>
                 </div>
-                <h4 className="inspector-course-name">{selectedSession.courseName}</h4>
+                <h4 className="inspector-course-name">
+                  <a
+                    href={`/cursos?curso=${selectedSession.courseCode}`}
+                    className="course-entity-link"
+                  >
+                    {selectedSession.courseName}
+                  </a>
+                </h4>
 
                 <div className="inspector-detail-row">
                   <Clock size={15} />
@@ -460,7 +493,19 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
 
                 <div className="inspector-detail-row">
                   <User size={15} />
-                  <span>{selectedSession.professor || 'Docente no asignado'}</span>
+                  <span>
+                    {selectedSession.professor ? (
+                      <a
+                        href={`/profesores?profesor=${encodeURIComponent(selectedSession.professor)}`}
+                        className="prof-entity-link"
+                        title={`Ver perfil de ${selectedSession.professor}`}
+                      >
+                        {selectedSession.professor}
+                      </a>
+                    ) : (
+                      'Docente no asignado'
+                    )}
+                  </span>
                 </div>
 
                 {selectedSession.email && (

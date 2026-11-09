@@ -1473,6 +1473,338 @@
   color: #F2F0EC !important;
 }
 
+/* ==========================================================================
+   LEVEL-2 NESTED MODAL: Solicitud de Asistencia como Visitante / Oyente
+   ========================================================================== */
+.visitor-modal-dialog,
+.visitor-modal-dialog * {
+  border-radius: 0px !important;
+}
+
+.visitor-modal-dialog {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  color: #141416 !important;
+  border: 2px solid #18181A !important;
+  border-top: 4px solid #18181A !important;
+  box-shadow: 6px 6px 0px rgba(24, 24, 26, 0.24) !important;
+}
+
+.visitor-modal-header {
+  background: #EAE8E3 !important;
+  background-color: #EAE8E3 !important;
+  border-bottom: 1px solid #18181A !important;
+  padding: 12px 18px !important;
+}
+
+.visitor-modal-icon-badge {
+  width: 36px !important;
+  height: 36px !important;
+  background-color: #DCD9D2 !important;
+  border: 1.5px solid #18181A !important;
+  color: #00779E !important;
+  border-radius: 0px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.visitor-course-code-badge {
+  background-color: #00779E !important;
+  color: #FFFFFF !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  font-weight: 700 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  padding: 2px 7px !important;
+}
+
+.visitor-course-name-text {
+  color: #4A4946 !important;
+  font-weight: 600 !important;
+}
+
+.visitor-modal-close-btn {
+  border-radius: 0px !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+}
+
+.visitor-modal-close-btn:hover {
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+}
+
+.visitor-modal-body {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  color: #141416 !important;
+}
+
+/* Section Selector & Meta Strip */
+.visitor-meta-strip {
+  gap: 12px !important;
+}
+
+.visitor-meta-label {
+  color: #4A4946 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.visitor-meta-section select,
+.visitor-meta-section .custom-select-trigger {
+  border-radius: 0px !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+.visitor-meta-section .custom-select-trigger:hover {
+  border-color: #00779E !important;
+}
+
+.visitor-meta-section .custom-select-dropdown {
+  border-radius: 0px !important;
+  border: 1.5px solid #18181A !important;
+  background-color: #F2F0EC !important;
+  box-shadow: 4px 4px 0px #18181A !important;
+}
+
+.visitor-meta-section .custom-select-option {
+  border-radius: 0px !important;
+  border-bottom: 1px solid #C6C3BB !important;
+  color: #141416 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.visitor-meta-section .custom-select-option:hover,
+.visitor-meta-section .custom-select-option.selected {
+  background-color: #DCD9D2 !important;
+  color: #005A78 !important;
+}
+
+/* Recipient Professor Card */
+.visitor-prof-card {
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  border-left: 4px solid #00779E !important;
+  border-radius: 0px !important;
+}
+
+.visitor-prof-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 0px !important;
+  background-color: #F2F0EC !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+}
+
+.visitor-prof-name {
+  color: #141416 !important;
+  font-weight: 700 !important;
+}
+
+.visitor-prof-email,
+.visitor-prof-email a,
+.visitor-prof-card .email-link {
+  font-family: 'JetBrains Mono', monospace !important;
+  color: #00779E !important;
+  font-weight: 600 !important;
+}
+
+.prof-dest-tag {
+  background-color: rgba(0, 119, 158, 0.14) !important;
+  color: #005A78 !important;
+  border: 1px solid #00779E !important;
+  border-radius: 0px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+}
+
+/* Student Remitente Collapsible Bar */
+.visitor-student-bar {
+  border: 1px solid #C6C3BB !important;
+  border-radius: 0px !important;
+  background-color: #EAE8E3 !important;
+}
+
+.visitor-student-toggle-btn {
+  border-radius: 0px !important;
+  color: #141416 !important;
+  background: transparent !important;
+}
+
+.visitor-student-toggle-btn:hover {
+  background-color: #DCD9D2 !important;
+}
+
+.visitor-student-summary {
+  color: #4A4946 !important;
+}
+
+.visitor-student-summary strong {
+  color: #141416 !important;
+}
+
+.visitor-student-major-pill {
+  color: #4A4946 !important;
+}
+
+.visitor-student-edit-action {
+  color: #00779E !important;
+  font-weight: 600 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.visitor-student-form-fields {
+  border-top: 1px solid #C6C3BB !important;
+  background-color: #F2F0EC !important;
+  border-radius: 0px !important;
+  padding: 12px !important;
+}
+
+.visitor-form-group label {
+  color: #4A4946 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+.visitor-input {
+  border-radius: 0px !important;
+  background-color: #FFFFFF !important;
+  border: 1.5px solid #18181A !important;
+  color: #141416 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  box-shadow: none !important;
+}
+
+.visitor-input:focus {
+  border-color: #00779E !important;
+  outline: 2px solid #00779E !important;
+}
+
+/* High-Contrast Grafton Swiss Technical Sheet Email Draft Box */
+.visitor-email-preview-container {
+  border: 1.5px solid #18181A !important;
+  border-radius: 0px !important;
+  background-color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+.email-preview-header {
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+  padding: 8px 14px !important;
+  border-bottom: 1px solid #18181A !important;
+  border-radius: 0px !important;
+}
+
+.email-header-label {
+  color: #38BDF8 !important;
+  font-weight: 700 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.email-header-subject {
+  color: #F2F0EC !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.email-copy-subj-btn {
+  background-color: #2E2E32 !important;
+  color: #F2F0EC !important;
+  border: 1px solid #787670 !important;
+  border-radius: 0px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.email-copy-subj-btn:hover {
+  background-color: #3E3E42 !important;
+  color: #FFFFFF !important;
+  border-color: #9E9D96 !important;
+}
+
+.email-preview-body {
+  background-color: #FAF9F5 !important;
+  border-radius: 0px !important;
+}
+
+.email-body-text {
+  background-color: #FAF9F5 !important;
+  color: #141416 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 12px !important;
+  line-height: 1.6 !important;
+  padding: 16px !important;
+}
+
+/* High-Contrast Architectural Emerald Etiquette Banner */
+.visitor-advice-alert {
+  background-color: #DCEEE6 !important;
+  border: 1px solid #0D7A4E !important;
+  border-left: 4px solid #0D7A4E !important;
+  color: #093B29 !important;
+  border-radius: 0px !important;
+}
+
+.visitor-advice-alert strong {
+  color: #093B29 !important;
+}
+
+.visitor-advice-alert .visitor-advice-icon {
+  color: #0D7A4E !important;
+}
+
+/* Footer Buttons */
+.visitor-modal-footer {
+  background-color: #EAE8E3 !important;
+  border-top: 1px solid #18181A !important;
+  border-radius: 0px !important;
+}
+
+.visitor-copy-btn {
+  border-radius: 0px !important;
+  background-color: #DCD9D2 !important;
+  border: 1.5px solid #18181A !important;
+  color: #141416 !important;
+  box-shadow: 2px 2px 0px #18181A !important;
+  font-weight: 700 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.visitor-copy-btn:hover {
+  background-color: #C6C3BB !important;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #18181A !important;
+}
+
+.visitor-send-btn {
+  border-radius: 0px !important;
+  background-color: #00779E !important;
+  border: 1.5px solid #18181A !important;
+  color: #FFFFFF !important;
+  box-shadow: 2px 2px 0px #18181A !important;
+  font-weight: 700 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.visitor-send-btn:hover {
+  background-color: #005A78 !important;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #18181A !important;
+}
+
 /* BUG 2.2: Sección Container & Inner Session Cards (TEORÍA / LABORATORIO) */
 .course-section-card {
   background: #DCD9D2 !important;
@@ -1590,11 +1922,19 @@
 }
 
 .modal-kpi-card .kpi-card-value.text-accent {
-  color: #00779E !important;
+  color: #005A78 !important;
 }
 
 .modal-kpi-card .kpi-card-value.text-emerald {
-  color: #0D7A4E !important;
+  color: #094D31 !important;
+}
+
+.modal-kpi-card .kpi-card-value.text-purple {
+  color: #4A235A !important;
+}
+
+.modal-kpi-card .kpi-card-value.text-amber {
+  color: #6E3600 !important;
 }
 
 .mentor-schedule-table-wrap,
@@ -2027,6 +2367,257 @@
 }
 
 /* ==========================================================================
+   PART 1: PROFESSOR MODAL SUB-TABS (Cursos · Secciones & Aulas Utilizadas)
+   & UNIVERSAL ENTITY DEEP-LINKING (WCAG AA Contrast >= 4.5:1 & 0px Geometry)
+   ========================================================================== */
+
+/* Universal Entity Interactive Affordances */
+.prof-entity-link,
+.course-entity-link,
+.room-entity-link,
+.prof-course-tag--link,
+.prof-room-tag--link {
+  cursor: pointer !important;
+  text-decoration: none !important;
+  color: #005A78 !important;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease !important;
+}
+
+.prof-entity-link:hover,
+.course-entity-link:hover,
+.room-entity-link:hover,
+.prof-course-tag--link:hover,
+.prof-room-tag--link:hover {
+  color: #00779E !important;
+  text-decoration: underline !important;
+}
+
+/* Global High-Contrast Overrides for Text Tokens */
+.text-muted {
+  color: #5A5852 !important;
+}
+
+.text-secondary {
+  color: #3A3936 !important;
+}
+
+/* Tab 2: Cursos · Secciones in Professor Detail Modal */
+.prof-course-code-pill,
+.prof-course-code-link {
+  border-radius: 0px !important;
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+  border: 1px solid #18181A !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+  padding: 4px 8px !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  letter-spacing: 0.02em !important;
+}
+
+.prof-course-code-pill:hover,
+.prof-course-code-link:hover {
+  background-color: #00779E !important;
+  border-color: #18181A !important;
+  color: #FFFFFF !important;
+}
+
+.prof-course-hours-badge,
+.prof-section-hours-badge {
+  border-radius: 0px !important;
+  background-color: #DCD9D2 !important;
+  color: #141416 !important;
+  border: 1px solid #18181A !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+}
+
+.prof-section-badge {
+  border-radius: 0px !important;
+  background-color: #00779E !important;
+  color: #FFFFFF !important;
+  border: 1px solid #18181A !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+  padding: 2px 7px !important;
+}
+
+.prof-section-modality-badge {
+  border-radius: 0px !important;
+  background-color: #F2F0EC !important;
+  color: #141416 !important;
+  border: 1px solid #18181A !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 600 !important;
+}
+
+.prof-section-enrolled {
+  color: #3A3936 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 600 !important;
+}
+
+.prof-section-hours {
+  color: #094D31 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+}
+
+.prof-course-meta-sub {
+  color: #3A3936 !important;
+  font-weight: 600 !important;
+}
+
+/* Session Type Labels (Theory / Lab / Practice) */
+.prof-sess-badge-group {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+  border-radius: 0px !important;
+  padding: 2px 8px !important;
+  font-size: 0.76rem !important;
+  display: inline-block !important;
+}
+
+.prof-sess-badge-group--teoría,
+.prof-sess-badge-group--teoria {
+  color: #005A78 !important;
+  background-color: #E0EBF5 !important;
+  border: 1px solid #00779E !important;
+  border-left: 3px solid #00779E !important;
+}
+
+.prof-sess-badge-group--laboratorio {
+  color: #094D31 !important;
+  background-color: #DCEEE6 !important;
+  border: 1px solid #0D7A4E !important;
+  border-left: 3px solid #0D7A4E !important;
+}
+
+.prof-sess-badge-group--práctica,
+.prof-sess-badge-group--practica {
+  color: #6E3600 !important;
+  background-color: #F5E8D3 !important;
+  border: 1px solid #B85D00 !important;
+  border-left: 3px solid #B85D00 !important;
+}
+
+.prof-sess-col-time {
+  color: #141416 !important;
+}
+
+.prof-sess-col-time span {
+  color: #3A3936 !important;
+}
+
+.prof-sess-col-time strong {
+  color: #141416 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.prof-sess-col-room {
+  color: #005A78 !important;
+  font-weight: 700 !important;
+}
+
+.prof-sess-room-code {
+  color: #005A78 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+  text-decoration: underline !important;
+}
+
+.prof-sess-room-code:hover {
+  color: #00779E !important;
+}
+
+.prof-sess-floor {
+  border-radius: 0px !important;
+  background-color: #DCD9D2 !important;
+  color: #141416 !important;
+  border: 1px solid #18181A !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+}
+
+.prof-sess-col-enrolled {
+  color: #3A3936 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Tab 3: Aulas Utilizadas in Professor Detail Modal */
+.prof-room-monogram-box {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 0px !important;
+  background-color: #DCD9D2 !important;
+  border: 1.5px solid #18181A !important;
+  color: #141416 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.prof-room-title {
+  color: #141416 !important;
+  font-weight: 700 !important;
+}
+
+.prof-room-code-badge {
+  color: #3A3936 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+}
+
+.prof-room-sessions-label {
+  color: #141416 !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.prof-room-mini-session strong {
+  color: #141416 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.prof-room-mini-session span {
+  color: #005A78 !important;
+  font-weight: 700 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.prof-room-explore-link {
+  color: #005A78 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important;
+  text-decoration: underline !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+.prof-room-explore-link:hover {
+  color: #00779E !important;
+  text-decoration: underline !important;
+}
+
+/* Ensure ALL elements in Professor modal tabs have 0px radius */
+.prof-modal-content-body * {
+  border-radius: 0px !important;
+}
+
+/* ==========================================================================
    FIX 1: MOBILE FLOATING BUTTON ("↑ FILTROS Y PISOS") & MOBILE VIEWPORT (393x852)
    ========================================================================== */
 html,
@@ -2202,6 +2793,147 @@ body {
 .dag-node-card.dag-node--unlock-chain > * {
   opacity: 0.78 !important;
 }
+
+/* ==========================================================================
+   Filter Bar Search & Sort Row (70% Search Bar / 30% Sort Selector)
+   ========================================================================== */
+.prof-search-row {
+  display: flex !important;
+  width: 100% !important;
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+.prof-search-row .prof-search-input-wrapper,
+.prof-search-row .course-search-input-wrapper {
+  flex: 0 0 calc(70% - 6px) !important;
+  width: calc(70% - 6px) !important;
+  max-width: calc(70% - 6px) !important;
+  min-width: 0 !important;
+}
+
+.prof-search-row .custom-select-container,
+.prof-search-row .course-sort-select {
+  flex: 0 0 calc(30% - 6px) !important;
+  width: calc(30% - 6px) !important;
+  max-width: calc(30% - 6px) !important;
+  min-width: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .prof-search-row {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .prof-search-row .prof-search-input-wrapper,
+  .prof-search-row .course-search-input-wrapper,
+  .prof-search-row .custom-select-container,
+  .prof-search-row .course-sort-select {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* ==========================================================================
+   Restablecer Filters Button (Grafton Swiss Concrete 0px & High-Contrast)
+   Unified across Mentores, Profesores, Cursos, Aulas, etc.
+   ========================================================================== */
+.prof-reset-btn,
+.filter-reset-btn,
+.btn-reset-filters {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 12px !important;
+  border-radius: 0px !important;
+  background-color: #FAF9F5 !important;
+  border: 1.5px solid #18181A !important;
+  border-left: 3px solid #8E1C28 !important;
+  color: #8E1C28 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  cursor: pointer !important;
+  box-shadow: 2px 2px 0px #18181A !important;
+  transition: transform 120ms ease, background-color 120ms ease, color 120ms ease, box-shadow 120ms ease, border-color 120ms ease !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+}
+
+.prof-reset-btn svg,
+.filter-reset-btn svg,
+.btn-reset-filters svg {
+  color: #8E1C28 !important;
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), color 120ms ease !important;
+}
+
+.prof-reset-btn:hover,
+.filter-reset-btn:hover,
+.btn-reset-filters:hover {
+  background-color: #8E1C28 !important;
+  color: #FFFFFF !important;
+  border-color: #18181A !important;
+  border-left-color: #18181A !important;
+  box-shadow: 3px 3px 0px #18181A !important;
+  transform: translate(-1px, -1px) !important;
+}
+
+.prof-reset-btn:hover svg,
+.filter-reset-btn:hover svg,
+.btn-reset-filters:hover svg {
+  color: #FFFFFF !important;
+  transform: rotate(-180deg) !important;
+}
+
+.prof-reset-btn:active,
+.filter-reset-btn:active,
+.btn-reset-filters:active {
+  transform: translate(1px, 1px) !important;
+  box-shadow: 1px 1px 0px #18181A !important;
+}
+
+.mentor-filter-meta-strip .prof-reset-btn,
+.mentor-filter-meta-strip .filter-reset-btn,
+.mentor-filter-meta-strip .btn-reset-filters {
+  border-radius: 0px !important;
+}
+
+/* ==========================================================================
+   Active Tag Chips in Summary Strip (Grafton Swiss Concrete)
+   ========================================================================== */
+.active-tag-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 3px 8px !important;
+  border-radius: 0px !important;
+  background-color: #E0EBF5 !important;
+  border: 1px solid #18181A !important;
+  border-left: 3px solid #00779E !important;
+  color: #005A78 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  box-shadow: 1.5px 1.5px 0px #18181A !important;
+}
+
+.active-tag-chip button {
+  background: transparent !important;
+  border: none !important;
+  color: #005A78 !important;
+  cursor: pointer !important;
+  padding: 0 2px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+}
+
+.active-tag-chip button:hover {
+  color: #8E1C28 !important;
+}
+
 
 
 

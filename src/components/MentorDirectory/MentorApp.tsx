@@ -77,6 +77,42 @@ export const MentorApp: React.FC<MentorAppProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  // Deep-link auto-open via ?mentor=QUERY URL parameter (and on popstate)
+  useEffect(() => {
+    if (!mentors.length || typeof window === 'undefined') return;
+
+    const checkUrlParam = () => {
+      const params = new URLSearchParams(window.location.search);
+      const mentorParam = params.get('mentor') || params.get('m');
+      if (!mentorParam) return;
+
+      const q = mentorParam.trim().toLowerCase();
+      const targetMentor = mentors.find(m => {
+        const dName = m.displayName.toLowerCase();
+        const email = (m.email || '').toLowerCase();
+        const id = m.id.toLowerCase();
+        return dName.includes(q) || email.includes(q) || id.includes(q) || q.includes(dName);
+      });
+
+      if (targetMentor) {
+        setFilter(prev => ({
+          ...prev,
+          searchQuery: '',
+          selectedCourseCode: 'ALL',
+          selectedDepartment: 'ALL',
+          onlyLiveNow: false,
+          onlyCompatible: false
+        }));
+
+        setSelectedMentor(targetMentor);
+      }
+    };
+
+    checkUrlParam();
+    window.addEventListener('popstate', checkUrlParam);
+    return () => window.removeEventListener('popstate', checkUrlParam);
+  }, [mentors]);
+
   // Build active schedule time blocks for live mentor clash detection
   const userScheduleBlocks: ActiveUserBlock[] = useMemo(() => {
     const blocks: ActiveUserBlock[] = [];
