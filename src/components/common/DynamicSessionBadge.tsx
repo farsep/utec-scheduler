@@ -6,6 +6,11 @@ export interface DynamicSessionBadgeProps {
   number?: string | number;
   sessionGroup?: string;
   className?: string;
+  durationMinutes?: number;
+  isShort?: boolean;
+  isNarrow?: boolean;
+  forceFull?: boolean;
+  forceAbbr?: boolean;
 }
 
 export const DynamicSessionBadge: React.FC<DynamicSessionBadgeProps> = ({
@@ -13,21 +18,33 @@ export const DynamicSessionBadge: React.FC<DynamicSessionBadgeProps> = ({
   group,
   number,
   sessionGroup,
-  className = ''
+  className = '',
+  durationMinutes,
+  isShort,
+  isNarrow,
+  forceFull,
+  forceAbbr
 }) => {
   const raw = (sessionGroup || type || '').trim();
 
   let resolvedType = type;
-  let resolvedGroup = number !== undefined ? number : group;
+  let resolvedGroup = number !== undefined ? String(number) : group !== undefined ? String(group) : '';
 
-  if (resolvedGroup === undefined || resolvedGroup === null) {
-    // If raw is e.g. "TEORÍA 11" or "LAB 14" or "TEO 7" or "Laboratorio 2"
-    const match = raw.match(/^([a-zA-ZáéíóúÁÉÍÓÚñÑ]+)\s*(.*)$/);
-    if (match) {
-      resolvedType = match[1];
-      resolvedGroup = match[2] || undefined;
+  if (!resolvedGroup) {
+    // If raw is e.g. "TEO1", "LAB11", "TEORÍA 11", "LAB 14", "Teoría 1", "TEO 2"
+    // Match type name and trailing group number/letter
+    const matchWithNum = raw.match(/^([a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+?)\s*(\d+[a-zA-Z]?)$/);
+    if (matchWithNum) {
+      resolvedType = matchWithNum[1].trim();
+      resolvedGroup = matchWithNum[2].trim();
     } else {
-      resolvedType = raw;
+      const matchSimple = raw.match(/^([a-zA-ZáéíóúÁÉÍÓÚñÑ]+)\s*(.*)$/);
+      if (matchSimple) {
+        resolvedType = matchSimple[1].trim();
+        resolvedGroup = matchSimple[2].trim();
+      } else {
+        resolvedType = raw;
+      }
     }
   }
 
@@ -36,47 +53,61 @@ export const DynamicSessionBadge: React.FC<DynamicSessionBadgeProps> = ({
   const isVirtual = /vir/i.test(resolvedType);
   const isPract = /pr[áa]c/i.test(resolvedType);
 
-  const prefix = isLab
-    ? 'LAB'
-    : isTheory
-    ? 'TEO'
-    : isVirtual
-    ? 'VIR'
-    : isPract
-    ? 'PRÁC'
-    : resolvedType ? resolvedType.slice(0, 4).toUpperCase() : 'SES';
+  let fullLabel = '';
+  let abbrLabel = '';
+  let suffix = '';
 
-  const suffix = isLab
-    ? 'ORATORIO'
-    : isTheory
-    ? 'RÍA'
-    : isVirtual
-    ? 'TUAL'
-    : isPract
-    ? 'TICA'
-    : '';
+  if (isTheory) {
+    fullLabel = 'Teoría';
+    abbrLabel = 'Teo';
+    suffix = 'ría';
+  } else if (isLab) {
+    fullLabel = 'Laboratorio';
+    abbrLabel = 'Lab';
+    suffix = 'oratorio';
+  } else if (isPract) {
+    fullLabel = 'Práctica';
+    abbrLabel = 'Prác';
+    suffix = 'tica';
+  } else if (isVirtual) {
+    fullLabel = 'Virtual';
+    abbrLabel = 'Vir';
+    suffix = 'tual';
+  } else {
+    fullLabel = resolvedType || 'Sesión';
+    abbrLabel = resolvedType ? resolvedType.slice(0, 4) : 'Ses';
+    suffix = '';
+  }
 
-  const colorClasses = isLab
-    ? 'bg-[#DCEEE6] text-[#094D31] border-[#0D7A4E]/40 border-l-[#0D7A4E]'
-    : isTheory
-    ? 'bg-[#E0EBF5] text-[#005A78] border-[#00779E]/40 border-l-[#00779E]'
-    : isVirtual
-    ? 'bg-[#F5E8D6] text-[#804200] border-[#C44D00]/40 border-l-[#C44D00]'
-    : 'bg-[#DCD9D2] text-[#141416] border-[#18181A]/40 border-l-[#18181A]';
+  // Decision rule:
+  // "Que si es de 2 horas a mas diga completo "Teoria"/"Laboratorio" y si el espacio es muy pequeño su abreviacion "Teo"/"Lab""
+  const isSmallSpace = isShort || isNarrow || (durationMinutes !== undefined && durationMinutes < 110);
+  const isTwoHoursOrMore = durationMinutes !== undefined && durationMinutes >= 110;
+
+  let isFull = false;
+  if (forceFull) {
+    isFull = true;
+  } else if (forceAbbr) {
+    isFull = false;
+  } else if (isTwoHoursOrMore && !isNarrow && !isShort) {
+    isFull = true;
+  } else if (isSmallSpace) {
+    isFull = false;
+  } else {
+    // Default fallback when duration is not provided (e.g. detailed modal views where space permits)
+    isFull = true;
+  }
 
   return (
     <span
-      className={`session-type-badge dynamic-session-badge group/badge inline-flex items-center font-mono text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 border border-l-[3px] rounded-none transition-all duration-150 select-none ${colorClasses} ${className}`}
-      title={raw || `${prefix}${suffix} ${resolvedGroup || ''}`.trim()}
+      className={`prof-session-group-tag dynamic-session-badge ${className}`}
+      title={raw || `${fullLabel} ${resolvedGroup}`.trim()}
     >
-      <span className="session-prefix">{prefix}</span>
-      {suffix && (
-        <span className="session-suffix-expand inline-block max-w-0 overflow-hidden opacity-0 group-hover/badge:max-w-[72px] group-hover/badge:opacity-100 group-hover/card:max-w-[72px] group-hover/card:opacity-100 group-hover:max-w-[72px] group-hover:opacity-100 @[220px]:max-w-[72px] @[220px]:opacity-100 transition-all duration-200 ease-out whitespace-nowrap">
-          {suffix}
-        </span>
-      )}
-      {resolvedGroup !== undefined && resolvedGroup !== null && resolvedGroup !== '' && (
-        <span className="ml-1 font-mono font-semibold">{resolvedGroup}</span>
+      <span className="session-prefix">
+        {isFull ? fullLabel : abbrLabel}
+      </span>
+      {resolvedGroup && (
+        <span className="session-group-num">&nbsp;{resolvedGroup}</span>
       )}
     </span>
   );

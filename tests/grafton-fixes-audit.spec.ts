@@ -32,6 +32,47 @@ test.describe('Grafton Swiss Concrete Fixes Audit', () => {
 
     expect(headerText).toContain('Pino Matos');
     expect(headerText).not.toContain('Espinoza Matos');
+
+    // In Jose Pino Matos's timetable (media_1794250950829_fc308faf.png), all classes are 2h (07-09, 11-13, 15-17)
+    // They must display full "Teoría" / "Laboratorio"
+    const pinoBadges = await modal.locator('.prof-session-footer .dynamic-session-badge').allInnerTexts();
+    expect(pinoBadges.length).toBeGreaterThan(0);
+    expect(pinoBadges.some(b => b.includes('Teoría') || b.includes('Laboratorio'))).toBe(true);
+    expect(pinoBadges.some(b => b.includes('TEO1') || b.includes('LAB11'))).toBe(false);
+  });
+
+  test('1B. Exact Timetable Verification for Cerda Hernandez, Jose Javier', async ({ page }) => {
+    await page.goto('/profesores?profesor=Cerda%20Hernandez%2C%20Jose%20Javier');
+    await page.waitForLoadState('networkidle');
+
+    const modal = page.locator('.prof-modal');
+    await expect(modal).toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(400);
+
+    // Capture screenshot matching fc308faf.png
+    await page.screenshot({ path: 'audit-screenshots/prof-cerda-hernandez-2h-badges.png' });
+
+    // Assert that badges for 2h sessions display complete "Teoría"
+    const badges = await modal.locator('.prof-session-footer .dynamic-session-badge').allInnerTexts();
+    expect(badges.length).toBeGreaterThan(0);
+    expect(badges.some(b => b.includes('Teoría') && b.includes('1'))).toBe(true);
+  });
+
+  test('1C. 2-Hour Laboratory Session Displays Complete "Laboratorio" (Romero Calla)', async ({ page }) => {
+    await page.goto('/profesores?profesor=Romero%20Calla%2C%20Luciano%20Arnaldo');
+    await page.waitForLoadState('networkidle');
+
+    const modal = page.locator('.prof-modal');
+    await expect(modal).toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(400);
+
+    // Capture screenshot of Luciano Romero Calla's timetable
+    await page.screenshot({ path: 'audit-screenshots/prof-romero-calla-lab-badges.png' });
+
+    // Assert that 2h laboratory session displays complete "Laboratorio"
+    const badges = await modal.locator('.prof-session-footer .dynamic-session-badge').allInnerTexts();
+    expect(badges.length).toBeGreaterThan(0);
+    expect(badges.some(b => b.includes('Laboratorio'))).toBe(true);
   });
 
   test('2. Time Picker Floating Popover Test on /aulas', async ({ page }) => {
@@ -148,10 +189,48 @@ test.describe('Grafton Swiss Concrete Fixes Audit', () => {
     const sessionBadges = modal.locator('.dynamic-session-badge, .prof-session-group-tag');
     await expect(sessionBadges.first()).toBeVisible({ timeout: 5000 });
 
-    // In compact/default state, session-prefix is TEO or LAB
+    // In Aaron Nuñez's timetable:
+    // Short 1h sessions display abbreviated "Teo", while 2h+ sessions display full "Teoría" / "Laboratorio"
     const prefixes = await modal.locator('.dynamic-session-badge .session-prefix').allInnerTexts();
     expect(prefixes.length).toBeGreaterThan(0);
-    expect(prefixes.some(p => p === 'TEO')).toBe(true);
+    expect(prefixes.some(p => p.toUpperCase() === 'TEO' || p === 'Teo')).toBe(true);
+    expect(prefixes.some(p => p === 'Teoría' || p === 'Laboratorio')).toBe(true);
+
+    // Verify badge styling matches location tag styling (border, background, font-size, 0px radius)
+    const sessionBadge = modal.locator('.dynamic-session-badge').first();
+    const roomTag = modal.locator('.prof-session-room-tag').first();
+    await expect(sessionBadge).toBeVisible();
+    await expect(roomTag).toBeVisible();
+
+    const badgeStyles = await sessionBadge.evaluate(el => {
+      const cs = window.getComputedStyle(el);
+      return {
+        borderRadius: cs.borderRadius,
+        borderWidth: cs.borderWidth,
+        borderStyle: cs.borderStyle,
+        borderColor: cs.borderColor,
+        backgroundColor: cs.backgroundColor,
+        fontSize: cs.fontSize,
+      };
+    });
+
+    const roomStyles = await roomTag.evaluate(el => {
+      const cs = window.getComputedStyle(el);
+      return {
+        borderRadius: cs.borderRadius,
+        borderWidth: cs.borderWidth,
+        borderStyle: cs.borderStyle,
+        borderColor: cs.borderColor,
+        backgroundColor: cs.backgroundColor,
+        fontSize: cs.fontSize,
+      };
+    });
+
+    expect(badgeStyles.borderRadius).toBe('0px');
+    expect(badgeStyles.borderRadius).toBe(roomStyles.borderRadius);
+    expect(badgeStyles.borderColor).toBe(roomStyles.borderColor);
+    expect(badgeStyles.backgroundColor).toBe(roomStyles.backgroundColor);
+    expect(badgeStyles.fontSize).toBe(roomStyles.fontSize);
 
     // Capture screenshot
     await page.screenshot({ path: 'audit-screenshots/prof-standardized-teo-lab.png' });
@@ -250,32 +329,34 @@ test.describe('Grafton Swiss Concrete Fixes Audit', () => {
     expect(resetStyles.borderRadius).toBe('0px');
   });
 
-  test('8. Dynamic Symmetrical TEO <-> TEORÍA and LAB <-> LABORATORIO Expansion', async ({ page }) => {
+  test('8. Static Session Labels: Teo and Lab Do NOT Expand on Hover', async ({ page }) => {
     await page.goto('/profesores?profesor=Aaron%20Nu%C3%B1ez%20del%20Prado%20Tavara');
     await page.waitForLoadState('networkidle');
 
     const modal = page.locator('.prof-modal');
     await expect(modal).toBeVisible({ timeout: 10000 });
 
-    // Find a dynamic session badge
-    const badge = modal.locator('.dynamic-session-badge').first();
-    await expect(badge).toBeVisible({ timeout: 5000 });
+    // Find a dynamic session badge with exact prefix "Teo"
+    const teoBadge = modal.locator('.dynamic-session-badge').filter({
+      has: page.locator('.session-prefix', { hasText: /^Teo$/ })
+    }).first();
+    await expect(teoBadge).toBeVisible({ timeout: 5000 });
+
+    const textBefore = (await teoBadge.innerText()).trim();
 
     // Hover over the badge
-    await badge.hover();
+    await teoBadge.hover();
     await page.waitForTimeout(250);
 
-    // Verify suffix expands
-    const suffix = badge.locator('.session-suffix-expand');
-    if (await suffix.count() > 0) {
-      const suffixStyles = await suffix.evaluate((el) => {
-        const computed = window.getComputedStyle(el);
-        return {
-          opacity: parseFloat(computed.opacity) || 0,
-        };
-      });
-      expect(suffixStyles.opacity).toBeGreaterThan(0);
-    }
+    const textAfter = (await teoBadge.innerText()).trim();
+
+    // Text must remain strictly identical: "Teo" does not turn into "Teoría" on hover
+    expect(textAfter).toBe(textBefore);
+    expect(textAfter).not.toContain('Teoría');
+
+    // Suffix expand element must not exist
+    const suffixCount = await teoBadge.locator('.session-suffix-expand').count();
+    expect(suffixCount).toBe(0);
   });
 
   test('9. Empty State Card is Horizontally Centered in /profesores ("buenerin")', async ({ page }) => {

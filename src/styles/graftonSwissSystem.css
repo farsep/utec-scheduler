@@ -2414,13 +2414,24 @@
 }
 
 .prof-session-group-tag,
+.dynamic-session-badge,
 .prof-session-room-tag,
 .prof-session-duration-tag,
 .prof-session-modality-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 0.64rem !important;
+  font-weight: 700 !important;
   background: rgba(255, 255, 255, 0.72) !important;
   border: 1px solid #006699 !important;
   color: #0A2E46 !important;
   border-radius: 0px !important;
+  padding: 1px 5px !important;
+  white-space: nowrap !important;
+  line-height: normal !important;
+  box-sizing: border-box !important;
 }
 
 .prof-course-detail-card,
@@ -3162,28 +3173,26 @@ body {
 
 /* Dynamic Symmetrical Session Badge (TEO ↔ TEORÍA & LAB ↔ LABORATORIO) */
 .dynamic-session-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 0.64rem !important;
+  font-weight: 700 !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid #006699 !important;
+  color: #0A2E46 !important;
   border-radius: 0px !important;
+  padding: 1px 5px !important;
+  white-space: nowrap !important;
+  line-height: normal !important;
+  box-sizing: border-box !important;
+  vertical-align: middle !important;
 }
 
-.dynamic-session-badge .session-suffix-expand {
-  display: inline-block;
-  max-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  opacity: 0;
-  transition: max-width 0.2s ease-out, opacity 0.2s ease-out;
-  vertical-align: bottom;
-}
-
-.dynamic-session-badge:hover .session-suffix-expand,
-.group\/badge:hover .session-suffix-expand,
-.prof-session-block:hover .session-suffix-expand,
-.timetable-block:hover .session-suffix-expand,
-.course-timetable-block:hover .session-suffix-expand,
-.schedule-block:hover .session-suffix-expand,
-.prof-session-card:hover .session-suffix-expand {
-  max-width: 72px !important;
-  opacity: 1 !important;
+.dynamic-session-badge .session-group-num {
+  font-weight: 700 !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
 }
 
 /* Live quick button styling across /cursos, /mentores, /profesores */
