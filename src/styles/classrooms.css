@@ -394,9 +394,9 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 10px 16px;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  border-radius: var(--radius-md);
+  background: #E8E6DF;
+  border: 1.5px solid #18181A;
+  border-radius: 0px;
   margin-top: -6px;
   margin-bottom: 2px;
 }
@@ -411,42 +411,44 @@
 .live-status-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: 0px;
   flex-shrink: 0;
 }
 
 .live-status-dot--pulse {
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
-  animation: pulse-dot 1.5s infinite;
+  background: #0D7A4E;
 }
 
 .live-status-dot--simulated {
-  background: #f59e0b;
-  box-shadow: 0 0 8px #f59e0b;
+  background: #C44D00;
 }
 
 .live-time-title {
   font-size: 0.82rem;
-  color: var(--text-secondary);
-  font-weight: 600;
+  color: #5A5852;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .live-time-badge {
-  font-family: var(--font-heading);
-  font-size: 1.05rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
   font-weight: 800;
-  color: #34d399;
-  background: rgba(16, 185, 129, 0.15);
+  color: #141416;
+  background: #DCD9D2;
+  border: 1px solid #18181A;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 0px;
   letter-spacing: -0.2px;
 }
 
 .live-day-tag {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #5A5852;
+  font-weight: 700;
 }
 
 .live-time-actions {
@@ -457,19 +459,20 @@
 
 .btn-time-step {
   padding: 4px 10px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--text-primary);
+  border-radius: 0px;
+  background: #F2F0EC;
+  border: 1px solid #18181A;
+  color: #141416;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 120ms ease;
 }
 
 .btn-time-step:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+  background: #18181A;
+  color: #F2F0EC;
 }
 
 .live-time-input-wrap {
@@ -478,41 +481,43 @@
 }
 
 .live-time-picker {
-  background: rgba(22, 30, 46, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-  color: #ffffff;
+  background: #F2F0EC;
+  border: 1px solid #18181A;
+  border-radius: 0px;
+  color: #141416;
   padding: 3px 8px;
   font-size: 0.82rem;
-  font-family: inherit;
+  font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
   outline: none;
   cursor: pointer;
 }
 
 .live-time-picker:focus {
-  border-color: var(--accent-emerald);
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  border-color: #00779E;
+  box-shadow: 2px 2px 0px rgba(0, 119, 158, 0.2);
 }
 
 .btn-reset-realtime {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  color: #fca5a5;
+  padding: 6px 12px;
+  border-radius: 0px;
+  background: #F2F0EC;
+  border: 1px solid #18181A;
+  color: #D9381E;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.12);
+  transition: all 120ms ease;
 }
 
 .btn-reset-realtime:hover {
-  background: rgba(239, 68, 68, 0.25);
-  color: #ffffff;
+  background: #D9381E;
+  color: #FFFFFF;
 }
 
 /* Controls Grid */
@@ -1285,21 +1290,28 @@
 }
 
 .btn-view-schedule {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: transparent;
-  border: none;
-  color: var(--accent-primary);
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform var(--transition-fast);
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 12px !important;
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.16) !important;
+  transition: background-color 120ms ease, transform 120ms ease !important;
+  cursor: pointer !important;
 }
 
 .btn-view-schedule:hover {
-  transform: translateX(3px);
-  color: #60a5fa;
+  background-color: #00779E !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) !important;
 }
 
 /* Occupied Section Accordion */
@@ -2327,7 +2339,7 @@
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
-    border-radius: 12px;
+    border-radius: 0px;
   }
 
   .live-time-info {
@@ -2342,6 +2354,7 @@
   .live-time-badge {
     font-size: 0.95rem;
     padding: 2px 7px;
+    border-radius: 0px;
   }
 
   .live-time-actions {
@@ -2360,7 +2373,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
+    border-radius: 0px;
   }
 
   .live-time-input-wrap {
@@ -2374,7 +2387,7 @@
     text-align: center;
     font-size: 1rem;
     font-weight: 700;
-    border-radius: 8px;
+    border-radius: 0px;
   }
 
   .btn-reset-realtime {
@@ -2383,6 +2396,7 @@
     min-height: 36px;
     font-size: 0.78rem;
     margin-top: 4px;
+    border-radius: 0px;
     border-radius: 8px;
   }
 

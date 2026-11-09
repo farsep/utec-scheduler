@@ -44,15 +44,24 @@ export const ClassroomTimeline: React.FC<ClassroomTimelineProps> = React.memo(({
           );
 
           if (occupiedBlock) {
+            const prevSlotStart = (hour - 1) * 60;
+            const prevSlotEnd = hour * 60;
+            const isFirstHourOfBlock = !availability.occupiedBlocksToday.some(
+              b => b.session.courseCode === occupiedBlock.session.courseCode &&
+                   Math.max(b.startMinutes, prevSlotStart) < Math.min(b.endMinutes, prevSlotEnd)
+            );
+
             return (
               <div
                 key={hour}
                 className="swiss-hour-cell swiss-hour-cell--occupied"
                 title={`${hourLabel} · Ocupada: ${occupiedBlock.session.courseCode} · ${occupiedBlock.session.courseName} (${occupiedBlock.startTime} - ${occupiedBlock.endTime})`}
               >
-                <span className="swiss-hour-cell-code">
-                  {occupiedBlock.session.courseCode}
-                </span>
+                {isFirstHourOfBlock && (
+                  <span className="swiss-hour-cell-code">
+                    {occupiedBlock.session.courseCode}
+                  </span>
+                )}
               </div>
             );
           }

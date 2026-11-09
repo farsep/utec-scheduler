@@ -572,3 +572,122 @@ export function enrichCoursesWithIntranetData(courses: Course[], intranetClassro
     })
   }));
 }
+
+/**
+ * Normalizes text for deterministic canonical professor matching:
+ * decomposes diacritics, lowercase, trims spaces.
+ */
+export function normalizeText(str: string): string {
+  return (str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Splits normalized text into whole alphanumeric words.
+ */
+export function getWords(str: string): string[] {
+  return normalizeText(str)
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+}
+
+/**
+ * 4-Tier Deterministic Canonical Professor Resolver:
+ * NEVER matches substrings inside longer words (e.g. prevents "espinoza" matching "pino").
+ */
+export function resolveCanonicalProfessor<
+  T extends {
+    rawName?: string;
+    name?: string;
+    nombre?: string;
+    displayName?: string;
+    lastNameFirst?: string;
+    email?: string;
+    id?: string;
+  }
+>(query: string, professors: T[]): T | undefined {
+  if (!query || !professors?.length) return undefined;
+  const decoded = decodeURIComponent(query).trim();
+  const qNorm = normalizeText(decoded);
+  const qNoComma = qNorm.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // If query is "Lastnames, Firstnames" (e.g. "Pino Matos, Jose"), also build "jose pino matos"
+  let qReordered = qNoComma;
+  if (decoded.includes(',')) {
+    const [last, first] = decoded.split(',').map((s) => normalizeText(s));
+    if (first && last) qReordered = `${first} ${last}`.replace(/\s+/g, ' ').trim();
+  }
+
+  const getProfStrings = (p: T) => {
+    const raw = p.rawName || p.nombre || p.name || p.displayName || '';
+    const normRaw = normalizeText(raw);
+    const normNoComma = normRaw.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+    let reordered = normNoComma;
+    if (raw.includes(',')) {
+      const [l, f] = raw.split(',').map((s) => normalizeText(s));
+      if (f && l) reordered = `${f} ${l}`.replace(/\s+/g, ' ').trim();
+    }
+    const dName = normalizeText(p.displayName || '');
+    const lName = normalizeText(p.lastNameFirst || '');
+    const id = normalizeText(p.id || '');
+    const emailUser = normalizeText((p.email || '').split('@')[0]);
+    // Collect all unique words across all name variations
+    const allWords = Array.from(
+      new Set([
+        ...getWords(raw),
+        ...getWords(p.displayName || ''),
+        ...getWords(p.lastNameFirst || '')
+      ])
+    );
+    return { normRaw, normNoComma, reordered, dName, lName, id, emailUser, words: allWords };
+  };
+
+  // TIER 1: Exact match on raw name, comma-stripped name, reordered "First Last" name, displayName, lastNameFirst, id or email prefix
+  const tier1 = professors.find((p) => {
+    const s = getProfStrings(p);
+    return (
+      s.normRaw === qNorm ||
+      s.normNoComma === qNoComma ||
+      s.reordered === qNoComma ||
+      s.normNoComma === qReordered ||
+      s.reordered === qReordered ||
+      s.dName === qNorm ||
+      s.dName === qNoComma ||
+      s.dName === qReordered ||
+      s.lName === qNorm ||
+      s.lName === qNoComma ||
+      s.id === qNorm ||
+      (s.emailUser && s.emailUser === qNorm)
+    );
+  });
+  if (tier1) return tier1;
+
+  // TIER 2: Exact whole-word set equality (same exact words, zero extra words)
+  const qWords = getWords(decoded);
+  const tier2 = professors.find((p) => {
+    const pWords = getProfStrings(p).words;
+    return pWords.length === qWords.length && qWords.every((qw) => pWords.includes(qw));
+  });
+  if (tier2) return tier2;
+
+  // TIER 3: All query words match as COMPLETE WHOLE WORDS (never substring "pino" inside "espinoza"!)
+  // Sort by smallest word-count difference so "Pino Matos, Jose" (3 words) beats any 4-word name
+  const tier3Candidates = professors
+    .map((p) => ({ prof: p, words: getProfStrings(p).words }))
+    .filter(({ words }) => qWords.every((qw) => words.includes(qw)))
+    .sort((a, b) => a.words.length - b.words.length);
+
+  if (tier3Candidates.length > 0) return tier3Candidates[0].prof;
+
+  // TIER 4: Whole-word prefix match only if Tier 1-3 found nothing
+  const tier4Candidates = professors
+    .map((p) => ({ prof: p, words: getProfStrings(p).words }))
+    .filter(({ words }) => qWords.every((qw) => words.some((pw) => pw.startsWith(qw))))
+    .sort((a, b) => a.words.length - b.words.length);
+
+  return tier4Candidates[0]?.prof;
+}

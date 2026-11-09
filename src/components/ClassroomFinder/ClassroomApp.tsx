@@ -478,13 +478,13 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
                     </div>
 
                     <div className="campus-floor-chips">
-                      {groupRooms.slice(0, 12).map(item => {
+                      {groupRooms.map(item => {
                         const isFree = item.isAvailableForSearch;
                         return (
                           <button
                             key={item.classroom.id}
                             type="button"
-                            className={`campus-room-chip ${isFree ? 'is-free' : 'is-busy'}`}
+                            className={`campus-room-chip ${isFree ? 'is-free' : 'is-busy'} cursor-pointer hover:border-[#18181A] hover:shadow-[2px_2px_0px_#18181A] transition-all`}
                             onClick={() => handleOpenDetail(item.classroom)}
                             title={`${item.classroom.displayName} — Clic para ver horario semanal`}
                           >
