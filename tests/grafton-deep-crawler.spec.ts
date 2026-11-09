@@ -420,5 +420,135 @@ test.describe('SUPREME SELF-HEALING DEEP MODAL & CALENDAR GRID CRAWLER (BUGS 1 -
 
     await assertZeroDarkContainersOrUnreadableText(page, '.prof-modal');
   });
+
+  test('LEVEL-2 NESTED MODAL: Solicitud de Asistencia como Visitante / Oyente (Pedir Permiso) Grafton Swiss Audit', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/cursos', { waitUntil: 'networkidle' });
+
+    // Switch to Catálogo Ofertado 2026-2 tab
+    const catalogBtn = page.getByRole('button', { name: /Catálogo Ofertado 2026-2/i }).first();
+    await expect(catalogBtn).toBeVisible();
+    await catalogBtn.click();
+    await page.waitForTimeout(300);
+
+    // Open Level-1 Course Modal
+    const detailBtn = page.locator('.course-view-detail-btn').first();
+    await expect(detailBtn).toBeVisible();
+    await detailBtn.click();
+    await page.waitForTimeout(300);
+
+    const courseModal = page.locator('.course-modal-dialog');
+    await expect(courseModal).toBeVisible();
+
+    // Click "Pedir Permiso" button to open Level-2 Visitor Email Modal
+    const pedirPermisoBtn = page.locator('button:has-text("Pedir Permiso")').first();
+    await expect(pedirPermisoBtn).toBeVisible();
+    await pedirPermisoBtn.click();
+    await page.waitForTimeout(400);
+
+    const visitorModal = page.locator('.visitor-modal-dialog');
+    await expect(visitorModal).toBeVisible();
+
+    // Capture screenshot
+    await page.screenshot({ path: 'audit-screenshots/modal-oyente-pedir-permiso.png' });
+
+    // Evaluate styles and contents inside Level-2 modal
+    const auditResult = await page.evaluate(() => {
+      const dialog = document.querySelector('.visitor-modal-dialog');
+      if (!dialog) return { found: false };
+
+      const parseRgb = (str: string): [number, number, number] => {
+        const m = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (!m) return [0, 0, 0];
+        return [Number(m[1]), Number(m[2]), Number(m[3])];
+      };
+
+      const relLuminance = ([r, g, b]: [number, number, number]) => {
+        const toLinear = (c: number) => {
+          const s = c / 255;
+          return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+      };
+
+      const emailPreview = document.querySelector('.visitor-email-preview-container');
+      const emailHeader = document.querySelector('.email-preview-header');
+      const emailBody = document.querySelector('.email-preview-body');
+      const emailText = document.querySelector('.email-body-text');
+      const profCard = document.querySelector('.visitor-prof-card');
+      const profAvatar = document.querySelector('.visitor-prof-avatar');
+      const adviceBanner = document.querySelector('.visitor-advice-alert');
+      const iconBadge = document.querySelector('.visitor-modal-icon-badge');
+      const codeBadge = document.querySelector('.visitor-course-code-badge');
+      const copyBtn = document.querySelector('.visitor-copy-btn');
+      const sendBtn = document.querySelector('.visitor-send-btn');
+      const selectTrigger = document.querySelector('.visitor-meta-section .custom-select-trigger');
+
+      // Check all elements for 0px border radius
+      const allElements = [dialog, ...Array.from(dialog.querySelectorAll('*'))];
+      const nonZeroRadiusEls: string[] = [];
+      for (const el of allElements) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) continue;
+        const r = getComputedStyle(el).borderRadius;
+        if (r && r !== '0px') {
+          nonZeroRadiusEls.push(`${el.tagName.toLowerCase()}.${el.className} (r=${r})`);
+        }
+      }
+
+      // Check email body background & text luminance
+      const bodyBg = emailBody ? getComputedStyle(emailBody).backgroundColor : '';
+      const textCol = emailText ? getComputedStyle(emailText).color : '';
+      const bodyBgLum = relLuminance(parseRgb(bodyBg));
+      const textColLum = relLuminance(parseRgb(textCol));
+
+      return {
+        found: true,
+        dialogBg: getComputedStyle(dialog).backgroundColor,
+        dialogRadius: getComputedStyle(dialog).borderRadius,
+        nonZeroRadiusEls,
+        bodyBg,
+        bodyBgLum,
+        textCol,
+        textColLum,
+        emailHeaderBg: emailHeader ? getComputedStyle(emailHeader).backgroundColor : '',
+        profCardBg: profCard ? getComputedStyle(profCard).backgroundColor : '',
+        profAvatarWidth: profAvatar ? getComputedStyle(profAvatar).width : '',
+        profAvatarHeight: profAvatar ? getComputedStyle(profAvatar).height : '',
+        adviceBannerBg: adviceBanner ? getComputedStyle(adviceBanner).backgroundColor : '',
+        iconBadgeWidth: iconBadge ? getComputedStyle(iconBadge).width : '',
+        iconBadgeHeight: iconBadge ? getComputedStyle(iconBadge).height : '',
+        codeBadgeBg: codeBadge ? getComputedStyle(codeBadge).backgroundColor : '',
+        copyBtnRadius: copyBtn ? getComputedStyle(copyBtn).borderRadius : '',
+        sendBtnRadius: sendBtn ? getComputedStyle(sendBtn).borderRadius : '',
+        triggerText: selectTrigger ? selectTrigger.textContent || '' : '',
+      };
+    });
+
+    expect(auditResult.found).toBe(true);
+    // All elements strictly 0px
+    expect(auditResult.nonZeroRadiusEls).toEqual([]);
+    expect(auditResult.dialogRadius).toBe('0px');
+
+    // Email body has light paper background (lum > 0.85) and dark text (lum < 0.20)
+    expect(auditResult.bodyBgLum).toBeGreaterThan(0.85);
+    expect(auditResult.textColLum).toBeLessThan(0.2);
+
+    // Section dropdown trigger text contains separator before Sección
+    if (auditResult.triggerText.includes('Sección')) {
+      expect(auditResult.triggerText).toMatch(/(^Sección|·\s*Sección|\s+Sección)/);
+      expect(auditResult.triggerText).not.toMatch(/[a-zA-ZáéíóúÁÉÍÓÚ]Sección/); // Never glued without space/separator
+    }
+
+    // Modal Header and Badges
+    expect(auditResult.profAvatarWidth).toBe('36px');
+    expect(auditResult.profAvatarHeight).toBe('36px');
+    expect(auditResult.iconBadgeWidth).toBe('36px');
+    expect(auditResult.iconBadgeHeight).toBe('36px');
+    expect(auditResult.copyBtnRadius).toBe('0px');
+    expect(auditResult.sendBtnRadius).toBe('0px');
+  });
 });
 

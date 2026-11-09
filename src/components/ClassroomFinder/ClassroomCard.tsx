@@ -33,6 +33,7 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
 
   return (
     <div
+      id={`room-card-${classroom.code}`}
       className={`classroom-card ${isAvailableForSearch ? 'classroom-card--available' : 'classroom-card--busy'}`}
       onClick={() => onOpenDetail(classroom)}
     >
@@ -105,7 +106,15 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
               </div>
               {nextSession && (
                 <div className="info-sub">
-                  Próxima clase: <span className="highlight-text">{nextSession.courseCode} · {nextSession.courseName}</span>
+                  Próxima clase:{' '}
+                  <a
+                    href={`/cursos?curso=${nextSession.courseCode}`}
+                    onClick={e => e.stopPropagation()}
+                    className="highlight-text course-entity-link"
+                    title={`Ver curso ${nextSession.courseCode}`}
+                  >
+                    {nextSession.courseCode} · {nextSession.courseName}
+                  </a>
                 </div>
               )}
             </div>
@@ -119,7 +128,15 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
               </div>
               {currentSession && (
                 <div className="info-sub">
-                  Clase actual: <span className="highlight-text">{currentSession.courseCode} · {currentSession.courseName}</span>
+                  Clase actual:{' '}
+                  <a
+                    href={`/cursos?curso=${currentSession.courseCode}`}
+                    onClick={e => e.stopPropagation()}
+                    className="highlight-text course-entity-link"
+                    title={`Ver curso ${currentSession.courseCode}`}
+                  >
+                    {currentSession.courseCode} · {currentSession.courseName}
+                  </a>
                 </div>
               )}
             </div>

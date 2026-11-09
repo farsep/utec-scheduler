@@ -6,7 +6,8 @@ import {
   evaluateClassroom,
   getCurrentDayAndMinutes,
   ALL_DAYS,
-  ROOM_TYPE_LABELS
+  ROOM_TYPE_LABELS,
+  resolveCanonicalRoom
 } from '../../utils/classroomUtils';
 import { minutesToTime } from '../../utils/scheduleUtils';
 import { getClassroomsCatalog, getSynchronousCachedClassrooms } from '../../utils/masterDataLoader';
@@ -178,6 +179,54 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
   useEffect(() => {
     loadMasterSchedule();
   }, [loadMasterSchedule]);
+
+  // Deep-link auto-open via ?aula=CODE URL parameter (and on popstate)
+  useEffect(() => {
+    if (!classrooms.length || typeof window === 'undefined') return;
+
+    const checkUrlParam = () => {
+      const params = new URLSearchParams(window.location.search);
+      const aulaParam = params.get('aula') || params.get('search');
+      if (!aulaParam) return;
+
+      const canonical = resolveCanonicalRoom(aulaParam);
+      const targetRoom = classrooms.find(
+        c => c.code.toUpperCase() === canonical.code.toUpperCase() ||
+             c.displayName.toLowerCase() === canonical.displayName.toLowerCase() ||
+             c.code.toUpperCase() === aulaParam.toUpperCase()
+      );
+
+      if (targetRoom) {
+        // Reset restrictive filters so the requested room is displayed
+        setFilter(prev => {
+          const updates: Partial<ClassroomFilterState> = {};
+          if (prev.selectedFloor !== 'ALL' && prev.selectedFloor !== targetRoom.floor) {
+            updates.selectedFloor = 'ALL';
+          }
+          if (prev.selectedType !== 'ALL' && prev.selectedType !== targetRoom.type) {
+            updates.selectedType = 'ALL';
+          }
+          if (prev.searchQuery) {
+            updates.searchQuery = '';
+          }
+          return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
+        });
+
+        setSelectedRoom(targetRoom);
+
+        setTimeout(() => {
+          const el = document.getElementById(`room-card-${targetRoom.code}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 120);
+      }
+    };
+
+    checkUrlParam();
+    window.addEventListener('popstate', checkUrlParam);
+    return () => window.removeEventListener('popstate', checkUrlParam);
+  }, [classrooms]);
 
   const handleFilterChange = (updates: Partial<ClassroomFilterState>) => {
     setFilter(prev => ({ ...prev, ...updates }));

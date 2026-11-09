@@ -871,20 +871,25 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 0px;
+  background-color: #FAF9F5;
+  border: 1.5px solid #18181A;
+  border-left: 3px solid #8E1C28;
+  color: #8E1C28;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  box-shadow: 2px 2px 0px #18181A;
+  transition: all 0.15s ease;
 }
 
 .btn-reset-filters:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.1);
+  background-color: #8E1C28;
+  color: #FFFFFF;
+  box-shadow: 3px 3px 0px #18181A;
+  transform: translate(-1px, -1px);
 }
 
 /* Results Section Header */

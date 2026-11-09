@@ -3,6 +3,7 @@ import type { DayOfWeek } from '../../types/schedule';
 import type { MentorInfo } from '../../types/mentor';
 import { evaluateMentorLiveStatus } from '../../utils/mentorUtils';
 import { getGraftonPigment } from '../../utils/graftonPigments';
+import { resolveCanonicalRoom } from '../../utils/classroomUtils';
 import {
   Clock,
   Building2,
@@ -100,15 +101,18 @@ export const MentorCard: React.FC<MentorCardProps> = ({
         {mentor.courses.map(course => {
           const coursePigment = getGraftonPigment(course.code);
           return (
-            <span
+            <a
               key={course.code}
-              className="mentor-course-badge"
+              href={`/cursos?curso=${course.code}`}
+              onClick={e => e.stopPropagation()}
+              className="mentor-course-badge course-entity-link"
               style={{ borderLeftColor: coursePigment.bar }}
+              title={`Ver curso ${course.code}`}
             >
               <span className="mentor-course-code">{course.code}</span>
               <span className="mentor-course-sep">·</span>
               <span className="mentor-course-name">{course.name}</span>
-            </span>
+            </a>
           );
         })}
       </div>
@@ -193,7 +197,19 @@ export const MentorCard: React.FC<MentorCardProps> = ({
                 <span className="session-day-name">{session.day}</span>
                 <span className="session-hours">{session.timeDisplay}</span>
                 <span className="session-room-inline">
-                  · {session.modality === 'Presencial' ? session.primaryRoom : 'Virtual'}
+                  ·{' '}
+                  {session.modality === 'Presencial' ? (
+                    <a
+                      href={`/aulas?aula=${resolveCanonicalRoom(session.primaryRoom).code}`}
+                      onClick={e => e.stopPropagation()}
+                      className="room-entity-link"
+                      title={`Ver disponibilidad de ${resolveCanonicalRoom(session.primaryRoom).displayName}`}
+                    >
+                      {resolveCanonicalRoom(session.primaryRoom).code}
+                    </a>
+                  ) : (
+                    'Virtual'
+                  )}
                 </span>
               </div>
 

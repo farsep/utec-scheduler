@@ -3112,10 +3112,8 @@
     grid-template-columns: 1fr 1.15fr;
     gap: 8px;
     padding: 0.65rem 0.85rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
-    background: rgba(11, 15, 25, 0.96);
-
-
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #EAE8E3;
+    border-top: 1px solid #18181A;
     position: relative;
     z-index: 2500;
   }

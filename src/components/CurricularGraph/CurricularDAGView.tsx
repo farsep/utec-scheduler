@@ -67,7 +67,26 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
   offeredCourseCodes = new Set(),
   onSelectCourseForSchedule,
 }) => {
-  const [subMode, setSubMode] = useState<'dag' | 'catalog'>('dag');
+  const [subMode, setSubMode] = useState<'dag' | 'catalog'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('curso') || params.get('c')) return 'catalog';
+    }
+    return 'dag';
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const checkCursoParam = () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('curso') || params.get('c')) {
+        setSubMode('catalog');
+      }
+    };
+    checkCursoParam();
+    window.addEventListener('popstate', checkCursoParam);
+    return () => window.removeEventListener('popstate', checkCursoParam);
+  }, []);
   const [selectedFaculty, setSelectedFaculty] = useState<'ALL' | FacultyId>('ALL');
   const [selectedCareerId, setSelectedCareerId] = useState<string>('ciencia-computacion');
   const [selectedCourseCode, setSelectedCourseCode] = useState<string>('CS1042');

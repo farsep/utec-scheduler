@@ -116,7 +116,7 @@ export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
 
   return (
     <div className="visitor-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="visitor-modal-dialog glass-card" onClick={e => e.stopPropagation()}>
+      <div className="visitor-modal-dialog" onClick={e => e.stopPropagation()}>
         {/* Modal Header */}
         <div className="visitor-modal-header">
           <div className="visitor-modal-title-group">
@@ -154,11 +154,13 @@ export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
               <CustomSelect
                 value={sectionNum}
                 onChange={val => setSectionNum(String(val))}
-                options={course.extendedSections.map(sec => ({
-                  value: sec.sectionNumber,
-                  label: `Sección ${sec.sectionNumber}`,
-                  badge: sec.sessions.map(s => s.day).join(', ')
-                }))}
+                options={course.extendedSections.map(sec => {
+                  const days = Array.from(new Set(sec.sessions.map(s => s.day))).filter(Boolean).join(', ');
+                  return {
+                    value: sec.sectionNumber,
+                    label: days ? `${days} · Sección ${sec.sectionNumber}` : `Sección ${sec.sectionNumber}`
+                  };
+                })}
                 size="sm"
                 ariaLabel="Seleccionar sección a auditar"
               />

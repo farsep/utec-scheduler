@@ -15,8 +15,8 @@
   --border-hairline: #C6C3BB; /* 1px structural joints */
   --border-strong: #18181A;   /* 2px solid top architectural beam on every card */
   --text-primary: #141416;
-  --text-secondary: #4A4946;
-  --text-muted: #787670;
+  --text-secondary: #3A3936;
+  --text-muted: #5A5852;
   --accent-primary: #00779E;  /* UTEC Technical Signal Cyan */
   --accent-soft: rgba(0, 119, 158, 0.12);
   --status-ok: #0D7A4E;       /* No-clash / Passed emerald */

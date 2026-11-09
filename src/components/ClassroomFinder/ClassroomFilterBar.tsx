@@ -405,11 +405,11 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
         {/* Reset button */}
         <button
           type="button"
-          className="btn-reset-filters"
+          className="prof-reset-btn btn-reset-filters"
           onClick={onResetFilters}
           title="Restablecer filtros a valores predeterminados"
         >
-          <RotateCcw size={14} />
+          <RotateCcw size={13} />
           <span>Restablecer</span>
         </button>
       </div>

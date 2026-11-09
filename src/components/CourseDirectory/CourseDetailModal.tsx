@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { CourseExtendedInfo } from '../../types/courseDirectory';
-import { DAY_LABELS } from '../../utils/classroomUtils';
+import { DAY_LABELS, resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { formatProfessorName } from '../../utils/professorUtils';
 import {
   generateIcsForVisitorSessions,
@@ -425,11 +425,11 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                             <div className="session-pill-location-row">
                               <MapPin size={14} className="text-emerald" />
                               <a
-                                href={`/aulas?search=${encodeURIComponent(sess.roomCode || sess.roomDisplayName)}`}
-                                className="session-room-link"
-                                title="Ver ocupación y mapa de este aula en Buscador de Aulas"
+                                href={`/aulas?aula=${resolveCanonicalRoom(sess.roomCode || sess.roomDisplayName).code}`}
+                                className="session-room-link room-entity-link"
+                                title="Ver ocupación y disponibilidad de este aula en Aulas Libres"
                               >
-                                {sess.roomDisplayName}
+                                {resolveCanonicalRoom(sess.roomCode || sess.roomDisplayName).displayName}
                                 <ExternalLink size={11} className="inline-ext-icon" />
                               </a>
                               {sess.floor > 1 && (
@@ -441,8 +441,8 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                               <GraduationCap size={14} className="text-purple" />
                               {formattedProf ? (
                                 <a
-                                  href={`/profesores?search=${encodeURIComponent(sess.professor)}`}
-                                  className="session-prof-link"
+                                  href={`/profesores?profesor=${encodeURIComponent(sess.professor)}`}
+                                  className="session-prof-link prof-entity-link"
                                   title="Ver perfil del docente en el Directorio"
                                 >
                                   {formattedProf}

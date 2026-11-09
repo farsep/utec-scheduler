@@ -133,6 +133,39 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
     loadMasterCourses();
   }, [loadMasterCourses]);
 
+  // Deep-link auto-open via ?curso=CODE URL parameter (and on popstate)
+  useEffect(() => {
+    if (!courses.length || typeof window === 'undefined') return;
+
+    const checkUrlParam = () => {
+      const params = new URLSearchParams(window.location.search);
+      const cursoParam = params.get('curso') || params.get('c');
+      if (!cursoParam) return;
+
+      const norm = cursoParam.trim().toUpperCase();
+      const targetCourse = courses.find(
+        c => c.code.toUpperCase() === norm ||
+             c.name.toLowerCase().includes(cursoParam.trim().toLowerCase())
+      );
+
+      if (targetCourse) {
+        setFilter(prev => ({
+          ...prev,
+          searchQuery: '',
+          selectedDepartment: 'ALL',
+          onlyLiveNow: false,
+          onlyVisitor: false
+        }));
+
+        setSelectedCourse(targetCourse);
+      }
+    };
+
+    checkUrlParam();
+    window.addEventListener('popstate', checkUrlParam);
+    return () => window.removeEventListener('popstate', checkUrlParam);
+  }, [courses]);
+
   const handleFilterChange = (updates: Partial<CourseFilterState>) => {
     setFilter(prev => ({ ...prev, ...updates }));
   };

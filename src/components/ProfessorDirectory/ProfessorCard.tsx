@@ -1,7 +1,7 @@
 import React, { useState, memo } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { ProfessorInfo } from '../../types/professor';
-import { ALL_DAYS } from '../../utils/classroomUtils';
+import { ALL_DAYS, resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { evaluateProfessorLiveStatus } from '../../utils/professorUtils';
 import { getGraftonPigment } from '../../utils/graftonPigments';
 import {
@@ -97,7 +97,22 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
             <div className="live-text-group">
               <strong>● Dictando ahora:</strong>
               <span>
-                {currentSession.courseCode} en {currentSession.roomCode} ({currentSession.startTime} - {currentSession.endTime})
+                <a
+                  href={`/cursos?curso=${currentSession.courseCode}`}
+                  onClick={e => e.stopPropagation()}
+                  className="prof-entity-link"
+                >
+                  {currentSession.courseCode}
+                </a>{' '}
+                en{' '}
+                <a
+                  href={`/aulas?aula=${resolveCanonicalRoom(currentSession.roomCode).code}`}
+                  onClick={e => e.stopPropagation()}
+                  className="prof-entity-link"
+                >
+                  {resolveCanonicalRoom(currentSession.roomCode).code}
+                </a>{' '}
+                ({currentSession.startTime} - {currentSession.endTime})
               </span>
             </div>
           </div>
@@ -105,7 +120,14 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
           <div className="prof-status-next">
             <Clock size={13} />
             <span>
-              Próxima clase: <strong>{nextSession.day} {nextSession.startTime}</strong> en {nextSession.roomCode}
+              Próxima clase: <strong>{nextSession.day} {nextSession.startTime}</strong> en{' '}
+              <a
+                href={`/aulas?aula=${resolveCanonicalRoom(nextSession.roomCode).code}`}
+                onClick={e => e.stopPropagation()}
+                className="prof-entity-link"
+              >
+                {resolveCanonicalRoom(nextSession.roomCode).code}
+              </a>
             </span>
           </div>
         ) : (
@@ -193,9 +215,11 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
           {professor.courses.slice(0, 3).map(course => {
             const pigment = getGraftonPigment(course.code);
             return (
-              <span
+              <a
                 key={course.code}
-                className="prof-course-tag"
+                href={`/cursos?curso=${course.code}`}
+                onClick={e => e.stopPropagation()}
+                className="prof-course-tag prof-course-tag--link"
                 style={{
                   borderLeftColor: pigment.bar,
                 }}
@@ -204,7 +228,7 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
                 <strong className="prof-course-tag-code">{course.code}</strong>
                 <span className="prof-course-tag-sep">·</span>
                 <span className="prof-course-tag-name">{course.name}</span>
-              </span>
+              </a>
             );
           })}
           {professor.courses.length > 3 && (
@@ -220,12 +244,21 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
         <div className="prof-card-rooms-row">
           <span className="prof-card-section-label">AULAS:</span>
           <div className="prof-rooms-chips">
-            {professor.uniqueRooms.slice(0, 5).map(room => (
-              <span key={room} className="prof-room-tag">
-                <MapPin size={10} />
-                <span>{room}</span>
-              </span>
-            ))}
+            {professor.uniqueRooms.slice(0, 5).map(room => {
+              const canonical = resolveCanonicalRoom(room);
+              return (
+                <a
+                  key={room}
+                  href={`/aulas?aula=${canonical.code}`}
+                  onClick={e => e.stopPropagation()}
+                  className="prof-room-tag prof-room-tag--link"
+                  title={`Ver disponibilidad de ${canonical.displayName}`}
+                >
+                  <MapPin size={10} />
+                  <span>{canonical.code}</span>
+                </a>
+              );
+            })}
             {professor.uniqueRooms.length > 5 && (
               <span className="prof-room-tag prof-room-tag--more">
                 +{professor.uniqueRooms.length - 5}

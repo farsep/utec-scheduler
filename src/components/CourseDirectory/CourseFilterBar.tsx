@@ -227,12 +227,12 @@ export const CourseFilterBar: React.FC<CourseFilterBarProps> = ({
           {isFiltered && (
             <button
               type="button"
-              className="btn btn-secondary filter-reset-btn"
+              className="prof-reset-btn filter-reset-btn"
               onClick={handleReset}
               title="Restablecer todos los filtros"
             >
-              <RotateCcw size={14} />
-              <span>Limpiar</span>
+              <RotateCcw size={13} />
+              <span>Restablecer</span>
             </button>
           )}
         </div>

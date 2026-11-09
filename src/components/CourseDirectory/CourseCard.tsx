@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { CourseExtendedInfo } from '../../types/courseDirectory';
-import { ALL_DAYS, DAY_LABELS } from '../../utils/classroomUtils';
+import { ALL_DAYS, DAY_LABELS, resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { evaluateCourseLiveStatus } from '../../utils/courseDirectoryUtils';
 import {
   BookOpen,
@@ -135,7 +135,15 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
             <div className="live-text-group">
               <strong>● En clase ahora:</strong>
               <span>
-                Sec. {liveSession.sectionNumber} en {liveSession.room} ({liveSession.startTime} - {liveSession.endTime})
+                Sec. {liveSession.sectionNumber} en{' '}
+                <a
+                  href={`/aulas?aula=${resolveCanonicalRoom(liveSession.room).code}`}
+                  onClick={e => e.stopPropagation()}
+                  className="room-entity-link"
+                >
+                  {liveSession.room}
+                </a>{' '}
+                ({liveSession.startTime} - {liveSession.endTime})
               </span>
             </div>
           </div>
@@ -147,7 +155,15 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
               <strong>
                 {DAY_LABELS[nextSession.day]} {nextSession.startTime} - {nextSession.endTime}
               </strong>{' '}
-              en {nextSession.room} (Sec. {nextSession.sectionNumber})
+              en{' '}
+              <a
+                href={`/aulas?aula=${resolveCanonicalRoom(nextSession.room).code}`}
+                onClick={e => e.stopPropagation()}
+                className="room-entity-link"
+              >
+                {nextSession.room}
+              </a>{' '}
+              (Sec. {nextSession.sectionNumber})
             </span>
           </div>
         ) : (
@@ -234,10 +250,16 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
           <span className="course-card-section-label">Docentes:</span>
           <div className="course-profs-chips">
             {course.uniqueProfessors.slice(0, 2).map((prof, idx) => (
-              <span key={idx} className="course-prof-tag" title={prof.name}>
+              <a
+                key={idx}
+                href={`/profesores?profesor=${encodeURIComponent(prof.name)}`}
+                onClick={e => e.stopPropagation()}
+                className="course-prof-tag course-prof-tag--link prof-entity-link"
+                title={`Ver perfil y horario de ${prof.name}`}
+              >
                 <GraduationCap size={11} />
                 <span>{prof.name}</span>
-              </span>
+              </a>
             ))}
             {course.uniqueProfessors.length > 2 && (
               <span className="course-prof-tag course-prof-tag--more">
@@ -253,12 +275,21 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
         <div className="course-card-rooms-row">
           <span className="course-card-section-label">Aulas:</span>
           <div className="course-rooms-chips">
-            {course.uniqueRooms.slice(0, 4).map(room => (
-              <span key={room} className="course-room-tag" title={`Aula ${room}`}>
-                <MapPin size={10} />
-                <span>{room}</span>
-              </span>
-            ))}
+            {course.uniqueRooms.slice(0, 4).map(room => {
+              const canonical = resolveCanonicalRoom(room);
+              return (
+                <a
+                  key={room}
+                  href={`/aulas?aula=${canonical.code}`}
+                  onClick={e => e.stopPropagation()}
+                  className="course-room-tag course-room-tag--link room-entity-link"
+                  title={`Ver disponibilidad de ${canonical.displayName}`}
+                >
+                  <MapPin size={10} />
+                  <span>{canonical.code}</span>
+                </a>
+              );
+            })}
             {course.uniqueRooms.length > 4 && (
               <span className="course-room-tag course-room-tag--more">
                 +{course.uniqueRooms.length - 4}
