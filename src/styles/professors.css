@@ -835,7 +835,7 @@
   transition: transform 0.18s ease;
 }
 
-.professor-card:hover .prof-view-detail-btn {
+.prof-view-detail-btn:hover {
   transform: translateX(4px);
   color: #60a5fa;
 }
