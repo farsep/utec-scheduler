@@ -318,10 +318,17 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
           )}
         </div>
 
-        <span className="course-view-detail-btn">
-          <span>Ver Horarios y Aulas</span>
-          <ChevronRight size={15} />
-        </span>
+        <button
+          type="button"
+          className="btn-view-schedule course-view-detail-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenDetail(course);
+          }}
+        >
+          <span>Ver Horario</span>
+          <ChevronRight size={14} />
+        </button>
       </div>
     </article>
   );

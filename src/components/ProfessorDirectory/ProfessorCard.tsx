@@ -273,10 +273,17 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
 
       {/* Footer CTA Button */}
       <div className="prof-card-footer">
-        <span className="prof-view-detail-btn">
-          <span>Ver Horario Completo</span>
-          <ChevronRight size={15} />
-        </span>
+        <button
+          type="button"
+          className="btn-view-schedule prof-view-detail-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenDetail(professor);
+          }}
+        >
+          <span>Ver Horario</span>
+          <ChevronRight size={14} />
+        </button>
       </div>
     </article>
   );

@@ -1010,19 +1010,39 @@
   border-top: 1px solid #C6C3BB !important;
 }
 
+.btn-view-schedule,
 .prof-view-detail-btn,
-.course-view-detail-btn {
-  font-family: var(--font-mono) !important;
-  font-size: 0.74rem !important;
+.course-view-detail-btn,
+.mentor-view-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 12px !important;
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
-  color: #00779E !important;
-  transform: none !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.16) !important;
+  transition: background-color 120ms ease, transform 120ms ease !important;
+  cursor: pointer !important;
 }
 
+.btn-view-schedule:hover,
+.prof-view-detail-btn:hover,
+.course-view-detail-btn:hover,
+.mentor-view-btn:hover,
 .professor-card:hover .prof-view-detail-btn,
-.course-card:hover .course-view-detail-btn {
-  color: #141416 !important;
-  transform: none !important;
+.course-card:hover .course-view-detail-btn,
+.mentor-card:hover .mentor-view-btn {
+  background-color: #00779E !important;
+  border-color: #00779E !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) !important;
 }
 
 .live-text-group strong,
@@ -1070,31 +1090,6 @@
   color: var(--accent-primary) !important;
 }
 
-.btn-view-schedule {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  padding: 6px 12px !important;
-  background-color: #18181A !important;
-  color: #F2F0EC !important;
-  border: 1px solid #18181A !important;
-  border-radius: 0px !important;
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.04em !important;
-  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.16) !important;
-  transition: background-color 120ms ease, transform 120ms ease !important;
-  cursor: pointer !important;
-}
-
-.btn-view-schedule:hover {
-  background-color: #00779E !important;
-  border-color: #00779E !important;
-  color: #FFFFFF !important;
-  transform: translateY(-1px) !important;
-}
 
 .prof-view-btn,
 .prof-email-copy-btn {
@@ -1320,24 +1315,33 @@
   box-shadow: none !important;
 }
 
-/* BUG 2.3: Fix "Ver Horarios y Aulas >" Button on /cursos Cards */
+/* Unified "Ver Horario >" Button on /cursos Cards */
 .course-view-detail-btn {
-  border-radius: 0px !important;
-  background: #DCD9D2 !important;
-  background-color: #DCD9D2 !important;
-  border: 1px solid #18181A !important;
-  color: #141416 !important;
-  padding: 4px 10px !important;
-  box-shadow: none !important;
-  font-family: var(--font-mono) !important;
-}
-
-.course-card:hover .course-view-detail-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 12px !important;
   background: #18181A !important;
   background-color: #18181A !important;
-  border-color: #18181A !important;
+  border: 1px solid #18181A !important;
   color: #F2F0EC !important;
-  box-shadow: none !important;
+  border-radius: 0px !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.16) !important;
+  cursor: pointer !important;
+}
+
+.course-card:hover .course-view-detail-btn,
+.course-view-detail-btn:hover {
+  background: #00779E !important;
+  background-color: #00779E !important;
+  border-color: #00779E !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) !important;
 }
 
 /* Modal Overlays (All Sub-Apps) */
@@ -3193,6 +3197,41 @@ body {
 .dynamic-session-badge .session-group-num {
   font-weight: 700 !important;
   font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+}
+
+/* Compact 1-Hour Session Block Pills: Ensure top & bottom borders are 100% visible and unclipped */
+.prof-session-block--short {
+  padding: 2px 5px !important;
+}
+
+.prof-session-short-inner {
+  overflow: visible !important;
+  gap: 1px !important;
+}
+
+.prof-session-short-row-bottom,
+.prof-session-short-bottom-wrap {
+  overflow-y: visible !important;
+  min-height: 17px !important;
+  line-height: normal !important;
+}
+
+.prof-session-short-bottom-content .dynamic-session-badge,
+.prof-session-short-bottom-content .prof-session-group-tag,
+.prof-session-short-bottom-content .prof-session-room-tag {
+  height: 15px !important;
+  max-height: 15px !important;
+  font-size: 0.60rem !important;
+  padding: 0px 4px !important;
+  line-height: 13px !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border: 1px solid #006699 !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+  color: #0A2E46 !important;
+  border-radius: 0px !important;
+  flex-shrink: 0 !important;
 }
 
 /* Live quick button styling across /cursos, /mentores, /profesores */

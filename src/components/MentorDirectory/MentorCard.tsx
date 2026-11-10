@@ -267,13 +267,13 @@ export const MentorCard: React.FC<MentorCardProps> = ({
 
         <button
           type="button"
-          className="prof-view-btn mentor-view-btn"
+          className="btn-view-schedule mentor-view-btn"
           onClick={e => {
             e.stopPropagation();
             onSelect(mentor);
           }}
         >
-          <span>Ver detalle</span>
+          <span>Ver Horario</span>
           <ChevronRight size={14} />
         </button>
       </div>
