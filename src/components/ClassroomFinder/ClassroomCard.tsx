@@ -17,6 +17,16 @@ interface ClassroomCardProps {
   onOpenDetail: (classroom: ClassroomAvailability['classroom']) => void;
 }
 
+export function formatRoomMonogram(code: string): string {
+  const norm = (code || '').toUpperCase().trim();
+  if (norm === 'AULAMAGNA' || norm.includes('MAGNA')) return 'MAG';
+  if (norm === 'FUTSAL' || norm.includes('FUTSAL')) return 'FUT';
+  if (norm === 'AUDITORIO' || norm.includes('AUDITORIO')) return 'AUD';
+  if (norm.length <= 4) return norm;
+  if (norm.length === 5) return norm;
+  return norm.slice(0, 4);
+}
+
 export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
   availability,
   filter,
@@ -26,6 +36,7 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
 }) => {
   const { classroom, liveStatus, currentSession, nextSession, minutesUntilNextSession, minutesUntilCurrentSessionEnds, isAvailableForSearch, occupancyPercentage } = availability;
   const typeMeta = ROOM_TYPE_LABELS[classroom.type] || ROOM_TYPE_LABELS.otro;
+  const monogram = formatRoomMonogram(classroom.code);
 
   const isLiveMode = filter.mode === 'live_now';
   const isFreeBanner = isLiveMode ? liveStatus === 'free_now' : isAvailableForSearch;
@@ -40,15 +51,26 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
       {/* Top Header */}
       <div className="classroom-card-header">
         <div className="classroom-card-title-group">
-          <div className="classroom-type-icon classroom-code-monogram">
-            <span>{classroom.code}</span>
+          <div
+            className={`classroom-type-icon classroom-code-monogram ${
+              monogram.length >= 5 ? 'classroom-code-monogram--5char' : ''
+            }`}
+          >
+            <span>{monogram}</span>
           </div>
           <div>
             <h3 className="classroom-card-name">{classroom.displayName}</h3>
             <div className="classroom-card-meta">
-              <span className="classroom-badge-code">{classroom.code}</span>
               <span className="classroom-badge-floor">Piso {classroom.floor}</span>
-              <span className="classroom-badge-type">{typeMeta.short}</span>
+              <span className="classroom-badge-type">
+                {classroom.type === 'auditorio'
+                  ? 'Auditorio'
+                  : classroom.type === 'laboratorio'
+                  ? 'Laboratorio'
+                  : classroom.type === 'aula'
+                  ? 'Aula'
+                  : typeMeta.short}
+              </span>
             </div>
           </div>
         </div>
@@ -167,7 +189,17 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
       <div className="classroom-card-timeline-section">
         <div className="timeline-header-label">
           <span>Ocupación de {filter.selectedDay}:</span>
-          <span className="occupancy-pill">{occupancyPercentage}% ocupado</span>
+          <span
+            className={`occupancy-pill ${
+              occupancyPercentage === 0
+                ? 'occupancy-pill--zero'
+                : occupancyPercentage >= 70
+                ? 'occupancy-pill--high'
+                : 'occupancy-pill--medium'
+            }`}
+          >
+            {occupancyPercentage}% ocupado
+          </span>
         </div>
         <ClassroomTimeline
           availability={availability}

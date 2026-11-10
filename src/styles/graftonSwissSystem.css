@@ -597,16 +597,53 @@
 
 .classroom-card-name,
 .prof-card-name,
-.course-dir-title,
-.results-section-header h2 {
+.course-dir-title {
   font-family: var(--font-heading) !important;
   color: var(--text-primary) !important;
+}
+
+/* Results Section Header (Strict Orthogonal Swiss Section Header) */
+.results-section-header h2 {
+  font-family: var(--font-heading, 'Space Grotesk', sans-serif) !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #141416 !important;
+  letter-spacing: -0.02em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.section-status-square {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  border-radius: 0px !important;
+  background-color: #0D7A4E !important;
+  border: 1px solid #18181A !important;
+  color: #FFFFFF !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.section-count-tag {
+  border-radius: 0px !important;
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+  border: 1px solid #18181A !important;
+  border-left: 3px solid #0D7A4E !important;
+  padding: 2px 9px !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.12) !important;
 }
 
 .classroom-badge-code,
 .classroom-badge-floor,
 .classroom-badge-type,
-.occupancy-pill,
 .stat-pill {
   font-family: var(--font-mono) !important;
   font-variant-numeric: tabular-nums !important;
@@ -617,23 +654,73 @@
   padding: 1px 6px !important;
 }
 
-/* 40x40px Orthogonal Room Code Monogram (FIX 3) */
+.occupancy-pill {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-variant-numeric: tabular-nums !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  border-radius: 0px !important;
+  padding: 1px 6px !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.occupancy-pill--zero {
+  background-color: #DCEEE6 !important;
+  color: #094D31 !important;
+  border: 1px solid #0D7A4E !important;
+}
+
+.occupancy-pill--high {
+  background-color: #DCD9D2 !important;
+  color: #141416 !important;
+  border: 1px solid #18181A !important;
+}
+
+.occupancy-pill--medium {
+  background-color: #FAF9F5 !important;
+  color: #141416 !important;
+  border: 1px solid #C6C3BB !important;
+}
+
+/* 44x44px Square Room Code Monogram Badge (NEVER BLEEDS) */
 .classroom-type-icon,
 .classroom-type-icon.classroom-code-monogram {
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
   border: 1.5px solid #18181A !important;
   background: #DCD9D2 !important;
   color: #141416 !important;
-  font-family: var(--font-mono) !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
   font-weight: 700 !important;
-  font-size: 0.78rem !important;
+  font-size: 12px !important;
+  letter-spacing: -0.02em !important;
   border-radius: 0px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   box-shadow: none !important;
+  overflow: hidden !important;
+  padding: 0 2px !important;
+  box-sizing: border-box !important;
+}
+
+.classroom-type-icon.classroom-code-monogram span {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  line-height: 1 !important;
+}
+
+.classroom-code-monogram--5char {
+  font-size: 10px !important;
+  letter-spacing: -0.04em !important;
 }
 
 .room-status-badge {
@@ -700,61 +787,77 @@
   color: #4A4946 !important;
 }
 
-/* 15-Segment Discrete Swiss Hourly Strip (07:00 to 22:00) (FIX 3) */
+/* 15-Hour Classroom Timeline Slots (Merged-Run Swiss Architecture) */
 .classroom-timeline-track,
 .classroom-timeline-track.swiss-hourly-strip {
-  display: flex !important;
+  display: grid !important;
+  grid-template-columns: repeat(15, minmax(0, 1fr)) !important;
   position: relative !important;
   width: 100% !important;
-  height: 28px !important;
-  border: 1px solid #18181A !important;
+  height: 30px !important;
+  border: 1.5px solid #18181A !important;
   border-radius: 0px !important;
-  background: #DCD9D2 !important;
+  background-color: #FAF9F5 !important;
   overflow: hidden !important;
   box-shadow: none !important;
 }
 
 .swiss-hour-cell {
-  height: 28px !important;
-  flex: 1 1 0% !important;
+  height: 30px !important;
   min-width: 0 !important;
-  border-right: 1px solid #C6C3BB !important;
-  border-radius: 0px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   overflow: hidden !important;
-  white-space: nowrap !important;
-  text-overflow: clip !important;
   box-sizing: border-box !important;
-  padding: 0 1px !important;
+  padding: 0 2px !important;
 }
 
-.swiss-hour-cell:last-of-type {
+/* FREE Slot Style (Open Architectural Space) */
+.swiss-hour-cell--free {
+  background-color: #FAF9F5 !important;
+  border-right: 1px dashed #D5D2C8 !important;
+  border-bottom: 3px solid #0D7A4E !important;
+}
+
+.swiss-hour-cell--free:last-child {
   border-right: none !important;
 }
 
-.swiss-hour-cell--free {
-  background: #DCEEE6 !important;
-  border-bottom: 2px solid #0D7A4E !important;
+/* OCCUPIED Slot Style (Solid Structural Mass with Architectural Hatch) */
+.swiss-hour-cell--occupied {
+  background: repeating-linear-gradient(-45deg, #DCD9D2, #DCD9D2 4px, #D0CDC4 4px, #D0CDC4 8px) !important;
+  border-left: 1px solid #18181A !important;
+  border-right: 1px solid #18181A !important;
+  border-bottom: 3px solid #A82032 !important;
+  cursor: pointer !important;
+  transition: background-color 100ms ease, color 100ms ease !important;
 }
 
-.swiss-hour-cell--occupied {
-  background: #F4E0E2 !important;
-  border-bottom: 2px solid #A82032 !important;
+.swiss-hour-cell--occupied:hover {
+  background: #18181A !important;
+  color: #F2F0EC !important;
+}
+
+.swiss-hour-cell--occupied:hover .swiss-hour-cell-code {
+  color: #F2F0EC !important;
 }
 
 .swiss-hour-cell-code {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 8.5px !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 9.5px !important;
   font-weight: 700 !important;
-  color: #520D17 !important;
-  line-height: 1 !important;
-  letter-spacing: -0.04em !important;
+  color: #141416 !important;
+  letter-spacing: -0.03em !important;
   white-space: nowrap !important;
   overflow: hidden !important;
-  text-overflow: clip !important;
-  padding: 0 1px !important;
+  text-align: center !important;
+  line-height: 1 !important;
+}
+
+.swiss-hour-cell-code--short {
+  font-size: 8.5px !important;
+  letter-spacing: -0.04em !important;
 }
 
 .timeline-search-window {
@@ -768,16 +871,30 @@
   z-index: 3 !important;
 }
 
+/* Current Time Needle (2px Swiss Signal Vermilion with 6x6px square cap) */
 .timeline-now-marker {
   position: absolute !important;
   top: 0 !important;
   bottom: 0 !important;
-  width: 0 !important;
-  border-left: 2px solid #18181A !important;
-  background: transparent !important;
+  width: 2px !important;
+  background-color: #D9381E !important;
+  border-left: none !important;
   box-shadow: none !important;
   pointer-events: none !important;
-  z-index: 4 !important;
+  z-index: 20 !important;
+  transform: translateX(-50%) !important;
+}
+
+.timeline-now-marker::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 6px !important;
+  height: 6px !important;
+  background-color: #D9381E !important;
+  border-radius: 0px !important;
 }
 
 .classroom-timeline-axis {
@@ -3634,6 +3751,131 @@ body {
 .gtp-apply-btn:hover {
   background-color: #00779E !important;
   color: #FFFFFF !important;
+}
+
+/* ==========================================================================
+   PART 4: GRAFTON SWISS ARCHITECTURAL NOTIFICATION TOAST & OYENTE BADGE CONTRAST
+   ========================================================================== */
+.course-footer-visitor-status {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 11px !important;
+  color: #5A5852 !important;
+}
+
+.course-footer-visitor-status.course-footer-visitor-status--active,
+.course-footer-visitor-status--active {
+  background-color: #F5E8D3 !important;
+  border: 1px solid #B85D00 !important;
+  border-left: 3px solid #D97706 !important;
+  color: #5C2D00 !important;
+  border-radius: 0px !important;
+  padding: 3px 8px !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow: none !important;
+}
+
+.course-toast-notification,
+.course-toast-notification.grafton-swiss-toast {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  background-color: #F2F0EC !important;
+  color: #141416 !important;
+  border-top: 3px solid #18181A !important;
+  border-right: 1.5px solid #18181A !important;
+  border-bottom: 1.5px solid #18181A !important;
+  border-left: 5px solid #D97706 !important;
+  border-radius: 0px !important;
+  box-shadow: 4px 4px 0px #18181A !important;
+  padding: 12px 14px !important;
+  z-index: 10000 !important;
+  animation: graftonToastSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.course-toast-notification.grafton-toast--added,
+.grafton-swiss-toast.grafton-toast--added {
+  border-left: 5px solid #D97706 !important;
+}
+
+.course-toast-notification.grafton-toast--removed,
+.grafton-swiss-toast.grafton-toast--removed {
+  border-left: 5px solid #5A5852 !important;
+}
+
+.grafton-toast-icon-box {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  border: 1.5px solid #18181A !important;
+  border-radius: 0px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.grafton-toast--added .grafton-toast-icon-box {
+  background-color: #F5E8D3 !important;
+  color: #B85D00 !important;
+}
+
+.grafton-toast--removed .grafton-toast-icon-box {
+  background-color: #DCD9D2 !important;
+  color: #5A5852 !important;
+}
+
+.grafton-toast-text-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  text-align: left !important;
+}
+
+.grafton-toast-eyebrow {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.grafton-toast--added .grafton-toast-eyebrow {
+  color: #B85D00 !important;
+}
+
+.grafton-toast--removed .grafton-toast-eyebrow {
+  color: #5A5852 !important;
+}
+
+.grafton-toast-title {
+  font-family: var(--font-heading, 'Space Grotesk', sans-serif) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #141416 !important;
+  line-height: 1.2 !important;
+}
+
+@keyframes graftonToastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 
