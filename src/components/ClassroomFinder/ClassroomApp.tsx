@@ -18,7 +18,6 @@ import { ClassroomDetailModal } from './ClassroomDetailModal';
 import { BroadcastIcon } from '../common/BroadcastIcon';
 import { ArchitecturalEmptyState } from '../common/ArchitecturalEmptyState';
 import {
-  Sparkles,
   Building2,
   Search,
   Filter,
@@ -364,7 +363,7 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
           <div className="hero-content">
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
               <div className="hero-chip" style={{ marginBottom: 0 }}>
-                <Sparkles size={14} className="hero-chip-icon" />
+                <Building2 size={14} className="hero-chip-icon" />
                 <span>Buscador Inteligente de Espacios UTEC</span>
               </div>
               {dataSourceInfo.type === 'intranet' && (
@@ -535,7 +534,9 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
             {/* Available Classrooms Section */}
             <div className="results-section-header">
               <div className="section-title-wrap">
-                <CheckCircle2 size={20} className="text-emerald" />
+                <span className="section-status-square" aria-hidden="true">
+                  <BroadcastIcon className="w-3.5 h-3.5" />
+                </span>
                 <h2>
                   Aulas Disponibles
                   <span className="section-count-tag">{totalAvailable}</span>

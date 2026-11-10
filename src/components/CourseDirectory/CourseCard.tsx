@@ -13,7 +13,6 @@ import {
   Radio,
   Layers,
   GraduationCap,
-  Sparkles,
   Laptop
 } from 'lucide-react';
 
@@ -307,12 +306,12 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
         <div className="course-card-footer-left">
           {isVisitor ? (
             <span className="course-footer-visitor-status course-footer-visitor-status--active">
-              <Star size={12} className="star-filled-gold" />
+              <Star size={12} fill="#B85D00" stroke="#B85D00" />
               <span>En tu lista de Oyente</span>
             </span>
           ) : (
             <span className="course-footer-visitor-status">
-              <Sparkles size={12} className="text-accent" />
+              <Star size={12} stroke="#5A5852" fill="none" />
               <span>Oyente disponible</span>
             </span>
           )}

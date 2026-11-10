@@ -21,7 +21,6 @@ import { BroadcastIcon } from '../common/BroadcastIcon';
 import { ArchitecturalEmptyState } from '../common/ArchitecturalEmptyState';
 import {
   BookOpen,
-  Sparkles,
   Users,
   Radio,
   Star,
@@ -66,7 +65,11 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
   const [selectedCourse, setSelectedCourse] = useState<CourseExtendedInfo | null>(null);
 
   // Toast notification for visitor actions
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastInfo, setToastInfo] = useState<{
+    type: 'added' | 'removed';
+    code: string;
+    name: string;
+  } | null>(null);
 
   // Floating back to top button visibility for mobile
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
@@ -178,12 +181,12 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
     const { isAdded, updatedItems } = toggleVisitorCourseInStorage(course);
     setVisitorItems(updatedItems);
 
-    setToastMessage(
-      isAdded
-        ? `⭐ "${course.code} - ${course.name}" guardado como visitante (oyente)`
-        : `Eliminado de tus cursos de visitante`
-    );
-    setTimeout(() => setToastMessage(null), 3000);
+    setToastInfo({
+      type: isAdded ? 'added' : 'removed',
+      code: course.code,
+      name: course.name
+    });
+    setTimeout(() => setToastInfo(null), 3500);
   };
 
   // Total unique sections across all courses
@@ -256,7 +259,7 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
         <div className="classroom-hero-banner glass-card course-hero-banner">
           <div className="hero-content">
             <div className="hero-chip">
-              <Sparkles size={14} className="hero-sparkle" />
+              <BookOpen size={14} className="hero-sparkle" />
               <span>Oferta Académica UTEC 2026-2</span>
             </div>
 
@@ -455,11 +458,29 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
         />
       )}
 
-      {/* Toast Feedback */}
-      {toastMessage && (
-        <div className="course-toast-notification glass-card" role="alert">
-          <Sparkles size={16} className="text-accent-amber" />
-          <span>{toastMessage}</span>
+      {/* Toast Feedback - Grafton Swiss Ticket */}
+      {toastInfo && (
+        <div
+          className={`course-toast-notification grafton-swiss-toast ${
+            toastInfo.type === 'added' ? 'grafton-toast--added' : 'grafton-toast--removed'
+          }`}
+          role="alert"
+        >
+          <div className="grafton-toast-icon-box">
+            {toastInfo.type === 'added' ? (
+              <Star size={16} fill="#B85D00" stroke="#B85D00" />
+            ) : (
+              <Star size={16} stroke="#5A5852" fill="none" />
+            )}
+          </div>
+          <div className="grafton-toast-text-wrap">
+            <span className="grafton-toast-eyebrow">
+              {toastInfo.type === 'added' ? '★ MODO OYENTE · GUARDADO' : '☆ MODO OYENTE · ELIMINADO'}
+            </span>
+            <span className="grafton-toast-title">
+              [{toastInfo.code}] {toastInfo.name}
+            </span>
+          </div>
         </div>
       )}
     </div>

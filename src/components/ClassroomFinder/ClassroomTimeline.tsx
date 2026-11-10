@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { ClassroomAvailability } from '../../types/classroom';
 import { UNIVERSITY_START_MINUTES, UNIVERSITY_END_MINUTES } from '../../utils/classroomUtils';
 
@@ -10,6 +10,17 @@ interface ClassroomTimelineProps {
 }
 
 const SWISS_HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] as const;
+
+interface TimelineRun {
+  status: 'free' | 'occupied';
+  startHour: number;
+  endHour: number;
+  spanHours: number;
+  courseCode?: string;
+  courseName?: string;
+  startTime?: string;
+  endTime?: string;
+}
 
 export const ClassroomTimeline: React.FC<ClassroomTimelineProps> = React.memo(({
   availability,
@@ -30,49 +41,109 @@ export const ClassroomTimeline: React.FC<ClassroomTimelineProps> = React.memo(({
     return Math.max(0, ((end - start) / totalRange) * 100);
   };
 
+  // Group consecutive hours of the same course/state into merged runs
+  const runs = useMemo(() => {
+    const result: TimelineRun[] = [];
+    let currentRun: TimelineRun | null = null;
+
+    for (const hour of SWISS_HOURS) {
+      const slotStart = hour * 60;
+      const slotEnd = (hour + 1) * 60;
+      const occupiedBlock = availability.occupiedBlocksToday.find(
+        b => Math.max(b.startMinutes, slotStart) < Math.min(b.endMinutes, slotEnd)
+      );
+
+      const status = occupiedBlock ? 'occupied' : 'free';
+      const courseCode = occupiedBlock?.session.courseCode;
+      const courseName = occupiedBlock?.session.courseName;
+      const startTime = occupiedBlock?.startTime;
+      const endTime = occupiedBlock?.endTime;
+
+      if (!currentRun) {
+        currentRun = {
+          status,
+          startHour: hour,
+          endHour: hour + 1,
+          spanHours: 1,
+          courseCode,
+          courseName,
+          startTime,
+          endTime
+        };
+      } else if (
+        currentRun.status === status &&
+        (status === 'free' || currentRun.courseCode === courseCode)
+      ) {
+        currentRun.endHour = hour + 1;
+        currentRun.spanHours += 1;
+        if (endTime) currentRun.endTime = endTime;
+      } else {
+        result.push(currentRun);
+        currentRun = {
+          status,
+          startHour: hour,
+          endHour: hour + 1,
+          spanHours: 1,
+          courseCode,
+          courseName,
+          startTime,
+          endTime
+        };
+      }
+    }
+    if (currentRun) result.push(currentRun);
+    return result;
+  }, [availability.occupiedBlocksToday]);
+
   return (
     <div className="classroom-timeline-wrap">
-      {/* 15-Segment Discrete Swiss Hourly Strip (07:00 to 22:00) */}
-      <div className="classroom-timeline-track swiss-hourly-strip" title="Línea de tiempo 07:00 a 22:00 (15 bloques de 1h)">
-        {SWISS_HOURS.map((hour) => {
-          const slotStart = hour * 60;
-          const slotEnd = (hour + 1) * 60;
-          const hourLabel = `${String(hour).padStart(2, '0')}:00–${String(hour + 1).padStart(2, '0')}:00`;
+      {/* 15-Segment Merged-Run Swiss Hourly Strip (07:00 to 22:00) */}
+      <div className="classroom-timeline-track swiss-hourly-strip" title="Línea de tiempo 07:00 a 22:00 (15 horas)">
+        {runs.map((run) => {
+          const startStr = `${String(run.startHour).padStart(2, '0')}:00`;
+          const endStr = `${String(run.endHour).padStart(2, '0')}:00`;
+          const runLabel = `${startStr}–${endStr}`;
 
-          const occupiedBlock = availability.occupiedBlocksToday.find(
-            b => Math.max(b.startMinutes, slotStart) < Math.min(b.endMinutes, slotEnd)
-          );
-
-          if (occupiedBlock) {
-            const prevSlotStart = (hour - 1) * 60;
-            const prevSlotEnd = hour * 60;
-            const isFirstHourOfBlock = !availability.occupiedBlocksToday.some(
-              b => b.session.courseCode === occupiedBlock.session.courseCode &&
-                   Math.max(b.startMinutes, prevSlotStart) < Math.min(b.endMinutes, prevSlotEnd)
-            );
-
+          if (run.status === 'occupied' && run.courseCode) {
             return (
               <div
-                key={hour}
-                className="swiss-hour-cell swiss-hour-cell--occupied"
-                title={`${hourLabel} · Ocupada: ${occupiedBlock.session.courseCode} · ${occupiedBlock.session.courseName} (${occupiedBlock.startTime} - ${occupiedBlock.endTime})`}
+                key={`occ-${run.startHour}-${run.courseCode}`}
+                className={`swiss-hour-cell swiss-hour-cell--occupied ${
+                  run.spanHours === 1 ? 'swiss-hour-cell--span1' : ''
+                }`}
+                style={{ gridColumn: `span ${run.spanHours}` }}
+                title={`${runLabel} · Ocupada: ${run.courseCode} · ${run.courseName || ''} (${run.startTime || startStr} - ${run.endTime || endStr})`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.location.href = `/cursos?curso=${encodeURIComponent(run.courseCode!)}`;
+                }}
               >
-                {isFirstHourOfBlock && (
-                  <span className="swiss-hour-cell-code">
-                    {occupiedBlock.session.courseCode}
-                  </span>
-                )}
+                <span
+                  className={`swiss-hour-cell-code ${
+                    run.spanHours === 1 ? 'swiss-hour-cell-code--short' : ''
+                  }`}
+                >
+                  {run.courseCode}
+                </span>
               </div>
             );
           }
 
-          return (
-            <div
-              key={hour}
-              className="swiss-hour-cell swiss-hour-cell--free"
-              title={`${hourLabel} · Libre`}
-            />
-          );
+          // Render free slots hour-by-hour so each hour has its dashed tick divider
+          const freeHours: React.ReactNode[] = [];
+          for (let h = run.startHour; h < run.endHour; h++) {
+            const hStart = `${String(h).padStart(2, '0')}:00`;
+            const hEnd = `${String(h + 1).padStart(2, '0')}:00`;
+            freeHours.push(
+              <div
+                key={`free-${h}`}
+                className="swiss-hour-cell swiss-hour-cell--free"
+                style={{ gridColumn: 'span 1' }}
+                title={`${hStart}–${hEnd} · Libre`}
+              />
+            );
+          }
+          return freeHours;
         })}
 
         {/* Highlighted Search Window (if custom search active) */}
@@ -87,7 +158,7 @@ export const ClassroomTimeline: React.FC<ClassroomTimelineProps> = React.memo(({
           />
         )}
 
-        {/* Current Time Needle (Sharp 2px solid #18181A vertical needle) */}
+        {/* Current Time Needle (Sharp 2px solid #D9381E vertical needle with 6x6px square cap) */}
         {isToday && nowMinutes !== undefined && nowMinutes >= UNIVERSITY_START_MINUTES && nowMinutes <= UNIVERSITY_END_MINUTES && (
           <div
             className="timeline-now-marker"

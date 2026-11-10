@@ -19,7 +19,6 @@ import {
   MapPin,
   GraduationCap,
   Layers,
-  Sparkles,
   ExternalLink,
   Download,
   Radio
@@ -487,7 +486,7 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
         {/* Modal Footer (Desktop/Tablet etiquette guidance; hidden on mobile so 100% of height goes to content) */}
         <div className="course-modal-footer">
           <div className="modal-footer-etiquette">
-            <Sparkles size={14} className="text-accent-amber" />
+            <Star size={14} className="text-accent-amber" />
             <span>
               <strong>Consejo para Oyentes:</strong> Consulta primero con el profesor titular. La mayoría de docentes en UTEC aceptan visitantes con gusto cuando hay espacio.
             </span>

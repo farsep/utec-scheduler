@@ -19,7 +19,6 @@ import { BroadcastIcon } from '../common/BroadcastIcon';
 import { ArchitecturalEmptyState } from '../common/ArchitecturalEmptyState';
 import {
   GraduationCap,
-  Sparkles,
   Users,
   Search,
   BookOpen,
@@ -211,7 +210,7 @@ export const ProfessorApp: React.FC<ProfessorAppProps> = ({ hideTopNavbar = fals
         <div className="classroom-hero-banner glass-card">
           <div className="hero-content">
             <div className="hero-chip">
-              <Sparkles size={14} className="hero-sparkle" />
+              <GraduationCap size={14} className="hero-sparkle" />
               <span>Directorio Académico UTEC</span>
             </div>
 
