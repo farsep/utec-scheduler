@@ -1035,14 +1035,44 @@
 .btn-view-schedule:hover,
 .prof-view-detail-btn:hover,
 .course-view-detail-btn:hover,
-.mentor-view-btn:hover,
-.professor-card:hover .prof-view-detail-btn,
-.course-card:hover .course-view-detail-btn,
-.mentor-card:hover .mentor-view-btn {
+.mentor-view-btn:hover {
   background-color: #00779E !important;
   border-color: #00779E !important;
   color: #FFFFFF !important;
   transform: translateY(-1px) !important;
+}
+
+.btn-view-schedule:hover svg,
+.prof-view-detail-btn:hover svg,
+.course-view-detail-btn:hover svg,
+.mentor-view-btn:hover svg {
+  transform: translateX(2px) !important;
+  transition: transform 120ms ease !important;
+}
+
+/* Enforce that card hover does NOT trigger button hover (ONLY hovering the button itself activates it) */
+.classroom-card:hover .btn-view-schedule:not(:hover),
+.professor-card:hover .btn-view-schedule:not(:hover),
+.professor-card:hover .prof-view-detail-btn:not(:hover),
+.course-card:hover .btn-view-schedule:not(:hover),
+.course-card:hover .course-view-detail-btn:not(:hover),
+.mentor-card:hover .btn-view-schedule:not(:hover),
+.mentor-card:hover .mentor-view-btn:not(:hover) {
+  background-color: #18181A !important;
+  border-color: #18181A !important;
+  color: #F2F0EC !important;
+  transform: none !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.16) !important;
+}
+
+.classroom-card:hover .btn-view-schedule:not(:hover) svg,
+.professor-card:hover .btn-view-schedule:not(:hover) svg,
+.professor-card:hover .prof-view-detail-btn:not(:hover) svg,
+.course-card:hover .btn-view-schedule:not(:hover) svg,
+.course-card:hover .course-view-detail-btn:not(:hover) svg,
+.mentor-card:hover .btn-view-schedule:not(:hover) svg,
+.mentor-card:hover .mentor-view-btn:not(:hover) svg {
+  transform: none !important;
 }
 
 .live-text-group strong,
@@ -1335,8 +1365,8 @@
   cursor: pointer !important;
 }
 
-.course-card:hover .course-view-detail-btn,
-.course-view-detail-btn:hover {
+.course-view-detail-btn:hover,
+.btn-view-schedule:hover {
   background: #00779E !important;
   background-color: #00779E !important;
   border-color: #00779E !important;

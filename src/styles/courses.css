@@ -772,14 +772,15 @@
   transition: all 0.18s ease;
 }
 
-.course-card:hover .course-view-detail-btn {
+/* Course Card View Button Hover (Only when hovering the button itself) */
+.course-view-detail-btn:hover {
   background: var(--accent-primary);
   border-color: var(--accent-primary);
   color: #ffffff;
   box-shadow: 0 2px 10px rgba(59, 130, 246, 0.35);
 }
 
-.course-card:hover .course-view-detail-btn svg {
+.course-view-detail-btn:hover svg {
   transform: translateX(2px);
   transition: transform 0.18s ease;
 }

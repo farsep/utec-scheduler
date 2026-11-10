@@ -242,6 +242,131 @@ test.describe('Grafton Swiss Concrete Fixes Audit', () => {
     await expect(mentorModal).toBeHidden({ timeout: 3000 });
   });
 
+  test('3E. Ver Horario > Hover Effect ONLY when hovering button itself (NOT card)', async ({ page }) => {
+    // 3E-1: /cursos
+    await page.goto('/cursos');
+    await page.waitForLoadState('networkidle');
+    const catalogTabBtn = page.locator('button', { hasText: 'Catálogo Ofertado' });
+    await expect(catalogTabBtn).toBeVisible({ timeout: 10000 });
+    await catalogTabBtn.click();
+    await page.waitForTimeout(400);
+
+    const courseCard = page.locator('.courses-cards-grid .course-card').first();
+    await expect(courseCard).toBeVisible({ timeout: 15000 });
+    const courseBtn = courseCard.locator('.btn-view-schedule');
+    await expect(courseBtn).toBeVisible({ timeout: 10000 });
+
+    // Initial state: not hovered -> #18181A
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(100);
+    let bg = await courseBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(24, 24, 26)');
+
+    // Hover on card (NOT on the button) -> button MUST REMAIN #18181A (NO hover effect on card hover)
+    await courseCard.hover({ position: { x: 20, y: 20 } });
+    await page.waitForTimeout(150);
+    bg = await courseBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(24, 24, 26)');
+    await courseCard.screenshot({ path: 'audit-screenshots/course-card-not-hovered-button.png' });
+
+    // Hover DIRECTLY on button -> button TURNS #00779E
+    await courseBtn.hover();
+    await page.waitForTimeout(150);
+    bg = await courseBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(0, 119, 158)');
+    await courseCard.screenshot({ path: 'audit-screenshots/course-card-hovered-button.png' });
+
+    // Move away -> back to #18181A
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(250);
+    bg = await courseBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(24, 24, 26)');
+
+    // 3E-2: /aulas
+    await page.goto('/aulas');
+    await page.waitForLoadState('networkidle');
+    const classroomCard = page.locator('.classroom-card').first();
+    const aulasBtn = classroomCard.locator('.btn-view-schedule');
+    await expect(aulasBtn).toBeVisible({ timeout: 10000 });
+
+    // Initial state -> #18181A
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(100);
+    bg = await aulasBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(24, 24, 26)');
+
+    // Hover on classroom card -> button MUST REMAIN #18181A
+    await classroomCard.hover({ position: { x: 20, y: 20 } });
+    await page.waitForTimeout(150);
+    bg = await aulasBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(24, 24, 26)');
+
+    // Hover DIRECTLY on button -> #00779E
+    await aulasBtn.hover();
+    await page.waitForTimeout(150);
+    bg = await aulasBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(0, 119, 158)');
+    await classroomCard.screenshot({ path: 'audit-screenshots/classroom-card-hovered-button.png' });
+
+    // Move away -> #18181A
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(250);
+    bg = await aulasBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(24, 24, 26)');
+
+    // 3E-3: /profesores
+    await page.goto('/profesores');
+    await page.waitForLoadState('networkidle');
+    const profCard = page.locator('.professor-card').first();
+    const profBtn = profCard.locator('.btn-view-schedule');
+    await expect(profBtn).toBeVisible({ timeout: 10000 });
+
+    // Hover on prof card -> button MUST REMAIN #18181A
+    await profCard.hover({ position: { x: 20, y: 20 } });
+    await page.waitForTimeout(150);
+    bg = await profBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(24, 24, 26)');
+
+    // Hover DIRECTLY on button -> #00779E
+    await profBtn.hover();
+    await page.waitForTimeout(150);
+    bg = await profBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(0, 119, 158)');
+    await profCard.screenshot({ path: 'audit-screenshots/prof-card-hovered-button.png' });
+
+    // Move away -> #18181A
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(250);
+    bg = await profBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(24, 24, 26)');
+
+    // 3E-4: /mentores
+    await page.goto('/mentores');
+    await page.waitForLoadState('networkidle');
+    const mentorCard = page.locator('.mentor-card').first();
+    const mentorBtn = mentorCard.locator('.btn-view-schedule');
+    await expect(mentorBtn).toBeVisible({ timeout: 10000 });
+
+    // Hover on mentor card -> button MUST REMAIN #18181A
+    await mentorCard.hover({ position: { x: 20, y: 20 } });
+    await page.waitForTimeout(150);
+    bg = await mentorBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(24, 24, 26)');
+
+    // Hover DIRECTLY on button -> #00779E
+    await mentorBtn.hover();
+    await page.waitForTimeout(150);
+    bg = await mentorBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(0, 119, 158)');
+    await mentorCard.screenshot({ path: 'audit-screenshots/mentor-card-hovered-button.png' });
+
+    // Move away -> #18181A
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(250);
+    bg = await mentorBtn.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    expect(bg).toBe('rgb(24, 24, 26)');
+  });
+
   test('4. Direct Click on Exact Time Badge & Minute Selection (:40 min)', async ({ page }) => {
     await page.goto('/aulas');
     await page.waitForLoadState('networkidle');

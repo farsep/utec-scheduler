@@ -1310,8 +1310,14 @@
 
 .btn-view-schedule:hover {
   background-color: #00779E !important;
+  border-color: #00779E !important;
   color: #FFFFFF !important;
   transform: translateY(-1px) !important;
+}
+
+.btn-view-schedule:hover svg {
+  transform: translateX(2px) !important;
+  transition: transform 120ms ease !important;
 }
 
 /* Occupied Section Accordion */
