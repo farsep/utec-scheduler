@@ -120,33 +120,126 @@ test.describe('Grafton Swiss Concrete Fixes Audit', () => {
     expect(Math.abs(heightAfter - heightBefore)).toBeLessThanOrEqual(4);
   });
 
-  test('3. Ver Horario > Button & Top Floor-Map Click Test on /aulas', async ({ page }) => {
+  test('3. Ver Horario > Button Uniformity & Click Action across /aulas, /profesores, /cursos, /mentores', async ({ page }) => {
+    // 3A: /aulas
     await page.goto('/aulas');
     await page.waitForLoadState('networkidle');
 
-    // Assert Ver Horario button on classroom cards
-    const viewScheduleBtn = page.locator('.classroom-card .btn-view-schedule').first();
-    await expect(viewScheduleBtn).toBeVisible({ timeout: 10000 });
-
-    const btnStyles = await viewScheduleBtn.evaluate((el) => {
-      const computed = window.getComputedStyle(el);
+    const aulasBtn = page.locator('.classroom-card .btn-view-schedule').first();
+    await expect(aulasBtn).toBeVisible({ timeout: 10000 });
+    const aulasStyles = await aulasBtn.evaluate((el) => {
+      const cs = window.getComputedStyle(el);
       return {
-        paddingLeft: parseFloat(computed.paddingLeft) || 0,
-        backgroundColor: computed.backgroundColor,
+        bg: cs.backgroundColor,
+        color: cs.color,
+        radius: cs.borderRadius,
+        textTransform: cs.textTransform,
       };
     });
+    expect(aulasStyles.bg).toBe('rgb(24, 24, 26)');
+    expect(aulasStyles.radius).toBe('0px');
+    expect(aulasStyles.textTransform).toBe('uppercase');
 
-    expect(btnStyles.paddingLeft).toBeGreaterThanOrEqual(8);
-    expect(btnStyles.backgroundColor).toBe('rgb(24, 24, 26)');
+    // Click "Ver Horario" on Classroom card and verify modal opens
+    await aulasBtn.click();
+    const classroomModal = page.locator('.classroom-modal');
+    await expect(classroomModal).toBeVisible({ timeout: 5000 });
+    await page.keyboard.press('Escape');
+    await expect(classroomModal).toBeHidden({ timeout: 3000 });
 
-    // Click a room tile in the top "Aulas y Laboratorios por Niveles" section
+    // Also click a room tile in the top "Aulas y Laboratorios por Niveles" section to verify floor map tile opens modal
     const roomTile = page.locator('.campus-floor-explorer .campus-room-chip').first();
     await expect(roomTile).toBeVisible();
     await roomTile.click();
-
-    // Assert that the Classroom Detail Modal opens immediately
-    const classroomModal = page.locator('.classroom-modal');
     await expect(classroomModal).toBeVisible({ timeout: 5000 });
+    await page.keyboard.press('Escape');
+    await expect(classroomModal).toBeHidden({ timeout: 3000 });
+
+    // 3B: /profesores
+    await page.goto('/profesores');
+    await page.waitForLoadState('networkidle');
+    const profBtn = page.locator('.professor-card .btn-view-schedule, .professor-card .prof-view-detail-btn').first();
+    await expect(profBtn).toBeVisible({ timeout: 10000 });
+    const profStyles = await profBtn.evaluate((el) => {
+      const cs = window.getComputedStyle(el);
+      return {
+        bg: cs.backgroundColor,
+        color: cs.color,
+        radius: cs.borderRadius,
+        textTransform: cs.textTransform,
+      };
+    });
+    expect(profStyles.bg).toBe('rgb(24, 24, 26)');
+    expect(profStyles.radius).toBe('0px');
+    expect(profStyles.textTransform).toBe('uppercase');
+
+    // Capture screenshot of Professor Card with uniform black button
+    await profBtn.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: 'audit-screenshots/prof-card-ver-horario-button.png' });
+
+    // Click "Ver Horario" on Professor card and verify Professor Modal opens
+    await profBtn.click();
+    const profModal = page.locator('.prof-modal');
+    await expect(profModal).toBeVisible({ timeout: 5000 });
+    await page.keyboard.press('Escape');
+    await expect(profModal).toBeHidden({ timeout: 3000 });
+
+    // 3C: /cursos
+    await page.goto('/cursos');
+    await page.waitForLoadState('networkidle');
+    // Switch to Catalog mode if DAG view is currently showing
+    const catalogTabBtn = page.locator('button', { hasText: 'Catálogo Ofertado' });
+    if (await catalogTabBtn.isVisible()) {
+      await catalogTabBtn.click();
+      await page.waitForTimeout(300);
+    }
+    const courseBtn = page.locator('.course-card .btn-view-schedule, .course-card .course-view-detail-btn').first();
+    await expect(courseBtn).toBeVisible({ timeout: 10000 });
+    const courseStyles = await courseBtn.evaluate((el) => {
+      const cs = window.getComputedStyle(el);
+      return {
+        bg: cs.backgroundColor,
+        color: cs.color,
+        radius: cs.borderRadius,
+        textTransform: cs.textTransform,
+      };
+    });
+    expect(courseStyles.bg).toBe('rgb(24, 24, 26)');
+    expect(courseStyles.radius).toBe('0px');
+    expect(courseStyles.textTransform).toBe('uppercase');
+
+    // Click "Ver Horario" on Course card and verify Course Modal dialog opens
+    await courseBtn.click();
+    const courseModal = page.locator('.course-modal-dialog');
+    await expect(courseModal).toBeVisible({ timeout: 5000 });
+    await page.keyboard.press('Escape');
+    await expect(courseModal).toBeHidden({ timeout: 3000 });
+
+    // 3D: /mentores
+    await page.goto('/mentores');
+    await page.waitForLoadState('networkidle');
+    const mentorBtn = page.locator('.mentor-card .btn-view-schedule, .mentor-card .mentor-view-btn').first();
+    await expect(mentorBtn).toBeVisible({ timeout: 10000 });
+    const mentorStyles = await mentorBtn.evaluate((el) => {
+      const cs = window.getComputedStyle(el);
+      return {
+        bg: cs.backgroundColor,
+        color: cs.color,
+        radius: cs.borderRadius,
+        textTransform: cs.textTransform,
+      };
+    });
+    expect(mentorStyles.bg).toBe('rgb(24, 24, 26)');
+    expect(mentorStyles.radius).toBe('0px');
+    expect(mentorStyles.textTransform).toBe('uppercase');
+
+    // Click "Ver Horario" on Mentor card and verify Mentor Modal opens
+    await mentorBtn.click();
+    const mentorModal = page.locator('.mentor-modal');
+    await expect(mentorModal).toBeVisible({ timeout: 5000 });
+    await page.keyboard.press('Escape');
+    await expect(mentorModal).toBeHidden({ timeout: 3000 });
   });
 
   test('4. Direct Click on Exact Time Badge & Minute Selection (:40 min)', async ({ page }) => {
@@ -231,6 +324,32 @@ test.describe('Grafton Swiss Concrete Fixes Audit', () => {
     expect(badgeStyles.borderColor).toBe(roomStyles.borderColor);
     expect(badgeStyles.backgroundColor).toBe(roomStyles.backgroundColor);
     expect(badgeStyles.fontSize).toBe(roomStyles.fontSize);
+
+    // Verify short block (1h session) pill top and bottom borders are rendered completely without clipping
+    const shortPill = modal.locator('.prof-session-short-bottom-content .dynamic-session-badge').first();
+    if (await shortPill.isVisible()) {
+      const shortPillStyles = await shortPill.evaluate((el) => {
+        const cs = window.getComputedStyle(el);
+        const rect = el.getBoundingClientRect();
+        return {
+          height: rect.height,
+          borderTopStyle: cs.borderTopStyle,
+          borderBottomStyle: cs.borderBottomStyle,
+          borderTopWidth: cs.borderTopWidth,
+          borderBottomWidth: cs.borderBottomWidth,
+        };
+      });
+      expect(shortPillStyles.borderTopStyle).toBe('solid');
+      expect(shortPillStyles.borderBottomStyle).toBe('solid');
+      expect(parseFloat(shortPillStyles.borderTopWidth)).toBeGreaterThanOrEqual(1);
+      expect(parseFloat(shortPillStyles.borderBottomWidth)).toBeGreaterThanOrEqual(1);
+      expect(shortPillStyles.height).toBeGreaterThanOrEqual(14);
+    }
+
+    const shortSessionBlock = modal.locator('.prof-session-block--short').first();
+    if (await shortSessionBlock.isVisible()) {
+      await shortSessionBlock.screenshot({ path: 'audit-screenshots/short-session-pill-borders.png' });
+    }
 
     // Capture screenshot
     await page.screenshot({ path: 'audit-screenshots/prof-standardized-teo-lab.png' });
