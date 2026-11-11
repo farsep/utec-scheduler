@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ScheduleApp } from './ScheduleApp';
 import { CurricularDAGView } from './CurricularGraph/CurricularDAGView';
+import { CourseApp } from './CourseDirectory/CourseApp';
 import { ProfessorApp } from './ProfessorDirectory/ProfessorApp';
 import { ClassroomApp } from './ClassroomFinder/ClassroomApp';
 import { MentorApp } from './MentorDirectory/MentorApp';
@@ -8,7 +9,7 @@ import { GraftonTopBar } from './GraftonTopBar';
 import { prewarmAllCatalogs } from '../utils/masterDataLoader';
 import type { Course } from '../types/schedule';
 
-export type TabKey = 'schedule' | 'courses' | 'professors' | 'classrooms' | 'mentors';
+export type TabKey = 'schedule' | 'malla' | 'courses' | 'professors' | 'classrooms' | 'mentors';
 
 interface AppShellProps {
   initialTab: TabKey;
@@ -16,6 +17,8 @@ interface AppShellProps {
 
 const PATH_TO_TAB: Record<string, TabKey> = {
   '/': 'schedule',
+  '/malla': 'malla',
+  '/mallas': 'malla',
   '/cursos': 'courses',
   '/profesores': 'professors',
   '/docentes': 'professors',
@@ -25,7 +28,8 @@ const PATH_TO_TAB: Record<string, TabKey> = {
 
 const TAB_TITLES: Record<TabKey, string> = {
   schedule: 'MatricuLAB · Armador de Horarios UTEC',
-  courses: 'Malla Curricular & 16 Carreras UTEC · MatricuLAB',
+  malla: 'Malla Curricular & 16 Carreras UTEC · MatricuLAB',
+  courses: 'Catálogo de Cursos Ofertados 2026-2 · MatricuLAB',
   professors: 'Directorio de Docentes UTEC · MatricuLAB',
   classrooms: 'Aulas y Laboratorios Libres UTEC · MatricuLAB',
   mentors: 'Mentores Académicos UTEC 2026-2 · MatricuLAB',
@@ -33,6 +37,7 @@ const TAB_TITLES: Record<TabKey, string> = {
 
 const TAB_PATHS: Record<TabKey, string> = {
   schedule: '/',
+  malla: '/malla',
   courses: '/cursos',
   professors: '/profesores',
   classrooms: '/aulas',
@@ -256,17 +261,27 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
         </div>
       )}
 
-      {visitedTabs.has('courses') && (
+      {visitedTabs.has('malla') && (
         <div
-          id="matriculab-view-courses"
+          id="matriculab-view-malla"
           className="app-shell-tab-pane"
-          style={{ display: activeTab === 'courses' ? 'block' : 'none' }}
+          style={{ display: activeTab === 'malla' ? 'block' : 'none' }}
         >
           <CurricularDAGView
             scheduledCourseCodes={scheduledCourseCodes}
             offeredCourseCodes={offeredCourseCodes}
             onSelectCourseForSchedule={handleSelectCourseFromDAG}
           />
+        </div>
+      )}
+
+      {visitedTabs.has('courses') && (
+        <div
+          id="matriculab-view-courses"
+          className="app-shell-tab-pane"
+          style={{ display: activeTab === 'courses' ? 'block' : 'none' }}
+        >
+          <CourseApp hideTopNavbar />
         </div>
       )}
 

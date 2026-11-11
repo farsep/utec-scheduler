@@ -147,13 +147,23 @@ test.describe('Grafton Swiss Concrete Fixes Audit', () => {
     await page.keyboard.press('Escape');
     await expect(classroomModal).toBeHidden({ timeout: 3000 });
 
-    // Also click a room tile in the top "Aulas y Laboratorios por Niveles" section to verify floor map tile opens modal
+    // Switch to "Campus Vertical" view to verify floor map tile opens modal
+    const floorTab = page.locator('.classroom-submode-btn, .dag-submode-btn').filter({ hasText: /Campus Vertical|Pisos/i });
+    if (await floorTab.isVisible()) {
+      await floorTab.click();
+    }
     const roomTile = page.locator('.campus-floor-explorer .campus-room-chip').first();
     await expect(roomTile).toBeVisible();
     await roomTile.click();
     await expect(classroomModal).toBeVisible({ timeout: 5000 });
     await page.keyboard.press('Escape');
     await expect(classroomModal).toBeHidden({ timeout: 3000 });
+
+    // Switch back to directory tab
+    const dirTab = page.locator('.classroom-submode-btn, .dag-submode-btn').filter({ hasText: /Directorio|Disponibilidad/i });
+    if (await dirTab.isVisible()) {
+      await dirTab.click();
+    }
 
     // 3B: /profesores
     await page.goto('/profesores');
