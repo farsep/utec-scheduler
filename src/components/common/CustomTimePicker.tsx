@@ -31,6 +31,7 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const [manualTime, setManualTime] = useState(value || '');
 
   // Keep manual input in sync with external value
@@ -99,6 +100,40 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
     };
   }, [isOpen]);
 
+  // Viewport bounds clamping safeguard
+  useEffect(() => {
+    if (!isOpen || !popoverRef.current) return;
+    const el = popoverRef.current;
+
+    const checkViewportBounds = () => {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const padding = 8;
+
+      // If popover is centered via CSS transform, let CSS handle it
+      const computed = window.getComputedStyle(el);
+      if (computed.transform !== 'none') return;
+
+      if (rect.right > vw - padding) {
+        const overflow = rect.right - (vw - padding);
+        el.style.left = `${Math.max(padding, el.offsetLeft - overflow)}px`;
+        el.style.right = 'auto';
+      } else if (rect.left < padding) {
+        const underflow = padding - rect.left;
+        el.style.left = `${el.offsetLeft + underflow}px`;
+        el.style.right = 'auto';
+      }
+    };
+
+    const rafId = requestAnimationFrame(checkViewportBounds);
+    window.addEventListener('resize', checkViewportBounds);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', checkViewportBounds);
+    };
+  }, [isOpen]);
+
   const toggleOpen = (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -136,7 +171,6 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
     <div
       ref={containerRef}
       className={`grafton-time-picker-wrapper ${className}`}
-      style={{ position: 'relative', display: 'inline-block' }}
     >
       {/* Trigger Button or Custom Trigger */}
       {customTrigger ? (
@@ -161,16 +195,10 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
       {/* Floating Grafton Swiss Popover */}
       {isOpen && (
         <div
+          ref={popoverRef}
           role="dialog"
           aria-label="Selector de Horario"
-          className="grafton-time-picker-popover"
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 6px)',
-            right: align === 'right' ? 0 : 'auto',
-            left: align === 'left' ? 0 : 'auto',
-            zIndex: 9999
-          }}
+          className={`grafton-time-picker-popover ${align === 'right' ? 'grafton-time-picker-popover--right' : 'grafton-time-picker-popover--left'}`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Popover Header */}
