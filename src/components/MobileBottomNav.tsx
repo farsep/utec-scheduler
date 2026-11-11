@@ -1,7 +1,7 @@
 import React from 'react';
-import { Calendar, BookOpen, Building2, GraduationCap, Award } from 'lucide-react';
+import { Calendar, GitBranch, BookOpen, Building2, GraduationCap, Award } from 'lucide-react';
 
-export type NavTabId = 'horarios' | 'cursos' | 'aulas' | 'docentes' | 'mentores';
+export type NavTabId = 'horarios' | 'malla' | 'cursos' | 'aulas' | 'docentes' | 'mentores';
 
 interface MobileBottomNavProps {
   activeTab: NavTabId;
@@ -17,6 +17,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'horarios', href: '/', label: 'Horarios', title: 'Armador de Horarios', icon: Calendar },
+  { id: 'malla', href: '/malla', label: 'Malla', title: 'Malla Curricular & Grafo', icon: GitBranch },
   { id: 'cursos', href: '/cursos', label: 'Cursos', title: 'Catálogo de Cursos Ofertados', icon: BookOpen },
   { id: 'aulas', href: '/aulas', label: 'Aulas', title: 'Buscador de Aulas Libres', icon: Building2 },
   { id: 'docentes', href: '/profesores', label: 'Docentes', title: 'Directorio de Docentes', icon: GraduationCap },

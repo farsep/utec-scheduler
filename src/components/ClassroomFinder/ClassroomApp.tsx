@@ -19,6 +19,7 @@ import { BroadcastIcon } from '../common/BroadcastIcon';
 import { ArchitecturalEmptyState } from '../common/ArchitecturalEmptyState';
 import {
   Building2,
+  LayoutGrid,
   Search,
   Filter,
   CheckCircle2,
@@ -34,27 +35,22 @@ interface ClassroomAppProps {
   hideTopNavbar?: boolean;
 }
 
-const UTEC_ARCHITECTURAL_FLOORS = [
-  {
-    id: 'f8-9',
-    title: 'Piso 8 & 9 · Computación, Ciencia de Datos y Salas de Estudio',
-    floors: [8, 9, 10],
-  },
-  {
-    id: 'f6-7',
-    title: 'Piso 6 & 7 · Laboratorios de Ingeniería y Electrónica',
-    floors: [6, 7],
-  },
-  {
-    id: 'f4-5',
-    title: 'Piso 4 & 5 · Aulas Magistrales y Ciencias Básicas',
-    floors: [4, 5],
-  },
-  {
-    id: 'f1-3',
-    title: 'Piso 1 al 3 · Auditorios, Talleres y Mesas Colaborativas',
-    floors: [1, 2, 3],
-  },
+interface ArchitecturalFloorLevel {
+  floor: number;
+  title: string;
+}
+
+const UTEC_ARCHITECTURAL_FLOORS: ArchitecturalFloorLevel[] = [
+  { floor: 10, title: 'Piso 10 · Aulas y Salas de Estudio' },
+  { floor: 9, title: 'Piso 9 · Aulas de Docencia' },
+  { floor: 8, title: 'Piso 8 · Aulas y Mesas Colaborativas' },
+  { floor: 7, title: 'Piso 7 · Aulas de Cátedra' },
+  { floor: 6, title: 'Piso 6 · Aulas, Laboratorios y Mesas' },
+  { floor: 5, title: 'Piso 5 · Aulas y Laboratorios' },
+  { floor: 4, title: 'Piso 4 · Aulas Magistrales y Laboratorios' },
+  { floor: 3, title: 'Piso 3 · Aulas y Mesas de Trabajo' },
+  { floor: 2, title: 'Piso 2 · Aulas y Laboratorios' },
+  { floor: 1, title: 'Piso 1 · Auditorios, Aula Magna y Laboratorios' },
 ];
 
 export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = false }) => {
@@ -96,6 +92,45 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
 
   // Toggle to show occupied rooms as well (default: show free first, with toggle)
   const [showOccupiedRooms, setShowOccupiedRooms] = useState<boolean>(false);
+
+  // Sub-view Mode: Direct Classroom Availability & Search (Default) vs Grafton Vertical Campus (Floors & Levels)
+  const [subMode, setSubMode] = useState<'directory' | 'floors'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get('vista') || params.get('view');
+      if (v === 'pisos' || v === 'campus' || v === 'floors') return 'floors';
+    }
+    return 'directory';
+  });
+
+  const handleSwitchSubMode = useCallback((mode: 'directory' | 'floors') => {
+    setSubMode(mode);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (mode === 'floors') {
+        url.searchParams.set('vista', 'pisos');
+      } else {
+        url.searchParams.delete('vista');
+        url.searchParams.delete('view');
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const checkVistaParam = () => {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get('vista') || params.get('view');
+      if (v === 'pisos' || v === 'campus' || v === 'floors') {
+        setSubMode('floors');
+      } else {
+        setSubMode('directory');
+      }
+    };
+    window.addEventListener('popstate', checkVistaParam);
+    return () => window.removeEventListener('popstate', checkVistaParam);
+  }, []);
 
   // Floating back to top button visibility for mobile
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
@@ -357,6 +392,51 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
         />
       )}
 
+      {/* Sub-view Bar: Curricular Graph style view switcher */}
+      <div className="dag-submode-bar classroom-submode-bar">
+        <div className="dag-submode-inner">
+          <div className="dag-submode-tabs" role="tablist" aria-label="Modo de exploración de aulas">
+            <button
+              type="button"
+              className={`dag-submode-btn classroom-submode-btn ${subMode === 'directory' ? 'is-active' : ''}`}
+              onClick={() => handleSwitchSubMode('directory')}
+              role="tab"
+              aria-selected={subMode === 'directory'}
+            >
+              <LayoutGrid size={14} />
+              <span className="submode-txt-full">Directorio y Disponibilidad de Aulas (Buscador & Horarios)</span>
+              <span className="submode-txt-short">Directorio de Aulas</span>
+            </button>
+            <button
+              type="button"
+              className={`dag-submode-btn classroom-submode-btn ${subMode === 'floors' ? 'is-active' : ''}`}
+              onClick={() => handleSwitchSubMode('floors')}
+              role="tab"
+              aria-selected={subMode === 'floors'}
+            >
+              <Building2 size={14} />
+              <span className="submode-txt-full">Campus Vertical Grafton Architects (Pisos y Niveles)</span>
+              <span className="submode-txt-short">Campus Vertical (Pisos)</span>
+            </button>
+          </div>
+
+          <div className="dag-submode-legend classroom-submode-legend">
+            <span className="dag-legend-item">
+              <span className="dag-legend-swatch dag-legend-swatch--emerald" />
+              <span>{totalAvailableAllFloors} Libres</span>
+            </span>
+            <span className="dag-legend-item">
+              <span className="dag-legend-swatch dag-legend-swatch--amber" />
+              <span>{classrooms.length - totalAvailableAllFloors} En clase</span>
+            </span>
+            <span className="dag-legend-item">
+              <span className="dag-legend-swatch dag-legend-swatch--cyan" />
+              <span>10 Pisos UTEC</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
       <main className="classroom-finder-main">
         {/* Hero Banner Section */}
         <div className="classroom-hero-banner glass-card">
@@ -441,71 +521,6 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
           </div>
         )}
 
-        {/* UTEC Barranco Architectural Floor Explorer (Grafton Swiss Concrete) */}
-        {!isLoading && evaluatedClassrooms.length > 0 && (
-          <section className="grafton-card campus-floor-explorer" aria-label="Explorador por pisos UTEC Barranco">
-            <div className="campus-floor-explorer__head">
-              <div>
-                <div className="dag-eyebrow">CAMPUS VERTICAL GRAFTON ARCHITECTS · BARRANCO</div>
-                <h2 className="campus-floor-explorer__title">
-                  Aulas y Laboratorios por Niveles (Estado en Tiempo Real)
-                </h2>
-              </div>
-              <span className="campus-floor-explorer__meta">
-                {totalAvailableAllFloors} libres de {classrooms.length} espacios
-              </span>
-            </div>
-
-            <div className="campus-floor-groups">
-              {UTEC_ARCHITECTURAL_FLOORS.map(group => {
-                const groupRooms = evaluatedClassrooms
-                  .filter(item => group.floors.includes(item.classroom.floor))
-                  .sort((a, b) => {
-                    if (a.isAvailableForSearch !== b.isAvailableForSearch) {
-                      return a.isAvailableForSearch ? -1 : 1;
-                    }
-                    return a.classroom.code.localeCompare(b.classroom.code);
-                  });
-
-                if (groupRooms.length === 0) return null;
-
-                return (
-                  <div key={group.id} className="campus-floor-band">
-                    <div className="campus-floor-band__header">
-                      <span className="campus-floor-band__title">{group.title}</span>
-                      <span className="campus-floor-band__count">
-                        {groupRooms.filter(r => r.isAvailableForSearch).length} libres / {groupRooms.length}
-                      </span>
-                    </div>
-
-                    <div className="campus-floor-chips">
-                      {groupRooms.map(item => {
-                        const isFree = item.isAvailableForSearch;
-                        return (
-                          <button
-                            key={item.classroom.id}
-                            type="button"
-                            className={`campus-room-chip ${isFree ? 'is-free' : 'is-busy'} cursor-pointer hover:border-[#18181A] hover:shadow-[2px_2px_0px_#18181A] transition-all`}
-                            onClick={() => handleOpenDetail(item.classroom)}
-                            title={`${item.classroom.displayName} — Clic para ver horario semanal`}
-                          >
-                            <span className="campus-room-chip__code">
-                              {isFree ? '●' : '○'} {item.classroom.code}
-                            </span>
-                            <span className="campus-room-chip__state">
-                              {isFree ? 'Libre · Piso ' + item.classroom.floor : 'En clase'}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
         {/* Filter Bar */}
         <ClassroomFilterBar
           filter={filter}
@@ -523,92 +538,162 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
           onResetFilters={handleResetFilters}
         />
 
-        {/* Loading Spinner */}
-        {isLoading ? (
-          <div className="classroom-loading-state">
-            <div className="loading-spinner" />
-            <p className="loading-text">Cargando y analizando 75+ aulas de UTEC...</p>
-          </div>
-        ) : (
-          <div className="classroom-results-container">
-            {/* Available Classrooms Section */}
-            <div className="results-section-header">
-              <div className="section-title-wrap">
-                <span className="section-status-square" aria-hidden="true">
-                  <BroadcastIcon className="w-3.5 h-3.5" />
+        {/* Conditional View: Campus Vertical by Floors VS Directory Cards Grid */}
+        {subMode === 'floors' ? (
+          /* UTEC Barranco Architectural Floor Explorer (Grafton Swiss Concrete) */
+          !isLoading && evaluatedClassrooms.length > 0 && (
+            <section className="grafton-card campus-floor-explorer" aria-label="Explorador por pisos UTEC Barranco">
+              <div className="campus-floor-explorer__head">
+                <div>
+                  <div className="dag-eyebrow">CAMPUS VERTICAL GRAFTON ARCHITECTS · BARRANCO</div>
+                  <h2 className="campus-floor-explorer__title">
+                    Aulas y Laboratorios por Niveles (Estado en Tiempo Real)
+                  </h2>
+                </div>
+                <span className="campus-floor-explorer__meta">
+                  {totalAvailableAllFloors} libres de {classrooms.length} espacios
                 </span>
-                <h2>
-                  Aulas Disponibles
-                  <span className="section-count-tag">{totalAvailable}</span>
-                </h2>
               </div>
-              <span className="section-subtitle">
-                {filter.mode === 'live_now'
-                  ? `Desocupadas en este momento (${effectiveLiveTimeStr}) en el día ${filter.selectedDay}`
-                  : `Totalmente libres de ${filter.startTime} a ${filter.endTime}`}
-              </span>
+
+              <div className="campus-floor-groups">
+                {UTEC_ARCHITECTURAL_FLOORS.map(level => {
+                  const floorRooms = evaluatedClassrooms
+                    .filter(item => item.classroom.floor === level.floor)
+                    .sort((a, b) => {
+                      if (a.isAvailableForSearch !== b.isAvailableForSearch) {
+                        return a.isAvailableForSearch ? -1 : 1;
+                      }
+                      return a.classroom.code.localeCompare(b.classroom.code);
+                    });
+
+                  if (floorRooms.length === 0) return null;
+
+                  const availableCount = floorRooms.filter(r => r.isAvailableForSearch).length;
+
+                  return (
+                    <div key={`floor-${level.floor}`} className="campus-floor-band">
+                      <div className="campus-floor-band__header">
+                        <span className="campus-floor-band__title">{level.title}</span>
+                        <span className="campus-floor-band__count">
+                          {availableCount} libres / {floorRooms.length}
+                        </span>
+                      </div>
+
+                      <div className="campus-floor-chips">
+                        {floorRooms.map(item => {
+                          const isFree = item.isAvailableForSearch;
+                          return (
+                            <button
+                              key={item.classroom.id}
+                              type="button"
+                              className={`campus-room-chip ${isFree ? 'is-free' : 'is-busy'} cursor-pointer hover:border-[#18181A] hover:shadow-[2px_2px_0px_#18181A] transition-all`}
+                              onClick={() => handleOpenDetail(item.classroom)}
+                              title={`${item.classroom.displayName} — Clic para ver horario semanal`}
+                            >
+                              <span className="campus-room-chip__code">
+                                {isFree ? '●' : '○'} {item.classroom.code}
+                              </span>
+                              <span className="campus-room-chip__state">
+                                {isFree ? `Libre · Piso ${item.classroom.floor}` : 'En clase'}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )
+        ) : (
+          /* Directory View: Loading State or Available Classrooms Grid + Occupied Section */
+          isLoading ? (
+            <div className="classroom-loading-state">
+              <div className="loading-spinner" />
+              <p className="loading-text">Cargando y analizando 75+ aulas de UTEC...</p>
             </div>
-
-            {availableRoomsList.length === 0 ? (
-              <ArchitecturalEmptyState
-                icon={<Building2 size={24} />}
-                title="No hay aulas disponibles con estos criterios"
-                description="Prueba ampliando el rango de tiempo, seleccionando otro piso o reduciendo las horas mínimas requeridas."
-                resetLabel="Restablecer Filtros"
-                onReset={handleResetFilters}
-              />
-            ) : (
-              <div className="classroom-cards-grid">
-                {availableRoomsList.map(item => (
-                  <ClassroomCard
-                    key={item.classroom.id}
-                    availability={item}
-                    filter={filter}
-                    nowMinutes={effectiveLiveMinutes}
-                    isToday={isToday}
-                    onOpenDetail={handleOpenDetail}
-                  />
-                ))}
+          ) : (
+            <div className="classroom-results-container">
+              {/* Available Classrooms Section */}
+              <div className="results-section-header">
+                <div className="section-title-wrap">
+                  <span className="section-status-square" aria-hidden="true">
+                    <BroadcastIcon className="w-3.5 h-3.5" />
+                  </span>
+                  <h2>
+                    Aulas Disponibles
+                    <span className="section-count-tag">{totalAvailable}</span>
+                  </h2>
+                </div>
+                <span className="section-subtitle">
+                  {filter.mode === 'live_now'
+                    ? `Desocupadas en este momento (${effectiveLiveTimeStr}) en el día ${filter.selectedDay}`
+                    : `Totalmente libres de ${filter.startTime} a ${filter.endTime}`}
+                </span>
               </div>
-            )}
 
-            {/* Occupied Rooms Accordion / Toggle */}
-            {busyRoomsList.length > 0 && (
-              <div className="occupied-section-wrap">
-                <button
-                  type="button"
-                  className="occupied-toggle-btn glass-card"
-                  onClick={() => setShowOccupiedRooms(!showOccupiedRooms)}
-                >
-                  <div className="toggle-btn-left">
-                    <Clock size={18} className="text-muted" />
-                    <span>
-                      Ver Aulas Ocupadas en este horario ({busyRoomsList.length})
-                    </span>
-                  </div>
-                  <ChevronDown
-                    size={18}
-                    className={`toggle-chevron ${showOccupiedRooms ? 'open' : ''}`}
-                  />
-                </button>
+              {availableRoomsList.length === 0 ? (
+                <ArchitecturalEmptyState
+                  icon={<Building2 size={24} />}
+                  title="No hay aulas disponibles con estos criterios"
+                  description="Prueba ampliando el rango de tiempo, seleccionando otro piso o reduciendo las horas mínimas requeridas."
+                  resetLabel="Restablecer Filtros"
+                  onReset={handleResetFilters}
+                />
+              ) : (
+                <div className="classroom-cards-grid">
+                  {availableRoomsList.map(item => (
+                    <ClassroomCard
+                      key={item.classroom.id}
+                      availability={item}
+                      filter={filter}
+                      nowMinutes={effectiveLiveMinutes}
+                      isToday={isToday}
+                      onOpenDetail={handleOpenDetail}
+                    />
+                  ))}
+                </div>
+              )}
 
-                {showOccupiedRooms && (
-                  <div className="classroom-cards-grid classroom-cards-grid--occupied">
-                    {busyRoomsList.map(item => (
-                      <ClassroomCard
-                        key={item.classroom.id}
-                        availability={item}
-                        filter={filter}
-                        nowMinutes={effectiveLiveMinutes}
-                        isToday={isToday}
-                        onOpenDetail={handleOpenDetail}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+              {/* Occupied Rooms Accordion / Toggle */}
+              {busyRoomsList.length > 0 && (
+                <div className="occupied-section-wrap">
+                  <button
+                    type="button"
+                    className="occupied-toggle-btn glass-card"
+                    onClick={() => setShowOccupiedRooms(!showOccupiedRooms)}
+                  >
+                    <div className="toggle-btn-left">
+                      <Clock size={18} className="text-muted" />
+                      <span>
+                        Ver Aulas Ocupadas en este horario ({busyRoomsList.length})
+                      </span>
+                    </div>
+                    <ChevronDown
+                      size={18}
+                      className={`toggle-chevron ${showOccupiedRooms ? 'open' : ''}`}
+                    />
+                  </button>
+
+                  {showOccupiedRooms && (
+                    <div className="classroom-cards-grid classroom-cards-grid--occupied">
+                      {busyRoomsList.map(item => (
+                        <ClassroomCard
+                          key={item.classroom.id}
+                          availability={item}
+                          filter={filter}
+                          nowMinutes={effectiveLiveMinutes}
+                          isToday={isToday}
+                          onOpenDetail={handleOpenDetail}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
         )}
       </main>
 

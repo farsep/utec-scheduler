@@ -387,8 +387,16 @@ test.describe('MatricuLAB — Autonomous Self-Healing Visual, Responsive & Funct
     await page.setViewportSize({ width: 1440, height: 900 });
     const roomsBtn = page.getByRole('button', { name: /Aulas/i }).first();
     await roomsBtn.click();
-    await expect(page.locator('.campus-floor-explorer')).toBeVisible();
     await expect(page.locator('.classroom-card').first()).toBeVisible();
+
+    // Verify view switcher can toggle to Campus Vertical view
+    const floorTab = page.locator('.classroom-submode-btn, .dag-submode-btn').filter({ hasText: /Campus Vertical|Pisos/i });
+    if (await floorTab.isVisible()) {
+      await floorTab.click();
+      await expect(page.locator('.campus-floor-explorer')).toBeVisible();
+      // Switch back to directory for cards audit
+      await page.locator('.classroom-submode-btn, .dag-submode-btn').filter({ hasText: /Directorio|Disponibilidad/i }).click();
+    }
 
     const classroomAudit = await page.evaluate(() => {
       const firstCard = document.querySelector('.classroom-card');

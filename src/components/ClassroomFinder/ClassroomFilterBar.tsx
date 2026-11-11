@@ -152,38 +152,53 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
 
       {/* Live Time Controller (Active when in "Libres Ahora") */}
       {!isCustomTime && (
-        <div className="live-time-controller">
+        <div className={`live-time-controller ${isSimulatedTime ? 'live-time-controller--simulated' : ''}`}>
           <div className="live-time-info">
-            <BroadcastIcon className={`w-3.5 h-3.5 shrink-0 ${isSimulatedTime ? 'text-[#C44D00]' : 'text-[#0D7A4E]'}`} />
-            <span className="live-time-title">
-              {isSimulatedTime ? 'Simulando Horario en Vivo:' : 'Hora Actual del Campus (En Vivo):'}
+            <span className="live-time-status-box">
+              <BroadcastIcon className="w-3.5 h-3.5 shrink-0" />
             </span>
-            <CustomTimePicker
-              value={activeLiveTimeStr}
-              onChange={(val) => onSetLiveTime(val)}
-              align="left"
-              customTrigger={(_formatted, onClick, isOpen) => (
-                <button
-                  type="button"
-                  className="live-time-badge cursor-pointer hover:bg-[#18181A] hover:text-[#F2F0EC] transition-colors inline-flex items-center gap-1.5"
-                  onClick={onClick}
-                  title="Clic para cambiar hora exacta del campus"
-                  aria-label={`Hora actual del campus: ${activeLiveTimeStr}. Clic para cambiar hora.`}
-                  aria-haspopup="dialog"
-                  aria-expanded={isOpen}
-                >
-                  <Clock size={12} className="opacity-70 shrink-0 inline" />
-                  <span>{activeLiveTimeStr}</span>
-                </button>
-              )}
-            />
-            <span className="live-day-tag">{DAY_LABELS[filter.selectedDay]}</span>
+            <div className="live-time-heading-wrap">
+              <span className="live-time-title">
+                {isSimulatedTime ? 'Simulando Campus' : 'Hora del Campus'}
+              </span>
+            </div>
+
+            {/* Desktop-only secondary badge for test compatibility */}
+            <div className="live-time-desktop-badge">
+              <CustomTimePicker
+                value={activeLiveTimeStr}
+                onChange={(val) => onSetLiveTime(val)}
+                align="left"
+                customTrigger={(_formatted, onClick, isOpen) => (
+                  <button
+                    type="button"
+                    className={`live-time-badge cursor-pointer hover:bg-[#18181A] hover:text-[#F2F0EC] transition-colors inline-flex items-center gap-1.5 ${isOpen ? 'live-time-badge--open' : ''}`}
+                    onClick={onClick}
+                    title="Clic para cambiar hora exacta del campus"
+                    aria-label={`Hora actual del campus: ${activeLiveTimeStr}. Clic para cambiar hora.`}
+                    aria-haspopup="dialog"
+                    aria-expanded={isOpen}
+                  >
+                    <Clock size={12} className="opacity-70 shrink-0 inline" />
+                    <span>{activeLiveTimeStr}</span>
+                  </button>
+                )}
+              />
+            </div>
+
+            {/* Status chip for mobile, tablet & desktop */}
+            <div className={`live-time-chip ${isSimulatedTime ? 'live-time-chip--simulated' : 'live-time-chip--live'}`}>
+              <span className="live-time-chip-dot" />
+              <span>{isSimulatedTime ? 'SIMULANDO' : 'EN VIVO'}</span>
+              <span className="live-time-chip-sep">·</span>
+              <span className="live-time-chip-day">{DAY_LABELS[filter.selectedDay]}</span>
+            </div>
           </div>
 
           <div className="live-time-actions">
             <button
               type="button"
-              className="grafton-step-btn"
+              className="grafton-step-btn grafton-step-btn--prev"
               onClick={() => onStepLiveTime(-15)}
               title="Retroceder 15 minutos en tiempo real"
             >
@@ -191,15 +206,29 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
             </button>
             <div className="live-time-input-wrap">
               <CustomTimePicker
-                size="sm"
+                size="md"
                 value={activeLiveTimeStr}
                 onChange={(val) => onSetLiveTime(val)}
-                align="right"
+                align="left"
+                customTrigger={(formattedDisplay, onClick, isOpen) => (
+                  <button
+                    type="button"
+                    className={`grafton-time-trigger-btn live-time-stepper-btn ${isOpen ? 'grafton-time-trigger-btn--open' : ''}`}
+                    onClick={onClick}
+                    aria-haspopup="dialog"
+                    aria-expanded={isOpen}
+                    title="Clic para seleccionar hora exacta del campus"
+                  >
+                    <Clock size={13} className="shrink-0 text-[#00779E]" />
+                    <span className="live-time-main-val">{activeLiveTimeStr}</span>
+                    <span className="live-time-sub-val">({formattedDisplay})</span>
+                  </button>
+                )}
               />
             </div>
             <button
               type="button"
-              className="grafton-step-btn"
+              className="grafton-step-btn grafton-step-btn--next"
               onClick={() => onStepLiveTime(15)}
               title="Avanzar 15 minutos en tiempo real"
             >
@@ -267,7 +296,7 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
                 onChange={(val) => handleTimeChange('end', val)}
                 minHour={7}
                 maxHour={22}
-                align="right"
+                align="left"
               />
             </div>
 

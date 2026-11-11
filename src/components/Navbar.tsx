@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Upload, Sparkles, Trash2, Building2, GraduationCap, Award, BookOpen } from 'lucide-react';
+import { Calendar, GitBranch, Upload, Sparkles, Trash2, Building2, GraduationCap, Award, BookOpen } from 'lucide-react';
 import type { MetadataInfo } from '../types/schedule';
 import { MobileBottomNav } from './MobileBottomNav';
 
@@ -38,6 +38,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           <a href="/" className="nav-tab-item nav-tab-item--active" title="Armador de Horarios">
             <Calendar size={15} />
             <span>Horarios</span>
+          </a>
+          <a href="/malla" className="nav-tab-item" title="Malla Curricular & Grafo de Prerrequisitos">
+            <GitBranch size={15} />
+            <span>Malla</span>
           </a>
           <a href="/cursos" className="nav-tab-item" title="Catálogo de Cursos Ofertados">
             <BookOpen size={15} />

@@ -58,10 +58,18 @@ export const GraftonTopBar: React.FC<GraftonTopBarProps> = ({
 
         <button
           type="button"
+          className={`grafton-nav-btn ${activeTab === 'malla' ? 'is-active' : ''}`}
+          onClick={() => onSwitchTab('malla')}
+        >
+          Malla & 16 Carreras
+        </button>
+
+        <button
+          type="button"
           className={`grafton-nav-btn ${activeTab === 'courses' ? 'is-active' : ''}`}
           onClick={() => onSwitchTab('courses')}
         >
-          Malla & 16 Carreras
+          Cursos
         </button>
 
         <button

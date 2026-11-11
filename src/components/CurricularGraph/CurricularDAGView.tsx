@@ -7,7 +7,6 @@ import {
   type CurricularCourseNode,
   type FacultyId,
 } from '../../data/utecCurriculaData';
-import { CourseApp } from '../CourseDirectory/CourseApp';
 import { GitBranch, BookOpen, CheckCircle2, ArrowRight, ArrowLeft, Plus } from 'lucide-react';
 
 interface CurricularDAGViewProps {
@@ -67,26 +66,6 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
   offeredCourseCodes = new Set(),
   onSelectCourseForSchedule,
 }) => {
-  const [subMode, setSubMode] = useState<'dag' | 'catalog'>(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('curso') || params.get('c')) return 'catalog';
-    }
-    return 'dag';
-  });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const checkCursoParam = () => {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('curso') || params.get('c')) {
-        setSubMode('catalog');
-      }
-    };
-    checkCursoParam();
-    window.addEventListener('popstate', checkCursoParam);
-    return () => window.removeEventListener('popstate', checkCursoParam);
-  }, []);
   const [selectedFaculty, setSelectedFaculty] = useState<'ALL' | FacultyId>('ALL');
   const [selectedCareerId, setSelectedCareerId] = useState<string>('ciencia-computacion');
   const [selectedCourseCode, setSelectedCourseCode] = useState<string>('CS1042');
@@ -253,7 +232,6 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
   }, [activeCareer, activeCourse.code, graphRelations]);
 
   useEffect(() => {
-    if (subMode !== 'dag') return;
     const raf = requestAnimationFrame(computeEdges);
     const timer = setTimeout(computeEdges, 90);
 
@@ -271,33 +249,29 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
       if (observer) observer.disconnect();
       window.removeEventListener('resize', computeEdges);
     };
-  }, [computeEdges, subMode]);
+  }, [computeEdges]);
 
   const isSelectedInSchedule = scheduledCourseCodes.has(activeCourse.code);
   const isOfferedInCatalog = offeredCourseCodes.has(activeCourse.code);
 
   return (
     <div className="curricular-dag-root">
-      {/* Sub-view Bar: Curricular Graph (16 Careers) vs 2026-2 Offered Catalog */}
+      {/* Sub-view Bar: Curricular Graph (16 Careers) & Link to 2026-2 Offered Catalog */}
       <div className="dag-submode-bar">
         <div className="dag-submode-inner">
           <div className="dag-submode-tabs" role="tablist" aria-label="Modo de exploración curricular">
-            <button
-              type="button"
-              className={`dag-submode-btn ${subMode === 'dag' ? 'is-active' : ''}`}
-              onClick={() => setSubMode('dag')}
-            >
+            <div className="dag-submode-btn is-active" style={{ cursor: 'default' }}>
               <GitBranch size={14} />
               <span>Ruta Curricular Interactiva · 16 Carreras UTEC</span>
-            </button>
-            <button
-              type="button"
-              className={`dag-submode-btn ${subMode === 'catalog' ? 'is-active' : ''}`}
-              onClick={() => setSubMode('catalog')}
+            </div>
+            <a
+              href="/cursos"
+              className="dag-submode-btn"
+              title="Explorar el catálogo completo de 420 cursos con secciones, horarios y oyentes"
             >
               <BookOpen size={14} />
-              <span>Catálogo Ofertado 2026-2 (420 Cursos & Modo Oyente)</span>
-            </button>
+              <span>Catálogo Ofertado 2026-2 (420 Cursos) →</span>
+            </a>
           </div>
 
           <div className="dag-submode-legend">
@@ -317,10 +291,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
         </div>
       </div>
 
-      {subMode === 'catalog' ? (
-        <CourseApp hideTopNavbar />
-      ) : (
-        <main className="dag-main-container">
+      <main className="dag-main-container">
           {/* 1. 4 Faculties & 16 Careers Selector Header */}
           <section className="grafton-card dag-careers-panel" aria-label="Selector de 4 Facultades y 16 Carreras UTEC">
             <div className="dag-panel-header">
@@ -403,16 +374,29 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                 </div>
               </div>
 
-              {isOfferedInCatalog && !isSelectedInSchedule && onSelectCourseForSchedule && (
-                <button
-                  type="button"
-                  className="btn btn-primary dag-add-schedule-btn"
-                  onClick={() => onSelectCourseForSchedule(activeCourse.code)}
-                >
-                  <Plus size={14} />
-                  <span>Añadir a Horario</span>
-                </button>
-              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                {isOfferedInCatalog && (
+                  <a
+                    href={`/cursos?curso=${activeCourse.code}`}
+                    className="btn btn-secondary dag-add-schedule-btn"
+                    style={{ borderColor: 'var(--border-hairline)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+                    title={`Ver secciones, horarios y oyentes de ${activeCourse.code} en Catálogo Ofertado`}
+                  >
+                    <BookOpen size={14} />
+                    <span>Ver en Cursos</span>
+                  </a>
+                )}
+                {isOfferedInCatalog && !isSelectedInSchedule && onSelectCourseForSchedule && (
+                  <button
+                    type="button"
+                    className="btn btn-primary dag-add-schedule-btn"
+                    onClick={() => onSelectCourseForSchedule(activeCourse.code)}
+                  >
+                    <Plus size={14} />
+                    <span>Añadir a Horario</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="dag-inspector-relations">
@@ -675,7 +659,6 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
             </div>
           </section>
         </main>
-      )}
     </div>
   );
 };
