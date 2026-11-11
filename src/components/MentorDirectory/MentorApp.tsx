@@ -9,6 +9,7 @@ import { MentorFilterBar } from './MentorFilterBar';
 import { MentorCard, type ActiveUserBlock } from './MentorCard';
 import { MentorDetailModal } from './MentorDetailModal';
 import { ArchitecturalEmptyState } from '../common/ArchitecturalEmptyState';
+import { GraftonMobileKpiBand } from '../common/GraftonMobileKpiBand';
 import {
   Award,
   Search,
@@ -233,7 +234,39 @@ export const MentorApp: React.FC<MentorAppProps> = ({
             </p>
           </div>
 
-          <div className="hero-kpi-badges prof-hero-kpi-badges mentor-hero-kpi-badges">
+          {/* Mobile High-Density 3-Column Swiss Industrial Band (< 1024px) */}
+          <GraftonMobileKpiBand
+            slots={[
+              {
+                icon: <CheckCircle2 size={14} color="#0D7A4E" />,
+                value: compatibleMentorsCount,
+                label: 'SIN CRUCE',
+                valueColor: '#0D7A4E',
+                accentColor: '#0D7A4E',
+                onClick: () => setOnlyCompatibleSchedule(prev => !prev),
+              },
+              {
+                icon: <Award size={14} color="#18181A" />,
+                value: mentors.length,
+                label: 'MENTORES',
+                valueColor: '#141416',
+                accentColor: '#18181A',
+              },
+              {
+                icon: <Building2 size={14} color="#00779E" />,
+                value: presencialSessionsCount,
+                label: 'PRESENCIALES',
+                valueColor: '#00779E',
+                accentColor: '#00779E',
+                onClick: () =>
+                  handleFilterChange({
+                    selectedModality: filter.selectedModality === 'Presencial' ? 'ALL' : 'Presencial',
+                  }),
+              },
+            ]}
+          />
+
+          <div className="hero-kpi-badges prof-hero-kpi-badges mentor-hero-kpi-badges hidden lg:flex">
             <div
               className={`hero-kpi-badge prof-hero-kpi-card ${onlyCompatibleSchedule ? 'prof-hero-kpi-card--live' : ''}`}
               onClick={() => setOnlyCompatibleSchedule(prev => !prev)}

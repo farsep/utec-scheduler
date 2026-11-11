@@ -18,6 +18,7 @@ import { CourseFilterBar } from './CourseFilterBar';
 import { CourseCard } from './CourseCard';
 import { CourseDetailModal } from './CourseDetailModal';
 import { BroadcastIcon } from '../common/BroadcastIcon';
+import { GraftonMobileKpiBand } from '../common/GraftonMobileKpiBand';
 import { ArchitecturalEmptyState } from '../common/ArchitecturalEmptyState';
 import {
   BookOpen,
@@ -272,8 +273,35 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
             </p>
           </div>
 
+          {/* Mobile High-Density 3-Column Swiss Industrial Band (< 1024px) */}
+          <GraftonMobileKpiBand
+            slots={[
+              {
+                icon: <BroadcastIcon className="w-3.5 h-3.5 shrink-0 text-[#0D7A4E]" />,
+                value: liveNowCount,
+                label: 'EN VIVO',
+                valueColor: '#0D7A4E',
+                accentColor: '#0D7A4E',
+              },
+              {
+                icon: <BookOpen size={14} color="#18181A" />,
+                value: courses.length,
+                label: 'CURSOS',
+                valueColor: '#141416',
+                accentColor: '#18181A',
+              },
+              {
+                icon: <Layers size={14} color="#00779E" />,
+                value: totalSectionsCount,
+                label: 'SECCIONES',
+                valueColor: '#00779E',
+                accentColor: '#00779E',
+              },
+            ]}
+          />
+
           {/* Hero KPI Badges */}
-          <div className="hero-kpi-badges prof-hero-kpi-badges course-hero-kpi-badges">
+          <div className="hero-kpi-badges prof-hero-kpi-badges course-hero-kpi-badges hidden lg:flex">
             <div className="hero-kpi-badge prof-hero-kpi-card">
               <div className="prof-kpi-card-header">
                 <div className="prof-kpi-icon-wrap prof-kpi-icon-wrap--blue">
