@@ -267,7 +267,7 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
                 onChange={(val) => handleTimeChange('end', val)}
                 minHour={7}
                 maxHour={22}
-                align="left"
+                align="right"
               />
             </div>
 
