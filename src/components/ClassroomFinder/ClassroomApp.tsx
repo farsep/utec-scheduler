@@ -16,6 +16,7 @@ import { ClassroomFilterBar } from './ClassroomFilterBar';
 import { ClassroomCard } from './ClassroomCard';
 import { ClassroomDetailModal } from './ClassroomDetailModal';
 import { BroadcastIcon } from '../common/BroadcastIcon';
+import { GraftonMobileKpiBand, type GraftonKpiSlot } from '../common/GraftonMobileKpiBand';
 import { ArchitecturalEmptyState } from '../common/ArchitecturalEmptyState';
 import {
   Building2,
@@ -471,7 +472,35 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
             </p>
           </div>
 
-          <div className="hero-kpi-badges prof-hero-kpi-badges classroom-hero-kpi-badges">
+          {/* Mobile High-Density 3-Column Swiss Industrial Band (< 1024px) */}
+          <GraftonMobileKpiBand
+            slots={[
+              {
+                icon: <BroadcastIcon className="w-3.5 h-3.5 shrink-0 text-[#0D7A4E]" />,
+                value: totalAvailable,
+                label: 'AULAS LIBRES',
+                valueColor: '#0D7A4E',
+                accentColor: '#0D7A4E',
+              },
+              {
+                icon: <Layers size={14} color="#18181A" />,
+                value: classrooms.length,
+                label: 'ESPACIOS',
+                valueColor: '#141416',
+                accentColor: '#18181A',
+              },
+              {
+                icon: <Layers size={14} color="#00779E" />,
+                value: 10,
+                label: 'PISOS UTEC',
+                valueColor: '#00779E',
+                accentColor: '#00779E',
+              },
+            ]}
+          />
+
+          {/* Desktop Hero KPI Badges (>= 1024px) */}
+          <div className="hero-kpi-badges prof-hero-kpi-badges classroom-hero-kpi-badges hidden lg:flex">
             <div className="hero-kpi-badge prof-hero-kpi-card prof-hero-kpi-card--live">
               <div className="prof-kpi-card-header">
                 <div className="prof-kpi-icon-wrap prof-kpi-icon-wrap--emerald">

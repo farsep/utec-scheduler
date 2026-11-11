@@ -4418,7 +4418,83 @@ body {
   .course-toast-notification.grafton-swiss-toast {
     bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
   }
+
+  /* Hide old stacked/unaligned hero KPI badges on mobile (< 1024px) */
+  .hero-kpi-badges.classroom-hero-kpi-badges,
+  .hero-kpi-badges.prof-hero-kpi-badges,
+  .hero-kpi-badges.course-hero-kpi-badges,
+  .hero-kpi-badges.mentor-hero-kpi-badges {
+    display: none !important;
+  }
 }
+
+/* ==========================================================================
+   GRAFTON MOBILE KPI BAND (DASHBOARD DE DATOS < 1024px)
+   ========================================================================== */
+.grafton-mobile-kpi-band {
+  width: 100% !important;
+  margin-bottom: 16px !important;
+  border-radius: 0px !important;
+  border: 2px solid #18181A !important;
+  background-color: #FFFFFF !important;
+  box-shadow: 3px 3px 0px #18181A !important;
+  padding: 0px !important;
+  box-sizing: border-box !important;
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .grafton-mobile-kpi-band {
+    display: none !important;
+  }
+}
+
+.grafton-kpi-grid {
+  display: grid !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.grafton-kpi-compartment {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 68px !important;
+  padding: 10px 4px 8px 4px !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  background-color: #FFFFFF !important;
+}
+
+.grafton-kpi-top-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 14px !important;
+}
+
+.grafton-kpi-metric {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 28px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  margin: 1px 0 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.grafton-kpi-label {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  color: #5A5852 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
 
 
 

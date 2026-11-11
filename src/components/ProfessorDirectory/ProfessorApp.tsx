@@ -16,6 +16,7 @@ import { ProfessorFilterBar } from './ProfessorFilterBar';
 import { ProfessorCard } from './ProfessorCard';
 import { ProfessorDetailModal } from './ProfessorDetailModal';
 import { BroadcastIcon } from '../common/BroadcastIcon';
+import { GraftonMobileKpiBand } from '../common/GraftonMobileKpiBand';
 import { ArchitecturalEmptyState } from '../common/ArchitecturalEmptyState';
 import {
   GraduationCap,
@@ -223,8 +224,35 @@ export const ProfessorApp: React.FC<ProfessorAppProps> = ({ hideTopNavbar = fals
             </p>
           </div>
 
+          {/* Mobile High-Density 3-Column Swiss Industrial Band (< 1024px) */}
+          <GraftonMobileKpiBand
+            slots={[
+              {
+                icon: <BroadcastIcon className="w-3.5 h-3.5 shrink-0 text-[#0D7A4E]" />,
+                value: teachingNowCount,
+                label: 'DICTANDO AHORA',
+                valueColor: '#0D7A4E',
+                accentColor: '#0D7A4E',
+              },
+              {
+                icon: <Users size={14} color="#18181A" />,
+                value: professors.length,
+                label: 'DOCENTES',
+                valueColor: '#141416',
+                accentColor: '#18181A',
+              },
+              {
+                icon: <BookOpen size={14} color="#00779E" />,
+                value: totalUniqueCourses,
+                label: 'CURSOS',
+                valueColor: '#00779E',
+                accentColor: '#00779E',
+              },
+            ]}
+          />
+
           {/* Hero KPI Badges on the right side - matching Aulas premium impression */}
-          <div className="hero-kpi-badges prof-hero-kpi-badges">
+          <div className="hero-kpi-badges prof-hero-kpi-badges hidden lg:flex">
             <div className="hero-kpi-badge prof-hero-kpi-card">
               <div className="prof-kpi-card-header">
                 <div className="prof-kpi-icon-wrap prof-kpi-icon-wrap--blue">
