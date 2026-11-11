@@ -5,6 +5,7 @@ import { CourseApp } from './CourseDirectory/CourseApp';
 import { ProfessorApp } from './ProfessorDirectory/ProfessorApp';
 import { ClassroomApp } from './ClassroomFinder/ClassroomApp';
 import { MentorApp } from './MentorDirectory/MentorApp';
+import { MobileBottomNav } from './MobileBottomNav';
 import { GraftonTopBar } from './GraftonTopBar';
 import { prewarmAllCatalogs } from '../utils/masterDataLoader';
 import type { Course } from '../types/schedule';
@@ -318,6 +319,11 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
           />
         </div>
       )}
+
+      <MobileBottomNav
+        activeTab={activeTab}
+        onSwitchTab={(tab, url) => switchTab(tab as TabKey, url)}
+      />
     </div>
   );
 };
