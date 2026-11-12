@@ -573,19 +573,6 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
                                   {session.courseName}
                                 </div>
 
-                                {isLongBlock && (
-                                  <div className="prof-session-long-badge-row">
-                                    <span className="prof-session-duration-tag">
-                                      {session.durationHours}h de clase
-                                    </span>
-                                    {session.modality && (
-                                      <span className="prof-session-modality-tag">
-                                        {session.modality}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-
                                 <div className="prof-session-footer">
                                   <DynamicSessionBadge
                                     sessionGroup={session.sessionGroup}

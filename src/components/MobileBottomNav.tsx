@@ -102,10 +102,34 @@ function shouldIgnorePageSwipe(target: EventTarget | null): boolean {
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onSwitchTab }) => {
-  const currentTabIndex = getCanonicalDockIndex(activeTab);
+  const [activePathIndex, setActivePathIndex] = useState<number>(() => {
+    return getCanonicalDockIndex(activeTab);
+  });
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const dockRef = useRef<HTMLElement | null>(null);
   const sliderRef = useRef<HTMLDivElement | null>(null);
+
+  // Synchronize activePathIndex when activeTab prop changes or when URL changes
+  useEffect(() => {
+    const updateFromLocationOrProp = () => {
+      setActivePathIndex(getCanonicalDockIndex(activeTab));
+    };
+
+    updateFromLocationOrProp();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('popstate', updateFromLocationOrProp);
+      window.addEventListener('astro:page-load', updateFromLocationOrProp);
+      window.addEventListener('DOMContentLoaded', updateFromLocationOrProp);
+      return () => {
+        window.removeEventListener('popstate', updateFromLocationOrProp);
+        window.removeEventListener('astro:page-load', updateFromLocationOrProp);
+        window.removeEventListener('DOMContentLoaded', updateFromLocationOrProp);
+      };
+    }
+  }, [activeTab]);
+
+  const currentTabIndex = activePathIndex;
 
   // Sync dock progress CSS variable to active index
   useEffect(() => {
@@ -132,6 +156,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
       const target = CANONICAL_DOCK_ITEMS[index];
       if (!target) return;
 
+      setActivePathIndex(index);
       if (dockRef.current) {
         dockRef.current.style.setProperty('--dock-active-progress', String(index));
       }
@@ -319,6 +344,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
       ref={dockRef}
       className="grafton-mobile-dock lg:hidden select-none"
       aria-label="Navegación principal móvil Grafton"
+      style={{
+        '--dock-active-progress': displayedActiveIndex,
+      } as React.CSSProperties}
       onTouchStart={onDockTouchStart}
       onTouchMove={onDockTouchMove}
       onTouchEnd={onDockTouchEnd}
@@ -332,7 +360,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
     >
       <div className="grafton-dock-grid grid grid-cols-5 h-[60px] relative">
         {/* Hardware-Accelerated Sliding Indicator */}
-        <div ref={sliderRef} className="grafton-dock-slider" aria-hidden="true" />
+        <div
+          ref={sliderRef}
+          className="grafton-dock-slider"
+          aria-hidden="true"
+          style={{
+            transform: `translate3d(calc(${displayedActiveIndex} * 100%), 0, 0)`,
+          }}
+        />
 
         {/* 5 Canonical Route Tabs */}
         {CANONICAL_DOCK_ITEMS.map((item, index) => {

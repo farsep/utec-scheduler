@@ -35,6 +35,7 @@ interface ClassroomFilterBarProps {
   totalAvailable: number;
   totalRooms: number;
   onResetFilters: () => void;
+  isFloorsView?: boolean;
 }
 
 export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
@@ -50,7 +51,8 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
   floorCounts,
   totalAvailable,
   totalRooms,
-  onResetFilters
+  onResetFilters,
+  isFloorsView = false
 }) => {
   const floors = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -334,136 +336,140 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
         </div>
       </div>
 
-      {/* Floor Filter Bar */}
-      <div className="floor-filter-row">
-        <label className="filter-group-label">
-          <Layers size={14} />
-          <span>Filtrar por Piso:</span>
-        </label>
-        <div className="floor-pills-scroll">
-          <button
-            type="button"
-            className={`floor-pill-btn ${filter.selectedFloor === 'ALL' ? 'selected' : ''}`}
-            onClick={() => onChangeFilter({ selectedFloor: 'ALL' })}
-          >
-            <span>Todos los Pisos</span>
-            <span className="floor-count-bubble">{floorCounts['ALL'] ?? totalAvailable}</span>
-          </button>
-
-          {floors.map(floor => {
-            const count = floorCounts[floor] || 0;
-            const isSelected = filter.selectedFloor === floor;
-            return (
-              <button
-                key={floor}
-                type="button"
-                className={`floor-pill-btn ${isSelected ? 'selected' : ''} ${count === 0 ? 'disabled' : ''}`}
-                onClick={() => onChangeFilter({ selectedFloor: floor })}
-              >
-                <span>Piso {floor}</span>
-                <span className={`floor-count-bubble ${count > 0 ? 'floor-count--positive' : ''}`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Bottom Row: Room Type Chips, Search Input & Sort */}
-      <div className="filter-bottom-row">
-        {/* Room Type Multi-chips */}
-        <div className="room-type-chips">
-          <button
-            type="button"
-            className={`type-chip-btn ${filter.selectedType === 'ALL' ? 'selected' : ''}`}
-            onClick={() => onChangeFilter({ selectedType: 'ALL' })}
-          >
-            <span>Todos</span>
-          </button>
-          <button
-            type="button"
-            className={`type-chip-btn ${filter.selectedType === 'aula' ? 'selected' : ''}`}
-            onClick={() => onChangeFilter({ selectedType: 'aula' })}
-          >
-            <GraduationCap size={14} />
-            <span>Aulas</span>
-          </button>
-          <button
-            type="button"
-            className={`type-chip-btn ${filter.selectedType === 'laboratorio' ? 'selected' : ''}`}
-            onClick={() => onChangeFilter({ selectedType: 'laboratorio' })}
-          >
-            <Laptop size={14} />
-            <span>Laboratorios</span>
-          </button>
-          <button
-            type="button"
-            className={`type-chip-btn ${filter.selectedType === 'mesas' ? 'selected' : ''}`}
-            onClick={() => onChangeFilter({ selectedType: 'mesas' })}
-          >
-            <Users size={14} />
-            <span>Mesas</span>
-          </button>
-          <button
-            type="button"
-            className={`type-chip-btn ${filter.selectedType === 'auditorio' ? 'selected' : ''}`}
-            onClick={() => onChangeFilter({ selectedType: 'auditorio' })}
-          >
-            <Building size={14} />
-            <span>Auditorios</span>
-          </button>
-        </div>
-
-        {/* Search Input */}
-        <div className="search-input-wrap">
-          <Search size={15} className="search-icon" />
-          <input
-            type="text"
-            placeholder="Buscar aula (ej. A704, L203, M802)..."
-            value={filter.searchQuery}
-            onChange={(e) => onChangeFilter({ searchQuery: e.target.value })}
-            className="classroom-search-field"
-          />
-          {filter.searchQuery && (
+      {/* Floor Filter Bar (Directory view only - streamlined out in Floors view) */}
+      {!isFloorsView && (
+        <div className="floor-filter-row">
+          <label className="filter-group-label">
+            <Layers size={14} />
+            <span>Filtrar por Piso:</span>
+          </label>
+          <div className="floor-pills-scroll">
             <button
               type="button"
-              className="search-clear-btn"
-              onClick={() => onChangeFilter({ searchQuery: '' })}
-              title="Borrar búsqueda"
+              className={`floor-pill-btn ${filter.selectedFloor === 'ALL' ? 'selected' : ''}`}
+              onClick={() => onChangeFilter({ selectedFloor: 'ALL' })}
             >
-              <X size={14} />
+              <span>Todos los Pisos</span>
+              <span className="floor-count-bubble">{floorCounts['ALL'] ?? totalAvailable}</span>
             </button>
-          )}
+
+            {floors.map(floor => {
+              const count = floorCounts[floor] || 0;
+              const isSelected = filter.selectedFloor === floor;
+              return (
+                <button
+                  key={floor}
+                  type="button"
+                  className={`floor-pill-btn ${isSelected ? 'selected' : ''} ${count === 0 ? 'disabled' : ''}`}
+                  onClick={() => onChangeFilter({ selectedFloor: floor })}
+                >
+                  <span>Piso {floor}</span>
+                  <span className={`floor-count-bubble ${count > 0 ? 'floor-count--positive' : ''}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
+      )}
 
-        {/* Sort Select */}
-        <CustomSelect
-          size="sm"
-          value={filter.sortBy}
-          onChange={(val) => onChangeFilter({ sortBy: val })}
-          options={[
-            { value: 'floor_asc', label: 'Piso (Menor a Mayor)' },
-            { value: 'floor_desc', label: 'Piso (Mayor a Menor)' },
-            { value: 'free_time', label: 'Mayor tiempo libre' },
-            { value: 'name', label: 'Código de aula' }
-          ]}
-          icon={<SlidersHorizontal size={14} />}
-          align="right"
-          ariaLabel="Ordenar aulas"
-        />
+      {/* Bottom Row: Room Type Chips, Search Input & Sort (Directory view only) */}
+      {!isFloorsView && (
+        <div className="filter-bottom-row">
+          {/* Room Type Multi-chips */}
+          <div className="room-type-chips">
+            <button
+              type="button"
+              className={`type-chip-btn ${filter.selectedType === 'ALL' ? 'selected' : ''}`}
+              onClick={() => onChangeFilter({ selectedType: 'ALL' })}
+            >
+              <span>Todos</span>
+            </button>
+            <button
+              type="button"
+              className={`type-chip-btn ${filter.selectedType === 'aula' ? 'selected' : ''}`}
+              onClick={() => onChangeFilter({ selectedType: 'aula' })}
+            >
+              <GraduationCap size={14} />
+              <span>Aulas</span>
+            </button>
+            <button
+              type="button"
+              className={`type-chip-btn ${filter.selectedType === 'laboratorio' ? 'selected' : ''}`}
+              onClick={() => onChangeFilter({ selectedType: 'laboratorio' })}
+            >
+              <Laptop size={14} />
+              <span>Laboratorios</span>
+            </button>
+            <button
+              type="button"
+              className={`type-chip-btn ${filter.selectedType === 'mesas' ? 'selected' : ''}`}
+              onClick={() => onChangeFilter({ selectedType: 'mesas' })}
+            >
+              <Users size={14} />
+              <span>Mesas</span>
+            </button>
+            <button
+              type="button"
+              className={`type-chip-btn ${filter.selectedType === 'auditorio' ? 'selected' : ''}`}
+              onClick={() => onChangeFilter({ selectedType: 'auditorio' })}
+            >
+              <Building size={14} />
+              <span>Auditorios</span>
+            </button>
+          </div>
 
-        {/* Reset button */}
-        <button
-          type="button"
-          className="prof-reset-btn btn-reset-filters"
-          onClick={onResetFilters}
-          title="Restablecer filtros a valores predeterminados"
-        >
-          <RotateCcw size={13} />
-          <span>Restablecer</span>
-        </button>
-      </div>
+          {/* Search Input */}
+          <div className="search-input-wrap">
+            <Search size={15} className="search-icon" />
+            <input
+              type="text"
+              placeholder="Buscar aula (ej. A704, L203, M802)..."
+              value={filter.searchQuery}
+              onChange={(e) => onChangeFilter({ searchQuery: e.target.value })}
+              className="classroom-search-field"
+            />
+            {filter.searchQuery && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={() => onChangeFilter({ searchQuery: '' })}
+                title="Borrar búsqueda"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Sort Select */}
+          <CustomSelect
+            size="sm"
+            value={filter.sortBy}
+            onChange={(val) => onChangeFilter({ sortBy: val })}
+            options={[
+              { value: 'floor_asc', label: 'Piso (Menor a Mayor)' },
+              { value: 'floor_desc', label: 'Piso (Mayor a Menor)' },
+              { value: 'free_time', label: 'Mayor tiempo libre' },
+              { value: 'name', label: 'Código de aula' }
+            ]}
+            icon={<SlidersHorizontal size={14} />}
+            align="right"
+            ariaLabel="Ordenar aulas"
+          />
+
+          {/* Reset button */}
+          <button
+            type="button"
+            className="prof-reset-btn btn-reset-filters"
+            onClick={onResetFilters}
+            title="Restablecer filtros a valores predeterminados"
+          >
+            <RotateCcw size={13} />
+            <span>Restablecer</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
