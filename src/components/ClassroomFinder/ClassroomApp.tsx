@@ -87,9 +87,19 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
   // Selected room for detailed view modal
   const [selectedRoom, setSelectedRoom] = useState<ClassroomInfo | null>(null);
 
-  const handleOpenDetail = useCallback((cls: ClassroomInfo) => {
-    setSelectedRoom(cls);
-  }, []);
+  const openRoomModal = useCallback((clsOrCode: ClassroomInfo | string) => {
+    if (typeof clsOrCode === 'string') {
+      const match = classrooms.find(c => c.code.toLowerCase() === clsOrCode.toLowerCase()) ||
+                    evaluatedClassrooms.find(e => e.classroom.code.toLowerCase() === clsOrCode.toLowerCase())?.classroom;
+      if (match) {
+        setSelectedRoom(match);
+      }
+    } else {
+      setSelectedRoom(clsOrCode);
+    }
+  }, [classrooms, evaluatedClassrooms]);
+
+  const handleOpenDetail = openRoomModal;
 
   // Toggle to show occupied rooms as well (default: show free first, with toggle)
   const [showOccupiedRooms, setShowOccupiedRooms] = useState<boolean>(false);
@@ -133,12 +143,13 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
     return () => window.removeEventListener('popstate', checkVistaParam);
   }, []);
 
-  // Floating back to top button visibility for mobile
+  // Floating back to top button visibility for mobile (only after scrolling past filter bar)
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 380);
+      // Filter bar ends around ~720px on mobile; only show floating return button when well past filters
+      setShowScrollTop(window.scrollY > 750);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -565,6 +576,7 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
           totalAvailable={totalAvailable}
           totalRooms={classrooms.length}
           onResetFilters={handleResetFilters}
+          isFloorsView={subMode === 'floors'}
         />
 
         {/* Conditional View: Campus Vertical by Floors VS Directory Cards Grid */}
@@ -616,7 +628,8 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
                               key={item.classroom.id}
                               type="button"
                               className={`campus-room-chip ${isFree ? 'is-free' : 'is-busy'} cursor-pointer hover:border-[#18181A] hover:shadow-[2px_2px_0px_#18181A] transition-all`}
-                              onClick={() => handleOpenDetail(item.classroom)}
+                              onClick={() => openRoomModal(item.classroom.code)}
+                              data-room-code={item.classroom.code}
                               title={`${item.classroom.displayName} — Clic para ver horario semanal`}
                             >
                               <span className="campus-room-chip__code">

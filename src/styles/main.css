@@ -414,17 +414,17 @@ input[type="range"]::-webkit-slider-thumb {
     display: none;
   }
 
-  /* Safe bottom padding so bottom bar never obscures content */
-  body,
-  .app-shell-root,
-  .app-shell-tab-pane,
-  main.main-content,
+  /* Safe bottom padding so bottom bar never obscures footer or content */
+  .grafton-footer {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
   .classroom-finder-root,
   .prof-directory-root,
   .course-finder-root,
   .mentor-directory-root,
   .curricular-dag-root {
-    padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   /* Shift floating mobile action button and notification toasts upward */
@@ -519,6 +519,15 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .student-metadata-scroll::-webkit-scrollbar {
   display: none;
+}
+
+@media (max-width: 768px) {
+  .student-metadata-scroll {
+    flex-wrap: wrap !important;
+    white-space: normal !important;
+    gap: 6px !important;
+    padding: 6px 12px !important;
+  }
 }
 
 .student-meta-item {
@@ -1393,6 +1402,114 @@ input[type="range"]::-webkit-slider-thumb {
   flex-direction: column;
 }
 
+@media (max-width: 768px) {
+  .timetable-grid-wrapper {
+    min-width: 100% !important;
+  }
+}
+
+/* Grafton Swiss Precision Segmented Control (Semana | Lunes | Martes... | Sábado) */
+.timetable-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #F4F3EF;
+  border-bottom: 1px solid #D0CFC8;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.timetable-controls-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.timetable-day-segmented-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: #EBEAE4;
+  border: 1px solid #D0CFC8;
+  border-radius: 4px;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  white-space: nowrap;
+}
+.timetable-day-segmented-control::-webkit-scrollbar {
+  display: none;
+}
+
+.timetable-day-segment-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 6px 12px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 12px;
+  font-weight: 600;
+  color: #4A4A46;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.timetable-day-segment-btn:hover:not(.is-active) {
+  background: rgba(24, 24, 26, 0.08);
+  color: #18181A;
+}
+.timetable-day-segment-btn.is-active {
+  background: #111827;
+  color: #FFFFFF;
+  border-color: #111827;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+.timetable-day-segment-btn.is-dimmed {
+  opacity: 0.5;
+}
+.timetable-day-hours-badge {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(24, 24, 26, 0.08);
+  color: inherit;
+  font-weight: 700;
+}
+.timetable-day-segment-btn.is-active .timetable-day-hours-badge {
+  background: rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+}
+
+.timetable-reset-week-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 6px 12px;
+  background: #FFFFFF;
+  border: 1px solid #18181A;
+  color: #18181A;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 2px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px #18181A;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.timetable-reset-week-btn:hover {
+  background: #EBEAE4;
+}
+
 .timetable-header {
   display: grid;
   grid-template-columns: 64px repeat(6, 1fr);
@@ -1489,9 +1606,9 @@ input[type="range"]::-webkit-slider-thumb {
 /* Course Pigment Block inside Timetable */
 .schedule-block {
   position: absolute;
-  left: 3px;
-  right: 3px;
-  padding: 6px 8px;
+  left: 2px;
+  right: 2px;
+  padding: 4px 6px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1500,6 +1617,7 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
   user-select: none;
   overflow: hidden;
+  box-sizing: border-box;
   z-index: 5;
   transition: box-shadow var(--transition-fast);
 }
@@ -1548,24 +1666,29 @@ input[type="range"]::-webkit-slider-thumb {
 
 .block-course-title {
   font-family: var(--font-heading);
-  font-size: 0.79rem;
+  font-size: 0.77rem;
   font-weight: 700;
-  line-height: 1.18;
-  margin-top: 2px;
+  line-height: 1.15;
+  margin-top: 1px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 
 .block-meta-mono,
 .block-time-mono {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: 0.66rem;
+  font-size: 0.63rem;
   font-weight: 600;
   line-height: 1.2;
   opacity: 0.92;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: auto;
 }
 
 .schedule-block.short-block {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { formatLocation, DAY_NAMES, DAYS } from '../utils/scheduleUtils';
 import {
   getGraftonPigment,
@@ -31,9 +31,10 @@ const formatCompactRoom = (loc: string) => {
   const formatted = formatLocation(loc);
   if (!formatted) return 'Aula';
   if (/virtual|zoom|meet/i.test(formatted)) return 'Virtual';
+  if (/magna|auditorio/i.test(formatted)) return 'MAG';
   const roomMatch = formatted.match(/([ABLM]\s?-?\s?\d{3,4}[A-Z]?)/i);
   if (roomMatch) return roomMatch[1].replace(/\s+/g, '').toUpperCase();
-  return formatted.length > 10 ? formatted.slice(0, 10) : formatted;
+  return formatted.length > 8 ? formatted.slice(0, 8) : formatted;
 };
 
 export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
@@ -47,6 +48,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
     compressView = false,
   }) => {
     const [dragOverDay, setDragOverDay] = useState<DayOfWeek | null>(null);
+    const [mobileDayFilter, setMobileDayFilter] = useState<'ALL' | DayOfWeek>('ALL');
 
     const scheduledBlocks: {
       course: Course;
@@ -191,13 +193,67 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
     };
 
     const SLOT_HEIGHT = 54;
+    const activeGridDays = mobileDayFilter === 'ALL' ? DAYS : [mobileDayFilter];
+    const totalWeekHours = useMemo(() => {
+      return Object.values(dayHoursMap).reduce((a, b) => a + b, 0);
+    }, [dayHoursMap]);
 
     return (
       <div className="timetable-grid-wrapper">
+        {/* Grafton Swiss Precision Segmented Control (Semana | Lunes | Martes... | Sábado) */}
+        <div className="timetable-controls-bar">
+          <div className="timetable-day-segmented-control" role="tablist" aria-label="Vista del Horario">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mobileDayFilter === 'ALL'}
+              className={`timetable-day-segment-btn ${mobileDayFilter === 'ALL' ? 'is-active' : ''}`}
+              onClick={() => setMobileDayFilter('ALL')}
+            >
+              <span>Semana</span>
+              <span className="timetable-day-hours-badge">{totalWeekHours}h</span>
+            </button>
+            {DAYS.map(day => {
+              const hrs = dayHoursMap[day] || 0;
+              const isSelected = mobileDayFilter === day;
+              const hasClasses = hrs > 0;
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  role="tab"
+                  aria-selected={isSelected}
+                  className={`timetable-day-segment-btn ${isSelected ? 'is-active' : ''} ${!hasClasses ? 'is-dimmed' : ''}`}
+                  onClick={() => setMobileDayFilter(day)}
+                  title={`${day}: ${hrs} horas de clase programadas`}
+                >
+                  <span>{DAY_NAMES[day]}</span>
+                  {hasClasses && <span className="timetable-day-hours-badge">{hrs}h</span>}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Quick reset to weekly view button if zoomed into a single day */}
+          {mobileDayFilter !== 'ALL' && (
+            <button
+              type="button"
+              className="timetable-reset-week-btn"
+              onClick={() => setMobileDayFilter('ALL')}
+              title="Restablecer vista a toda la semana"
+            >
+              ← Volver a vista semanal
+            </button>
+          )}
+        </div>
+
         {/* Header Days Row */}
-        <div className="timetable-header">
+        <div
+          className="timetable-header"
+          style={mobileDayFilter !== 'ALL' ? { gridTemplateColumns: '64px 1fr' } : undefined}
+        >
           <div className="time-col-header">HORA</div>
-          {DAYS.map(day => {
+          {activeGridDays.map(day => {
             const hrs = dayHoursMap[day] || 0;
             return (
               <div key={day} className="day-col-header">
@@ -223,9 +279,12 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
               ))}
             </div>
 
-            {/* 6 Day Columns Canvas */}
-            <div className="days-canvas-grid">
-              {DAYS.map(day => {
+            {/* Day Columns Canvas */}
+            <div
+              className="days-canvas-grid"
+              style={mobileDayFilter !== 'ALL' ? { gridTemplateColumns: '1fr' } : undefined}
+            >
+              {activeGridDays.map(day => {
                 const dayBlocks = scheduledBlocks.filter(b => b.day === day);
                 const dayGhostBlocks = ghostBlocks.filter(g => g.day === day);
 
@@ -255,6 +314,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
                       const textColor = block.hasConflict ? '#520D17' : pigment.text;
                       const durationMinutes = block.endMinutes - block.startMinutes;
                       const compactRoom = formatCompactRoom(block.location);
+                      const canonicalRoom = compactRoom === 'MAG' ? 'MAG · Aula Magna' : compactRoom;
                       const sessionKind = formatSessionTypeLabel(block.sessionGroup);
 
                       return (
@@ -273,7 +333,9 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
                           title={`${block.course.code} · ${block.course.name}\nSección ${block.sectionNumber} (${block.sessionGroup})\n${block.startTime} – ${block.endTime} · Aula: ${formatLocation(block.location)}\nDocente: ${block.professor}`}
                         >
                           <div className="block-top-row">
-                            <span className="block-room-pill">{compactRoom}</span>
+                            <span className="block-room-pill" title={formatLocation(block.location)}>
+                              {canonicalRoom}
+                            </span>
                             <button
                               type="button"
                               className="block-remove-btn"

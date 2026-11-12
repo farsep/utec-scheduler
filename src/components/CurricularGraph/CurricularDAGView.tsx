@@ -292,18 +292,20 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
       </div>
 
       <main className="dag-main-container">
-          {/* 1. 4 Faculties & 16 Careers Selector Header */}
-          <section className="grafton-card dag-careers-panel" aria-label="Selector de 4 Facultades y 16 Carreras UTEC">
-            <div className="dag-panel-header">
-              <div>
-                <div className="dag-eyebrow">ESTRUCTURA CURRICULAR OFICIAL · UTEC BARRANCO</div>
-                <h1 className="dag-title">
-                  Malla Curricular & Grafo de Prerrequisitos — 16 Carreras de Pregrado
-                </h1>
+          {/* 1. Compact Single-Bar Swiss Career Selector (Replaces 4x4 bulky grid, reclaims +200px) */}
+          <section className="dag-compact-bar" aria-label="Selector de 4 Facultades y 16 Carreras UTEC">
+            {/* Left compartment: Currently selected career with code badge and faculty name */}
+            <div className="dag-active-career-compartment">
+              <span className="dag-active-career-code">{activeCareer.shortCode}</span>
+              <div className="dag-active-career-info">
+                <span className="dag-active-career-name">{activeCareer.name}</span>
+                <span className="dag-active-career-faculty">{activeCareer.facultyName}</span>
               </div>
+            </div>
 
-              {/* Faculty Filter Strip */}
-              <div className="dag-faculty-strip">
+            {/* Right compartment: Faculty filter tabs + Horizontal scrollable career pills */}
+            <div className="dag-selector-scroll-compartment">
+              <div className="dag-compact-faculty-strip" role="group" aria-label="Filtro por Facultad">
                 <button
                   type="button"
                   className={`dag-faculty-btn ${selectedFaculty === 'ALL' ? 'is-active' : ''}`}
@@ -322,33 +324,33 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                   </button>
                 ))}
               </div>
-            </div>
 
-            {/* Responsive 1 / 2 / 4 Column Grid of Career Selector Buttons */}
-            <div className="dag-careers-grid">
-              {visibleCareers.map(career => {
-                const isActive = career.id === activeCareer.id;
-                return (
-                  <button
-                    key={career.id}
-                    type="button"
-                    className={`dag-career-btn ${isActive ? 'is-active' : ''}`}
-                    onClick={() => handleSelectCareer(career)}
-                  >
-                    <span className="dag-career-code">{career.shortCode}</span>
-                    <span className="dag-career-meta">
-                      <span className="dag-career-name">{career.name}</span>
-                      <span className="dag-career-faculty">{career.facultyName}</span>
-                    </span>
-                  </button>
-                );
-              })}
+              {/* Clean Horizontal Scrollable Pill Bar */}
+              <div className="dag-careers-pills-scroll" role="listbox" aria-label="Carreras de pregrado">
+                {visibleCareers.map(career => {
+                  const isActive = career.id === activeCareer.id;
+                  return (
+                    <button
+                      key={career.id}
+                      type="button"
+                      className={`dag-career-pill ${isActive ? 'is-active' : ''}`}
+                      onClick={() => handleSelectCareer(career)}
+                      title={`${career.name} — ${career.facultyName}`}
+                      role="option"
+                      aria-selected={isActive}
+                    >
+                      <span className="dag-career-pill-code">{career.shortCode}</span>
+                      <span className="dag-career-pill-name">{career.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </section>
 
-          {/* 2. Top Course Inspector Card (Locked min-h-[132px] & min-h-[68px] pill rows for CLS = 0) */}
+          {/* 2. Top Course Inspector Card (Compact min-h-[88px] & sticky top-14 z-30) */}
           <section
-            className="grafton-card dag-inspector-card min-h-[132px]"
+            className="grafton-card dag-inspector-card dag-inspector-card--compact sticky top-14 z-30 min-h-[88px] py-2.5 px-4"
             aria-label="Inspector de asignatura seleccionada"
           >
             <div className="dag-inspector-main">
@@ -405,7 +407,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                 <span className="dag-relation-label">
                   <ArrowLeft size={13} /> Requiere aprobar antes:
                 </span>
-                <div className="dag-relation-pills min-h-[68px] content-start">
+                <div className="dag-relation-pills min-h-[32px] content-start">
                   {activeCourse.prereqs.length === 0 ? (
                     <span className="dag-relation-empty">
                       Ingreso directo · Sin prerrequisitos previos
@@ -430,7 +432,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                 <span className="dag-relation-label">
                   <ArrowRight size={13} /> Desbloquea directamente:
                 </span>
-                <div className="dag-relation-pills min-h-[68px] content-start">
+                <div className="dag-relation-pills min-h-[32px] content-start">
                   {graphRelations.directUnlocks.size === 0 ? (
                     <span className="dag-relation-empty">
                       Asignatura terminal de ruta especializada

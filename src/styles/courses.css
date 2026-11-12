@@ -195,11 +195,17 @@
 }
 
 .visitor-filter-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: #fbbf24;
-  font-weight: 500;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background-color: #F5E8D3 !important;
+  color: #5C2D00 !important;
+  border: 1px solid #B85D00 !important;
+  padding: 3px 8px !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border-radius: 0px !important;
 }
 
 /* Course Cards Grid */
@@ -1187,7 +1193,7 @@
 .session-modality-badge {
   font-size: 0.68rem;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 0px !important;
   font-weight: 600;
 }
 

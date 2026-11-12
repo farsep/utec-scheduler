@@ -2924,20 +2924,180 @@ body {
 }
 
 /* ==========================================================================
-   CURRICULAR GRAPH (DAG) — OPAQUE GHOSTING, LOCKED INSPECTOR HEIGHT &
+   CURRICULAR GRAPH (DAG) — COMPACT BAR, COMPACT STICKY INSPECTOR &
    1ST-DEGREE vs. 2ND-DEGREE LINEAGE HIERARCHY
    ========================================================================== */
+.dag-compact-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-height: 52px;
+  background-color: #FFFFFF;
+  border: 2px solid #18181A;
+  box-shadow: 3px 3px 0px #18181A;
+  margin-bottom: 12px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.dag-active-career-compartment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background-color: #18181A;
+  color: #FFFFFF;
+  flex-shrink: 0;
+  border-right: 2px solid #18181A;
+}
+
+.dag-active-career-code {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 12px;
+  font-weight: 800;
+  background-color: #00779E;
+  color: #FFFFFF;
+  padding: 3px 7px;
+  letter-spacing: 0.05em;
+}
+
+.dag-active-career-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.dag-active-career-name {
+  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.dag-active-career-faculty {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  color: #A1A1AA;
+  white-space: nowrap;
+}
+
+.dag-selector-scroll-compartment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dag-compact-faculty-strip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  border-right: 1.5px solid #DCD9D2;
+  padding-right: 8px;
+}
+
+.dag-careers-pills-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  padding: 2px 0;
+}
+.dag-careers-pills-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.dag-career-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  background-color: #F2F0EC;
+  border: 1px solid #18181A;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 120ms ease;
+  flex-shrink: 0;
+  color: #141416;
+}
+
+.dag-career-pill:hover {
+  background-color: #E2DFD8;
+}
+
+.dag-career-pill.is-active {
+  background-color: #00779E !important;
+  color: #FFFFFF !important;
+  border-color: #00779E !important;
+  font-weight: 700 !important;
+}
+
+.dag-career-pill-code {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-weight: 700;
+  font-size: 10.5px;
+}
+
+.dag-career-pill-name {
+  font-family: var(--font-sans, sans-serif);
+}
+
+@media (max-width: 1023px) {
+  .dag-compact-bar {
+    flex-direction: column;
+  }
+  .dag-active-career-compartment {
+    border-right: none;
+    border-bottom: 2px solid #18181A;
+  }
+  .dag-selector-scroll-compartment {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .dag-compact-faculty-strip {
+    border-right: none;
+    border-bottom: 1px solid #DCD9D2;
+    padding-bottom: 6px;
+    overflow-x: auto;
+  }
+}
+
 .dag-inspector-card {
-  min-height: 132px !important;
+  min-height: 88px !important;
+  padding: 10px 16px !important;
+  background-color: #FFFFFF !important;
+  border: 2px solid #18181A !important;
+  box-shadow: 3px 3px 0px #18181A !important;
+}
+
+.dag-inspector-card--compact {
+  position: sticky !important;
+  top: 54px !important;
+  z-index: 35 !important;
 }
 
 .dag-inspector-main {
-  min-height: 48px !important;
+  min-height: 38px !important;
+  gap: 10px !important;
 }
 
 .dag-relation-pills {
-  min-height: 68px !important;
+  min-height: 32px !important;
   align-content: flex-start !important;
+  gap: 5px !important;
+}
+
+.dag-inspector-relations {
+  margin-top: 6px !important;
+  padding-top: 6px !important;
 }
 
 .dag-svg-layer {
@@ -3771,6 +3931,8 @@ body {
 
   .live-time-info {
     width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
     justify-content: space-between !important;
   }
 
@@ -3778,33 +3940,54 @@ body {
     display: none !important;
   }
 
+  /* Symmetrical 3-compartment toolbar spanning full width on tablet */
   .live-time-actions {
     width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
+    display: grid !important;
+    grid-template-columns: 68px 1fr 68px !important;
     gap: 8px !important;
+    align-items: center !important;
   }
 
   .live-time-actions .grafton-step-btn {
-    width: 68px !important;
-    height: 36px !important;
-    flex-shrink: 0 !important;
+    width: 100% !important;
+    height: 38px !important;
+    font-size: 12px !important;
+    padding: 0 !important;
   }
 
   .live-time-actions .live-time-input-wrap {
-    flex: 0 0 auto !important;
+    width: 100% !important;
   }
 
   .live-time-actions .live-time-input-wrap .grafton-time-picker-wrapper {
-    width: auto !important;
+    width: 100% !important;
+    position: static !important;
   }
 
   .live-time-actions .live-time-stepper-btn {
-    width: auto !important;
-    min-width: 180px !important;
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 14px !important;
+    gap: 8px !important;
+  }
+
+  .live-time-actions .btn-reset-realtime {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
     height: 36px !important;
     justify-content: center !important;
+    margin-top: 4px !important;
+  }
+
+  /* Centered popover under live-time-controller on tablet */
+  .live-time-actions .grafton-time-picker-popover {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: 330px !important;
+    max-width: 100% !important;
   }
 }
 
@@ -4040,8 +4223,13 @@ body {
   grid-template-columns: repeat(4, 1fr) !important;
   gap: 4px !important;
   max-height: none !important;
-  overflow: visible !important;
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
   margin-bottom: 10px !important;
+}
+.gtp-hours-grid::-webkit-scrollbar {
+  display: none !important;
 }
 
 .gtp-chip {
@@ -4493,6 +4681,36 @@ body {
   line-height: 1 !important;
   text-transform: uppercase !important;
   white-space: nowrap !important;
+}
+
+/* Quick Filter Buttons & Chips Strict Non-Wrapping Box Guarantee */
+.prof-modality-btn,
+.day-pill-btn,
+.time-preset-btn,
+.duration-pill-btn,
+.floor-pill-btn,
+.type-chip-btn,
+.prof-filter-btn {
+  white-space: nowrap !important;
+  height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+.visitor-filter-indicator {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background-color: #F5E8D3 !important;
+  color: #5C2D00 !important;
+  border: 1px solid #B85D00 !important;
+  padding: 3px 8px !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border-radius: 0px !important;
 }
 
 

@@ -107,6 +107,19 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
 
     const checkViewportBounds = () => {
       if (!el) return;
+      // In desktop (>= 1024px), preserve strictly left-aligned anchoring to the trigger button
+      if (window.innerWidth >= 1024) {
+        if (align === 'left') {
+          el.style.left = '0px';
+          el.style.right = 'auto';
+          return;
+        } else if (align === 'right') {
+          el.style.left = 'auto';
+          el.style.right = '0px';
+          return;
+        }
+      }
+
       const rect = el.getBoundingClientRect();
       const vw = window.innerWidth;
       const padding = 8;
