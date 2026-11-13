@@ -348,9 +348,9 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
             </div>
           </section>
 
-          {/* 2. Top Course Inspector Card (Compact min-h-[88px] & sticky top-14 z-30) */}
+          {/* 2. Top Course Inspector Card (Natural flow, unclipped) */}
           <section
-            className="grafton-card dag-inspector-card dag-inspector-card--compact sticky top-14 z-30 min-h-[88px] py-2.5 px-4"
+            className="grafton-card dag-inspector-card dag-inspector-card--compact relative z-10 min-h-[88px] py-2.5 px-4"
             aria-label="Inspector de asignatura seleccionada"
           >
             <div className="dag-inspector-main">

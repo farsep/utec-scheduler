@@ -7,12 +7,28 @@ const { execSync } = require('child_process');
 const PORT = 4335;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 const OUT_DIR = path.resolve(process.cwd(), 'tour_videos_1');
+const OUT_DIR_2 = path.resolve(process.cwd(), 'tour-videos');
+const ARTIFACT_DIR = '/home/charmcast/.gemini/antigravity/brain/24f434e2-bf0f-4361-abbc-96cc52a1d046';
 const distDir = path.join(process.cwd(), 'dist');
 
 function ensureOutDir() {
   if (!fs.existsSync(OUT_DIR)) {
     fs.mkdirSync(OUT_DIR, { recursive: true });
   }
+  if (!fs.existsSync(OUT_DIR_2)) {
+    fs.mkdirSync(OUT_DIR_2, { recursive: true });
+  }
+}
+
+function syncFile(srcPath, filename) {
+  try {
+    fs.copyFileSync(srcPath, path.join(OUT_DIR_2, filename));
+  } catch (_) {}
+  try {
+    if (srcPath.endsWith('.png')) {
+      fs.copyFileSync(srcPath, path.join(ARTIFACT_DIR, filename));
+    }
+  } catch (_) {}
 }
 
 function startServer() {
@@ -160,7 +176,17 @@ async function safeFill(page, selectorOrText, text, waitMs = 850) {
 async function closeAnyModal(page) {
   await page.keyboard.press('Escape');
   await pause(page, 450);
-  await safeClick(page, '[role="dialog"] button:has-text("Cerrar"), [role="dialog"] button:has-text("✕"), [role="dialog"] button:has-text("×"), .modal button:has-text("Cerrar")', 450);
+  const overlay = page.locator('.modal-overlay:visible, [role="dialog"]:visible').first();
+  if ((await overlay.count()) > 0) {
+    const closeBtn = page.locator('.modal-card button.close-btn:visible, [role="dialog"] button.close-btn:visible, button.close-btn:visible, button:has-text("Cerrar"):visible').first();
+    if ((await closeBtn.count()) > 0) {
+      await closeBtn.click({ timeout: 1500 }).catch(() => {});
+    } else {
+      await page.mouse.click(20, 20);
+    }
+  }
+  await pause(page, 450);
+  await page.waitForSelector('.modal-overlay', { state: 'detached', timeout: 2000 }).catch(() => {});
 }
 
 // =============================================================================
@@ -218,27 +244,81 @@ async function runDesktopTour(browser) {
   // Verify Semana is active again
   await safeClick(page, '.timetable-day-segment-btn:has-text("Semana")', 750);
 
-  // Schedule Optimizer Modal ("Auto-Generar")
+  // 1. Redesigned Export Modal ("Exportar u Organizar Horario")
+  console.log('[Desktop] Testing Redesigned Export Modal...');
+  if (await safeClick(page, 'button.grafton-export-btn, button:has-text("Exportar")', 1100)) {
+    await pause(page, 800);
+    const snapExport = path.join(OUT_DIR, 'snapshot-export-modal.png');
+    await page.screenshot({ path: snapExport });
+    syncFile(snapExport, 'snapshot-export-modal.png');
+
+    // Cycle through all alarm segments in Swiss Segmented Control
+    for (const seg of ['10 min', '15 min ★', '30 min', '1 hora', 'Sin alarma']) {
+      await safeClick(page, `.alarm-segment-btn:has-text("${seg}"), button:has-text("${seg}")`, 650);
+    }
+
+    // Toggle color schemes
+    await safeClick(page, 'button:has-text("Color Único por Asignatura")', 700);
+    await safeClick(page, 'button:has-text("Colores por Tipo/Prefijo")', 700);
+
+    // Open Google Calendar Modal & close it
+    if (await safeClick(page, 'button:has-text("Abrir en Google Calendar"), button:has-text("Sincronizar")', 850)) {
+      await pause(page, 600);
+      await safeClick(page, '.google-calendar-modal button.close-btn, button:has-text("Cancelar"), button:has-text("Cerrar")', 600);
+      await pause(page, 500);
+    }
+
+    await closeAnyModal(page);
+  }
+
+  // 2. Schedule Optimizer Modal ("Generador Automático de Horarios")
+  console.log('[Desktop] Testing Redesigned Schedule Optimizer Modal (No sparkles & Blocker Grid)...');
   if (await safeClick(page, 'button:has-text("Auto-Generar"), button:has-text("Generador")', 1100)) {
     await pause(page, 800);
+    const snapOpt = path.join(OUT_DIR, 'snapshot-optimizer-modal.png');
+    await page.screenshot({ path: snapOpt });
+    syncFile(snapOpt, 'snapshot-optimizer-modal.png');
+
+    // Click Calendario de Bloqueos toggle to immediately reveal TimeBlockerGrid on the right
+    await safeClick(page, '[data-testid="toggle-blocker-grid"], label:has-text("Calendario de Bloqueos")', 900);
+    await pause(page, 800);
+
+    const snapBlocker = path.join(OUT_DIR, 'snapshot-optimizer-blocker-grid.png');
+    await page.screenshot({ path: snapBlocker });
+    syncFile(snapBlocker, 'snapshot-optimizer-blocker-grid.png');
+
+    // Paint a block on the grid
+    const blockerGrid = page.locator('.time-blocker-grid, [class*="time-blocker"]').first();
+    if ((await blockerGrid.count()) > 0) {
+      const box = await blockerGrid.boundingBox();
+      if (box) {
+        await page.mouse.move(box.x + 80, box.y + 60);
+        await page.mouse.down();
+        await page.mouse.move(box.x + 80, box.y + 120, { steps: 5 });
+        await page.mouse.up();
+        await pause(page, 650);
+      }
+    }
+
+    // Toggle Modo Estricto
+    await safeClick(page, 'span:has-text("Modo Estricto"), label:has-text("Modo Estricto")', 650);
+
+    // Click Calcular / Generar Horarios
     await safeClick(page, 'button:has-text("Calcular"), button:has-text("Generar")', 900);
-    await pause(page, 900);
+    await pause(page, 1000);
+
     await closeAnyModal(page);
-    await page.waitForSelector('.modal-overlay', { state: 'detached', timeout: 2000 }).catch(() => {});
   }
 
-  // Export Modal
-  if (await safeClick(page, 'button.grafton-export-btn, button:has-text("Exportar")', 1100)) {
-    await pause(page, 900);
-    await closeAnyModal(page);
-    await page.waitForSelector('.modal-overlay', { state: 'detached', timeout: 2000 }).catch(() => {});
-  }
-
-  // Import Modal
+  // 3. Import Offer Modal ("Gestión de Archivos de Matrícula")
+  console.log('[Desktop] Testing Redesigned Import Modal...');
   if (await safeClick(page, 'button.grafton-nav-btn--import, button:has-text("Importar")', 1100)) {
-    await pause(page, 900);
+    await pause(page, 800);
+    const snapImport = path.join(OUT_DIR, 'snapshot-import-modal.png');
+    await page.screenshot({ path: snapImport });
+    syncFile(snapImport, 'snapshot-import-modal.png');
+
     await closeAnyModal(page);
-    await page.waitForSelector('.modal-overlay', { state: 'detached', timeout: 2000 }).catch(() => {});
   }
 
   // 2. MALLA CURRICULAR (/malla) - SPA In-Memory Navigation
@@ -408,9 +488,7 @@ async function runDesktopTour(browser) {
   await safeClick(page, '.grafton-nav-btn:has-text("Horario")', 1000);
   const thumbDesktop = path.join(OUT_DIR, 'thumb-desktop.png');
   await page.screenshot({ path: thumbDesktop });
-  try {
-    fs.copyFileSync(thumbDesktop, '/home/charmcast/.gemini/antigravity/brain/24f434e2-bf0f-4361-abbc-96cc52a1d046/thumb-desktop.png');
-  } catch (_) {}
+  syncFile(thumbDesktop, 'thumb-desktop.png');
 
   console.log('Finishing Desktop recording...');
   const video = page.video();
@@ -421,10 +499,12 @@ async function runDesktopTour(browser) {
     const destWebm = path.join(OUT_DIR, '01-desktop-exhaustive-tour.webm');
     await video.saveAs(destWebm);
     console.log(`Saved Desktop webm: ${destWebm}`);
+    syncFile(destWebm, '01-desktop-exhaustive-tour.webm');
     try {
       const destMp4 = path.join(OUT_DIR, '01-desktop-exhaustive-tour.mp4');
       execSync(`ffmpeg -y -i "${destWebm}" -c:v libx264 -pix_fmt yuv420p -preset fast -crf 23 "${destMp4}"`, { stdio: 'ignore' });
       console.log(`Generated Desktop mp4: ${destMp4}`);
+      syncFile(destMp4, '01-desktop-exhaustive-tour.mp4');
     } catch (e) {
       console.warn('ffmpeg conversion warning:', e.message);
     }
@@ -535,9 +615,7 @@ async function runTabletTour(browser) {
 
   const thumbTablet = path.join(OUT_DIR, 'thumb-tablet.png');
   await page.screenshot({ path: thumbTablet });
-  try {
-    fs.copyFileSync(thumbTablet, '/home/charmcast/.gemini/antigravity/brain/24f434e2-bf0f-4361-abbc-96cc52a1d046/thumb-tablet.png');
-  } catch (_) {}
+  syncFile(thumbTablet, 'thumb-tablet.png');
 
   console.log('Finishing Tablet recording...');
   const video = page.video();
@@ -548,10 +626,12 @@ async function runTabletTour(browser) {
     const destWebm = path.join(OUT_DIR, '02-tablet-exhaustive-tour.webm');
     await video.saveAs(destWebm);
     console.log(`Saved Tablet webm: ${destWebm}`);
+    syncFile(destWebm, '02-tablet-exhaustive-tour.webm');
     try {
       const destMp4 = path.join(OUT_DIR, '02-tablet-exhaustive-tour.mp4');
       execSync(`ffmpeg -y -i "${destWebm}" -c:v libx264 -pix_fmt yuv420p -preset fast -crf 23 "${destMp4}"`, { stdio: 'ignore' });
       console.log(`Generated Tablet mp4: ${destMp4}`);
+      syncFile(destMp4, '02-tablet-exhaustive-tour.mp4');
     } catch (e) {
       console.warn('ffmpeg conversion warning:', e.message);
     }
@@ -662,9 +742,7 @@ async function runMobileTour(browser) {
 
   const thumbMobile = path.join(OUT_DIR, 'thumb-mobile.png');
   await page.screenshot({ path: thumbMobile });
-  try {
-    fs.copyFileSync(thumbMobile, '/home/charmcast/.gemini/antigravity/brain/24f434e2-bf0f-4361-abbc-96cc52a1d046/thumb-mobile.png');
-  } catch (_) {}
+  syncFile(thumbMobile, 'thumb-mobile.png');
 
   console.log('Finishing Mobile recording...');
   const video = page.video();
@@ -675,10 +753,12 @@ async function runMobileTour(browser) {
     const destWebm = path.join(OUT_DIR, '03-mobile-exhaustive-tour.webm');
     await video.saveAs(destWebm);
     console.log(`Saved Mobile webm: ${destWebm}`);
+    syncFile(destWebm, '03-mobile-exhaustive-tour.webm');
     try {
       const destMp4 = path.join(OUT_DIR, '03-mobile-exhaustive-tour.mp4');
       execSync(`ffmpeg -y -i "${destWebm}" -c:v libx264 -pix_fmt yuv420p -preset fast -crf 23 "${destMp4}"`, { stdio: 'ignore' });
       console.log(`Generated Mobile mp4: ${destMp4}`);
+      syncFile(destMp4, '03-mobile-exhaustive-tour.mp4');
     } catch (e) {
       console.warn('ffmpeg conversion warning:', e.message);
     }

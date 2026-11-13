@@ -89,15 +89,14 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
 
   const openRoomModal = useCallback((clsOrCode: ClassroomInfo | string) => {
     if (typeof clsOrCode === 'string') {
-      const match = classrooms.find(c => c.code.toLowerCase() === clsOrCode.toLowerCase()) ||
-                    evaluatedClassrooms.find(e => e.classroom.code.toLowerCase() === clsOrCode.toLowerCase())?.classroom;
+      const match = classrooms.find(c => c.code.toLowerCase() === clsOrCode.toLowerCase());
       if (match) {
         setSelectedRoom(match);
       }
     } else {
       setSelectedRoom(clsOrCode);
     }
-  }, [classrooms, evaluatedClassrooms]);
+  }, [classrooms]);
 
   const handleOpenDetail = openRoomModal;
 

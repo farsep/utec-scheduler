@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { X, Calendar, Clock, Coffee, Eye, Pin, Info, Sparkles, Filter, ShieldAlert, CheckCircle2, Search, ArrowLeft, Lock, Unlock, CheckSquare, Square, ChevronRight, Check } from 'lucide-react';
+import { X, Calendar, Clock, Coffee, Eye, Pin, Info, Filter, ShieldAlert, CheckCircle2, Search, ArrowLeft, Lock, Unlock, CheckSquare, Square, ChevronRight, Check, SlidersHorizontal } from 'lucide-react';
 import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
 import { formatLocation, getCourseColor, getCoursePrefix, minutesToTime, normalizeString, getCombinations, sessionToBitmask } from '../utils/scheduleUtils';
@@ -53,6 +53,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   const [savedOptionsRecord, setSavedOptionsRecord] = useState<Record<string, string[]>>({});
 
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
+  const [showBlockerGrid, setShowBlockerGrid] = useState(false);
   const [pinnedCourseCodes, setPinnedCourseCodes] = useState<string[]>([]);
   const [maxCourses, setMaxCourses] = useState(5);
   const [minTime, setMinTime] = useState<string>('07:00');
@@ -109,6 +110,15 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     });
     return newMask;
   }, [blockedTimeMask, blockedSectionsForTime, courses]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const cancelGeneration = () => {
     workerRefs.current.forEach(w => w.terminate());
@@ -683,17 +693,47 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       <div className="modal-card optimizer-modal-card" onClick={e => e.stopPropagation()}>
         
         {/* Header */}
-        <div className="modal-header" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-hairline)', background: 'var(--bg-elevated)' }}>
+        <div className="modal-header" style={{ padding: '16px 20px', borderBottom: '1.5px solid #18181A', background: '#F2F0EC' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ background: 'var(--accent-primary)', padding: '8px', borderRadius: '0px', display: 'flex', flexShrink: 0 }}>
-              <Sparkles size={20} color="white" />
+            <div style={{
+              width: '36px',
+              height: '36px',
+              backgroundColor: '#DCD9D2',
+              border: '1.5px solid #18181A',
+              borderRadius: '0px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              color: '#141416'
+            }}>
+              <SlidersHorizontal size={18} />
             </div>
             <div>
-              <h3 className="modal-title" style={{ fontSize: '1.15rem', marginBottom: '2px' }}>Generador Automático de Horarios</h3>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>Encuentra las mejores combinaciones sin cruces y con menor cantidad de huecos.</p>
+              <h3 className="modal-title" style={{ fontSize: '1.15rem', marginBottom: '2px', color: '#141416', fontWeight: 700 }}>Generador Automático de Horarios</h3>
+              <p style={{ fontSize: '0.82rem', color: '#5A5852', margin: 0 }}>Encuentra las mejores combinaciones sin cruces y con menor cantidad de huecos.</p>
             </div>
           </div>
-          <button className="close-btn" onClick={onClose}><X size={20} /></button>
+          <button
+            className="close-btn"
+            onClick={onClose}
+            aria-label="Cerrar modal"
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '0px',
+              border: '1.5px solid #18181A',
+              backgroundColor: '#DCD9D2',
+              color: '#141416',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '1.5px 1.5px 0px #18181A'
+            }}
+          >
+            <X size={18} />
+          </button>
         </div>
 
         <ErrorBoundary>
@@ -834,14 +874,36 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   </div>
                 )}
 
-                {isAdvancedMode && (
-                  <div style={{ padding: '12px', background: 'var(--bg-elevated)', borderRadius: '0px', marginBottom: '16px', border: '1px solid var(--border-hairline)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                {/* Calendario de Bloqueos (Restricciones Temporales) Toggle Block */}
+                <div style={{ padding: '12px', background: 'var(--bg-elevated)', borderRadius: '0px', marginBottom: '16px', border: '1px solid var(--border-hairline)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: (showBlockerGrid || isAdvancedMode) ? '10px' : '0px' }}>
+                    <div 
+                      onClick={() => setShowBlockerGrid(!showBlockerGrid)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
+                    >
+                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', margin: 0 }}>
                         Calendario de Bloqueos (Restricciones Temporales)
                       </label>
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Modo Estricto:</label>
+                    </div>
+                    <div 
+                      data-testid="toggle-blocker-grid"
+                      onClick={() => setShowBlockerGrid(!showBlockerGrid)}
+                      style={{ 
+                        width: '36px', height: '20px', background: (showBlockerGrid || isAdvancedMode) ? 'var(--accent-primary)' : 'var(--border-hairline)',
+                        borderRadius: '0px', position: 'relative', transition: 'all 0.3s', cursor: 'pointer', flexShrink: 0
+                      }}>
+                      <div style={{
+                        position: 'absolute', top: '2px', left: (showBlockerGrid || isAdvancedMode) ? '18px' : '2px',
+                        width: '16px', height: '16px', background: 'white', borderRadius: '0px',
+                        transition: 'all 0.3s'
+                      }} />
+                    </div>
+                  </div>
+
+                  {(showBlockerGrid || isAdvancedMode) && (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border-hairline)' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Modo Estricto:</span>
                         <div 
                           onClick={() => setIsConstraintStrict(!isConstraintStrict)}
                           style={{ 
@@ -855,12 +917,12 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                           }} />
                         </div>
                       </div>
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0' }}>
-                      {isConstraintStrict ? 'Modo Estricto: Se descartan los cruces rojos.' : 'Modo Flexible: Se penalizan los cruces rojos.'} Configura los bloqueos en el gran panel derecho.
-                    </p>
-                  </div>
-                )}
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '8px 0 0 0', lineHeight: 1.35 }}>
+                        {isConstraintStrict ? 'Modo Estricto: Se descartan los cruces rojos.' : 'Modo Flexible: Se penalizan los cruces rojos.'} Configura los bloqueos en el gran panel derecho.
+                      </p>
+                    </>
+                  )}
+                </div>
 
                 {/* Selected Courses Tags */}
                 {selectedCourseCodes.length > 0 && !isAdvancedMode && (
@@ -1321,7 +1383,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
               opacity: previewSchedule ? 0 : 1
             }}>
                 {!results && !isGenerating && (
-                  isAdvancedMode ? (
+                  (isAdvancedMode || showBlockerGrid) ? (
                     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                         <div>
@@ -1349,10 +1411,23 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', textAlign: 'center' }}>
-                      <Sparkles size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-                      <p style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Listo para Optimizar</p>
-                      <p style={{ fontSize: '0.9rem', maxWidth: '300px', lineHeight: 1.5 }}>Selecciona tus cursos y preferencias en el panel izquierdo y presiona "Generar Horarios".</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#5A5852', textAlign: 'center' }}>
+                      <div style={{
+                        width: '48px',
+                        height: '48px',
+                        backgroundColor: '#DCD9D2',
+                        border: '1.5px solid #18181A',
+                        borderRadius: '0px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: '16px',
+                        color: '#141416'
+                      }}>
+                        <Calendar size={24} />
+                      </div>
+                      <p style={{ fontSize: '1.1rem', fontWeight: 700, color: '#141416', fontFamily: 'var(--font-heading, Space Grotesk)', marginBottom: '6px' }}>Listo para Optimizar</p>
+                      <p style={{ fontSize: '0.88rem', maxWidth: '320px', lineHeight: 1.5, color: '#5A5852' }}>Selecciona tus cursos y preferencias en el panel izquierdo y presiona "Generar Horarios".</p>
                     </div>
                   )
                 )}

@@ -3079,9 +3079,9 @@ body {
 }
 
 .dag-inspector-card--compact {
-  position: sticky !important;
-  top: 54px !important;
-  z-index: 35 !important;
+  position: relative !important;
+  top: auto !important;
+  z-index: 10 !important;
 }
 
 .dag-inspector-main {
