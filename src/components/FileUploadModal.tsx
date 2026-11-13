@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { X, FileSpreadsheet, FileText, Upload, CheckCircle2, Download, AlertCircle, Trash2, Loader2, Code2, Sparkles } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, FileSpreadsheet, FileText, Upload, CheckCircle2, Download, AlertCircle, Trash2, Loader2, Code2 } from 'lucide-react';
 import { parseExcelFile } from '../utils/excelParser';
 import { parsePDFFile, type PDFParseResult } from '../utils/pdfParser';
 import { getClassroomsCatalog } from '../utils/masterDataLoader';
@@ -39,6 +39,15 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
   const excelInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -226,40 +235,99 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Upload size={22} color="var(--accent-primary)" />
-            <h3 className="modal-title">Gestión de Archivos de Matrícula</h3>
+      <div
+        className="modal-card"
+        onClick={e => e.stopPropagation()}
+        style={{
+          maxWidth: '620px',
+          width: '94%',
+          backgroundColor: '#F2F0EC',
+          border: '2px solid #18181A',
+          borderTop: '4px solid #18181A',
+          borderRadius: '0px',
+          boxShadow: '6px 6px 0px #18181A',
+          padding: '20px',
+          gap: '14px'
+        }}
+      >
+        <div className="modal-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1.5px solid #18181A' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '36px',
+              height: '36px',
+              backgroundColor: '#DCD9D2',
+              border: '1.5px solid #18181A',
+              borderRadius: '0px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#141416',
+              flexShrink: 0
+            }}>
+              <Upload size={18} />
+            </div>
+            <div>
+              <h3 className="modal-title" style={{ fontSize: '1.15rem', color: '#141416', fontWeight: 700, margin: 0, fontFamily: 'var(--font-heading, Space Grotesk)' }}>
+                Gestión de Archivos de Matrícula
+              </h3>
+            </div>
           </div>
-          <button className="close-btn" onClick={onClose}>
-            <X size={20} />
+          <button
+            className="close-btn"
+            onClick={onClose}
+            aria-label="Cerrar modal"
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '0px',
+              border: '1.5px solid #18181A',
+              backgroundColor: '#DCD9D2',
+              color: '#141416',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '1.5px 1.5px 0px #18181A'
+            }}
+          >
+            <X size={18} />
           </button>
         </div>
 
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+        <p style={{ fontSize: '0.85rem', color: '#5A5852', lineHeight: 1.5, margin: 0 }}>
           Sube tu <strong>Consolidado de Matrícula</strong>, <strong>Consolidado de Horario</strong>, tu PDF de <strong>Cursos Habilitados</strong> y/o tu archivo Excel de <strong>Oferta Académica</strong>.
         </p>
 
         {/* Consolidado Automatic Flow Info Badge */}
-        <div style={{ background: 'var(--accent-soft)', border: '1px solid var(--accent-primary)', borderLeft: '3px solid var(--accent-primary)', padding: '12px 14px', borderRadius: '0px', fontSize: '0.78rem', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <div style={{ fontWeight: 700, color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={15} color="var(--accent-primary)" />
+        <div style={{
+          background: '#FAF9F5',
+          border: '1.5px solid #18181A',
+          borderLeft: '4px solid #00779E',
+          padding: '12px 14px',
+          borderRadius: '0px',
+          fontSize: '0.78rem',
+          color: '#141416',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px'
+        }}>
+          <div style={{ fontWeight: 700, color: '#00779E', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FileText size={15} />
             <span>Sincronización Automática con Consolidados:</span>
           </div>
-          <div style={{ color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+          <div style={{ color: '#5A5852', lineHeight: 1.4 }}>
             Si subes un <strong>Consolidado de Horario</strong> o <strong>Consolidado de Matrícula</strong>, el sistema cargará automáticamente todas tus clases matriculadas y abrirá directamente las opciones de exportación (Google Calendar e iCal <code>.ics</code>).
           </div>
         </div>
 
         {errorMsg && (
-          <div style={{ background: '#F8EDE1', border: '1px solid var(--status-warn)', borderLeft: '3px solid var(--status-warn)', color: '#7A3E00', padding: '10px 14px', borderRadius: '0px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ background: '#F8EDE1', border: '1.5px solid #18181A', borderLeft: '4px solid #D9381E', color: '#7A3E00', padding: '10px 14px', borderRadius: '0px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <AlertCircle size={16} />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        <div className="upload-grid">
+        <div className="upload-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
           {/* Hidden File Inputs (accessible to all mobile browsers) */}
           <input
             ref={excelInputRef}
@@ -290,30 +358,54 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               const file = e.dataTransfer.files?.[0];
               if (file) handleExcelFile(file);
             }}
+            style={{
+              backgroundColor: '#FAF9F5',
+              border: '1.5px dashed #18181A',
+              borderRadius: '0px',
+              padding: '18px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              cursor: 'pointer'
+            }}
           >
             {isProcessing === 'excel' ? (
-              <Loader2 size={32} className="spin-icon" color="var(--accent-emerald)" />
+              <Loader2 size={32} className="spin-icon" color="#0D7A4E" />
             ) : (
-              <FileSpreadsheet size={32} color="var(--accent-emerald)" />
+              <FileSpreadsheet size={32} color="#0D7A4E" />
             )}
-            <div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Oferta Excel (.xlsx)</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Catálogo General de Cursos</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#141416' }}>Oferta Excel (.xlsx)</div>
+              <div style={{ fontSize: '0.75rem', color: '#5A5852', marginTop: '2px' }}>Catálogo General de Cursos</div>
             </div>
             {hasExcelData ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                <div style={{ color: 'var(--accent-emerald)', fontSize: '0.78rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ color: '#0D7A4E', fontSize: '0.78rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <CheckCircle2 size={14} /> {excelLoadedName || 'Excel Cargado'}
                 </div>
                 <button
                   type="button"
-                  className="btn btn-secondary"
                   onClick={(e) => {
                     e.stopPropagation();
                     onClearExcel();
                     setExcelLoadedName(null);
                   }}
-                  style={{ fontSize: '0.72rem', padding: '3px 8px', color: '#fca5a5', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                  style={{
+                    fontSize: '0.72rem',
+                    padding: '3px 8px',
+                    color: '#D9381E',
+                    backgroundColor: '#FAF9F5',
+                    border: '1px solid #18181A',
+                    borderRadius: '0px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    fontWeight: 700
+                  }}
                 >
                   <Trash2 size={12} /> Eliminar Excel
                 </button>
@@ -321,10 +413,20 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             ) : (
               <button
                 type="button"
-                className="btn btn-secondary"
                 disabled={isProcessing === 'excel'}
                 onClick={triggerExcelPicker}
-                style={{ fontSize: '0.78rem', padding: '6px 14px' }}
+                style={{
+                  fontSize: '0.78rem',
+                  padding: '6px 14px',
+                  backgroundColor: '#DCD9D2',
+                  color: '#141416',
+                  border: '1px solid #18181A',
+                  borderRadius: '0px',
+                  boxShadow: '2px 2px 0px #18181A',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
               >
                 {isProcessing === 'excel' ? 'Procesando...' : 'Examinar Excel'}
               </button>
@@ -343,30 +445,54 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               const file = e.dataTransfer.files?.[0];
               if (file) handlePDFFile(file);
             }}
+            style={{
+              backgroundColor: '#FAF9F5',
+              border: '1.5px dashed #18181A',
+              borderRadius: '0px',
+              padding: '18px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              cursor: 'pointer'
+            }}
           >
             {isProcessing === 'pdf' ? (
-              <Loader2 size={32} className="spin-icon" color="var(--accent-rose)" />
+              <Loader2 size={32} className="spin-icon" color="#D9381E" />
             ) : (
-              <FileText size={32} color="var(--accent-rose)" />
+              <FileText size={32} color="#D9381E" />
             )}
-            <div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>PDF de Horario / Cursos</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Consolidado de Horario, Consolidado de Matrícula o Cursos Habilitados</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#141416' }}>PDF de Horario / Cursos</div>
+              <div style={{ fontSize: '0.75rem', color: '#5A5852', marginTop: '2px' }}>Consolidado de Horario, Consolidado de Matrícula o Cursos Habilitados</div>
             </div>
             {hasPDFData ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                <div style={{ color: 'var(--accent-emerald)', fontSize: '0.78rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ color: '#0D7A4E', fontSize: '0.78rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <CheckCircle2 size={14} /> {pdfLoadedName || 'PDF Cargado'}
                 </div>
                 <button
                   type="button"
-                  className="btn btn-secondary"
                   onClick={(e) => {
                     e.stopPropagation();
                     onClearPDF();
                     setPdfLoadedName(null);
                   }}
-                  style={{ fontSize: '0.72rem', padding: '3px 8px', color: '#fca5a5', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                  style={{
+                    fontSize: '0.72rem',
+                    padding: '3px 8px',
+                    color: '#D9381E',
+                    backgroundColor: '#FAF9F5',
+                    border: '1px solid #18181A',
+                    borderRadius: '0px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    fontWeight: 700
+                  }}
                 >
                   <Trash2 size={12} /> Eliminar PDF
                 </button>
@@ -374,10 +500,20 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             ) : (
               <button
                 type="button"
-                className="btn btn-secondary"
                 disabled={isProcessing === 'pdf'}
                 onClick={triggerPDFPicker}
-                style={{ fontSize: '0.78rem', padding: '6px 14px' }}
+                style={{
+                  fontSize: '0.78rem',
+                  padding: '6px 14px',
+                  backgroundColor: '#DCD9D2',
+                  color: '#141416',
+                  border: '1px solid #18181A',
+                  borderRadius: '0px',
+                  boxShadow: '2px 2px 0px #18181A',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
               >
                 {isProcessing === 'pdf' ? 'Procesando...' : 'Examinar PDF'}
               </button>
@@ -386,22 +522,40 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         </div>
 
         {/* Download Sample File Box (Excel Only) */}
-        <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-hairline)', padding: '14px', borderRadius: '0px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Archivo de muestra pública para prueba:</div>
+        <div style={{ background: '#FAF9F5', border: '1px solid #18181A', padding: '12px 14px', borderRadius: '0px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#141416' }}>Archivo de muestra pública para prueba:</div>
           <div>
-            <a href="/samples/Consulta_Horario.xlsx" download className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '6px 12px', textDecoration: 'none', display: 'inline-flex' }}>
+            <a
+              href="/samples/Consulta_Horario.xlsx"
+              download
+              style={{
+                fontSize: '0.75rem',
+                padding: '6px 12px',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: '#DCD9D2',
+                color: '#141416',
+                border: '1px solid #18181A',
+                borderRadius: '0px',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontWeight: 700,
+                boxShadow: '2px 2px 0px #18181A'
+              }}
+            >
               <Download size={14} /> Descargar Consulta_Horario.xlsx
             </a>
           </div>
         </div>
 
         {/* JSON Import Section */}
-        <div style={{ marginTop: '4px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <Code2 size={16} color="var(--text-muted)" />
-            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Opciones Avanzadas: Importar JSON</span>
+        <div style={{ marginTop: '2px', borderTop: '1px solid #18181A', paddingTop: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <Code2 size={16} color="#141416" />
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#141416' }}>Opciones Avanzadas: Importar JSON</span>
           </div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px', lineHeight: 1.4 }}>
+          <p style={{ fontSize: '0.75rem', color: '#5A5852', marginBottom: '8px', lineHeight: 1.4, margin: '0 0 8px 0' }}>
             Pega aquí el código JSON enviado a tu correo o sube el archivo .json para recrear un horario exportado.
           </p>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -409,7 +563,16 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               type="text" 
               placeholder="Pega el contenido JSON aquí..."
               className="search-input"
-              style={{ flex: 1, fontSize: '0.75rem', padding: '8px 12px' }}
+              style={{
+                flex: 1,
+                fontSize: '0.75rem',
+                padding: '8px 12px',
+                backgroundColor: '#FAF9F5',
+                border: '1px solid #18181A',
+                borderRadius: '0px',
+                color: '#141416',
+                fontFamily: 'JetBrains Mono, monospace'
+              }}
               onChange={e => {
                 const val = e.target.value;
                 if (val && val.trim().startsWith('{')) {
@@ -417,16 +580,50 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 }
               }}
             />
-            <label className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <label
+              style={{
+                fontSize: '0.75rem',
+                padding: '6px 12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: '#DCD9D2',
+                color: '#141416',
+                border: '1px solid #18181A',
+                borderRadius: '0px',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontWeight: 700,
+                boxShadow: '2px 2px 0px #18181A'
+              }}
+            >
               <Upload size={14} /> Subir .json
               <input type="file" accept=".json,application/json" onChange={handleJsonFileUpload} style={{ display: 'none' }} />
             </label>
           </div>
         </div>
 
-        <button className="btn btn-primary" onClick={onClose} style={{ justifySelf: 'flex-end' }}>
-          Cerrar
-        </button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '6px' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              padding: '8px 20px',
+              backgroundColor: '#DCD9D2',
+              color: '#141416',
+              border: '1.5px solid #18181A',
+              borderRadius: '0px',
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '11px',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              boxShadow: '2px 2px 0px #18181A',
+              cursor: 'pointer'
+            }}
+          >
+            Cerrar
+          </button>
+        </div>
       </div>
     </div>
   );
