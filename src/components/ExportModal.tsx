@@ -4,6 +4,7 @@ import { generateICS, downloadFile } from '../utils/icsExporter';
 import { exportScheduleToPNG } from '../utils/pngExporter';
 import { formatLocation, getCourseColor, getCoursePrefix, getScheduleColorMap } from '../utils/scheduleUtils';
 import { GoogleCalendarModal } from './GoogleCalendarModal';
+import { Calendar31Icon } from './common/Calendar31Icon';
 import type { Course } from '../types/schedule';
 
 interface ExportModalProps {
@@ -144,9 +145,25 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     downloadFile(csvContent, `Cursos_Seleccionados_${optionName.replace(/\s+/g, '_')}.csv`, 'text/csv;charset=utf-8;');
   };
 
+  if (isGCalModalOpen) {
+    return (
+      <GoogleCalendarModal
+        isOpen={isGCalModalOpen}
+        onBack={() => setIsGCalModalOpen(false)}
+        onClose={() => {
+          setIsGCalModalOpen(false);
+          onClose();
+        }}
+        courses={courses}
+        selectedSections={selectedSections}
+        optionName={optionName}
+        isConsolidado={isConsolidado}
+      />
+    );
+  }
+
   return (
-    <>
-      <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose}>
         <div
           role="dialog"
           aria-modal="true"
@@ -269,26 +286,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             >
               <div className="export-card-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                 <div className="export-card-info" style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flex: 1, minWidth: 0 }}>
-                  <div
-                    className="export-card-icon"
-                    style={{
-                      width: '42px',
-                      height: '42px',
-                      borderRadius: '0px',
-                      border: '1.5px solid #18181A',
-                      backgroundColor: '#E0EBF5',
-                      color: '#005A78',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      fontFamily: 'JetBrains Mono, monospace',
-                      fontSize: '15px',
-                      fontWeight: 700
-                    }}
-                  >
-                    31
-                  </div>
+                  <Calendar31Icon size={42} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <span className="export-card-title" style={{ fontFamily: 'var(--font-heading, Space Grotesk)', fontWeight: 700, fontSize: '13.5px', color: '#141416' }}>
@@ -756,15 +754,5 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           </div>
         </div>
       </div>
-
-      <GoogleCalendarModal
-        isOpen={isGCalModalOpen}
-        onClose={() => setIsGCalModalOpen(false)}
-        courses={courses}
-        selectedSections={selectedSections}
-        optionName={optionName}
-        isConsolidado={isConsolidado}
-      />
-    </>
   );
 };

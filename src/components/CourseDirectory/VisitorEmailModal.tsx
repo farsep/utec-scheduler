@@ -13,19 +13,22 @@ import {
   User,
   PenLine,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ArrowLeft
 } from 'lucide-react';
 
 interface VisitorEmailModalProps {
   course: CourseExtendedInfo;
   selectedSectionNumber?: string;
   onClose: () => void;
+  onBack?: () => void;
 }
 
 export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
   course,
   selectedSectionNumber = '1',
-  onClose
+  onClose,
+  onBack
 }) => {
   const [sectionNum, setSectionNum] = useState<string>(selectedSectionNumber);
   const [studentName, setStudentName] = useState<string>(() => {
@@ -120,6 +123,33 @@ export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
         {/* Modal Header */}
         <div className="visitor-modal-header">
           <div className="visitor-modal-title-group">
+            {onBack && (
+              <button
+                type="button"
+                className="visitor-modal-back-btn"
+                onClick={onBack}
+                aria-label="Volver al detalle del curso"
+                style={{
+                  height: '32px',
+                  padding: '0 10px',
+                  borderRadius: '0px',
+                  backgroundColor: '#DCD9D2',
+                  border: '1px solid #18181A',
+                  color: '#141416',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  cursor: 'pointer',
+                  flexShrink: 0
+                }}
+              >
+                <ArrowLeft size={14} />
+                <span>Volver</span>
+              </button>
+            )}
             <div className="visitor-modal-icon-badge">
               <Mail size={18} />
             </div>

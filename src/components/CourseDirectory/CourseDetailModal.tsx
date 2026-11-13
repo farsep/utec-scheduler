@@ -169,6 +169,20 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
     }))
   ];
 
+  if (isEmailModalOpen) {
+    return (
+      <VisitorEmailModal
+        course={course}
+        selectedSectionNumber={selectedSectionNumber === 'ALL' ? course.extendedSections[0]?.sectionNumber || '1' : selectedSectionNumber}
+        onBack={() => setIsEmailModalOpen(false)}
+        onClose={() => {
+          setIsEmailModalOpen(false);
+          onClose();
+        }}
+      />
+    );
+  }
+
   return (
     <div
       ref={overlayRef}
@@ -497,15 +511,6 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
           </button>
         </div>
       </div>
-
-      {/* Embedded Visitor Email Modal */}
-      {isEmailModalOpen && (
-        <VisitorEmailModal
-          course={course}
-          selectedSectionNumber={selectedSectionNumber === 'ALL' ? course.extendedSections[0]?.sectionNumber || '1' : selectedSectionNumber}
-          onClose={() => setIsEmailModalOpen(false)}
-        />
-      )}
     </div>
   );
 };
