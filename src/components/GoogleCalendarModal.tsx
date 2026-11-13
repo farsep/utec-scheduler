@@ -14,8 +14,10 @@ import {
   Layers,
   ChevronDown,
   ChevronRight,
-  SlidersHorizontal
+  SlidersHorizontal,
+  ArrowLeft
 } from 'lucide-react';
+import { Calendar31Icon } from './common/Calendar31Icon';
 import type { Course } from '../types/schedule';
 import {
   getSavedAuth,
@@ -35,6 +37,7 @@ import {
 interface GoogleCalendarModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onBack?: () => void;
   courses: Course[];
   selectedSections: Record<string, string>;
   optionName: string;
@@ -57,6 +60,7 @@ const formatReminderPhrase = (minutes: number): string => {
 export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
   isOpen,
   onClose,
+  onBack,
   courses,
   selectedSections,
   optionName,
@@ -218,27 +222,36 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
             borderBottom: '1.5px solid #18181A'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '0px',
-                backgroundColor: '#DCD9D2',
-                border: '1.5px solid #18181A',
-                color: '#141416',
-                fontFamily: 'JetBrains Mono, monospace',
-                fontWeight: 700,
-                fontSize: '15px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}
-            >
-              [31]
-            </div>
-            <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+            {onBack && (
+              <button
+                type="button"
+                className="grafton-gcal-back-btn"
+                onClick={onBack}
+                aria-label="Volver a Exportar"
+                style={{
+                  height: '32px',
+                  padding: '0 10px',
+                  borderRadius: '0px',
+                  backgroundColor: '#DCD9D2',
+                  border: '1px solid #18181A',
+                  color: '#141416',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  cursor: 'pointer',
+                  flexShrink: 0
+                }}
+              >
+                <ArrowLeft size={14} />
+                <span>Volver</span>
+              </button>
+            )}
+            <Calendar31Icon size={40} />
+            <div style={{ minWidth: 0 }}>
               <h3
                 className="modal-title"
                 style={{

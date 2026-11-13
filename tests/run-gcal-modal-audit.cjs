@@ -43,16 +43,34 @@ const server = http.createServer((req, res) => {
     await page.locator('button.grafton-export-btn, button:has-text("Exportar")').first().click();
     await page.waitForTimeout(500);
 
-    // Click Conectar to open Level-2 "Conectar a Google Calendar" Modal
+    // Assert ExportModal renders 1 dialog and SVG Calendar-31 icon (no "[31]")
+    assert.strictEqual(await page.locator('[role="dialog"]:visible').count(), 1, 'Expected 1 visible dialog for ExportModal');
+    assert.strictEqual(await page.locator('.export-modal-card svg text:has-text("31")').count(), 1, 'Expected SVG Calendar-31 icon in ExportModal');
+
+    // Click Conectar to open "Conectar a Google Calendar" Modal
     await page.locator('button:has-text("Conectar")').first().click();
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(800);
 
     const gcalModal = page.locator('.grafton-gcal-modal');
     assert.strictEqual(await gcalModal.isVisible(), true, 'Google Calendar modal should be visible');
 
-    // Capture screenshot
+    // Single-modal stacking assertions
+    assert.strictEqual(await page.locator('[role="dialog"]:visible').count(), 1, 'Expected ONLY 1 visible [role="dialog"] when Google Calendar modal is open');
+    assert.strictEqual(await page.locator('text="Imagen PNG de alta resolución"').isVisible(), false, 'Parent ExportModal PNG card must NOT be visible behind Google Calendar modal');
+    assert.strictEqual(await page.locator('text="Descargar CSV"').isVisible(), false, 'Parent ExportModal CSV button must NOT be visible behind Google Calendar modal');
+
+    // SVG Calendar-31 icon & no literal "[31]"
+    const bodyText = await page.evaluate(() => document.body.innerText);
+    assert.strictEqual(bodyText.includes('[31]'), false, 'document.body.innerText must NOT contain "[31]"');
+    assert.strictEqual(await gcalModal.locator('svg text:has-text("31")').count(), 1, 'Expected SVG Calendar-31 icon in GoogleCalendarModal header');
+
+    // Capture full-page screenshot to visually prove single-modal rendering
     const auditDir = path.resolve(process.cwd(), 'audit-screenshots');
     if (!fs.existsSync(auditDir)) fs.mkdirSync(auditDir, { recursive: true });
+    const singleModalPng = path.join(auditDir, 'google-calendar-single-modal.png');
+    await page.screenshot({ path: singleModalPng });
+    fs.copyFileSync(singleModalPng, '/home/charmcast/.gemini/antigravity/brain/24f434e2-bf0f-4361-abbc-96cc52a1d046/google-calendar-single-modal.png');
+
     const outPng = path.join(auditDir, 'modal-google-calendar-connect.png');
     await gcalModal.screenshot({ path: outPng });
     fs.copyFileSync(outPng, '/home/charmcast/.gemini/antigravity/brain/24f434e2-bf0f-4361-abbc-96cc52a1d046/modal-google-calendar-connect.png');
@@ -101,7 +119,29 @@ const server = http.createServer((req, res) => {
     assert.deepStrictEqual(auditResult.foundEmojis, [], 'Expected 0 forbidden emojis in innerText');
     assert.deepStrictEqual(auditResult.greenTexts, [], 'Expected 0 green helper texts');
 
-    console.log('ALL GRAFTON SWISS GOOGLE CALENDAR MODAL ASSERTIONS PASSED!');
+    // Test ← Volver returns cleanly to Exportar u Organizar Horario
+    await gcalModal.locator('button:has-text("Volver")').click();
+    await page.waitForTimeout(400);
+    assert.strictEqual(await page.locator('[role="dialog"]:visible').count(), 1, 'Expected 1 visible [role="dialog"] after clicking Volver');
+    assert.strictEqual(await page.locator('text="Imagen PNG de alta resolución"').isVisible(), true, 'ExportModal PNG card should be visible again after Volver');
+    assert.strictEqual(await page.locator('text="Descargar CSV"').isVisible(), true, 'ExportModal CSV button should be visible again after Volver');
+
+    // Test /cursos CourseDetailModal -> Pedir Permiso single-modal + Volver
+    await page.goto('http://127.0.0.1:4341/cursos', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(800);
+    await page.locator('.course-card:visible, .directory-course-card:visible, article:visible').first().click();
+    await page.waitForTimeout(500);
+    assert.strictEqual(await page.locator('[role="dialog"]:visible').count(), 1, 'Expected 1 visible dialog for CourseDetailModal');
+    await page.locator('button:has-text("Pedir Permiso")').click();
+    await page.waitForTimeout(400);
+    assert.strictEqual(await page.locator('[role="dialog"]:visible').count(), 1, 'Expected ONLY 1 visible [role="dialog"] when VisitorEmailModal is open');
+    assert.strictEqual(await page.locator('.course-modal-dialog').isVisible(), false, 'Parent CourseDetailModal must NOT be visible behind VisitorEmailModal');
+    await page.locator('.visitor-modal-back-btn').click();
+    await page.waitForTimeout(400);
+    assert.strictEqual(await page.locator('[role="dialog"]:visible').count(), 1, 'Expected 1 visible dialog after clicking Volver in VisitorEmailModal');
+    assert.strictEqual(await page.locator('.course-modal-dialog').isVisible(), true, 'CourseDetailModal should be visible again after Volver');
+
+    console.log('ALL GRAFTON SWISS SINGLE-MODAL & SVG CALENDAR-31 ASSERTIONS PASSED!');
   } finally {
     await browser.close();
     server.close();
