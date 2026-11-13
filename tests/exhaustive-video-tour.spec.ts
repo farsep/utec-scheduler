@@ -1,4 +1,4 @@
-import { test, chromium, Page, BrowserContext } from '@playwright/test';
+import { test, expect, chromium, Page, BrowserContext } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
@@ -187,8 +187,16 @@ test.describe('MatricuLAB Exhaustive Video Tour (Desktop + Mobile)', () => {
       await closeAnyModal(page);
     }
 
-    // Open Export / Import modals if present on header
+    // Open Export / Google Calendar / Import modals if present on header
     if (await safeClick(page, 'button:has-text("Exportar")', 1000)) {
+      if (await safeClick(page, 'button:has-text("Conectar")', 1200)) {
+        const auditDir = path.resolve(process.cwd(), 'audit-screenshots');
+        if (!fs.existsSync(auditDir)) fs.mkdirSync(auditDir, { recursive: true });
+        await page.locator('.grafton-gcal-modal').screenshot({
+          path: path.join(auditDir, 'modal-google-calendar-connect.png')
+        }).catch(() => {});
+        await closeAnyModal(page);
+      }
       await closeAnyModal(page);
     }
     if (await safeClick(page, 'button:has-text("Importar"), a:has-text("Importar")', 1000)) {
@@ -460,5 +468,65 @@ test.describe('MatricuLAB Exhaustive Video Tour (Desktop + Mobile)', () => {
         console.warn('ffmpeg conversion skipped or failed:', e);
       }
     }
+  });
+
+  test('Google Calendar Connect Sub-Modal Grafton Swiss Concrete Audit', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
+    await pause(page, 800);
+
+    // Load sample schedule if needed
+    await safeClick(page, 'button:has-text("Datos Muestra"), button:has-text("Muestra")', 800);
+
+    // Open Level-1 Export Modal
+    await page.locator('button.grafton-export-btn, button:has-text("Exportar")').first().click();
+    await pause(page, 600);
+
+    // Click Conectar on the Google Calendar row to open Level-2 Modal
+    await page.locator('button:has-text("Conectar")').first().click();
+    await pause(page, 1200);
+
+    const gcalModal = page.locator('.grafton-gcal-modal');
+    await expect(gcalModal).toBeVisible();
+
+    // Capture audit-screenshots/modal-google-calendar-connect.png
+    const auditDir = path.resolve(process.cwd(), 'audit-screenshots');
+    if (!fs.existsSync(auditDir)) fs.mkdirSync(auditDir, { recursive: true });
+    await gcalModal.screenshot({ path: path.join(auditDir, 'modal-google-calendar-connect.png') });
+
+    // Programmatic Grafton Swiss assertions inside the open Conectar a Google Calendar modal
+    const auditResult = await gcalModal.evaluate((modal) => {
+      const allElements = [modal, ...Array.from(modal.querySelectorAll('*'))];
+      const nonZeroRadius: string[] = [];
+      const gradientElements: string[] = [];
+      const greenTexts: string[] = [];
+
+      for (const el of allElements) {
+        const style = window.getComputedStyle(el);
+        if (style.borderRadius && style.borderRadius !== '0px') {
+          nonZeroRadius.push(`${el.tagName}.${el.className}: ${style.borderRadius}`);
+        }
+        if (style.backgroundImage && style.backgroundImage.includes('linear-gradient')) {
+          gradientElements.push(`${el.tagName}.${el.className}: ${style.backgroundImage}`);
+        }
+        if (
+          style.color === 'rgb(16, 185, 129)' ||
+          style.color === 'rgb(5, 150, 105)'
+        ) {
+          greenTexts.push(`${el.tagName}: ${style.color}`);
+        }
+      }
+
+      const innerText = (modal as HTMLElement).innerText || '';
+      const forbiddenEmojis = ['🎨', '🌈', '🔔', '⚙️', '🚫', '💡'];
+      const foundEmojis = forbiddenEmojis.filter((emoji) => innerText.includes(emoji));
+
+      return { nonZeroRadius, gradientElements, greenTexts, foundEmojis };
+    });
+
+    expect(auditResult.nonZeroRadius).toEqual([]);
+    expect(auditResult.gradientElements).toEqual([]);
+    expect(auditResult.foundEmojis).toEqual([]);
+    expect(auditResult.greenTexts).toEqual([]);
   });
 });
