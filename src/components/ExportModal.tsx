@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Image, FileSpreadsheet, Download, RefreshCw, Bell, BellOff, Palette, Layers, Clock } from 'lucide-react';
 import { generateICS, downloadFile } from '../utils/icsExporter';
+import { exportScheduleToPNG } from '../utils/pngExporter';
 import { formatLocation, getCourseColor, getCoursePrefix, getScheduleColorMap } from '../utils/scheduleUtils';
 import { GoogleCalendarModal } from './GoogleCalendarModal';
 import type { Course } from '../types/schedule';
@@ -70,26 +71,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   };
 
   const handleExportImage = async () => {
-    const gridElem = document.querySelector('.timetable-grid-wrapper') as HTMLElement;
-    if (!gridElem || isExportingImage) return;
+    if (isExportingImage) return;
 
     setIsExportingImage(true);
     try {
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(gridElem, {
-        scale: 2,
-        backgroundColor: '#F2F0EC',
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-        removeContainer: true,
-        imageTimeout: 0
-      });
-      const dataUrl = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = `Horario_UTEC_${optionName.replace(/\s+/g, '_')}.png`;
-      a.click();
+      await exportScheduleToPNG(courses, selectedSections, optionName);
     } catch (err) {
       console.error('Failed to export schedule image:', err);
     } finally {
