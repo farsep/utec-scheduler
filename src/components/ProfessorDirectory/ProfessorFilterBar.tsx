@@ -216,6 +216,18 @@ export const ProfessorFilterBar: React.FC<ProfessorFilterBarProps> = ({
             >
               Presencial
             </button>
+            <button
+              type="button"
+              className={`prof-modality-btn ${filter.selectedModality === 'Sincronico' ? 'prof-modality-btn--active' : ''}`}
+              onClick={() =>
+                onFilterChange({
+                  selectedModality: filter.selectedModality === 'Sincronico' ? 'ALL' : 'Sincronico'
+                })
+              }
+              title="Solo docentes con clases virtuales / sincrónicas"
+            >
+              Virtual
+            </button>
           </div>
 
           {/* Clear Filters Button if any active */}

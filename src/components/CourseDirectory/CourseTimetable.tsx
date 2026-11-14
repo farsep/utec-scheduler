@@ -722,7 +722,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                             : baseShortSec;
 
                         const shortProf = s.professor && !/docente\s*utec/i.test(s.professor)
-                          ? formatProfessorName(s.professor).shortName
+                          ? formatProfessorName(s.professor).displayName
                           : null;
 
                         return (

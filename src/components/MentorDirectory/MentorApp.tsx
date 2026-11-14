@@ -90,7 +90,7 @@ export const MentorApp: React.FC<MentorAppProps> = ({
 
       const q = mentorParam.trim().toLowerCase();
       const targetMentor = mentors.find(m => {
-        const dName = m.displayName.toLowerCase();
+        const dName = m.name.toLowerCase();
         const email = (m.email || '').toLowerCase();
         const id = m.id.toLowerCase();
         return dName.includes(q) || email.includes(q) || id.includes(q) || q.includes(dName);

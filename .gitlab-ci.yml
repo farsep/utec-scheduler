@@ -1,6 +1,6 @@
 # GitLab CI/CD Pipeline for Astro + pnpm GitLab Pages Deployment
 
-image: node:22-bookworm
+image: node:24-bookworm
 
 stages:
   - deploy
@@ -18,17 +18,17 @@ pages:
     - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     - source "$HOME/.cargo/env"
     - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-    # Setup pnpm
+    # Setup pnpm (matching package.json packageManager)
     - corepack enable
-    - corepack prepare pnpm@9 --activate
-    - pnpm config set store-dir .pnpm-store
+    - corepack prepare pnpm@12.18.0 --activate
   script:
     # Build WASM first
     - cd wasm-engine
     - wasm-pack build --target web
     - cd ..
-    # Build Astro app
-    - pnpm install
+    # Install dependencies, typecheck, and build Astro app
+    - pnpm install --frozen-lockfile --store-dir .pnpm-store
+    - pnpm run check
     - pnpm run build
     - rm -rf public
     - mv dist public
