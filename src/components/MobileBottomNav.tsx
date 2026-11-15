@@ -131,10 +131,19 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
 
   const currentTabIndex = activePathIndex;
 
-  // Sync dock progress CSS variable to active index
+  // Sync dock progress CSS variable to active index & clear any stale pane transforms
   useEffect(() => {
     if (dockRef.current) {
       dockRef.current.style.setProperty('--dock-active-progress', String(currentTabIndex));
+    }
+    if (typeof document !== 'undefined') {
+      document
+        .querySelectorAll<HTMLElement>('.app-shell-tab-pane, main.main-content, .app-shell-root')
+        .forEach(el => {
+          el.style.removeProperty('transform');
+          el.style.removeProperty('transition');
+          el.style.removeProperty('will-change');
+        });
     }
   }, [currentTabIndex]);
 
@@ -183,7 +192,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
     let isSwipeActive = false;
     let isSwipeLocked = false;
     let isVerticalScroll = false;
-    let activeContentEl: HTMLElement | null = null;
 
     const onTouchStart = (e: TouchEvent) => {
       if (window.innerWidth >= 1024 || e.touches.length !== 1) return;
@@ -195,12 +203,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
       isSwipeActive = false;
       isSwipeLocked = false;
       isVerticalScroll = false;
-
-      // Find active tab pane or main container for parallax shift
-      activeContentEl =
-        document.querySelector('.app-shell-tab-pane[style*="display: block"]') ||
-        document.querySelector('main.main-content') ||
-        document.querySelector('.app-shell-root');
     };
 
     const onTouchMove = (e: TouchEvent) => {
@@ -240,12 +242,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
         }
 
         setHoverIndex(Math.round(fractionalProgress));
-
-        if (activeContentEl) {
-          const shift = Math.max(-48, Math.min(48, deltaX * 0.18));
-          activeContentEl.style.transform = `translate3d(${shift}px, 0, 0)`;
-          activeContentEl.style.transition = 'none';
-        }
       }
     };
 
@@ -258,11 +254,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
 
       if (sliderRef.current) {
         sliderRef.current.classList.remove('is-dragging');
-      }
-
-      if (activeContentEl) {
-        activeContentEl.style.transition = 'transform 260ms cubic-bezier(0.22, 1, 0.36, 1)';
-        activeContentEl.style.transform = 'translate3d(0, 0, 0)';
       }
 
       let targetIdx = currentTabIndex;

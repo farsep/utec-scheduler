@@ -9,7 +9,8 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 /* Background Subtle Ambient Glow */

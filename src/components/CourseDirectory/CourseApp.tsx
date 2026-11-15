@@ -77,14 +77,26 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
 
   useEffect(() => {
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 380);
+      const y = Math.max(
+        window.scrollY || 0,
+        document.documentElement?.scrollTop || 0,
+        document.body?.scrollTop || 0
+      );
+      setShowScrollTop(y > 300);
     };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+    window.addEventListener('popstate', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll, { capture: true });
+      window.removeEventListener('popstate', handleScroll);
+    };
   }, []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement?.scrollTo?.({ top: 0, behavior: 'smooth' });
+    document.body?.scrollTo?.({ top: 0, behavior: 'smooth' });
   };
 
   // Real-time ticker
@@ -139,14 +151,28 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
     loadMasterCourses();
   }, [loadMasterCourses]);
 
-  // Deep-link auto-open via ?curso=CODE URL parameter (and on popstate)
+  // Deep-link auto-open via ?curso=CODE URL parameter (and on popstate / modal close)
   useEffect(() => {
-    if (!courses.length || typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return;
 
-    const checkUrlParam = () => {
+    const handleCloseModals = () => setSelectedCourse(null);
+    window.addEventListener('matriculab:close-modals', handleCloseModals);
+
+    if (!courses.length) {
+      return () => window.removeEventListener('matriculab:close-modals', handleCloseModals);
+    }
+
+    const checkUrlParam = (fromPopState = false) => {
+      if (!window.location.pathname.startsWith('/cursos')) {
+        setSelectedCourse(null);
+        return;
+      }
       const params = new URLSearchParams(window.location.search);
       const cursoParam = params.get('curso') || params.get('c');
-      if (!cursoParam) return;
+      if (!cursoParam) {
+        if (fromPopState) setSelectedCourse(null);
+        return;
+      }
 
       const norm = cursoParam.trim().toUpperCase();
       const targetCourse = courses.find(
@@ -167,9 +193,13 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
       }
     };
 
-    checkUrlParam();
-    window.addEventListener('popstate', checkUrlParam);
-    return () => window.removeEventListener('popstate', checkUrlParam);
+    const onPopState = () => checkUrlParam(true);
+    checkUrlParam(false);
+    window.addEventListener('popstate', onPopState);
+    return () => {
+      window.removeEventListener('matriculab:close-modals', handleCloseModals);
+      window.removeEventListener('popstate', onPopState);
+    };
   }, [courses]);
 
   const handleFilterChange = (updates: Partial<CourseFilterState>) => {

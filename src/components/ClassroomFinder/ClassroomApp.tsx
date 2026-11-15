@@ -147,15 +147,26 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
 
   useEffect(() => {
     const handleScroll = () => {
-      // Filter bar ends around ~720px on mobile; only show floating return button when well past filters
-      setShowScrollTop(window.scrollY > 750);
+      const y = Math.max(
+        window.scrollY || 0,
+        document.documentElement?.scrollTop || 0,
+        document.body?.scrollTop || 0
+      );
+      setShowScrollTop(y > 300);
     };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+    window.addEventListener('popstate', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll, { capture: true });
+      window.removeEventListener('popstate', handleScroll);
+    };
   }, []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement?.scrollTo?.({ top: 0, behavior: 'smooth' });
+    document.body?.scrollTo?.({ top: 0, behavior: 'smooth' });
   };
 
   // Real-time ticker: only triggers React re-render when the minute actually ticks
@@ -227,14 +238,28 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
     loadMasterSchedule();
   }, [loadMasterSchedule]);
 
-  // Deep-link auto-open via ?aula=CODE URL parameter (and on popstate)
+  // Deep-link auto-open via ?aula=CODE URL parameter (and on popstate / modal close)
   useEffect(() => {
-    if (!classrooms.length || typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return;
 
-    const checkUrlParam = () => {
+    const handleCloseModals = () => setSelectedRoom(null);
+    window.addEventListener('matriculab:close-modals', handleCloseModals);
+
+    if (!classrooms.length) {
+      return () => window.removeEventListener('matriculab:close-modals', handleCloseModals);
+    }
+
+    const checkUrlParam = (fromPopState = false) => {
+      if (!window.location.pathname.startsWith('/aulas')) {
+        setSelectedRoom(null);
+        return;
+      }
       const params = new URLSearchParams(window.location.search);
       const aulaParam = params.get('aula') || params.get('search');
-      if (!aulaParam) return;
+      if (!aulaParam) {
+        if (fromPopState) setSelectedRoom(null);
+        return;
+      }
 
       const canonical = resolveCanonicalRoom(aulaParam);
       const targetRoom = classrooms.find(
@@ -270,9 +295,13 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
       }
     };
 
-    checkUrlParam();
-    window.addEventListener('popstate', checkUrlParam);
-    return () => window.removeEventListener('popstate', checkUrlParam);
+    const onPopState = () => checkUrlParam(true);
+    checkUrlParam(false);
+    window.addEventListener('popstate', onPopState);
+    return () => {
+      window.removeEventListener('matriculab:close-modals', handleCloseModals);
+      window.removeEventListener('popstate', onPopState);
+    };
   }, [classrooms]);
 
   const handleFilterChange = (updates: Partial<ClassroomFilterState>) => {

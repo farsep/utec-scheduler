@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, FileSpreadsheet, FileText, Upload, CheckCircle2, Download, AlertCircle, Trash2, Loader2, Code2 } from 'lucide-react';
 import { parseExcelFile } from '../utils/excelParser';
 import { parsePDFFile, type PDFParseResult } from '../utils/pdfParser';
@@ -233,10 +234,13 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
     pdfInputRef.current?.click();
   };
 
-  return (
+  const modalContent = (
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Importar Oferta Académica"
         onClick={e => e.stopPropagation()}
         style={{
           maxWidth: '620px',
@@ -627,4 +631,6 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

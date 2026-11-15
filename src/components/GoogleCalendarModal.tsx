@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Calendar,
@@ -190,7 +191,7 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
     localStorage.setItem('utec_reminder_minutes', String(minutes));
   };
 
-  return (
+  const modalContent = (
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-card grafton-gcal-modal"
@@ -931,4 +932,6 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

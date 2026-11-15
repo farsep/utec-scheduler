@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { CourseExtendedInfo } from '../../types/courseDirectory';
 import { generateVisitorEmailTemplate } from '../../utils/courseDirectoryUtils';
 import { CustomSelect } from '../common/CustomSelect';
@@ -117,7 +118,7 @@ export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div className="visitor-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div className="visitor-modal-dialog" onClick={e => e.stopPropagation()}>
         {/* Modal Header */}
@@ -332,4 +333,6 @@ export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

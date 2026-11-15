@@ -89,9 +89,12 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
     }
   }, []);
 
+  const suppressPopStateModalCloseRef = useRef(false);
+
   const switchTab = useCallback(
     (targetTab: TabKey, targetUrl?: string) => {
       if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('matriculab:close-modals'));
         scrollPositions.current[activeTab] = window.scrollY;
       }
 
@@ -111,7 +114,12 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
         const curPathAndSearch = window.location.pathname + window.location.search;
         if (curPathAndSearch !== nextPath) {
           window.history.pushState({ tab: targetTab }, '', nextPath);
-          window.dispatchEvent(new PopStateEvent('popstate'));
+          suppressPopStateModalCloseRef.current = true;
+          try {
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          } finally {
+            suppressPopStateModalCloseRef.current = false;
+          }
         }
       }
       if (TAB_TITLES[targetTab]) {
@@ -128,6 +136,9 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
 
   useEffect(() => {
     const handlePopState = () => {
+      if (!suppressPopStateModalCloseRef.current) {
+        window.dispatchEvent(new CustomEvent('matriculab:close-modals'));
+      }
       let p = window.location.pathname.split('?')[0].split('#')[0];
       if (p.length > 1 && p.endsWith('/')) {
         p = p.slice(0, -1);
@@ -176,6 +187,8 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
       if (targetTab) {
         e.preventDefault();
         e.stopPropagation();
+
+        window.dispatchEvent(new CustomEvent('matriculab:close-modals'));
 
         if (targetTab !== activeTab) {
           switchTab(targetTab, rawHref);

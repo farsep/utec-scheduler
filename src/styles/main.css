@@ -100,7 +100,7 @@
 html {
   min-height: 100%;
   background-color: var(--bg-canvas);
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100vw;
 }
 
@@ -109,7 +109,7 @@ body {
   color: var(--text-primary);
   font-family: var(--font-body);
   min-height: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100vw;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -167,17 +167,25 @@ input[type="range"]::-webkit-slider-thumb {
   min-height: 100vh;
   width: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   display: flex;
   flex-direction: column;
   background: var(--bg-canvas);
+  transform: none;
+  filter: none;
+  contain: none;
 }
 
 .app-shell-tab-pane {
   flex: 1;
   width: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
+  transform: none;
+  filter: none;
+  contain: none;
 }
 
 .grafton-card,
@@ -257,9 +265,10 @@ input[type="range"]::-webkit-slider-thumb {
   background: #CFCBC2;
 }
 
-/* Strictly hide mobile drawer toggle at >= 1024px */
+/* Strictly hide mobile-only controls at >= 1024px */
 @media (min-width: 1024px) {
-  .grafton-mobile-drawer-btn {
+  .grafton-mobile-drawer-btn,
+  .timetable-import-btn {
     display: none !important;
   }
 }
@@ -2767,12 +2776,23 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 @media (max-width: 768px) {
+  .optimizer-modal-card {
+    height: 90dvh !important;
+    max-height: 90dvh !important;
+  }
   .optimizer-split-body {
     flex-direction: column;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
   }
-  .optimizer-config-panel {
+  .optimizer-config-panel,
+  .optimizer-right-panel {
     width: 100% !important;
     border-right: none !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
   }
   .optimizer-config-panel[data-has-results="true"] {
     display: none !important;

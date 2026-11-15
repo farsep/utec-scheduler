@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { DayOfWeek } from '../../types/schedule';
 import type { CourseExtendedInfo } from '../../types/courseDirectory';
 import { DAY_LABELS, resolveCanonicalRoom } from '../../utils/classroomUtils';
@@ -84,22 +85,31 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
     }, 200);
   };
 
-  // Lock body scroll so Safari / mobile browser never scrolls background page
+  // Lock body & html scroll so Safari / mobile browser never scrolls background page
   useEffect(() => {
-    const originalOverflow = document.body.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !isEmailModalOpen) {
         triggerClose();
       }
     };
+    const handleCloseModals = () => {
+      setIsEmailModalOpen(false);
+      onClose();
+    };
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('matriculab:close-modals', handleCloseModals);
 
     return () => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
-      document.body.style.overflow = originalOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('matriculab:close-modals', handleCloseModals);
     };
   }, [isEmailModalOpen]);
 
@@ -183,7 +193,7 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
     );
   }
 
-  return (
+  const modalContent = (
     <div
       ref={overlayRef}
       className="course-modal-backdrop"
@@ -513,4 +523,6 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

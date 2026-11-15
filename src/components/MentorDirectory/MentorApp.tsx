@@ -55,14 +55,26 @@ export const MentorApp: React.FC<MentorAppProps> = ({
 
   useEffect(() => {
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 380);
+      const y = Math.max(
+        window.scrollY || 0,
+        document.documentElement?.scrollTop || 0,
+        document.body?.scrollTop || 0
+      );
+      setShowScrollTop(y > 300);
     };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+    window.addEventListener('popstate', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll, { capture: true });
+      window.removeEventListener('popstate', handleScroll);
+    };
   }, []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement?.scrollTo?.({ top: 0, behavior: 'smooth' });
+    document.body?.scrollTo?.({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -79,14 +91,28 @@ export const MentorApp: React.FC<MentorAppProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Deep-link auto-open via ?mentor=QUERY URL parameter (and on popstate)
+  // Deep-link auto-open via ?mentor=QUERY URL parameter (and on popstate / modal close)
   useEffect(() => {
-    if (!mentors.length || typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return;
 
-    const checkUrlParam = () => {
+    const handleCloseModals = () => setSelectedMentor(null);
+    window.addEventListener('matriculab:close-modals', handleCloseModals);
+
+    if (!mentors.length) {
+      return () => window.removeEventListener('matriculab:close-modals', handleCloseModals);
+    }
+
+    const checkUrlParam = (fromPopState = false) => {
+      if (!window.location.pathname.startsWith('/mentores')) {
+        setSelectedMentor(null);
+        return;
+      }
       const params = new URLSearchParams(window.location.search);
       const mentorParam = params.get('mentor') || params.get('m');
-      if (!mentorParam) return;
+      if (!mentorParam) {
+        if (fromPopState) setSelectedMentor(null);
+        return;
+      }
 
       const q = mentorParam.trim().toLowerCase();
       const targetMentor = mentors.find(m => {
@@ -110,9 +136,13 @@ export const MentorApp: React.FC<MentorAppProps> = ({
       }
     };
 
-    checkUrlParam();
-    window.addEventListener('popstate', checkUrlParam);
-    return () => window.removeEventListener('popstate', checkUrlParam);
+    const onPopState = () => checkUrlParam(true);
+    checkUrlParam(false);
+    window.addEventListener('popstate', onPopState);
+    return () => {
+      window.removeEventListener('matriculab:close-modals', handleCloseModals);
+      window.removeEventListener('popstate', onPopState);
+    };
   }, [mentors]);
 
   // Build active schedule time blocks for live mentor clash detection

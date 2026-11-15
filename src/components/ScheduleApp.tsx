@@ -183,6 +183,26 @@ export const ScheduleApp: React.FC<ScheduleAppProps> = ({
     }
   }, [exportTriggerCount]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const closeModals = () => {
+      setIsUploadOpen(false);
+      setIsExportOpen(false);
+      setIsOptimizerOpen(false);
+    };
+    const onPopState = () => {
+      if (window.location.pathname !== '/' && !window.location.pathname.startsWith('/horarios')) {
+        closeModals();
+      }
+    };
+    window.addEventListener('matriculab:close-modals', closeModals);
+    window.addEventListener('popstate', onPopState);
+    return () => {
+      window.removeEventListener('matriculab:close-modals', closeModals);
+      window.removeEventListener('popstate', onPopState);
+    };
+  }, []);
+
   // Notify AppShell of active schedule state for DAG & Mentors clash detection
   useEffect(() => {
     if (onScheduleStateChange) {
@@ -564,6 +584,16 @@ export const ScheduleApp: React.FC<ScheduleAppProps> = ({
                 >
                   <SlidersHorizontal size={14} />
                   <span>Auto-Generar</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-compact timetable-import-btn"
+                  onClick={() => setIsUploadOpen(true)}
+                  title="Importar oferta académica (PDF o Excel)"
+                >
+                  <Upload size={13} />
+                  <span>Importar</span>
                 </button>
 
                 <button

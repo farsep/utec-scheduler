@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { DayOfWeek } from '../../types/schedule';
 import type { MentorInfo, MentorSession } from '../../types/mentor';
 import { evaluateMentorLiveStatus } from '../../utils/mentorUtils';
@@ -96,16 +97,20 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
     const originalHtmlOverflow = document.documentElement.style.overflow;
 
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') triggerClose();
     };
+    const handleCloseModals = () => onClose();
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('matriculab:close-modals', handleCloseModals);
 
     return () => {
       document.body.style.overflow = originalBodyOverflow || '';
       document.documentElement.style.overflow = originalHtmlOverflow || '';
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('matriculab:close-modals', handleCloseModals);
       if (rafId.current) cancelAnimationFrame(rafId.current);
     };
   }, [onClose]);
@@ -160,7 +165,7 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div
       ref={overlayRef}
       className="classroom-modal-overlay prof-modal-overlay mentor-modal-overlay"
@@ -548,4 +553,6 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

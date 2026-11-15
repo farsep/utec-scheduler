@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Calendar, Clock, Coffee, Eye, Pin, Info, Filter, ShieldAlert, CheckCircle2, Search, ArrowLeft, Lock, Unlock, CheckSquare, Square, ChevronRight, Check, SlidersHorizontal } from 'lucide-react';
 import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
@@ -688,9 +689,15 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  const modalContent = (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card optimizer-modal-card" onClick={e => e.stopPropagation()}>
+      <div
+        className="modal-card optimizer-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Generador Automático de Horarios"
+        onClick={e => e.stopPropagation()}
+      >
         
         {/* Header */}
         <div className="modal-header" style={{ padding: '16px 20px', borderBottom: '1.5px solid #18181A', background: '#F2F0EC' }}>
@@ -1656,4 +1663,6 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

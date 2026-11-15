@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { DayOfWeek } from '../../types/schedule';
 import type { ProfessorInfo, ProfessorSession } from '../../types/professor';
 import { ALL_DAYS, DAY_LABELS, parseLocationInfo, resolveCanonicalRoom } from '../../utils/classroomUtils';
@@ -103,20 +104,26 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
     }, 200);
   };
 
-  // Lock body scroll and handle Escape key
+  // Lock body & html scroll and handle Escape key
   useEffect(() => {
-    const originalOverflow = document.body.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') triggerClose();
     };
+    const handleCloseModals = () => onClose();
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('matriculab:close-modals', handleCloseModals);
 
     return () => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
-      document.body.style.overflow = originalOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('matriculab:close-modals', handleCloseModals);
     };
   }, [onClose]);
 
@@ -181,7 +188,7 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div
       ref={overlayRef}
       className="classroom-modal-overlay prof-modal-overlay"
@@ -649,4 +656,6 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

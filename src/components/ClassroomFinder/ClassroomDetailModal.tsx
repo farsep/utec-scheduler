@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { ClassroomInfo, ClassroomSession } from '../../types/classroom';
 import type { DayOfWeek } from '../../types/schedule';
 import { ALL_DAYS, DAY_LABELS, ROOM_TYPE_LABELS, calculateFreeBlocks, formatDurationHuman } from '../../utils/classroomUtils';
@@ -202,20 +203,26 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
     window.addEventListener('mouseup', onMouseUp);
   };
 
-  // Lock body scroll and listen for Escape key to close
+  // Lock body & html scroll and listen for Escape key to close
   useEffect(() => {
-    const originalOverflow = document.body.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') triggerClose();
     };
+    const handleCloseModals = () => onClose();
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('matriculab:close-modals', handleCloseModals);
 
     return () => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
-      document.body.style.overflow = originalOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('matriculab:close-modals', handleCloseModals);
     };
   }, [onClose]);
 
@@ -235,7 +242,7 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
   const activeDaySessions = classroom.sessionsByDay[activeTabDay] || [];
   const { freeBlocks, occupiedBlocks, totalFreeMinutes } = calculateFreeBlocks(activeDaySessions);
 
-  return (
+  const modalContent = (
     <div
       ref={overlayRef}
       className="classroom-modal-overlay"
@@ -523,4 +530,6 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

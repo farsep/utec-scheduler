@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Calendar, Image, FileSpreadsheet, Download, RefreshCw, Bell, BellOff, Palette, Layers, Clock } from 'lucide-react';
 import { generateICS, downloadFile } from '../utils/icsExporter';
 import { exportScheduleToPNG } from '../utils/pngExporter';
@@ -162,7 +163,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     );
   }
 
-  return (
+  const modalContent = (
     <div className="modal-overlay" onClick={onClose}>
         <div
           role="dialog"
@@ -755,4 +756,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         </div>
       </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
