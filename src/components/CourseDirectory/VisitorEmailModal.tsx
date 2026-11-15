@@ -121,6 +121,7 @@ export const VisitorEmailModal: React.FC<VisitorEmailModalProps> = ({
   const modalContent = (
     <div className="visitor-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div className="visitor-modal-dialog" onClick={e => e.stopPropagation()}>
+        <div className="grafton-modal-drag-handle w-10 h-1 bg-[#18181A]/40 mx-auto mt-2 mb-1.5 sm:hidden" aria-hidden="true" />
         {/* Modal Header */}
         <div className="visitor-modal-header">
           <div className="visitor-modal-title-group">

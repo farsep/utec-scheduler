@@ -4830,10 +4830,34 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
   border-top: 3px solid #0D7A4E !important;
 }
 
-.grafton-mobile-dock[data-active-dock="professors"] .grafton-dock-slider,
-.grafton-mobile-dock[data-active-dock="mentors"] .grafton-dock-slider {
+.grafton-mobile-dock[data-active-dock="professors"] .grafton-dock-slider {
   background-color: #F9E3E1 !important;
   border-top: 3px solid #B8332A !important;
+}
+
+.grafton-mobile-dock[data-active-dock="mentors"] .grafton-dock-slider {
+  background-color: #EAE8F6 !important;
+  border-top: 3px solid #3D348B !important;
+}
+
+.grafton-dock-scrub-pill {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  transform: translateX(-50%);
+  padding: 5px 10px;
+  background: #18181A;
+  color: #F4F2ED;
+  border: 2px solid #18181A;
+  border-top: 3px solid #00779E;
+  border-radius: 0px;
+  box-shadow: 3px 3px 0px rgba(24, 24, 26, 0.25);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 95;
 }
 
 .grafton-dock-slider.is-dragging {
@@ -4920,14 +4944,20 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
   color: #094D31 !important;
 }
 
-.grafton-dock-item[data-dock-module="professors"].is-active .grafton-dock-icon,
-.grafton-dock-item[data-dock-module="mentors"].is-active .grafton-dock-icon {
+.grafton-dock-item[data-dock-module="professors"].is-active .grafton-dock-icon {
   color: #B8332A !important;
 }
 
-.grafton-dock-item[data-dock-module="professors"].is-active .grafton-dock-label,
-.grafton-dock-item[data-dock-module="mentors"].is-active .grafton-dock-label {
+.grafton-dock-item[data-dock-module="professors"].is-active .grafton-dock-label {
   color: #6E1812 !important;
+}
+
+.grafton-dock-item[data-dock-module="mentors"].is-active .grafton-dock-icon {
+  color: #3D348B !important;
+}
+
+.grafton-dock-item[data-dock-module="mentors"].is-active .grafton-dock-label {
+  color: #2A2364 !important;
 }
 
 .grafton-dock-item.is-active .grafton-dock-icon svg {
@@ -5675,6 +5705,489 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
 @media (max-width: 1023px) {
   .classroom-results-container {
     padding-bottom: 160px !important;
+  }
+}
+
+/* ============================================================================
+   NATIVE GESTURE ENGINE + COMMAND PALETTE (⌘K) + DAG ZOOM TOOLBAR
+   ============================================================================ */
+
+/* Universal Modal Bottom-Sheet Drag Handle (< 640px) */
+.grafton-modal-drag-handle {
+  display: block;
+  width: 40px;
+  height: 4px;
+  background: rgba(24, 24, 26, 0.36);
+  margin: 8px auto 6px;
+  border-radius: 0;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .grafton-modal-drag-handle {
+    display: none !important;
+  }
+}
+
+/* Course Card Mobile Swipe Container & Recessed Orthogonal Trays (/cursos) */
+.course-card-swipe-container {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 0;
+}
+
+.course-card-swipe-container > .course-card {
+  flex: 1;
+}
+
+.course-swipe-tray-left,
+.course-swipe-tray-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 128px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  user-select: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.course-swipe-tray-left {
+  left: 0;
+  justify-content: flex-start;
+  background: #F5E8D3;
+  border-right: 2px solid #B85D00;
+  color: #6E3600;
+}
+
+.course-swipe-tray-right {
+  right: 0;
+  justify-content: flex-end;
+  background: #E0EBF5;
+  border-left: 2px solid #00668C;
+  color: #004D6B;
+}
+
+@media (min-width: 768px) {
+  .course-swipe-tray-left,
+  .course-swipe-tray-right {
+    display: none !important;
+  }
+}
+
+/* Curricular DAG 2D Zoom & Pan Toolbar (/malla) */
+.dag-zoom-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #DCD9D2;
+  border-bottom: 1.5px solid #18181A;
+  box-sizing: border-box;
+}
+
+.dag-zoom-hint {
+  display: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #4A4946;
+  text-transform: uppercase;
+}
+
+@media (min-width: 640px) {
+  .dag-zoom-hint {
+    display: inline;
+  }
+}
+
+.dag-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.dag-zoom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 10px;
+  min-height: 28px;
+  background: #F4F2ED;
+  border: 1.5px solid #18181A;
+  border-radius: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #141416;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.dag-zoom-btn:hover {
+  background: #E0EBF5;
+}
+
+.dag-zoom-btn--reset {
+  min-width: 56px;
+}
+
+.dag-zoom-btn--fit.is-active {
+  background: #00779E;
+  color: #FFFFFF;
+}
+
+.dag-scroll-container.cursor-grab {
+  cursor: grab;
+  user-select: none;
+}
+
+.dag-scroll-container.cursor-grabbing {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* GraftonTopBar Command Palette Trigger */
+.grafton-cmdk-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #F4F2ED;
+  border: 1.5px solid #18181A;
+  border-radius: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #141416;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.grafton-cmdk-trigger:hover {
+  background: #E0EBF5;
+  box-shadow: 2px 2px 0px #18181A;
+}
+
+.grafton-cmdk-trigger__icon {
+  color: #00779E;
+  flex-shrink: 0;
+}
+
+.grafton-cmdk-trigger__label {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .grafton-cmdk-trigger__label {
+    display: inline;
+  }
+}
+
+/* Universal Command Palette Modal (⌘K / Ctrl+K) */
+.command-palette-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8vh 12px 16px;
+  background: rgba(24, 24, 26, 0.58);
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .command-palette-overlay {
+    padding: 12vh 16px 24px;
+  }
+}
+
+.grafton-cmdk-dialog {
+  width: 100%;
+  max-width: 680px;
+  max-height: 78dvh;
+  background: #F4F2ED;
+  border: 2px solid #18181A;
+  border-top: 4px solid #00779E;
+  box-shadow: 6px 6px 0px #18181A;
+  border-radius: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.grafton-cmdk-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background: #DCD9D2;
+  border-bottom: 2px solid #18181A;
+}
+
+.grafton-cmdk-search-icon {
+  color: #00779E;
+  flex-shrink: 0;
+}
+
+.grafton-cmdk-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #141416;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.grafton-cmdk-input::placeholder {
+  color: #5A5852;
+}
+
+.grafton-cmdk-esc {
+  display: none;
+  padding: 2px 6px;
+  background: #F4F2ED;
+  border: 1.5px solid #18181A;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #4A4946;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .grafton-cmdk-esc {
+    display: inline-block;
+  }
+}
+
+.grafton-cmdk-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: #F4F2ED;
+  border: 1.5px solid #18181A;
+  border-radius: 0;
+  color: #141416;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.grafton-cmdk-close:hover {
+  background: #18181A;
+  color: #F4F2ED;
+}
+
+.grafton-cmdk-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #E6E3DC;
+  border-bottom: 1.5px solid #C6C3BB;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.grafton-cmdk-tab {
+  padding: 4px 8px;
+  background: #F4F2ED;
+  color: #4A4946;
+  border: 1px solid #B8B4AC;
+  border-radius: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.grafton-cmdk-tab:hover {
+  border-color: #18181A;
+  color: #141416;
+}
+
+.grafton-cmdk-tab.is-active {
+  background: #18181A;
+  color: #F4F2ED;
+  border-color: #18181A;
+}
+
+.grafton-cmdk-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.grafton-cmdk-empty {
+  padding: 32px 16px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #5A5852;
+}
+
+.grafton-cmdk-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #F4F2ED;
+  border: none;
+  border-bottom: 1px solid #D4D1C9;
+  border-left: 4px solid transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 100ms ease;
+  box-sizing: border-box;
+}
+
+.grafton-cmdk-item:hover {
+  background: #EAE7E1;
+}
+
+.grafton-cmdk-item.is-active {
+  background: #E0EBF5;
+}
+
+.grafton-cmdk-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.grafton-cmdk-item-icon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #DCD9D2;
+  border: 1.5px solid #18181A;
+  flex-shrink: 0;
+}
+
+.grafton-cmdk-item-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.grafton-cmdk-item-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.grafton-cmdk-item-code {
+  padding: 2px 6px;
+  background: #18181A;
+  color: #F4F2ED;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.grafton-cmdk-item-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #141416;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grafton-cmdk-item-sub {
+  margin-top: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: #5A5852;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grafton-cmdk-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.grafton-cmdk-item-badge {
+  padding: 2px 6px;
+  border: 1px solid rgba(24, 24, 26, 0.35);
+  background: rgba(255, 255, 255, 0.5);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.grafton-cmdk-item-arrow {
+  color: #5A5852;
+  flex-shrink: 0;
+}
+
+.grafton-cmdk-item.is-active .grafton-cmdk-item-arrow {
+  color: #00779E;
+}
+
+.grafton-cmdk-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: #DCD9D2;
+  border-top: 1.5px solid #18181A;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: #4A4946;
+  flex-shrink: 0;
+}
+
+.grafton-cmdk-footer-shortcut {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .grafton-cmdk-footer-shortcut {
+    display: inline;
   }
 }
 

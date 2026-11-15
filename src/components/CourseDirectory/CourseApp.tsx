@@ -194,11 +194,24 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
     };
 
     const onPopState = () => checkUrlParam(true);
+    const onCmdKOpenCourse = (e: Event) => {
+      const code = (e as CustomEvent<{ code?: string }>).detail?.code?.toUpperCase();
+      if (!code) return;
+      const match = courses.find(c => c.code.toUpperCase() === code);
+      if (match) setSelectedCourse(match);
+    };
+    const onCmdKToggleOyente = () => {
+      setFilter(prev => ({ ...prev, onlyVisitor: !prev.onlyVisitor }));
+    };
     checkUrlParam(false);
     window.addEventListener('popstate', onPopState);
+    window.addEventListener('matriculab:cmdk-open-course', onCmdKOpenCourse);
+    window.addEventListener('matriculab:cmdk-toggle-oyente', onCmdKToggleOyente);
     return () => {
       window.removeEventListener('matriculab:close-modals', handleCloseModals);
       window.removeEventListener('popstate', onPopState);
+      window.removeEventListener('matriculab:cmdk-open-course', onCmdKOpenCourse);
+      window.removeEventListener('matriculab:cmdk-toggle-oyente', onCmdKToggleOyente);
     };
   }, [courses]);
 

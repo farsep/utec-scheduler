@@ -256,6 +256,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           gap: '14px'
         }}
       >
+        <div className="grafton-modal-drag-handle w-10 h-1 bg-[#18181A]/40 mx-auto mb-1.5 sm:hidden" aria-hidden="true" />
         <div
           className="modal-header"
           style={{

@@ -212,6 +212,8 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
         }}
         onClick={e => e.stopPropagation()}
       >
+        {/* Mobile Drag Handle */}
+        <div className="grafton-modal-drag-handle w-10 h-1 bg-[#18181A]/40 mx-auto mb-1.5 sm:hidden" aria-hidden="true" />
         {/* Header */}
         <div
           className="modal-header"

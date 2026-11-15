@@ -301,11 +301,19 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
     };
 
     const onPopState = () => checkUrlParam(true);
+    const onCmdKOpenRoom = (e: Event) => {
+      const code = (e as CustomEvent<{ code?: string }>).detail?.code?.toUpperCase();
+      if (!code) return;
+      const targetRoom = classrooms.find(c => c.code.toUpperCase() === code);
+      if (targetRoom) setSelectedRoom(targetRoom);
+    };
     checkUrlParam(false);
     window.addEventListener('popstate', onPopState);
+    window.addEventListener('matriculab:cmdk-open-classroom', onCmdKOpenRoom);
     return () => {
       window.removeEventListener('matriculab:close-modals', handleCloseModals);
       window.removeEventListener('popstate', onPopState);
+      window.removeEventListener('matriculab:cmdk-open-classroom', onCmdKOpenRoom);
     };
   }, [classrooms]);
 

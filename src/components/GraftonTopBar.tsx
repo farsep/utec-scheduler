@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Download, Upload } from 'lucide-react';
+import { Menu, Download, Upload, Search } from 'lucide-react';
 import type { TabKey } from './AppShell';
 
 interface GraftonTopBarProps {
@@ -112,8 +112,19 @@ export const GraftonTopBar: React.FC<GraftonTopBarProps> = ({
         </button>
       </nav>
 
-      {/* Right: Export Button */}
-      <div className="grafton-topbar__actions">
+      {/* Right: Universal Command Palette Trigger & Export Button */}
+      <div className="grafton-topbar__actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button
+          type="button"
+          data-testid="cmdk-trigger-btn"
+          onClick={() => window.dispatchEvent(new CustomEvent('matriculab:open-cmdk'))}
+          title="Abrir Paleta de Comandos Universal (⌘K / Ctrl+K)"
+          className="grafton-cmdk-trigger"
+        >
+          <Search size={13} className="grafton-cmdk-trigger__icon" />
+          <span className="grafton-cmdk-trigger__label">⌘K Buscar</span>
+        </button>
+
         <button
           type="button"
           className="grafton-export-btn"

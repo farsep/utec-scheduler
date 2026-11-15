@@ -59,6 +59,7 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number>(0);
+  const touchStartTime = useRef<number>(0);
   const isDragging = useRef<boolean>(false);
   const isClosing = useRef<boolean>(false);
   const rafId = useRef<number | null>(null);
@@ -121,8 +122,10 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
         return;
       }
       touchStartY.current = e.touches[0].clientY;
+      touchStartTime.current = performance.now();
       isDragging.current = true;
       if (modalRef.current) modalRef.current.style.transition = 'none';
+      if (overlayRef.current) overlayRef.current.style.transition = 'none';
     }
   };
 
@@ -138,6 +141,10 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
     rafId.current = requestAnimationFrame(() => {
       if (deltaY > 0 && modalRef.current) {
         modalRef.current.style.transform = `translate3d(0, ${deltaY}px, 0)`;
+        if (overlayRef.current) {
+          const dim = Math.max(0.2, 1 - Math.min(1, deltaY / 320) * 0.72);
+          overlayRef.current.style.opacity = String(dim);
+        }
       }
     });
   };
@@ -146,12 +153,20 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
     if (!isDragging.current || isClosing.current) return;
     isDragging.current = false;
     const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    const elapsed = Math.max(1, performance.now() - touchStartTime.current);
+    const velocity = deltaY / elapsed;
 
-    if (deltaY > 100) {
+    if (deltaY > 105 || (velocity > 0.45 && deltaY > 24)) {
       triggerClose();
-    } else if (modalRef.current) {
-      modalRef.current.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
-      modalRef.current.style.transform = 'translate3d(0, 0, 0)';
+    } else {
+      if (modalRef.current) {
+        modalRef.current.style.transition = 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)';
+        modalRef.current.style.transform = 'translate3d(0, 0, 0)';
+      }
+      if (overlayRef.current) {
+        overlayRef.current.style.transition = 'opacity 200ms ease-out';
+        overlayRef.current.style.opacity = '1';
+      }
     }
   };
 

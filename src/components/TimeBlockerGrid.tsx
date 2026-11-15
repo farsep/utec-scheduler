@@ -120,13 +120,21 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
     }
   }, [drag.kind, displayMask, onChange]);
 
-  // Listen for mouseup anywhere (handles drag released outside grid)
+  // Listen for mouseup / touchend / pointerup anywhere (handles drag released outside grid)
   useEffect(() => {
     window.addEventListener('mouseup', commit);
-    return () => window.removeEventListener('mouseup', commit);
+    window.addEventListener('touchend', commit);
+    window.addEventListener('touchcancel', commit);
+    window.addEventListener('pointerup', commit);
+    return () => {
+      window.removeEventListener('mouseup', commit);
+      window.removeEventListener('touchend', commit);
+      window.removeEventListener('touchcancel', commit);
+      window.removeEventListener('pointerup', commit);
+    };
   }, [commit]);
 
-  // ── Y → slot index (for window mousemove during resize) ──────────────────
+  // ── Y → slot index (for window mousemove / touchmove during drag & resize) ─
   const slotFromClientY = useCallback((clientY: number): number => {
     if (!scrollRef.current) return 0;
     const rect = scrollRef.current.getBoundingClientRect();
@@ -134,34 +142,53 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
     return Math.max(0, Math.min(59, Math.floor(y / SLOT_PX)));
   }, []);
 
-  // ── Global mousemove: tracks slot for ALL drag modes ────────────────────
-  // We use a ref so the handler always reads fresh drag state without
-  // needing to re-register on every state change (avoids stale closures).
+  // ── Global mousemove / touchmove / pointermove: tracks slot for ALL drag modes
   const dragRef = useRef<Drag>({ kind: 'idle' });
   useEffect(() => { dragRef.current = drag; }, [drag]);
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const updateFromClient = (clientX: number, clientY: number) => {
       const d = dragRef.current;
       if (d.kind === 'idle') return;
 
-      const rawSlot = slotFromClientY(e.clientY);
+      let rawSlot = slotFromClientY(clientY);
+      const hitEl = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+      const hitCell = hitEl?.closest?.('.tbg-slot-cell') as HTMLElement | null;
+      if (hitCell?.dataset?.slotIdx !== undefined) {
+        const parsed = Number(hitCell.dataset.slotIdx);
+        if (!Number.isNaN(parsed)) rawSlot = parsed;
+      }
 
       if (d.kind === 'creating') {
-        // Snap to hour boundary; decide direction relative to anchor
         const hourStart = Math.floor(rawSlot / 4) * 4;
         const hourEnd   = Math.min(hourStart + 3, 59);
-        // Cursor above anchor → block grows upward: currentSlot = top of that hour
-        // Cursor at/below    → block grows downward: currentSlot = bottom of that hour
         const newCurrent = hourEnd < d.anchorSlot ? hourStart : hourEnd;
         setDrag(prev => prev.kind === 'creating' ? { ...prev, currentSlot: newCurrent } : prev);
       } else {
-        // resize-top / resize-bot: just track the raw slot
         setDrag(prev => prev.kind === 'idle' ? prev : { ...prev, currentSlot: rawSlot });
       }
     };
-    window.addEventListener('mousemove', handler);
-    return () => window.removeEventListener('mousemove', handler);
+
+    const onMouseMove = (e: MouseEvent) => updateFromClient(e.clientX, e.clientY);
+    const onPointerMove = (e: PointerEvent) => {
+      if (dragRef.current.kind !== 'idle') {
+        updateFromClient(e.clientX, e.clientY);
+      }
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (dragRef.current.kind === 'idle' || e.touches.length !== 1) return;
+      if (e.cancelable) e.preventDefault();
+      updateFromClient(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('touchmove', onTouchMove);
+    };
   }, [slotFromClientY]); // only slotFromClientY needed; drag state is read via ref
 
   // ── Cell event handlers (creating mode) ──────────────────────────────────
@@ -202,7 +229,8 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
       `}</style>
 
       <div
-        className="time-blocker-grid"
+        className="time-blocker-grid time-block-painter"
+        data-no-page-swipe="true"
         style={{
           userSelect: 'none',
           background: 'var(--bg-surface)',
@@ -364,8 +392,13 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
                         e.stopPropagation(); e.preventDefault();
                         setDrag({ kind: 'resize-top', dayIdx: block.dayIdx, origStart: block.startSlot, origEnd: block.endSlot, currentSlot: block.startSlot });
                       }}
+                      onTouchStart={(e) => {
+                        if (e.touches.length !== 1) return;
+                        e.stopPropagation();
+                        setDrag({ kind: 'resize-top', dayIdx: block.dayIdx, origStart: block.startSlot, origEnd: block.endSlot, currentSlot: block.startSlot });
+                      }}
                       style={{
-                        height: '6px', flexShrink: 0, cursor: 'ns-resize',
+                        height: '6px', flexShrink: 0, cursor: 'ns-resize', touchAction: 'none',
                         background: 'rgba(168,32,50,0.16)',
                       }}
                     />
@@ -375,6 +408,11 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
                       className="tbg-block-body"
                       onMouseDown={(e) => {
                         e.stopPropagation(); e.preventDefault();
+                        deleteBlock(block);
+                      }}
+                      onTouchStart={(e) => {
+                        if (e.touches.length !== 1) return;
+                        e.stopPropagation();
                         deleteBlock(block);
                       }}
                       style={{
@@ -418,8 +456,13 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
                         e.stopPropagation(); e.preventDefault();
                         setDrag({ kind: 'resize-bot', dayIdx: block.dayIdx, origStart: block.startSlot, origEnd: block.endSlot, currentSlot: block.endSlot });
                       }}
+                      onTouchStart={(e) => {
+                        if (e.touches.length !== 1) return;
+                        e.stopPropagation();
+                        setDrag({ kind: 'resize-bot', dayIdx: block.dayIdx, origStart: block.startSlot, origEnd: block.endSlot, currentSlot: block.endSlot });
+                      }}
                       style={{
-                        height: '6px', flexShrink: 0, cursor: 'ns-resize',
+                        height: '6px', flexShrink: 0, cursor: 'ns-resize', touchAction: 'none',
                         background: 'rgba(168,32,50,0.16)',
                       }}
                     />
@@ -450,11 +493,20 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
                       <div
                         key={slotIdx}
                         className="tbg-slot-cell"
+                        data-day-idx={dayIdx}
+                        data-slot-idx={slotIdx}
                         onMouseDown={() => handleCellDown(dayIdx, slotIdx)}
+                        onTouchStart={e => {
+                          if (e.touches.length === 1) {
+                            e.stopPropagation();
+                            handleCellDown(dayIdx, slotIdx);
+                          }
+                        }}
                         style={{
                           height: `${SLOT_PX}px`,
                           flexShrink: 0,
                           pointerEvents: (blocked || pinned) ? 'none' : 'auto',
+                          touchAction: 'none',
                           cursor: 'default',
                           borderBottom: slotIdx % 4 === 3 ? '1px solid #D4D1C9' : 'none',
                           borderRight: '1px solid #C6C3BB',

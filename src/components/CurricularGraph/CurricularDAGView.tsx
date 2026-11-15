@@ -7,7 +7,7 @@ import {
   type CurricularCourseNode,
   type FacultyId,
 } from '../../data/utecCurriculaData';
-import { GitBranch, BookOpen, CheckCircle2, ArrowRight, ArrowLeft, Plus } from 'lucide-react';
+import { GitBranch, BookOpen, CheckCircle2, ArrowRight, ArrowLeft, Plus, Maximize2 } from 'lucide-react';
 
 interface CurricularDAGViewProps {
   scheduledCourseCodes?: Set<string>;
@@ -71,9 +71,65 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
   const [selectedCourseCode, setSelectedCourseCode] = useState<string>('CS1042');
   const [svgEdges, setSvgEdges] = useState<SvgEdge[]>([]);
   const [mobileInspectorExpanded, setMobileInspectorExpanded] = useState(false);
+  const [dagZoom, setDagZoom] = useState<number>(1);
+  const [stageDims, setStageDims] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+  const [isPanning, setIsPanning] = useState(false);
 
   const stageRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const nodeRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const panStateRef = useRef<{
+    isDown: boolean;
+    didDrag: boolean;
+    startX: number;
+    startY: number;
+    scrollLeft: number;
+    scrollTop: number;
+    lastX: number;
+    lastY: number;
+    lastTime: number;
+    velX: number;
+    velY: number;
+    rafId: number | null;
+  }>({
+    isDown: false,
+    didDrag: false,
+    startX: 0,
+    startY: 0,
+    scrollLeft: 0,
+    scrollTop: 0,
+    lastX: 0,
+    lastY: 0,
+    lastTime: 0,
+    velX: 0,
+    velY: 0,
+    rafId: null,
+  });
+
+  // Listen for Command Palette career switches
+  useEffect(() => {
+    const applyCareer = (careerId?: string) => {
+      if (!careerId) return;
+      const found = UTEC_16_CAREERS.find(c => c.id === careerId);
+      if (found) {
+        setSelectedFaculty('ALL');
+        setSelectedCareerId(found.id);
+        setSelectedCourseCode(found.defaultSelectedCode);
+      }
+    };
+    const pendingCareer = (window as any).__MATRICULAB_PENDING_CAREER__;
+    if (pendingCareer) {
+      delete (window as any).__MATRICULAB_PENDING_CAREER__;
+      applyCareer(pendingCareer);
+    }
+    const onSelectCareerEvt = (e: Event) => {
+      const detail = (e as CustomEvent<{ careerId?: string }>).detail;
+      delete (window as any).__MATRICULAB_PENDING_CAREER__;
+      applyCareer(detail?.careerId);
+    };
+    window.addEventListener('matriculab:cmdk-select-career', onSelectCareerEvt);
+    return () => window.removeEventListener('matriculab:cmdk-select-career', onSelectCareerEvt);
+  }, []);
 
   const activeCareer: CareerCurriculum = useMemo(() => {
     return UTEC_16_CAREERS.find(c => c.id === selectedCareerId) || UTEC_16_CAREERS[0];
@@ -190,7 +246,9 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
 
     const stageRect = stageEl.getBoundingClientRect();
     if (stageRect.width === 0) return;
+    setStageDims({ w: stageEl.offsetWidth, h: stageEl.offsetHeight });
 
+    const scale = Math.max(dagZoom, 0.25);
     const nextEdges: SvgEdge[] = [];
 
     for (const target of activeCareer.courses) {
@@ -202,10 +260,10 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
         const sRect = sourceEl.getBoundingClientRect();
         const tRect = targetEl.getBoundingClientRect();
 
-        const x1 = sRect.right - stageRect.left;
-        const y1 = sRect.top - stageRect.top + sRect.height / 2;
-        const x2 = tRect.left - stageRect.left;
-        const y2 = tRect.top - stageRect.top + tRect.height / 2;
+        const x1 = (sRect.right - stageRect.left) / scale;
+        const y1 = (sRect.top - stageRect.top + sRect.height / 2) / scale;
+        const x2 = (tRect.left - stageRect.left) / scale;
+        const y2 = (tRect.top - stageRect.top + tRect.height / 2) / scale;
 
         const dx = Math.max(28, (x2 - x1) * 0.48);
         const d = `M ${x1.toFixed(1)} ${y1.toFixed(1)} C ${(x1 + dx).toFixed(1)} ${y1.toFixed(1)}, ${(x2 - dx).toFixed(1)} ${y2.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}`;
@@ -245,7 +303,107 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
     };
     nextEdges.sort((a, b) => edgeOrder[a.kind] - edgeOrder[b.kind]);
     setSvgEdges(nextEdges);
-  }, [activeCareer, activeCourse.code, graphRelations]);
+  }, [activeCareer, activeCourse.code, graphRelations, dagZoom]);
+
+  const stopPanMomentum = useCallback(() => {
+    if (panStateRef.current.rafId !== null) {
+      cancelAnimationFrame(panStateRef.current.rafId);
+      panStateRef.current.rafId = null;
+    }
+  }, []);
+
+  useEffect(() => stopPanMomentum, [stopPanMomentum]);
+
+  const handleDagMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || !scrollContainerRef.current) return;
+    stopPanMomentum();
+    const scroller = scrollContainerRef.current;
+    const now = performance.now();
+    panStateRef.current = {
+      isDown: true,
+      didDrag: false,
+      startX: e.clientX,
+      startY: e.clientY,
+      scrollLeft: scroller.scrollLeft,
+      scrollTop: scroller.scrollTop,
+      lastX: e.clientX,
+      lastY: e.clientY,
+      lastTime: now,
+      velX: 0,
+      velY: 0,
+      rafId: null,
+    };
+  };
+
+  const handleDagMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const p = panStateRef.current;
+    const scroller = scrollContainerRef.current;
+    if (!p.isDown || !scroller) return;
+
+    const dx = e.clientX - p.startX;
+    const dy = e.clientY - p.startY;
+    if (!p.didDrag && Math.hypot(dx, dy) > 5) {
+      p.didDrag = true;
+      setIsPanning(true);
+    }
+    if (!p.didDrag) return;
+
+    e.preventDefault();
+    scroller.scrollLeft = p.scrollLeft - dx;
+    scroller.scrollTop = p.scrollTop - dy;
+
+    const now = performance.now();
+    const dt = Math.max(8, now - p.lastTime);
+    p.velX = ((p.lastX - e.clientX) / dt) * 16;
+    p.velY = ((p.lastY - e.clientY) / dt) * 16;
+    p.lastX = e.clientX;
+    p.lastY = e.clientY;
+    p.lastTime = now;
+  };
+
+  const endDagPan = () => {
+    const p = panStateRef.current;
+    const scroller = scrollContainerRef.current;
+    if (!p.isDown) return;
+    p.isDown = false;
+    setIsPanning(false);
+
+    if (p.didDrag && scroller && (Math.abs(p.velX) > 0.6 || Math.abs(p.velY) > 0.6)) {
+      const step = () => {
+        p.velX *= 0.92;
+        p.velY *= 0.92;
+        scroller.scrollLeft += p.velX;
+        scroller.scrollTop += p.velY;
+        if (Math.abs(p.velX) > 0.4 || Math.abs(p.velY) > 0.4) {
+          p.rafId = requestAnimationFrame(step);
+        } else {
+          p.rafId = null;
+        }
+      };
+      p.rafId = requestAnimationFrame(step);
+    }
+
+    if (p.didDrag) {
+      window.setTimeout(() => {
+        panStateRef.current.didDrag = false;
+      }, 60);
+    }
+  };
+
+  const handleDagWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const step = e.deltaY < 0 ? 0.08 : -0.08;
+      setDagZoom(z => Number(Math.max(0.55, Math.min(1.35, z + step)).toFixed(2)));
+    }
+  };
+
+  const handleFitTenCycles = () => {
+    setDagZoom(0.72);
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     const raf = requestAnimationFrame(computeEdges);
@@ -495,8 +653,91 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
 
           {/* 3. 10-Cycle Horizontal Scroll Curricular Graph Stage */}
           <section className="grafton-card dag-canvas-card" aria-label="Grafo curricular por ciclos">
-            <div className="dag-scroll-container">
-              <div className="dag-stage-inner" ref={stageRef}>
+            {/* Compact Zoom & Fit Toolbar */}
+            <div className="dag-zoom-toolbar">
+              <span className="dag-zoom-hint">
+                ARRASTRAR LIENZO PARA DESPLAZAR · CTRL+SCROLL PARA ZOOM
+              </span>
+              <div className="dag-zoom-controls">
+                <button
+                  type="button"
+                  data-testid="dag-zoom-out"
+                  onClick={() => setDagZoom(z => Number(Math.max(0.55, z - 0.1).toFixed(2)))}
+                  className="dag-zoom-btn"
+                  aria-label="Alejar grafo curricular"
+                >
+                  −
+                </button>
+                <button
+                  type="button"
+                  data-testid="dag-zoom-reset"
+                  onClick={() => setDagZoom(1)}
+                  className="dag-zoom-btn dag-zoom-btn--reset"
+                  title="Restablecer zoom al 100%"
+                >
+                  {Math.round(dagZoom * 100)}%
+                </button>
+                <button
+                  type="button"
+                  data-testid="dag-zoom-in"
+                  onClick={() => setDagZoom(z => Number(Math.min(1.35, z + 0.1).toFixed(2)))}
+                  className="dag-zoom-btn"
+                  aria-label="Acercar grafo curricular"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  data-testid="dag-zoom-fit"
+                  onClick={handleFitTenCycles}
+                  className={`dag-zoom-btn dag-zoom-btn--fit ${
+                    Math.abs(dagZoom - 0.72) < 0.02 ? 'is-active' : ''
+                  }`}
+                >
+                  <Maximize2 size={12} />
+                  <span>Ajustar 10 Ciclos</span>
+                </button>
+              </div>
+            </div>
+
+            <div
+              id="dag-scroll-container"
+              ref={scrollContainerRef}
+              data-no-page-swipe="true"
+              className={`dag-scroll-container select-none ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+              onMouseDown={handleDagMouseDown}
+              onMouseMove={handleDagMouseMove}
+              onMouseUp={endDagPan}
+              onMouseLeave={endDagPan}
+              onWheel={handleDagWheel}
+              onClickCapture={e => {
+                if (panStateRef.current.didDrag) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }
+              }}
+            >
+              <div
+                className="dag-stage-zoom-frame"
+                style={
+                  dagZoom !== 1 && stageDims.w > 0
+                    ? {
+                        width: `${Math.ceil(stageDims.w * dagZoom)}px`,
+                        height: `${Math.ceil(stageDims.h * dagZoom)}px`,
+                        overflow: 'hidden',
+                      }
+                    : undefined
+                }
+              >
+                <div
+                  className="dag-stage-inner"
+                  ref={stageRef}
+                  style={{
+                    transform: dagZoom !== 1 ? `scale(${dagZoom})` : undefined,
+                    transformOrigin: 'top left',
+                    minWidth: Math.abs(dagZoom - 0.72) < 0.02 ? '1780px' : undefined,
+                  }}
+                >
                 {/* SVG Bezier Connectors Layer (z-index: 0, behind 100% opaque .dag-node cards) */}
                 <svg className="dag-svg-layer" aria-hidden="true">
                   {svgEdges.map(edge => {
@@ -540,7 +781,14 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                 </svg>
 
                 {/* 10 Cycle Columns */}
-                <div className="dag-columns-grid">
+                <div
+                  className="dag-columns-grid"
+                  style={
+                    Math.abs(dagZoom - 0.72) < 0.02
+                      ? { gridTemplateColumns: 'repeat(10, minmax(168px, 1fr))', gap: '12px' }
+                      : undefined
+                  }
+                >
                   {cycles.map(({ cycleNum, items, totalCredits }) => (
                     <div key={cycleNum} className="dag-cycle-column">
                       <div className="dag-cycle-header">
@@ -696,6 +944,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                     </div>
                   ))}
                 </div>
+              </div>
               </div>
             </div>
           </section>

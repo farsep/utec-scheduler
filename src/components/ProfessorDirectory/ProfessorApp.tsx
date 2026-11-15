@@ -165,11 +165,19 @@ export const ProfessorApp: React.FC<ProfessorAppProps> = ({ hideTopNavbar = fals
     };
 
     const onPopState = () => checkUrlParam(true);
+    const onCmdKOpenProf = (e: Event) => {
+      const qName = (e as CustomEvent<{ name?: string }>).detail?.name;
+      if (!qName) return;
+      const targetProf = resolveCanonicalProfessor(qName, professors);
+      if (targetProf) setSelectedProf(targetProf);
+    };
     checkUrlParam(false);
     window.addEventListener('popstate', onPopState);
+    window.addEventListener('matriculab:cmdk-open-professor', onCmdKOpenProf);
     return () => {
       window.removeEventListener('matriculab:close-modals', handleCloseModals);
       window.removeEventListener('popstate', onPopState);
+      window.removeEventListener('matriculab:cmdk-open-professor', onCmdKOpenProf);
     };
   }, [professors]);
 

@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useRef, useState } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { CourseExtendedInfo } from '../../types/courseDirectory';
 import { ALL_DAYS, DAY_LABELS, resolveCanonicalRoom } from '../../utils/classroomUtils';
@@ -54,25 +54,138 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
   const monogram = getCourseMonogram(course.code);
   const facultyColors = getFacultyPolychrome(course.code || course.departmentLabel);
 
+  const [swipeX, setSwipeX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const touchStateRef = useRef<{
+    startX: number;
+    startY: number;
+    locked: 'none' | 'h' | 'v';
+    lastDeltaX: number;
+    didSwipe: boolean;
+  }>({ startX: 0, startY: 0, locked: 'none', lastDeltaX: 0, didSwipe: false });
+
+  const handleCardTouchStart = (e: React.TouchEvent<HTMLElement>) => {
+    if (typeof window === 'undefined' || window.innerWidth >= 768 || e.touches.length !== 1) return;
+    touchStateRef.current = {
+      startX: e.touches[0].clientX,
+      startY: e.touches[0].clientY,
+      locked: 'none',
+      lastDeltaX: 0,
+      didSwipe: false,
+    };
+  };
+
+  const handleCardTouchMove = (e: React.TouchEvent<HTMLElement>) => {
+    if (typeof window === 'undefined' || window.innerWidth >= 768 || e.touches.length !== 1) return;
+    const st = touchStateRef.current;
+    if (st.locked === 'v') return;
+
+    const deltaX = e.touches[0].clientX - st.startX;
+    const deltaY = e.touches[0].clientY - st.startY;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    if (st.locked === 'none') {
+      if (absY > 10 && absX <= absY * 1.35) {
+        st.locked = 'v';
+        return;
+      }
+      if (absX > absY * 1.35 && absX > 10) {
+        st.locked = 'h';
+        st.didSwipe = true;
+        setIsSwiping(true);
+      } else if (Math.hypot(absX, absY) > 16) {
+        st.locked = 'v';
+        return;
+      }
+    }
+
+    if (st.locked === 'h') {
+      e.stopPropagation();
+      const clampedX = Math.max(-110, Math.min(110, deltaX));
+      st.lastDeltaX = clampedX;
+      setSwipeX(clampedX);
+    }
+  };
+
+  const handleCardTouchEnd = (e: React.TouchEvent<HTMLElement>) => {
+    const st = touchStateRef.current;
+    if (st.locked !== 'h') {
+      st.locked = 'none';
+      return;
+    }
+    e.stopPropagation();
+    const finalX = st.lastDeltaX;
+    st.locked = 'none';
+    setIsSwiping(false);
+    setSwipeX(0);
+
+    if (finalX > 68) {
+      const synthEvt = {
+        stopPropagation: () => {},
+        preventDefault: () => {},
+      } as unknown as React.MouseEvent;
+      onToggleVisitor(course, synthEvt);
+    } else if (finalX < -68) {
+      onOpenDetail(course);
+    }
+
+    window.setTimeout(() => {
+      st.didSwipe = false;
+    }, 120);
+  };
+
   return (
-    <article
-      className={`course-card glass-card ${isCurrentlyLive ? 'course-card--live' : ''} ${isVisitor ? 'course-card--visitor' : ''}`}
-      style={{
-        ['--faculty-accent' as string]: facultyColors.accent,
-        ['--faculty-bg' as string]: facultyColors.bg,
-        ['--faculty-text' as string]: facultyColors.text,
-      }}
-      onClick={() => onOpenDetail(course)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
+    <div className="course-card-swipe-container relative overflow-hidden" data-no-page-swipe="true">
+      {/* Orthogonal Swipe Action Trays (< 768px) */}
+      <div
+        className="course-swipe-tray-left md:hidden absolute inset-y-0 left-0 w-32 flex items-center justify-start px-4 bg-[#F5E8D3] border-r-2 border-[#B85D00] text-[#6E3600] font-mono text-[10px] font-bold uppercase tracking-wider select-none pointer-events-none"
+        style={{ opacity: swipeX > 6 ? Math.min(1, swipeX / 68) : 0 }}
+        aria-hidden="true"
+      >
+        ★ OYENTE
+      </div>
+      <div
+        className="course-swipe-tray-right md:hidden absolute inset-y-0 right-0 w-32 flex items-center justify-end px-4 bg-[#E0EBF5] border-l-2 border-[#00668C] text-[#004D6B] font-mono text-[10px] font-bold uppercase tracking-wider select-none pointer-events-none"
+        style={{ opacity: swipeX < -6 ? Math.min(1, Math.abs(swipeX) / 68) : 0 }}
+        aria-hidden="true"
+      >
+        HORARIO →
+      </div>
+
+      <article
+        className={`course-card glass-card ${isCurrentlyLive ? 'course-card--live' : ''} ${isVisitor ? 'course-card--visitor' : ''}`}
+        style={{
+          ['--faculty-accent' as string]: facultyColors.accent,
+          ['--faculty-bg' as string]: facultyColors.bg,
+          ['--faculty-text' as string]: facultyColors.text,
+          transform: swipeX !== 0 ? `translate3d(${swipeX}px, 0, 0)` : undefined,
+          transition: isSwiping ? 'none' : 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
+          position: 'relative',
+          zIndex: 1,
+        }}
+        onTouchStart={handleCardTouchStart}
+        onTouchMove={handleCardTouchMove}
+        onTouchEnd={handleCardTouchEnd}
+        onTouchCancel={() => {
+          touchStateRef.current.locked = 'none';
+          setIsSwiping(false);
+          setSwipeX(0);
+        }}
+        onClick={() => {
+          if (touchStateRef.current.didSwipe) return;
           onOpenDetail(course);
-        }
-      }}
-      aria-label={`Ver detalles del curso ${course.code} - ${course.name}`}
-    >
+        }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onOpenDetail(course);
+          }
+        }}
+        aria-label={`Ver detalles del curso ${course.code} - ${course.name}`}
+      >
       {/* Top Header: Avatar Monogram, Department, Code, Credits, Bookmark Star */}
       <div className="course-card-header">
         <div className="course-card-avatar">
@@ -322,7 +435,8 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
           <ChevronRight size={14} />
         </button>
       </div>
-    </article>
+      </article>
+    </div>
   );
 });
 

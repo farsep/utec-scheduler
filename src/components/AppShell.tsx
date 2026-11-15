@@ -7,6 +7,7 @@ import { ClassroomApp } from './ClassroomFinder/ClassroomApp';
 import { MentorApp } from './MentorDirectory/MentorApp';
 import { MobileBottomNav } from './MobileBottomNav';
 import { GraftonTopBar } from './GraftonTopBar';
+import { CommandPalette } from './CommandPalette';
 import { prewarmAllCatalogs } from '../utils/masterDataLoader';
 import type { Course } from '../types/schedule';
 
@@ -156,6 +157,162 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Universal < 768px Mobile Bottom-Sheet Drag-to-Dismiss for .modal-card & .visitor-modal-dialog
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let activeSheet: HTMLElement | null = null;
+    let activeBackdrop: HTMLElement | null = null;
+    let scrollEl: HTMLElement | null = null;
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+    let startedOnHeader = false;
+    let isDragging = false;
+    let lockedOut = false;
+
+    const findScrollableParent = (node: HTMLElement, boundary: HTMLElement): HTMLElement | null => {
+      let cur: HTMLElement | null = node;
+      while (cur && cur !== boundary) {
+        if (cur.scrollHeight > cur.clientHeight + 4) {
+          const ov = window.getComputedStyle(cur).overflowY;
+          if (ov === 'auto' || ov === 'scroll') return cur;
+        }
+        cur = cur.parentElement;
+      }
+      return boundary;
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (window.innerWidth >= 768 || e.touches.length !== 1) return;
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      const sheet = target.closest('.modal-card, .visitor-modal-dialog') as HTMLElement | null;
+      if (!sheet) return;
+
+      if (target.closest('button, a, input, select, textarea, .tbg-interactive-grid, .overflow-x-auto')) {
+        return;
+      }
+
+      scrollEl = findScrollableParent(target, sheet);
+      startedOnHeader = Boolean(target.closest('.modal-header, .visitor-modal-header, .grafton-modal-drag-handle'));
+      if (!startedOnHeader && scrollEl && scrollEl.scrollTop > 2) return;
+
+      activeSheet = sheet;
+      activeBackdrop = sheet.closest('.modal-overlay, .visitor-modal-backdrop') as HTMLElement | null;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTime = performance.now();
+      isDragging = false;
+      lockedOut = false;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!activeSheet || lockedOut || e.touches.length !== 1) return;
+      const deltaX = e.touches[0].clientX - startX;
+      const deltaY = e.touches[0].clientY - startY;
+
+      if (!isDragging) {
+        if (!startedOnHeader && scrollEl && scrollEl.scrollTop > 2) {
+          lockedOut = true;
+          activeSheet = null;
+          return;
+        }
+        if (deltaY < -6 || Math.abs(deltaX) > Math.abs(deltaY) * 1.15) {
+          lockedOut = true;
+          activeSheet = null;
+          return;
+        }
+        if (deltaY > 8 && deltaY > Math.abs(deltaX) * 1.25) {
+          isDragging = true;
+          activeSheet.style.transition = 'none';
+          if (activeBackdrop) activeBackdrop.style.transition = 'none';
+        }
+      }
+
+      if (isDragging) {
+        if (e.cancelable) e.preventDefault();
+        const clampedY = Math.max(0, deltaY);
+        activeSheet.style.transform = `translate3d(0, ${clampedY}px, 0)`;
+        if (activeBackdrop) {
+          const dim = Math.max(0.2, 1 - Math.min(1, clampedY / 320) * 0.72);
+          activeBackdrop.style.opacity = String(dim);
+        }
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!activeSheet) return;
+      const sheet = activeSheet;
+      const backdrop = activeBackdrop;
+      const wasDragging = isDragging;
+      activeSheet = null;
+      activeBackdrop = null;
+      isDragging = false;
+      lockedOut = false;
+
+      if (!wasDragging) return;
+
+      const deltaY = (e.changedTouches[0]?.clientY ?? startY) - startY;
+      const elapsed = Math.max(1, performance.now() - startTime);
+      const velocity = deltaY / elapsed;
+
+      if (deltaY > 105 || (velocity > 0.45 && deltaY > 24)) {
+        sheet.style.transition = 'transform 180ms cubic-bezier(0.32, 1, 0.23, 1)';
+        sheet.style.transform = 'translate3d(0, 100%, 0)';
+        if (backdrop) {
+          backdrop.style.transition = 'opacity 180ms ease-out';
+          backdrop.style.opacity = '0';
+        }
+        window.setTimeout(() => {
+          const closeBtn = sheet.querySelector(
+            '.close-btn, .visitor-close-btn, button[aria-label*="Cerrar"]'
+          ) as HTMLButtonElement | null;
+          if (closeBtn) {
+            closeBtn.click();
+          } else if (backdrop) {
+            backdrop.click();
+          }
+          // Reset transforms in case element persists
+          sheet.style.removeProperty('transform');
+          sheet.style.removeProperty('transition');
+          if (backdrop) {
+            backdrop.style.removeProperty('opacity');
+            backdrop.style.removeProperty('transition');
+          }
+        }, 175);
+      } else {
+        sheet.style.transition = 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)';
+        sheet.style.transform = 'translate3d(0, 0, 0)';
+        if (backdrop) {
+          backdrop.style.transition = 'opacity 200ms ease-out';
+          backdrop.style.opacity = '1';
+        }
+        window.setTimeout(() => {
+          sheet.style.removeProperty('transform');
+          sheet.style.removeProperty('transition');
+          if (backdrop) {
+            backdrop.style.removeProperty('opacity');
+            backdrop.style.removeProperty('transition');
+          }
+        }, 210);
+      }
+    };
+
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
+    document.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+      document.removeEventListener('touchcancel', onTouchEnd);
+    };
   }, []);
 
   // Intercept internal route links for instant SPA tab switching
@@ -336,6 +493,12 @@ export const AppShell: React.FC<AppShellProps> = ({ initialTab }) => {
       <MobileBottomNav
         activeTab={activeTab}
         onSwitchTab={(tab, url) => switchTab(tab as TabKey, url)}
+      />
+
+      <CommandPalette
+        onSwitchTab={(tab, url) => switchTab(tab, url)}
+        onOpenUploadModal={handleOpenUploadFromTopBar}
+        onOpenExportModal={handleOpenExportFromTopBar}
       />
     </div>
   );

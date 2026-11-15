@@ -71,6 +71,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   const [results, setResults] = useState<GeneratedScheduleResult[] | null>(null);
 
   const [previewSchedule, setPreviewSchedule] = useState<Record<string, string> | null>(null);
+  const [previewIndex, setPreviewIndex] = useState<number>(0);
   const [activeSaveId, setActiveSaveId] = useState<string | null>(null);
   const [lastSavedName, setLastSavedName] = useState<string | null>(null);
   const [savedOptionsRecord, setSavedOptionsRecord] = useState<Record<string, string[]>>({});
@@ -781,6 +782,51 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     setBlockedTimeMask(validated);
   }, [courseViabilityMasks]);
 
+  const resultsScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setPreviewIndex(0);
+  }, [results]);
+
+  // Keyboard Cycling across Top 50 Optimal Schedules (ArrowRight / J -> next, ArrowLeft / K -> prev)
+  useEffect(() => {
+    if (!isOpen || !results || results.length === 0) return;
+    const visibleCount = Math.min(50, results.length);
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (document.querySelector('.command-palette-overlay')) return;
+      const activeTag = (document.activeElement as HTMLElement | null)?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
+      if ((document.activeElement as HTMLElement | null)?.isContentEditable) return;
+
+      const isNext = e.key === 'ArrowRight' || e.key === 'j' || e.key === 'J';
+      const isPrev = e.key === 'ArrowLeft' || e.key === 'k' || e.key === 'K';
+      if (!isNext && !isPrev) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const nextIdx = isNext
+        ? (previewIndex + 1) % visibleCount
+        : (previewIndex - 1 + visibleCount) % visibleCount;
+      setPreviewIndex(nextIdx);
+      const nextResult = results[nextIdx];
+      if (nextResult && previewSchedule !== null) {
+        setPreviewSchedule(nextResult.selectedSections);
+      }
+      window.requestAnimationFrame(() => {
+        const cardEl = resultsScrollRef.current?.querySelector<HTMLElement>(
+          `[data-optimizer-result-idx="${nextIdx}"]`
+        );
+        cardEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, results, previewSchedule, previewIndex]);
+
   if (!isOpen) return null;
 
   const modalContent = (
@@ -793,6 +839,8 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         onClick={e => e.stopPropagation()}
       >
         
+        {/* Mobile Drag Handle */}
+        <div className="grafton-modal-drag-handle w-10 h-1 bg-[#18181A]/40 mx-auto mt-2 mb-1.5 sm:hidden" aria-hidden="true" />
         {/* Header */}
         <div
           className="modal-header"
@@ -1474,7 +1522,23 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
               <div style={{ position: 'absolute', inset: 0, padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px', background: '#FAF9F5', zIndex: 25, overflow: 'hidden' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', borderBottom: '1.5px solid #18181A', paddingBottom: '10px' }}>
                   <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontFamily: "'Space Grotesk', sans-serif", color: '#141416' }}>
-                    <Eye size={18} color="#00779E" /> Vista Previa del Horario
+                    <Eye size={18} color="#00779E" />
+                    <span>Vista Previa del Horario</span>
+                    {results && results.length > 0 && (
+                      <span
+                        data-testid="optimizer-preview-counter"
+                        style={{
+                          padding: '2px 8px',
+                          backgroundColor: '#18181A',
+                          color: '#F4F2ED',
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: '11px',
+                          fontWeight: 700,
+                        }}
+                      >
+                        #{previewIndex + 1} / {Math.min(50, results.length)} · ← K / J →
+                      </span>
+                    )}
                   </h4>
                   <button 
                     type="button"
@@ -1628,7 +1692,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   </div>
 
                   {/* Scrollable 50 Result Cards Container */}
-                  <div className="optimizer-results-scroll overflow-y-auto">
+                  <div ref={resultsScrollRef} className="optimizer-results-scroll overflow-y-auto">
                     {results.slice(0, 50).map((res, index) => {
                       const rankLabel =
                         index === 0
@@ -1658,7 +1722,14 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                       return (
                         <div
                           key={res.id}
+                          data-optimizer-result-idx={index}
+                          data-focused-result={index === previewIndex ? 'true' : 'false'}
                           className={`optimizer-swiss-card ${cardTierClass}`}
+                          style={
+                            index === previewIndex
+                              ? { outline: '2px solid #00779E', outlineOffset: '-2px' }
+                              : undefined
+                          }
                         >
                           {/* ZONE A: Top Header & Telemetry Row */}
                           <div className={`optimizer-card-zone-a ${zoneAClass}`}>
@@ -1728,7 +1799,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                             <button
                               type="button"
                               className="swiss-action-btn btn-preview"
-                              onClick={() => setPreviewSchedule(res.selectedSections)}
+                              onClick={() => {
+                                setPreviewIndex(index);
+                                setPreviewSchedule(res.selectedSections);
+                              }}
                             >
                               <Eye size={12} />
                               <span>Vista Previa</span>

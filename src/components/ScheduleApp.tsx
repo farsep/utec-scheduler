@@ -195,13 +195,48 @@ export const ScheduleApp: React.FC<ScheduleAppProps> = ({
         closeModals();
       }
     };
+    const onCmdKOpenOptimizer = () => {
+      closeModals();
+      setIsOptimizerOpen(true);
+    };
     window.addEventListener('matriculab:close-modals', closeModals);
     window.addEventListener('popstate', onPopState);
+    window.addEventListener('matriculab:cmdk-open-optimizer', onCmdKOpenOptimizer);
     return () => {
       window.removeEventListener('matriculab:close-modals', closeModals);
       window.removeEventListener('popstate', onPopState);
+      window.removeEventListener('matriculab:cmdk-open-optimizer', onCmdKOpenOptimizer);
     };
   }, []);
+
+  // Keyboard option cycling (ArrowLeft/ArrowRight & J/K) when on Horarios with no modal open
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isUploadOpen || isExportOpen || isOptimizerOpen) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (document.querySelector('[role="dialog"], .command-palette-overlay')) return;
+      const activeTag = (document.activeElement as HTMLElement | null)?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
+      if ((document.activeElement as HTMLElement | null)?.isContentEditable) return;
+      if (options.length < 2) return;
+
+      const key = e.key;
+      const isNext = key === 'ArrowRight' || key === 'j' || key === 'J';
+      const isPrev = key === 'ArrowLeft' || key === 'k' || key === 'K';
+      if (!isNext && !isPrev) return;
+
+      const curIdx = options.findIndex(o => o.id === activeOptionId);
+      const safeIdx = curIdx >= 0 ? curIdx : 0;
+      const nextIdx = isNext
+        ? (safeIdx + 1) % options.length
+        : (safeIdx - 1 + options.length) % options.length;
+      e.preventDefault();
+      setActiveOptionId(options[nextIdx].id);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isUploadOpen, isExportOpen, isOptimizerOpen, options, activeOptionId]);
 
   // Notify AppShell of active schedule state for DAG & Mentors clash detection
   useEffect(() => {

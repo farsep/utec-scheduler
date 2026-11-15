@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { formatLocation, DAY_NAMES, DAYS } from '../utils/scheduleUtils';
 import {
   getGraftonPigment,
@@ -91,6 +91,18 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
     const [dragOverDay, setDragOverDay] = useState<DayOfWeek | null>(null);
     const [mobileDayFilter, setMobileDayFilter] = useState<'ALL' | DayOfWeek>('ALL');
     const [inspectedBlockKey, setInspectedBlockKey] = useState<string | null>(null);
+    const lastTapRef = useRef<{ time: number; day: DayOfWeek; x: number; y: number }>({
+      time: 0,
+      day: 'Lun',
+      x: 0,
+      y: 0,
+    });
+    const pinchRef = useRef<{ startDist: number; day: DayOfWeek } | null>(null);
+    const touchMoveTrackRef = useRef<{ startX: number; startY: number; moved: boolean }>({
+      startX: 0,
+      startY: 0,
+      moved: false,
+    });
 
     const scheduledBlocks: {
       course: Course;
@@ -249,6 +261,78 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
       );
     }, [inspectedBlockKey, scheduledBlocks]);
 
+    const toggleDayZoom = (day: DayOfWeek) => {
+      if (mobileDayFilter === 'ALL') {
+        setMobileDayFilter(day);
+        setInspectedBlockKey(null);
+      } else {
+        setMobileDayFilter('ALL');
+      }
+    };
+
+    const handleDaySurfaceTouchStart = (e: React.TouchEvent, day: DayOfWeek) => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[1].clientX - e.touches[0].clientX;
+        const dy = e.touches[1].clientY - e.touches[0].clientY;
+        pinchRef.current = { startDist: Math.hypot(dx, dy) || 1, day };
+        return;
+      }
+      if (e.touches.length === 1) {
+        touchMoveTrackRef.current = {
+          startX: e.touches[0].clientX,
+          startY: e.touches[0].clientY,
+          moved: false,
+        };
+      }
+    };
+
+    const handleDaySurfaceTouchMove = (e: React.TouchEvent) => {
+      if (e.touches.length === 2 && pinchRef.current) {
+        const dx = e.touches[1].clientX - e.touches[0].clientX;
+        const dy = e.touches[1].clientY - e.touches[0].clientY;
+        const dist = Math.hypot(dx, dy);
+        const ratio = dist / Math.max(pinchRef.current.startDist, 1);
+        if (ratio > 1.25 && mobileDayFilter === 'ALL') {
+          setMobileDayFilter(pinchRef.current.day);
+          setInspectedBlockKey(null);
+          pinchRef.current = null;
+        } else if (ratio < 0.78 && mobileDayFilter !== 'ALL') {
+          setMobileDayFilter('ALL');
+          pinchRef.current = null;
+        }
+        return;
+      }
+      if (e.touches.length === 1) {
+        const dx = Math.abs(e.touches[0].clientX - touchMoveTrackRef.current.startX);
+        const dy = Math.abs(e.touches[0].clientY - touchMoveTrackRef.current.startY);
+        if (dx > 12 || dy > 12) {
+          touchMoveTrackRef.current.moved = true;
+        }
+      }
+    };
+
+    const handleDaySurfaceTouchEnd = (e: React.TouchEvent, day: DayOfWeek) => {
+      if (pinchRef.current && e.touches.length < 2) {
+        pinchRef.current = null;
+      }
+      if (e.changedTouches.length !== 1 || touchMoveTrackRef.current.moved) return;
+      if ((e.target as HTMLElement | null)?.closest('button, .remove-course-btn')) return;
+
+      const now = performance.now();
+      const t = e.changedTouches[0];
+      const prev = lastTapRef.current;
+      if (
+        prev.day === day &&
+        now - prev.time < 340 &&
+        Math.hypot(t.clientX - prev.x, t.clientY - prev.y) < 42
+      ) {
+        lastTapRef.current = { time: 0, day, x: 0, y: 0 };
+        toggleDayZoom(day);
+      } else {
+        lastTapRef.current = { time: now, day, x: t.clientX, y: t.clientY };
+      }
+    };
+
     return (
       <div className="timetable-grid-wrapper">
         {/* Grafton Swiss Precision Segmented Control (Semana | Lunes | Martes... | Sábado) */}
@@ -309,7 +393,19 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
           {activeGridDays.map(day => {
             const hrs = dayHoursMap[day] || 0;
             return (
-              <div key={day} className="day-col-header">
+              <div
+                key={day}
+                data-day-col={day}
+                className="day-col-header"
+                onTouchStart={e => handleDaySurfaceTouchStart(e, day)}
+                onTouchMove={handleDaySurfaceTouchMove}
+                onTouchEnd={e => handleDaySurfaceTouchEnd(e, day)}
+                onDoubleClick={() => {
+                  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                    toggleDayZoom(day);
+                  }
+                }}
+              >
                 {mobileDayFilter === 'ALL' ? (
                   <>
                     <span className="day-col-label-short">{DAY_SHORT_LABELS[day]}</span>
@@ -437,10 +533,20 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
                 return (
                   <div
                     key={day}
+                    data-day-col={day}
                     className={`day-column-canvas ${dragOverDay === day ? 'drag-over' : ''}`}
                     onDragOver={e => handleDragOver(e, day)}
                     onDragLeave={() => setDragOverDay(null)}
                     onDrop={handleDrop}
+                    onTouchStart={e => handleDaySurfaceTouchStart(e, day)}
+                    onTouchMove={handleDaySurfaceTouchMove}
+                    onTouchEnd={e => handleDaySurfaceTouchEnd(e, day)}
+                    onDoubleClick={e => {
+                      if ((e.target as HTMLElement | null)?.closest('button, .remove-course-btn')) return;
+                      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                        toggleDayZoom(day);
+                      }
+                    }}
                   >
                     {/* Active Scheduled Blocks */}
                     {dayBlocks.map((block, idx) => {

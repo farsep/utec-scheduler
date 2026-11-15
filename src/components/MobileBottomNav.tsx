@@ -24,6 +24,27 @@ export const CANONICAL_DOCK_ITEMS: DockItem[] = [
   { id: 'mentors', href: '/mentores', label: 'Mentores', title: 'Mentores Académicos', icon: Award },
 ];
 
+const DOCK_BEAM_COLORS = ['#00779E', '#B85D00', '#0D7A4E', '#B8332A', '#3D348B'] as const;
+const DOCK_TINT_COLORS = ['#E0EBF5', '#F5E8D3', '#DCEEE6', '#F9E3E1', '#EAE8F6'] as const;
+const DOCK_TOOLTIP_LABELS = ['[ HORARIOS ]', '[ CURSOS ]', '[ AULAS ]', '[ DOCENTES ]', '[ MENTORES ]'] as const;
+
+function clamp(val: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, val));
+}
+
+function getActiveMainPane(): HTMLElement | null {
+  if (typeof document === 'undefined') return null;
+  const panes = Array.from(document.querySelectorAll<HTMLElement>('.app-shell-tab-pane'));
+  const visiblePane = panes.find(el => {
+    const style = window.getComputedStyle(el);
+    return style.display !== 'none' && style.visibility !== 'hidden';
+  });
+  if (visiblePane) {
+    return visiblePane.querySelector<HTMLElement>('main') || visiblePane;
+  }
+  return document.querySelector<HTMLElement>('main.main-content, main, .app-shell-main');
+}
+
 export function getCanonicalDockIndex(tabKey?: string): number {
   if (!tabKey) {
     if (typeof window !== 'undefined') {
@@ -48,7 +69,7 @@ export function getCanonicalDockIndex(tabKey?: string): number {
 function shouldIgnorePageSwipe(target: EventTarget | null): boolean {
   if (!target || !(target instanceof HTMLElement)) return true;
 
-  // 1. Any modal, dialog, or drawer open
+  // 1. Any modal, dialog, command palette, or drawer open
   if (
     document.querySelector('[role="dialog"]') ||
     document.querySelector('.modal-open') ||
@@ -57,20 +78,24 @@ function shouldIgnorePageSwipe(target: EventTarget | null): boolean {
     document.querySelector('.prof-detail-modal') ||
     document.querySelector('.course-detail-modal') ||
     document.querySelector('.mentor-detail-modal') ||
+    document.querySelector('.command-palette-overlay') ||
     document.querySelector('.mobile-sidebar-drawer.is-open')
   ) {
     return true;
   }
 
-  // 2. Interactive form controls or painters
+  // 2. Interactive form controls, painters, explicit opt-outs, or mobile course swipe cards
   if (
+    target.closest('[data-no-page-swipe]') ||
+    target.closest('.overflow-x-auto') ||
     target.closest('input') ||
     target.closest('select') ||
     target.closest('textarea') ||
     target.closest('button') ||
     target.closest('[role="button"]') ||
     target.closest('.interactive-painter') ||
-    target.closest('.time-block-painter')
+    target.closest('.time-block-painter') ||
+    (typeof window !== 'undefined' && window.innerWidth < 768 && target.closest('.course-card-swipe-container'))
   ) {
     return true;
   }
@@ -78,6 +103,9 @@ function shouldIgnorePageSwipe(target: EventTarget | null): boolean {
   // 3. Horizontally scrollable container or ancestor
   let el: HTMLElement | null = target;
   while (el && el !== document.body && el !== document.documentElement) {
+    if (el.hasAttribute('data-no-page-swipe') || el.classList.contains('overflow-x-auto')) {
+      return true;
+    }
     if (el.scrollWidth > el.clientWidth + 4) {
       const style = window.getComputedStyle(el);
       const overflowX = style.overflowX;
@@ -106,8 +134,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
     return getCanonicalDockIndex(activeTab);
   });
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [scrubState, setScrubState] = useState<{ index: number; progress: number } | null>(null);
   const dockRef = useRef<HTMLElement | null>(null);
   const sliderRef = useRef<HTMLDivElement | null>(null);
+  const paneResetTimerRef = useRef<number | null>(null);
 
   // Synchronize activePathIndex when activeTab prop changes or when URL changes
   useEffect(() => {
@@ -182,7 +212,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
     [onSwitchTab]
   );
 
-  // Gesture 1: YouTube-iOS Horizontal Touch Swipe on Viewport (< 1024px)
+  // Gesture 1: 1:1 Elastic Page-Swipe with Live Polychrome Dock Interpolation (< 1024px)
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -192,17 +222,63 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
     let isSwipeActive = false;
     let isSwipeLocked = false;
     let isVerticalScroll = false;
+    let trackedPane: HTMLElement | null = null;
+
+    const applySliderProgress = (progress: number, nearestIdx: number) => {
+      if (dockRef.current) {
+        dockRef.current.style.setProperty('--dock-active-progress', String(progress));
+      }
+      if (sliderRef.current) {
+        sliderRef.current.style.borderTopColor = DOCK_BEAM_COLORS[nearestIdx] || DOCK_BEAM_COLORS[0];
+        sliderRef.current.style.backgroundColor = DOCK_TINT_COLORS[nearestIdx] || DOCK_TINT_COLORS[0];
+      }
+    };
+
+    const clearSliderInlineColors = () => {
+      if (sliderRef.current) {
+        sliderRef.current.style.removeProperty('border-top-color');
+        sliderRef.current.style.removeProperty('background-color');
+      }
+    };
+
+    const resetPaneParallax = (animateBack: boolean) => {
+      if (!trackedPane) return;
+      const pane = trackedPane;
+      trackedPane = null;
+      if (paneResetTimerRef.current) {
+        window.clearTimeout(paneResetTimerRef.current);
+        paneResetTimerRef.current = null;
+      }
+      if (animateBack) {
+        pane.style.transition = 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)';
+        pane.style.transform = 'translate3d(0, 0, 0)';
+        paneResetTimerRef.current = window.setTimeout(() => {
+          pane.style.removeProperty('transform');
+          pane.style.removeProperty('transition');
+          pane.style.removeProperty('will-change');
+        }, 230);
+      } else {
+        pane.style.removeProperty('transform');
+        pane.style.removeProperty('transition');
+        pane.style.removeProperty('will-change');
+      }
+    };
 
     const onTouchStart = (e: TouchEvent) => {
       if (window.innerWidth >= 1024 || e.touches.length !== 1) return;
-      if (shouldIgnorePageSwipe(e.target)) return;
+      if (shouldIgnorePageSwipe(e.target)) {
+        isSwipeLocked = true;
+        isVerticalScroll = true;
+        return;
+      }
 
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
-      touchStartTime = Date.now();
+      touchStartTime = performance.now();
       isSwipeActive = false;
       isSwipeLocked = false;
       isVerticalScroll = false;
+      trackedPane = null;
     };
 
     const onTouchMove = (e: TouchEvent) => {
@@ -213,14 +289,25 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
       const deltaY = e.touches[0].clientY - touchStartY;
 
       if (!isSwipeLocked) {
-        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 8) {
+        const absX = Math.abs(deltaX);
+        const absY = Math.abs(deltaY);
+        if (absY > 10 && absX <= absY * 1.35) {
           isVerticalScroll = true;
           isSwipeLocked = true;
           return;
         }
-        if (Math.abs(deltaX) > Math.abs(deltaY) * 1.35 && Math.abs(deltaX) > 14) {
+        if (absX > absY * 1.35 && absX > 10) {
           isSwipeActive = true;
           isSwipeLocked = true;
+          trackedPane = getActiveMainPane();
+          if (trackedPane) {
+            trackedPane.style.willChange = 'transform';
+            trackedPane.style.transition = 'none';
+          }
+        } else if (Math.hypot(absX, absY) > 16) {
+          isVerticalScroll = true;
+          isSwipeLocked = true;
+          return;
         }
       }
 
@@ -231,33 +318,40 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
           sliderRef.current.classList.add('is-dragging');
         }
 
-        // Fractional progress: deltaX > 0 (swipe right -> prev tab), deltaX < 0 (swipe left -> next tab)
-        const fractionalProgress = Math.max(
-          0,
-          Math.min(4, currentTabIndex - deltaX / window.innerWidth)
-        );
+        const raw = currentTabIndex - deltaX / Math.max(window.innerWidth, 1);
+        const damped =
+          raw < 0 ? raw * 0.18 : raw > 4 ? 4 + (raw - 4) * 0.18 : raw;
+        const progress = clamp(damped, -0.22, 4.22);
+        const nearestIdx = Math.round(clamp(progress, 0, 4));
 
-        if (dockRef.current) {
-          dockRef.current.style.setProperty('--dock-active-progress', String(fractionalProgress));
+        applySliderProgress(progress, nearestIdx);
+        setHoverIndex(nearestIdx);
+
+        if (trackedPane) {
+          const parallaxX = clamp(deltaX * 0.22, -56, 56);
+          trackedPane.style.transform = `translate3d(${parallaxX.toFixed(1)}px, 0, 0)`;
         }
-
-        setHoverIndex(Math.round(fractionalProgress));
       }
     };
 
     const onTouchEnd = (e: TouchEvent) => {
-      if (!isSwipeActive) return;
+      if (!isSwipeActive) {
+        isSwipeLocked = false;
+        isVerticalScroll = false;
+        return;
+      }
 
       const deltaX = e.changedTouches[0].clientX - touchStartX;
-      const duration = Date.now() - touchStartTime;
-      const velocity = Math.abs(deltaX) / Math.max(1, duration);
+      const duration = Math.max(1, performance.now() - touchStartTime);
+      const velocity = Math.abs(deltaX) / duration;
 
       if (sliderRef.current) {
         sliderRef.current.classList.remove('is-dragging');
       }
+      clearSliderInlineColors();
 
       let targetIdx = currentTabIndex;
-      if (Math.abs(deltaX) >= 68 || velocity >= 0.38) {
+      if (Math.abs(deltaX) > 64 || velocity > 0.38) {
         if (deltaX < 0 && currentTabIndex < 4) {
           targetIdx = currentTabIndex + 1;
         } else if (deltaX > 0 && currentTabIndex > 0) {
@@ -271,11 +365,18 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
       setHoverIndex(null);
 
       if (targetIdx !== currentTabIndex) {
+        try {
+          navigator.vibrate?.(10);
+        } catch (_) {}
+        resetPaneParallax(false);
         handleNavigate(targetIdx);
+      } else {
+        resetPaneParallax(true);
       }
 
       isSwipeActive = false;
       isSwipeLocked = false;
+      isVerticalScroll = false;
     };
 
     window.addEventListener('touchstart', onTouchStart, { passive: true });
@@ -288,44 +389,56 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('touchcancel', onTouchEnd);
+      if (paneResetTimerRef.current) window.clearTimeout(paneResetTimerRef.current);
     };
   }, [currentTabIndex, handleNavigate]);
 
-  // Gesture 2: Direct Thumb-Scrubbing Across the Bottom Bar (< 1024px)
+  // Gesture 2: Magnetic Thumb-Scrubbing Across the Bottom Bar (< 1024px)
+  const updateDockScrub = (clientX: number) => {
+    const width = Math.max(window.innerWidth, 1);
+    const fractionalIndex = clamp((clientX / width) * 5 - 0.5, 0, 4);
+    const nearestIdx = Math.round(fractionalIndex);
+    setHoverIndex(nearestIdx);
+    setScrubState({ index: nearestIdx, progress: fractionalIndex });
+    if (dockRef.current) {
+      dockRef.current.style.setProperty('--dock-active-progress', String(fractionalIndex));
+    }
+    if (sliderRef.current) {
+      sliderRef.current.style.borderTopColor = DOCK_BEAM_COLORS[nearestIdx] || DOCK_BEAM_COLORS[0];
+      sliderRef.current.style.backgroundColor = DOCK_TINT_COLORS[nearestIdx] || DOCK_TINT_COLORS[0];
+    }
+    return nearestIdx;
+  };
+
   const onDockTouchStart = (e: React.TouchEvent<HTMLElement>) => {
     if (sliderRef.current) {
       sliderRef.current.classList.add('is-dragging');
     }
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const rawProgress = Math.max(0, Math.min(4, (x / rect.width) * 5));
-    const idx = Math.max(0, Math.min(4, Math.floor(rawProgress)));
-    setHoverIndex(idx);
-    if (dockRef.current) {
-      dockRef.current.style.setProperty('--dock-active-progress', String(idx));
-    }
+    updateDockScrub(e.touches[0].clientX);
   };
 
   const onDockTouchMove = (e: React.TouchEvent<HTMLElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const rawProgress = Math.max(0, Math.min(4, (x / rect.width) * 5));
-    const idx = Math.max(0, Math.min(4, Math.floor(rawProgress)));
-    setHoverIndex(idx);
-    if (dockRef.current) {
-      dockRef.current.style.setProperty('--dock-active-progress', String(idx));
-    }
+    if (e.cancelable) e.preventDefault();
+    updateDockScrub(e.touches[0].clientX);
   };
 
   const onDockTouchEnd = (e: React.TouchEvent<HTMLElement>) => {
     if (sliderRef.current) {
       sliderRef.current.classList.remove('is-dragging');
+      sliderRef.current.style.removeProperty('border-top-color');
+      sliderRef.current.style.removeProperty('background-color');
     }
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.changedTouches[0].clientX - rect.left;
-    const rawProgress = Math.max(0, Math.min(4, (x / rect.width) * 5));
-    const idx = Math.max(0, Math.min(4, Math.floor(rawProgress)));
-    handleNavigate(idx);
+    const clientX = e.changedTouches[0]?.clientX ?? 0;
+    const width = Math.max(window.innerWidth, 1);
+    const fractionalIndex = clamp((clientX / width) * 5 - 0.5, 0, 4);
+    const nearestIdx = Math.round(fractionalIndex);
+    setScrubState(null);
+    if (nearestIdx !== currentTabIndex) {
+      try {
+        navigator.vibrate?.(10);
+      } catch (_) {}
+    }
+    handleNavigate(nearestIdx);
   };
 
   const displayedActiveIndex = hoverIndex !== null ? hoverIndex : currentTabIndex;
@@ -337,29 +450,39 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
       className="grafton-mobile-dock lg:hidden select-none"
       aria-label="Navegación principal móvil Grafton"
       data-active-dock={activeDockModule}
-      style={{
-        '--dock-active-progress': displayedActiveIndex,
-      } as React.CSSProperties}
       onTouchStart={onDockTouchStart}
       onTouchMove={onDockTouchMove}
       onTouchEnd={onDockTouchEnd}
       onTouchCancel={() => {
-        if (sliderRef.current) sliderRef.current.classList.remove('is-dragging');
+        if (sliderRef.current) {
+          sliderRef.current.classList.remove('is-dragging');
+          sliderRef.current.style.removeProperty('border-top-color');
+          sliderRef.current.style.removeProperty('background-color');
+        }
         if (dockRef.current) {
           dockRef.current.style.setProperty('--dock-active-progress', String(currentTabIndex));
         }
         setHoverIndex(null);
+        setScrubState(null);
       }}
     >
+      {scrubState !== null && (
+        <div
+          className="grafton-dock-scrub-pill"
+          style={{
+            left: `calc(${((scrubState.progress + 0.5) / 5) * 100}%)`,
+            borderTopColor: DOCK_BEAM_COLORS[scrubState.index] || DOCK_BEAM_COLORS[0],
+          }}
+        >
+          {DOCK_TOOLTIP_LABELS[scrubState.index]}
+        </div>
+      )}
       <div className="grafton-dock-grid grid grid-cols-5 h-[60px] relative">
         {/* Hardware-Accelerated Sliding Indicator */}
         <div
           ref={sliderRef}
           className="grafton-dock-slider"
           aria-hidden="true"
-          style={{
-            transform: `translate3d(calc(${displayedActiveIndex} * 100%), 0, 0)`,
-          }}
         />
 
         {/* 5 Canonical Route Tabs */}
