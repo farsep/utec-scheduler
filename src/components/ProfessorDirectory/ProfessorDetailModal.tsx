@@ -18,7 +18,6 @@ import {
   MapPin,
   Users,
   GraduationCap,
-  Sparkles,
   ExternalLink,
   ChevronRight,
   Info
@@ -352,33 +351,33 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
         </div>
 
         {/* Modal View Selector Tabs */}
-        <div className="prof-modal-nav-tabs">
+        <div className="prof-modal-nav-tabs grid grid-cols-3 gap-1">
           <button
             type="button"
-            className={`prof-modal-tab-btn ${activeTab === 'horario' ? 'prof-modal-tab-btn--active' : ''}`}
+            className={`prof-modal-tab-btn whitespace-nowrap text-[10.5px] sm:text-xs px-1.5 py-2 ${activeTab === 'horario' ? 'prof-modal-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('horario')}
           >
-            <Calendar size={15} />
+            <Calendar size={14} className="shrink-0" />
             <span className="tab-label-full">Horario Semanal ({professor.totalSessionsCount} clases)</span>
             <span className="tab-label-short">Horario ({professor.totalSessionsCount})</span>
           </button>
 
           <button
             type="button"
-            className={`prof-modal-tab-btn ${activeTab === 'cursos' ? 'prof-modal-tab-btn--active' : ''}`}
+            className={`prof-modal-tab-btn whitespace-nowrap text-[10.5px] sm:text-xs px-1.5 py-2 ${activeTab === 'cursos' ? 'prof-modal-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('cursos')}
           >
-            <BookOpen size={15} />
+            <BookOpen size={14} className="shrink-0" />
             <span className="tab-label-full">Cursos ({professor.uniqueCoursesCount}) • Secciones ({professor.uniqueSectionsCount})</span>
             <span className="tab-label-short">Cursos ({professor.uniqueCoursesCount})</span>
           </button>
 
           <button
             type="button"
-            className={`prof-modal-tab-btn ${activeTab === 'aulas' ? 'prof-modal-tab-btn--active' : ''}`}
+            className={`prof-modal-tab-btn whitespace-nowrap text-[10.5px] sm:text-xs px-1.5 py-2 ${activeTab === 'aulas' ? 'prof-modal-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('aulas')}
           >
-            <MapPin size={15} />
+            <MapPin size={14} className="shrink-0" />
             <span className="tab-label-full">Aulas Utilizadas ({professor.uniqueRooms.length})</span>
             <span className="tab-label-short">Aulas ({professor.uniqueRooms.length})</span>
           </button>

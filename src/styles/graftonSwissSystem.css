@@ -543,7 +543,7 @@
 .courses-cards-grid .course-card {
   background: var(--bg-surface) !important;
   border: 1px solid var(--border-hairline) !important;
-  border-top: 2px solid var(--border-strong) !important;
+  border-top: 3px solid var(--faculty-accent, var(--border-strong)) !important;
   border-radius: 0px !important;
   box-shadow: var(--shadow-tactile) !important;
   color: var(--text-primary) !important;
@@ -556,7 +556,7 @@
 .course-dir-card:hover,
 .courses-cards-grid .course-card:hover {
   border-color: var(--accent-primary) !important;
-  border-top-color: var(--border-strong) !important;
+  border-top-color: var(--faculty-accent, var(--border-strong)) !important;
   transform: none !important;
   box-shadow: 3px 3px 0px rgba(24, 24, 26, 0.14) !important;
   background: var(--bg-surface) !important;
@@ -918,8 +918,9 @@
   min-width: 44px !important;
   border-radius: 0px !important;
   border: 1.5px solid #18181A !important;
-  background: #DCD9D2 !important;
-  color: #141416 !important;
+  border-top: 3px solid var(--faculty-accent, #18181A) !important;
+  background: var(--faculty-bg, #DCD9D2) !important;
+  color: var(--faculty-text, #141416) !important;
   font-family: var(--font-heading) !important;
   font-weight: 700 !important;
   font-size: 1.05rem !important;
@@ -1618,10 +1619,19 @@
 }
 
 .course-modal-nav-tabs,
-.prof-modal-nav-tabs {
+.prof-modal-nav-tabs,
+.prof-modal-tabs-nav {
   background: #DCD9D2 !important;
   background-color: #DCD9D2 !important;
   border-bottom: 1px solid #18181A !important;
+}
+
+.prof-modal-nav-tabs,
+.prof-modal-tabs-nav {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+  overflow: visible !important;
 }
 
 .course-modal-tab-btn,
@@ -1633,6 +1643,24 @@
   border: 1px solid #C6C3BB !important;
   box-shadow: none !important;
   font-family: var(--font-mono) !important;
+}
+
+.prof-modal-tab-btn {
+  min-width: 0 !important;
+  width: 100% !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  padding: 8px 6px !important;
+}
+
+@media (max-width: 639px) {
+  .prof-modal-tab-btn {
+    font-size: 10.5px !important;
+    padding: 7px 4px !important;
+    gap: 4px !important;
+  }
 }
 
 .course-modal-tab-btn--active,
@@ -2233,6 +2261,26 @@
   color: #0A2E46 !important;
 }
 
+.mentor-modal,
+.mentor-modal * {
+  border-radius: 0px !important;
+}
+
+.reservations-count-pill {
+  background: #DCEEE6 !important;
+  border: 1px solid #0D7A4E !important;
+  color: #093B29 !important;
+  border-radius: 0px !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+}
+
+.res-course-tag,
+.week-badge,
+.room-tag {
+  border-radius: 0px !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+}
+
 .mentor-reservations-card,
 .mentor-modal-course-card,
 .mentor-tips-banner {
@@ -2274,20 +2322,42 @@
 
 /* BUG 4: Classroom Detail Modal (/aulas -> "Ver Horario >") */
 .classroom-type-icon--large {
-  width: 48px !important;
-  height: 48px !important;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
   border-radius: 0px !important;
   background: #DCD9D2 !important;
   background-color: #DCD9D2 !important;
   border: 1.5px solid #18181A !important;
   color: #141416 !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
 }
 
 .classroom-modal-day-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  overflow: visible !important;
   border-bottom: 1px solid #C6C3BB !important;
 }
 
+@media (max-width: 639px) {
+  .classroom-modal-day-tabs {
+    gap: 4px !important;
+  }
+}
+
 .modal-day-tab {
+  min-width: 0 !important;
+  width: 100% !important;
+  justify-content: center !important;
   border-radius: 0px !important;
   background: #DCD9D2 !important;
   background-color: #DCD9D2 !important;
@@ -2492,6 +2562,14 @@
   color: #141416 !important;
 }
 
+.prof-timetable-controls-bar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
 .prof-day-jump-pills,
 .prof-view-mode-toggle,
 .course-timetable-toolbar {
@@ -2502,10 +2580,40 @@
   box-shadow: none !important;
 }
 
+@media (max-width: 639px) {
+  .prof-timetable-controls-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+  }
+  .prof-day-jump-pills {
+    width: 100% !important;
+    flex: none !important;
+    justify-content: space-between !important;
+  }
+  .prof-view-mode-toggle {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    margin-left: 0 !important;
+  }
+  .prof-view-toggle-btn {
+    justify-content: center !important;
+    width: 100% !important;
+  }
+}
+
+.prof-day-jump-pill,
+.prof-view-toggle-btn,
+.course-day-jump-chip,
+.pill-day-count,
+.pill-day-dot {
+  border-radius: 0px !important;
+}
+
 .prof-day-jump-pill,
 .prof-view-toggle-btn,
 .course-day-jump-chip {
-  border-radius: 0px !important;
   background: #DCD9D2 !important;
   background-color: #DCD9D2 !important;
   color: #141416 !important;
@@ -2679,6 +2787,28 @@
   border-radius: 0px !important;
   color: #141416 !important;
   box-shadow: none !important;
+}
+
+.prof-agenda-header,
+.prof-agenda-day-badge,
+.prof-agenda-card *,
+.prof-agenda-course-code,
+.prof-agenda-meta-pill,
+.prof-agenda-time-bar {
+  border-radius: 0px !important;
+}
+
+.prof-agenda-header {
+  background: #EAE8E3 !important;
+  border: 1px solid #18181A !important;
+}
+
+.prof-agenda-day-badge,
+.prof-agenda-meta-pill {
+  background: #F2F0EC !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
 }
 
 .prof-section-session-item,
@@ -3211,6 +3341,44 @@ body,
 .dag-inspector-relations {
   margin-top: 6px !important;
   padding-top: 6px !important;
+}
+
+@media (max-width: 1023px) {
+  .dag-inspector-card,
+  .dag-inspector-card--compact {
+    position: relative !important;
+    top: auto !important;
+  }
+  .dag-inspector-card.is-mobile-collapsed {
+    min-height: 38px !important;
+    padding: 4px 10px !important;
+    gap: 0 !important;
+  }
+  .dag-inspector-card.is-mobile-collapsed .dag-inspector-main {
+    min-height: 28px !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    align-items: center !important;
+  }
+  .dag-inspector-card.is-mobile-collapsed .dag-inspector-code {
+    padding: 2px 6px !important;
+    font-size: 0.72rem !important;
+  }
+  .dag-inspector-card.is-mobile-collapsed .dag-inspector-titles {
+    min-width: 0 !important;
+  }
+  .dag-inspector-card.is-mobile-collapsed .dag-inspector-name {
+    font-size: 0.78rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
+  }
+  .dag-inspector-card.is-mobile-collapsed .dag-inspector-sub,
+  .dag-inspector-card.is-mobile-collapsed .dag-inspector-actions,
+  .dag-inspector-card.is-mobile-collapsed .dag-inspector-relations {
+    display: none !important;
+  }
 }
 
 .dag-svg-layer {
@@ -5042,6 +5210,19 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
 .grafton-gcal-session-link:hover {
   background-color: #18181A !important;
   color: #F2F0EC !important;
+}
+
+.time-bar,
+.time-bar--free,
+.time-bar--occupied,
+.mobile-sheet-drag-handle {
+  border-radius: 0px !important;
+}
+
+@media (min-width: 1024px) {
+  .dag-mobile-route-toggle {
+    display: none !important;
+  }
 }
 
 

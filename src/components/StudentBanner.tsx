@@ -1,5 +1,5 @@
-import React from 'react';
-import { User, GraduationCap, Award, Calendar, Clock, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, GraduationCap, Award, Calendar, Clock } from 'lucide-react';
 import type { MetadataInfo } from '../types/schedule';
 
 interface StudentBannerProps {
@@ -7,18 +7,82 @@ interface StudentBannerProps {
 }
 
 export const StudentBanner: React.FC<StudentBannerProps> = ({ metadata }) => {
+  const [mobileExpanded, setMobileExpanded] = useState(false);
+
   if (!metadata.studentName && !metadata.major && !metadata.program) return null;
 
   const isConsolidado = Boolean(metadata.isConsolidado);
   const isHorario = metadata.documentType === 'Consolidado de Horario';
+  const compactName = metadata.studentName || 'Estudiante UTEC';
+  const compactMajor = metadata.major || metadata.program || 'UTEC';
+  const compactSemester = metadata.semester ? ` (${metadata.semester})` : '';
 
   return (
     <div className="student-metadata-banner-container">
-      <div className="student-metadata-scroll">
+      {/* Mobile (< 768px): Collapsible 1-line compact Swiss student strip */}
+      <div
+        className="student-mobile-summary-bar"
+        style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: '10.5px',
+          color: '#141416',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            minWidth: 0,
+            flex: 1,
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <User size={12} style={{ flexShrink: 0, color: '#005A8C' }} />
+          <span style={{ fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {compactName}
+          </span>
+          <span style={{ color: '#4A4946', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            · {compactMajor}
+            {compactSemester}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setMobileExpanded(prev => !prev)}
+          aria-expanded={mobileExpanded}
+          style={{
+            flexShrink: 0,
+            padding: '2px 8px',
+            backgroundColor: '#FAF9F5',
+            color: '#141416',
+            border: '1px solid #18181A',
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '10px',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
+            borderRadius: '0px',
+            cursor: 'pointer',
+          }}
+        >
+          {mobileExpanded ? '▴ Ficha' : '▾ Ficha'}
+        </button>
+      </div>
+
+      <div
+        className={`student-metadata-scroll ${
+          mobileExpanded ? 'is-expanded-mobile' : 'is-collapsed-mobile'
+        }`}
+      >
       {metadata.documentType && metadata.documentType !== 'Horario Carga Hábil' && (
-        <div className="student-meta-item" style={{ background: 'rgba(59, 130, 246, 0.12)', borderColor: 'rgba(59, 130, 246, 0.3)' }}>
-          <Sparkles size={14} color="var(--accent-primary)" />
-          <span className="student-meta-value" style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>
+        <div
+          className="student-meta-item"
+          style={{ background: '#E0EBF5', borderColor: '#00668C' }}
+        >
+          <Calendar size={13} color="#005A8C" />
+          <span className="student-meta-value" style={{ color: '#0A2E46', fontWeight: 700 }}>
             {metadata.documentType}
           </span>
         </div>

@@ -70,6 +70,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
   const [selectedCareerId, setSelectedCareerId] = useState<string>('ciencia-computacion');
   const [selectedCourseCode, setSelectedCourseCode] = useState<string>('CS1042');
   const [svgEdges, setSvgEdges] = useState<SvgEdge[]>([]);
+  const [mobileInspectorExpanded, setMobileInspectorExpanded] = useState(false);
 
   const stageRef = useRef<HTMLDivElement | null>(null);
   const nodeRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -77,6 +78,21 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
   const activeCareer: CareerCurriculum = useMemo(() => {
     return UTEC_16_CAREERS.find(c => c.id === selectedCareerId) || UTEC_16_CAREERS[0];
   }, [selectedCareerId]);
+
+  useEffect(() => {
+    const collapseOnScroll = () => {
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+        setMobileInspectorExpanded(false);
+      }
+    };
+    window.addEventListener('scroll', collapseOnScroll, { passive: true });
+    const scroller = stageRef.current?.closest('.dag-scroll-container');
+    scroller?.addEventListener('scroll', collapseOnScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', collapseOnScroll);
+      scroller?.removeEventListener('scroll', collapseOnScroll);
+    };
+  }, [activeCareer.id]);
 
   const visibleCareers = useMemo(() => {
     if (selectedFaculty === 'ALL') return UTEC_16_CAREERS;
@@ -350,7 +366,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
 
           {/* 2. Top Course Inspector Card (Natural flow, unclipped) */}
           <section
-            className="grafton-card dag-inspector-card dag-inspector-card--compact relative z-10 min-h-[88px] py-2.5 px-4"
+            className={`grafton-card dag-inspector-card dag-inspector-card--compact relative z-10 min-h-[88px] py-2.5 px-4 ${!mobileInspectorExpanded ? 'is-mobile-collapsed' : ''}`}
             aria-label="Inspector de asignatura seleccionada"
           >
             <div className="dag-inspector-main">
@@ -376,7 +392,30 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setMobileInspectorExpanded(v => !v)}
+                aria-expanded={mobileInspectorExpanded}
+                className="dag-mobile-route-toggle"
+                style={{
+                  flexShrink: 0,
+                  padding: '4px 8px',
+                  backgroundColor: '#DCD9D2',
+                  color: '#141416',
+                  border: '1px solid #18181A',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  whiteSpace: 'nowrap',
+                  borderRadius: '0px',
+                  cursor: 'pointer',
+                }}
+              >
+                {mobileInspectorExpanded ? '▴ Ocultar' : '↑ Ver Ruta'}
+              </button>
+
+              <div className="dag-inspector-actions flex items-center gap-2 flex-wrap">
                 {isOfferedInCatalog && (
                   <a
                     href={`/cursos?curso=${activeCourse.code}`}

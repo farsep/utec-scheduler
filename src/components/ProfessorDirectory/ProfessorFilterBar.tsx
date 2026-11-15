@@ -9,7 +9,6 @@ import {
   Search,
   X,
   SlidersHorizontal,
-  Sparkles,
   Calendar,
   GraduationCap,
   ArrowUpDown,

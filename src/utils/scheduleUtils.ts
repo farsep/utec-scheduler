@@ -466,3 +466,42 @@ export function getCourseDepartmentPalette(courseCode: string): CourseDepartment
     borderAccent: '#3D348B',
   };
 }
+
+export interface FacultyPolychrome {
+  accent: string;
+  bg: string;
+  text: string;
+}
+
+/**
+ * Returns Polychrome Swiss Architectural faculty colors (Computing Cobalt, Engineering Terracotta,
+ * Basic Sciences Ochre, or Business/Humanities Indigo) from either a course code or department label.
+ */
+export function getFacultyPolychrome(codeOrDept: string): FacultyPolychrome {
+  const raw = (codeOrDept || '').trim();
+  if (/^[A-Za-z]{2,4}\d{3,4}/.test(raw)) {
+    const pal = getCourseDepartmentPalette(raw);
+    return { accent: pal.codeBg, bg: pal.secBg, text: pal.secText };
+  }
+
+  const upper = raw.toUpperCase();
+  if (
+    COMPUTING_DATA_PREFIXES.has(upper) ||
+    /COMPUTACI[ÓO]N|\bDATOS\b|\bDATA\b|SOFTWARE|\bSISTEMAS\b|INTELIGENCIA ARTIFICIAL/.test(upper)
+  ) {
+    return { accent: '#005A8C', bg: '#F0F6FA', text: '#0A2E46' };
+  }
+  if (
+    ENGINEERING_PREFIXES.has(upper) ||
+    /INGENIER|MEC[AÁ]NIC|MEC[AÁ]TR|\bCIVIL\b|ELECTR|INDUSTRIAL|AMBIENTAL|\bENERG|\bBIO|QU[IÍ]MIC/.test(upper)
+  ) {
+    return { accent: '#B8332A', bg: '#FDF2F1', text: '#4A120E' };
+  }
+  if (
+    SCIENCES_MATH_PREFIXES.has(upper) ||
+    /\bCIENCIAS\b|B[AÁ]SICAS|MATEM|F[IÍ]SICA|ESTAD[IÍ]STIC/.test(upper)
+  ) {
+    return { accent: '#B86200', bg: '#FDF6EC', text: '#4D2600' };
+  }
+  return { accent: '#3D348B', bg: '#F3F2FA', text: '#1E194D' };
+}

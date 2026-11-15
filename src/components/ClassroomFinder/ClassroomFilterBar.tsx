@@ -16,7 +16,6 @@ import {
   Users,
   Building,
   RotateCcw,
-  Sparkles,
   SlidersHorizontal,
   X
 } from 'lucide-react';

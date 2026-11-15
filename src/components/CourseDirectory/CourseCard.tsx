@@ -3,6 +3,7 @@ import type { DayOfWeek } from '../../types/schedule';
 import type { CourseExtendedInfo } from '../../types/courseDirectory';
 import { ALL_DAYS, DAY_LABELS, resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { evaluateCourseLiveStatus } from '../../utils/courseDirectoryUtils';
+import { getFacultyPolychrome } from '../../utils/scheduleUtils';
 import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
   BookOpen,
@@ -23,19 +24,6 @@ interface CourseCardProps {
   isVisitor: boolean;
   onToggleVisitor: (course: CourseExtendedInfo, e: React.MouseEvent) => void;
   onOpenDetail: (course: CourseExtendedInfo) => void;
-}
-
-/**
- * Derives a vibrant two-color gradient based on the course code or department
- */
-function getCourseAvatarGradient(code: string, deptColor?: string): string {
-  let hash = 0;
-  for (let i = 0; i < code.length; i++) {
-    hash = code.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const h1 = Math.abs(hash % 360);
-  const h2 = (h1 + 45) % 360;
-  return `linear-gradient(135deg, hsl(${h1}, 70%, 48%) 0%, hsl(${h2}, 80%, 38%) 100%)`;
 }
 
 /**
@@ -64,11 +52,16 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
   );
 
   const monogram = getCourseMonogram(course.code);
-  const avatarGradient = getCourseAvatarGradient(course.code, course.departmentColor);
+  const facultyColors = getFacultyPolychrome(course.code || course.departmentLabel);
 
   return (
     <article
       className={`course-card glass-card ${isCurrentlyLive ? 'course-card--live' : ''} ${isVisitor ? 'course-card--visitor' : ''}`}
+      style={{
+        ['--faculty-accent' as string]: facultyColors.accent,
+        ['--faculty-bg' as string]: facultyColors.bg,
+        ['--faculty-text' as string]: facultyColors.text,
+      }}
       onClick={() => onOpenDetail(course)}
       role="button"
       tabIndex={0}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, GitBranch, Upload, Sparkles, Trash2, Building2, GraduationCap, Award, BookOpen } from 'lucide-react';
+import { Calendar, GitBranch, Upload, Trash2, Building2, GraduationCap, Award, BookOpen } from 'lucide-react';
 import type { MetadataInfo } from '../types/schedule';
 import { MobileBottomNav } from './MobileBottomNav';
 
@@ -90,7 +90,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
 
         <button className="btn btn-secondary" onClick={onLoadSample} title="Cargar datos de ejemplo (UTEC)">
-          <Sparkles size={15} color="var(--accent-amber)" />
+          <BookOpen size={15} color="#B85D00" />
           <span>Cargar Ejemplo</span>
         </button>
 

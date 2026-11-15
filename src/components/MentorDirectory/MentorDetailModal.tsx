@@ -16,7 +16,6 @@ import {
   Award,
   BookOpen,
   MapPin,
-  Sparkles,
   Info
 } from 'lucide-react';
 
@@ -262,35 +261,35 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
         </div>
 
         {/* Modal Navigation Tabs */}
-        <nav className="prof-modal-tabs-nav prof-modal-nav-tabs" aria-label="Navegación del modal de mentor">
+        <nav className="prof-modal-tabs-nav prof-modal-nav-tabs grid grid-cols-3 gap-1" aria-label="Navegación del modal de mentor">
           <button
             type="button"
-            className={`prof-modal-tab-btn ${activeTab === 'horario' ? 'prof-modal-tab-btn--active' : ''}`}
+            className={`prof-modal-tab-btn whitespace-nowrap text-[10.5px] sm:text-xs px-1.5 py-2 ${activeTab === 'horario' ? 'prof-modal-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('horario')}
           >
-            <Calendar size={15} />
+            <Calendar size={14} className="shrink-0" />
             <span className="tab-label-full">Horario Semanal</span>
             <span className="tab-label-short">Horario</span>
           </button>
 
           <button
             type="button"
-            className={`prof-modal-tab-btn ${activeTab === 'aulas' ? 'prof-modal-tab-btn--active' : ''}`}
+            className={`prof-modal-tab-btn whitespace-nowrap text-[10.5px] sm:text-xs px-1.5 py-2 ${activeTab === 'aulas' ? 'prof-modal-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('aulas')}
           >
-            <MapPin size={15} />
+            <MapPin size={14} className="shrink-0" />
             <span className="tab-label-full">Aulas y Reservas {hasReservations ? '(11 Semanas)' : ''}</span>
             <span className="tab-label-short">Aulas {hasReservations ? '(11s)' : ''}</span>
           </button>
 
           <button
             type="button"
-            className={`prof-modal-tab-btn ${activeTab === 'info' ? 'prof-modal-tab-btn--active' : ''}`}
+            className={`prof-modal-tab-btn whitespace-nowrap text-[10.5px] sm:text-xs px-1.5 py-2 ${activeTab === 'info' ? 'prof-modal-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('info')}
           >
-            <BookOpen size={15} />
+            <BookOpen size={14} className="shrink-0" />
             <span className="tab-label-full">Cursos y Consejos</span>
-            <span className="tab-label-short">Cursos</span>
+            <span className="tab-label-short">Consejos</span>
           </button>
         </nav>
 
@@ -535,8 +534,22 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
 
             {/* Tips Banner */}
             <div className="mentor-tips-banner glass-card">
-              <div className="tips-icon">
-                <Sparkles size={20} color="var(--accent-amber)" />
+              <div
+                className="tips-icon w-7 h-7 bg-[#B85D00] text-white border border-[#18181A] flex items-center justify-center shrink-0 rounded-none"
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  backgroundColor: '#B85D00',
+                  color: '#FFFFFF',
+                  border: '1px solid #18181A',
+                  borderRadius: '0px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}
+              >
+                <BookOpen size={15} />
               </div>
               <div className="tips-content">
                 <h4>Recomendaciones para tu Mentoría Académica</h4>

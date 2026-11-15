@@ -1493,6 +1493,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                     onSelectSection={() => {}}
                     onRemoveSection={() => {}}
                     compressView={true}
+                    readOnly={true}
                   />
                 </div>
               </div>

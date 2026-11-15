@@ -13,7 +13,6 @@ import {
   Calendar,
   LayoutGrid,
   List,
-  Sparkles,
   ChevronRight,
   BookOpen
 } from 'lucide-react';
@@ -320,7 +319,7 @@ export const ProfessorTimetable: React.FC<ProfessorTimetableProps> = ({
   return (
     <div className="prof-timetable-wrap">
       {/* Quick Navigation Controls Bar */}
-      <div className="prof-timetable-controls-bar">
+      <div className="prof-timetable-controls-bar flex flex-wrap items-center justify-between gap-2">
         {/* Day Jump Navigation Pills */}
         <div className="prof-day-jump-pills">
           {ALL_DAYS.map(day => {

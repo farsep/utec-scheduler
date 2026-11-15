@@ -4,6 +4,7 @@ import type { ProfessorInfo } from '../../types/professor';
 import { ALL_DAYS, resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { evaluateProfessorLiveStatus } from '../../utils/professorUtils';
 import { getGraftonPigment } from '../../utils/graftonPigments';
+import { getFacultyPolychrome } from '../../utils/scheduleUtils';
 import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
   Mail,
@@ -50,9 +51,18 @@ export const ProfessorCard: React.FC<ProfessorCardProps> = memo(({
     e.stopPropagation();
   };
 
+  const facultyColors = getFacultyPolychrome(
+    professor.courses[0]?.code || professor.departmentLabel || professor.department
+  );
+
   return (
     <article
       className={`professor-card glass-card ${isTeachingNow ? 'professor-card--teaching-now' : ''}`}
+      style={{
+        ['--faculty-accent' as string]: facultyColors.accent,
+        ['--faculty-bg' as string]: facultyColors.bg,
+        ['--faculty-text' as string]: facultyColors.text,
+      }}
       onClick={() => onOpenDetail(professor)}
       role="button"
       tabIndex={0}

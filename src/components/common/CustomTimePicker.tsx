@@ -267,10 +267,37 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
 
           {/* Hour Selector Grid */}
           <div style={{ marginBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
-              <span className="gtp-section-label" style={{ marginBottom: 0 }}>HORA ({minHour}:00 - {maxHour}:00)</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#787670' }}>
-                Actual: {String(currentHour).padStart(2, '0')}:00
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                whiteSpace: 'nowrap',
+                marginBottom: '6px',
+              }}
+            >
+              <span
+                className="gtp-section-label"
+                style={{ marginBottom: 0, whiteSpace: 'nowrap' }}
+              >
+                HORA ({String(minHour).padStart(2, '0')}:00–{String(maxHour).padStart(2, '0')}:00)
+              </span>
+              <span
+                style={{
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  padding: '2px 6px',
+                  backgroundColor: '#DCD9D2',
+                  border: '1px solid #18181A',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  color: '#141416',
+                  borderRadius: '0px',
+                }}
+              >
+                {String(currentHour).padStart(2, '0')}:00
               </span>
             </div>
             <div className="gtp-hours-grid">
@@ -295,10 +322,28 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
 
           {/* Minute Selector */}
           <div style={{ marginBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
-              <span className="gtp-section-label" style={{ marginBottom: 0 }}>MINUTOS</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#787670' }}>
-                Actual: :{String(currentMinute).padStart(2, '0')} min
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                whiteSpace: 'nowrap',
+                marginBottom: '6px',
+              }}
+            >
+              <span className="gtp-section-label" style={{ marginBottom: 0, whiteSpace: 'nowrap' }}>MINUTOS</span>
+              <span
+                style={{
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  color: '#4A4946',
+                }}
+              >
+                :{String(currentMinute).padStart(2, '0')}
               </span>
             </div>
             <div className="gtp-grid-4">
@@ -309,9 +354,10 @@ export const CustomTimePicker: React.FC<CustomTimePickerProps> = ({
                     key={m}
                     type="button"
                     className={`gtp-chip ${isSelected ? 'gtp-chip--active' : ''}`}
+                    style={{ whiteSpace: 'nowrap' }}
                     onClick={() => handleSelectMinute(m)}
                   >
-                    :{String(m).padStart(2, '0')} min
+                    :{String(m).padStart(2, '0')}
                   </button>
                 );
               })}

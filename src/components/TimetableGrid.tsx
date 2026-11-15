@@ -17,24 +17,64 @@ interface TimetableGridProps {
   onSelectSection: (courseCode: string, sectionNumber: string) => void;
   onRemoveSection: (courseCode: string) => void;
   compressView?: boolean;
+  readOnly?: boolean;
 }
+
+const DAY_SHORT_LABELS: Record<DayOfWeek, string> = {
+  Lun: 'Lun',
+  Mar: 'Mar',
+  Mie: 'Mié',
+  Jue: 'Jue',
+  Vie: 'Vie',
+  Sab: 'Sáb',
+};
 
 const formatSessionTypeLabel = (session: string) => {
   if (!session) return 'Teoría';
   if (/LABORATORIO|LAB/i.test(session)) return 'Lab';
   if (/TALLER/i.test(session)) return 'Taller';
   if (/SEMINARIO|SEM/i.test(session)) return 'Seminario';
+  if (/PR[AÁ]CTICA|PRA/i.test(session)) return 'Práctica';
   return 'Teoría';
 };
 
+const formatMicroSessionType = (sessionGroup: string, sectionNumber: string) => {
+  const s = sessionGroup || '';
+  let prefix = 'TEO';
+  if (/LABORATORIO|LAB/i.test(s)) prefix = 'LAB';
+  else if (/TALLER|TAL/i.test(s)) prefix = 'TAL';
+  else if (/SEMINARIO|SEM/i.test(s)) prefix = 'SEM';
+  else if (/PR[AÁ]CTICA|PRA/i.test(s)) prefix = 'PRA';
+
+  const groupNum = s.match(/(\d+)\s*$/)?.[1];
+  const secNum = (sectionNumber || '').match(/\d+/)?.[0];
+  const num = groupNum || secNum || '1';
+  return `${prefix} ${num}`;
+};
+
 const formatCompactRoom = (loc: string) => {
-  const formatted = formatLocation(loc);
-  if (!formatted) return 'Aula';
-  if (/virtual|zoom|meet/i.test(formatted)) return 'Virtual';
-  if (/magna|auditorio/i.test(formatted)) return 'MAG';
+  const formatted = (formatLocation(loc) || loc || '').trim();
+  if (!formatted) return 'AULA';
+  if (/virtual|zoom|meet/i.test(formatted)) return 'VIR';
+  if (/magna/i.test(formatted)) return 'MAG';
+  if (/auditorio/i.test(formatted)) return 'AUD';
+  if (/futsal/i.test(formatted)) return 'FUT';
+  const mesasMatch = formatted.match(/mesas?\s*-?\s*(\d{2,4}[A-Z]?)/i);
+  if (mesasMatch) return `M${mesasMatch[1].toUpperCase()}`;
   const roomMatch = formatted.match(/([ABLM]\s?-?\s?\d{3,4}[A-Z]?)/i);
-  if (roomMatch) return roomMatch[1].replace(/\s+/g, '').toUpperCase();
-  return formatted.length > 8 ? formatted.slice(0, 8) : formatted;
+  if (roomMatch) return roomMatch[1].replace(/[\s-]+/g, '').toUpperCase();
+  const labMatch = formatted.match(/lab(?:oratorio)?\.?\s*-?\s*([A-Z]?\d{2,4}[A-Z]?)/i);
+  if (labMatch) {
+    const val = labMatch[1].toUpperCase();
+    return val.startsWith('L') ? val : `L${val}`;
+  }
+  const aulaMatch = formatted.match(/aula\s*-?\s*([A-Z]?\d{2,4}[A-Z]?)/i);
+  if (aulaMatch) {
+    const val = aulaMatch[1].toUpperCase();
+    return /^[A-Z]/.test(val) ? val : `A${val}`;
+  }
+  const firstToken = formatted.split(/\s+/)[0] || formatted;
+  return firstToken.length > 5 ? firstToken.slice(0, 5).toUpperCase() : firstToken.toUpperCase();
 };
 
 export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
@@ -46,9 +86,11 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
     onSelectSection,
     onRemoveSection,
     compressView = false,
+    readOnly = false,
   }) => {
     const [dragOverDay, setDragOverDay] = useState<DayOfWeek | null>(null);
     const [mobileDayFilter, setMobileDayFilter] = useState<'ALL' | DayOfWeek>('ALL');
+    const [inspectedBlockKey, setInspectedBlockKey] = useState<string | null>(null);
 
     const scheduledBlocks: {
       course: Course;
@@ -198,10 +240,19 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
       return Object.values(dayHoursMap).reduce((a, b) => a + b, 0);
     }, [dayHoursMap]);
 
+    const inspectedBlock = useMemo(() => {
+      if (!inspectedBlockKey) return null;
+      return (
+        scheduledBlocks.find(
+          b => `${b.course.code}-${b.sectionNumber}-${b.day}-${b.startMinutes}` === inspectedBlockKey
+        ) || null
+      );
+    }, [inspectedBlockKey, scheduledBlocks]);
+
     return (
       <div className="timetable-grid-wrapper">
         {/* Grafton Swiss Precision Segmented Control (Semana | Lunes | Martes... | Sábado) */}
-        <div className="timetable-controls-bar">
+        <div className={`timetable-controls-bar ${mobileDayFilter !== 'ALL' ? 'is-day-zoomed' : ''}`}>
           <div className="timetable-day-segmented-control" role="tablist" aria-label="Vista del Horario">
             <button
               type="button"
@@ -224,7 +275,10 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
                   role="tab"
                   aria-selected={isSelected}
                   className={`timetable-day-segment-btn ${isSelected ? 'is-active' : ''} ${!hasClasses ? 'is-dimmed' : ''}`}
-                  onClick={() => setMobileDayFilter(day)}
+                  onClick={() => {
+                    setMobileDayFilter(day);
+                    setInspectedBlockKey(null);
+                  }}
                   title={`${day}: ${hrs} horas de clase programadas`}
                 >
                   <span>{DAY_NAMES[day]}</span>
@@ -249,20 +303,112 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
 
         {/* Header Days Row */}
         <div
-          className="timetable-header"
-          style={mobileDayFilter !== 'ALL' ? { gridTemplateColumns: '64px 1fr' } : undefined}
+          className={`timetable-header ${mobileDayFilter !== 'ALL' ? 'is-day-zoomed' : ''}`}
         >
           <div className="time-col-header">HORA</div>
           {activeGridDays.map(day => {
             const hrs = dayHoursMap[day] || 0;
             return (
               <div key={day} className="day-col-header">
-                <span>{DAY_NAMES[day]}</span>
-                {hrs > 0 && <span className="day-col-hours">({hrs}h)</span>}
+                {mobileDayFilter === 'ALL' ? (
+                  <>
+                    <span className="day-col-label-short">{DAY_SHORT_LABELS[day]}</span>
+                    <span className="day-col-label-full">{DAY_NAMES[day]}</span>
+                  </>
+                ) : (
+                  <span>{DAY_NAMES[day]}</span>
+                )}
+                {hrs > 0 && (
+                  <span className={`day-col-hours ${mobileDayFilter === 'ALL' ? 'day-col-hours--week' : ''}`}>
+                    ({hrs}h)
+                  </span>
+                )}
               </div>
             );
           })}
         </div>
+
+        {/* Mobile Tap-to-Inspect Swiss Course Inspector Strip (< 640px Week View) */}
+        {mobileDayFilter === 'ALL' && inspectedBlock && (
+          <div
+            data-testid="mobile-course-inspector-strip"
+            className="mobile-course-inspector-strip"
+            style={{
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px',
+              padding: '7px 10px',
+              backgroundColor: '#18181A',
+              color: '#F2F0EC',
+              borderBottom: '1.5px solid #18181A',
+              borderLeft: '4px solid #00779E',
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '10.5px',
+              lineHeight: 1.3,
+              borderRadius: '0px',
+            }}
+          >
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <span style={{ fontWeight: 700, color: '#38BDF8' }}>[{inspectedBlock.course.code}]</span>{' '}
+              <span style={{ fontWeight: 600, color: '#F2F0EC' }}>{inspectedBlock.course.name}</span>
+              <span style={{ color: '#C6C3BB' }}>
+                {' · '}
+                {DAY_SHORT_LABELS[inspectedBlock.day]} {inspectedBlock.startTime}–
+                {inspectedBlock.endTime} ·{' '}
+                {formatMicroSessionType(inspectedBlock.sessionGroup, inspectedBlock.sectionNumber)} ·
+                Aula {formatCompactRoom(inspectedBlock.location)}
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onRemoveSection(inspectedBlock.course.code);
+                    setInspectedBlockKey(null);
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    backgroundColor: '#B8332A',
+                    color: '#FFFFFF',
+                    border: '1px solid rgba(242, 240, 236, 0.45)',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    whiteSpace: 'nowrap',
+                    borderRadius: '0px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Quitar ×
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setInspectedBlockKey(null)}
+                aria-label="Cerrar inspector de curso"
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#2C2C30',
+                  color: '#F2F0EC',
+                  border: '1px solid #52514E',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  borderRadius: '0px',
+                  cursor: 'pointer',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Grid Canvas Body */}
         <div id="timetable-grid-body" className="timetable-body timetable-scroll">
@@ -316,11 +462,24 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
                       const compactRoom = formatCompactRoom(block.location);
                       const canonicalRoom = compactRoom === 'MAG' ? 'MAG · Aula Magna' : compactRoom;
                       const sessionKind = formatSessionTypeLabel(block.sessionGroup);
+                      const microType = formatMicroSessionType(
+                        block.sessionGroup,
+                        block.sectionNumber
+                      );
+                      const blockUniqueKey = `${block.course.code}-${block.sectionNumber}-${block.day}-${block.startMinutes}`;
+                      const isInspected = inspectedBlockKey === blockUniqueKey;
 
                       return (
                         <div
                           key={`${block.course.code}-${block.sectionNumber}-${idx}`}
-                          className={`schedule-block ${isLab ? 'schedule-block--lab' : 'schedule-block--teo'} ${block.hasConflict ? 'has-conflict' : ''} ${durationMinutes <= 60 ? 'short-block' : ''}`}
+                          onClick={() => {
+                            if (mobileDayFilter === 'ALL') {
+                              setInspectedBlockKey(prev =>
+                                prev === blockUniqueKey ? null : blockUniqueKey
+                              );
+                            }
+                          }}
+                          className={`group schedule-block ${mobileDayFilter === 'ALL' ? 'schedule-block--week-view' : 'schedule-block--day-view'} ${isLab ? 'schedule-block--lab' : 'schedule-block--teo'} ${block.hasConflict ? 'has-conflict' : ''} ${durationMinutes <= 60 ? 'short-block' : ''} ${isInspected ? 'is-inspected' : ''}`}
                           style={{
                             top: `${topPercent}%`,
                             height: `calc(${heightPercent}% - 2px)`,
@@ -329,40 +488,89 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
                             border: `1px solid ${borderColor}`,
                             borderLeft: `4px solid ${barColor}`,
                             color: textColor,
+                            outline: isInspected ? '2px solid #00779E' : undefined,
                           }}
                           title={`${block.course.code} · ${block.course.name}\nSección ${block.sectionNumber} (${block.sessionGroup})\n${block.startTime} – ${block.endTime} · Aula: ${formatLocation(block.location)}\nDocente: ${block.professor}`}
                         >
-                          <div className="block-top-row">
-                            <span className="block-room-pill" title={formatLocation(block.location)}>
-                              {canonicalRoom}
-                            </span>
-                            <button
-                              type="button"
-                              className="block-remove-btn"
-                              onClick={e => {
-                                e.stopPropagation();
-                                onRemoveSection(block.course.code);
-                              }}
-                              aria-label={`Quitar ${block.course.name}`}
-                              title="Quitar asignatura"
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-
-                          <div className="block-course-title">{block.course.name}</div>
-
-                          {durationMinutes > 60 && (
-                            <div className="block-meta-mono flex items-center gap-1">
-                              <span>{block.course.code}</span>
-                              <span>·</span>
-                              <DynamicSessionBadge type={sessionKind} />
+                          {/* Mobile Week View (< 640px): Strict 3-Line Swiss Micro-Ticket */}
+                          {mobileDayFilter === 'ALL' && (
+                            <div className="mobile-micro-ticket">
+                              <span
+                                className="micro-ticket-code"
+                                style={{ color: block.hasConflict ? '#520D17' : '#141416' }}
+                              >
+                                {block.course.code}
+                              </span>
+                              <span
+                                className="micro-ticket-type"
+                                style={{ color: block.hasConflict ? '#A82032' : '#005A78' }}
+                              >
+                                {microType}
+                              </span>
+                              <span
+                                className="micro-ticket-room"
+                                style={{ color: block.hasConflict ? '#520D17' : '#141416' }}
+                              >
+                                {compactRoom}
+                              </span>
+                              {!readOnly && (
+                                <button
+                                  type="button"
+                                  className="micro-ticket-remove-btn"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    onRemoveSection(block.course.code);
+                                    setInspectedBlockKey(null);
+                                  }}
+                                  aria-label={`Quitar ${block.course.name}`}
+                                  title="Quitar asignatura"
+                                >
+                                  ×
+                                </button>
+                              )}
                             </div>
                           )}
 
-                          <div className="block-time-mono">
-                            {durationMinutes <= 60 ? `${block.course.code} · ` : ''}
-                            {block.startTime}–{block.endTime}
+                          {/* Desktop & Mobile Day View: Full Course Ticket */}
+                          <div
+                            className={`block-desktop-content ${
+                              mobileDayFilter === 'ALL' ? 'is-week-view' : 'is-day-view'
+                            }`}
+                          >
+                            <div className="block-top-row">
+                              <span className="block-room-pill" title={formatLocation(block.location)}>
+                                {canonicalRoom}
+                              </span>
+                              {!readOnly && (
+                                <button
+                                  type="button"
+                                  className="block-remove-btn"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    onRemoveSection(block.course.code);
+                                  }}
+                                  aria-label={`Quitar ${block.course.name}`}
+                                  title="Quitar asignatura"
+                                >
+                                  <X size={12} />
+                                </button>
+                              )}
+                            </div>
+
+                            <div className="block-course-title">{block.course.name}</div>
+
+                            {durationMinutes > 60 && (
+                              <div className="block-meta-mono flex items-center gap-1">
+                                <span>{block.course.code}</span>
+                                <span>·</span>
+                                <DynamicSessionBadge type={sessionKind} />
+                              </div>
+                            )}
+
+                            <div className="block-time-mono">
+                              {durationMinutes <= 60 ? `${block.course.code} · ` : ''}
+                              {block.startTime}–{block.endTime}
+                            </div>
                           </div>
                         </div>
                       );

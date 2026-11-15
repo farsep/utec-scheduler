@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import type { ClassroomInfo, ClassroomSession } from '../../types/classroom';
 import type { DayOfWeek } from '../../types/schedule';
 import { ALL_DAYS, DAY_LABELS, ROOM_TYPE_LABELS, calculateFreeBlocks, formatDurationHuman } from '../../utils/classroomUtils';
+import { formatRoomMonogram } from './ClassroomCard';
 import {
   X,
   GraduationCap,
@@ -281,11 +282,10 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
         >
           <div className="classroom-modal-title-group">
             <div className="classroom-type-icon classroom-type-icon--large">
-              <span>{classroom.code}</span>
+              <span>{formatRoomMonogram(classroom.code)}</span>
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="classroom-modal-badge-row">
-                <span className="classroom-badge-code">{classroom.code}</span>
                 <span className="classroom-badge-floor">Piso {classroom.floor}</span>
                 <span className="classroom-badge-type">{typeMeta.label}</span>
               </div>

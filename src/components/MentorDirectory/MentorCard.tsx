@@ -3,6 +3,7 @@ import type { DayOfWeek } from '../../types/schedule';
 import type { MentorInfo } from '../../types/mentor';
 import { evaluateMentorLiveStatus } from '../../utils/mentorUtils';
 import { getGraftonPigment } from '../../utils/graftonPigments';
+import { getFacultyPolychrome } from '../../utils/scheduleUtils';
 import { resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
@@ -43,6 +44,9 @@ export const MentorCard: React.FC<MentorCardProps> = ({
   const liveStatus = evaluateMentorLiveStatus(mentor, currentDay, currentMinutes);
   const isPresencial = mentor.modalities.includes('Presencial');
   const pigment = getGraftonPigment(mentor.courses[0]?.code || mentor.departmentCode);
+  const facultyColors = getFacultyPolychrome(
+    mentor.courses[0]?.code || mentor.departmentName || mentor.departmentCode
+  );
 
   const handleCopyEmail = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -61,6 +65,11 @@ export const MentorCard: React.FC<MentorCardProps> = ({
   return (
     <article
       className={`professor-card mentor-card glass-card ${liveStatus.isMentoringNow ? 'professor-card--teaching-now mentor-card--live' : ''}`}
+      style={{
+        ['--faculty-accent' as string]: facultyColors.accent,
+        ['--faculty-bg' as string]: facultyColors.bg,
+        ['--faculty-text' as string]: facultyColors.text,
+      }}
       onClick={() => onSelect(mentor)}
       role="button"
       tabIndex={0}
