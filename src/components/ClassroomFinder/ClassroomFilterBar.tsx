@@ -1,15 +1,21 @@
 import React from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { ClassroomFilterState, RoomType } from '../../types/classroom';
-import { ALL_DAYS, DAY_LABELS, ROOM_TYPE_LABELS } from '../../utils/classroomUtils';
+import {
+  ALL_DAYS,
+  DAY_LABELS,
+  getWeekDatesMap,
+  shiftDateByDays,
+  ddmmyyyyToISO,
+  isoToDDMMYYYY,
+  formatDateHumanShort
+} from '../../utils/classroomUtils';
 import { CustomSelect } from '../common/CustomSelect';
 import { CustomTimePicker } from '../common/CustomTimePicker';
 import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
-  Zap,
   Clock,
   Search,
-  Filter,
   Layers,
   GraduationCap,
   Laptop,
@@ -17,13 +23,17 @@ import {
   Building,
   RotateCcw,
   SlidersHorizontal,
-  X
+  X,
+  Calendar,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface ClassroomFilterBarProps {
   filter: ClassroomFilterState;
   onChangeFilter: (updates: Partial<ClassroomFilterState>) => void;
   systemDay: DayOfWeek;
+  systemDateStr?: string;
   systemTimeStr: string;
   isSimulatedTime: boolean;
   activeLiveTimeStr: string;
@@ -41,6 +51,7 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
   filter,
   onChangeFilter,
   systemDay,
+  systemDateStr = '',
   systemTimeStr,
   isSimulatedTime,
   activeLiveTimeStr,
@@ -54,6 +65,11 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
   isFloorsView = false
 }) => {
   const floors = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const dateMode = filter.dateMode || 'exact_date';
+  const activeDateStr = filter.selectedDate || systemDateStr || '';
+  const weekDatesMap = getWeekDatesMap(activeDateStr || undefined);
+  const isoDateValue = ddmmyyyyToISO(activeDateStr);
+  const isDifferentDateFromToday = Boolean(systemDateStr && activeDateStr && activeDateStr !== systemDateStr);
 
   const timePresets = [
     { label: 'Mañana', start: '08:00', end: '12:00' },
@@ -122,7 +138,13 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
           <button
             type="button"
             className={`mode-toggle-btn ${filter.mode === 'live_now' ? 'active active--live' : ''}`}
-            onClick={() => onChangeFilter({ mode: 'live_now', selectedDay: systemDay })}
+            onClick={() =>
+              onChangeFilter({
+                mode: 'live_now',
+                selectedDay: systemDay,
+                selectedDate: systemDateStr || activeDateStr
+              })
+            }
           >
             <BroadcastIcon className="w-3.5 h-3.5 shrink-0" />
             <span>Libres Ahora</span>
@@ -192,7 +214,10 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
               <span className="live-time-chip-dot" />
               <span>{isSimulatedTime ? 'SIMULANDO' : 'EN VIVO'}</span>
               <span className="live-time-chip-sep">·</span>
-              <span className="live-time-chip-day">{DAY_LABELS[filter.selectedDay]}</span>
+              <span className="live-time-chip-day">
+                {DAY_LABELS[filter.selectedDay]}
+                {dateMode === 'exact_date' && activeDateStr ? ` ${activeDateStr.slice(0, 5)}` : ''}
+              </span>
             </div>
           </div>
 
@@ -251,6 +276,108 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
         </div>
       )}
 
+      {/* Exact Date & Week Switcher Bar */}
+      <div className="date-mode-controller">
+        <div className="date-mode-switch" role="group" aria-label="Modo de fechas de reserva">
+          <button
+            type="button"
+            className={`date-mode-btn ${dateMode === 'exact_date' ? 'is-active' : ''}`}
+            onClick={() =>
+              onChangeFilter({
+                dateMode: 'exact_date',
+                selectedDate: activeDateStr || systemDateStr || weekDatesMap[filter.selectedDay]
+              })
+            }
+          >
+            <Calendar size={13} />
+            <span>Fecha Exacta</span>
+            {dateMode === 'exact_date' && activeDateStr && (
+              <span className="date-mode-pill-tag">{formatDateHumanShort(activeDateStr)}</span>
+            )}
+          </button>
+          <button
+            type="button"
+            className={`date-mode-btn ${dateMode === 'semester_template' ? 'is-active' : ''}`}
+            onClick={() => onChangeFilter({ dateMode: 'semester_template' })}
+          >
+            <span>Semestre General</span>
+          </button>
+        </div>
+
+        <div className="date-week-nav">
+          <button
+            type="button"
+            className="grafton-step-btn"
+            onClick={() => {
+              const shifted = shiftDateByDays(activeDateStr || weekDatesMap[filter.selectedDay], -7);
+              onChangeFilter({
+                dateMode: 'exact_date',
+                selectedDate: shifted.dateStr,
+                selectedDay: shifted.day
+              });
+            }}
+            title="Semana anterior (-7 días)"
+          >
+            <ChevronLeft size={13} />
+            <span>Sem.</span>
+          </button>
+
+          <label className="date-picker-box" title="Elegir fecha exacta del calendario (Ciclo 2026-2)">
+            <Calendar size={13} className="date-picker-icon" />
+            <input
+              type="date"
+              className="date-picker-input"
+              aria-label="Seleccionar fecha exacta"
+              min="2026-08-01"
+              max="2026-12-31"
+              value={isoDateValue}
+              onChange={(e) => {
+                const nextDDMMYYYY = isoToDDMMYYYY(e.target.value);
+                if (!nextDDMMYYYY) return;
+                onChangeFilter({
+                  dateMode: 'exact_date',
+                  selectedDate: nextDDMMYYYY
+                });
+              }}
+            />
+          </label>
+
+          {isDifferentDateFromToday && systemDateStr && (
+            <button
+              type="button"
+              className="date-today-jump-btn"
+              onClick={() =>
+                onChangeFilter({
+                  dateMode: 'exact_date',
+                  selectedDate: systemDateStr,
+                  selectedDay: systemDay
+                })
+              }
+              title={`Volver a hoy (${systemDateStr})`}
+            >
+              Hoy
+            </button>
+          )}
+
+          <button
+            type="button"
+            className="grafton-step-btn"
+            onClick={() => {
+              const shifted = shiftDateByDays(activeDateStr || weekDatesMap[filter.selectedDay], 7);
+              onChangeFilter({
+                dateMode: 'exact_date',
+                selectedDate: shifted.dateStr,
+                selectedDay: shifted.day
+              });
+            }}
+            title="Semana siguiente (+7 días)"
+          >
+            <span>Sem.</span>
+            <ChevronRight size={13} />
+          </button>
+        </div>
+      </div>
+
       {/* Primary Filter Grid */}
       <div className="filter-controls-row">
         {/* Day Selector */}
@@ -259,15 +386,24 @@ export const ClassroomFilterBar: React.FC<ClassroomFilterBarProps> = ({
           <div className="day-pills-list">
             {ALL_DAYS.map(day => {
               const isSelected = filter.selectedDay === day;
-              const isToday = systemDay === day;
+              const dayDate = weekDatesMap[day];
+              const isToday = systemDay === day && (!systemDateStr || dateMode === 'semester_template' || dayDate === systemDateStr);
               return (
                 <button
                   key={day}
                   type="button"
-                  className={`day-pill-btn ${isSelected ? 'selected' : ''}`}
-                  onClick={() => onChangeFilter({ selectedDay: day })}
+                  className={`day-pill-btn ${dateMode === 'exact_date' ? 'day-pill-btn--dated' : ''} ${isSelected ? 'selected' : ''}`}
+                  onClick={() =>
+                    onChangeFilter({
+                      selectedDay: day,
+                      ...(dateMode === 'exact_date' ? { selectedDate: dayDate } : {})
+                    })
+                  }
                 >
                   <span>{day}</span>
+                  {dateMode === 'exact_date' && dayDate && (
+                    <span className="day-pill-date">{dayDate.slice(0, 5)}</span>
+                  )}
                   {isToday && <span className="today-badge">Hoy</span>}
                 </button>
               );

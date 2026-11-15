@@ -5,8 +5,8 @@ import type { ClassroomInfo, ClassroomSession, RoomType } from '../src/types/cla
 import { parseLocationInfo, ALL_DAYS } from '../src/utils/classroomUtils';
 
 // Default credentials passed from active intranet session
-const DEFAULT_AUTH_TOKEN = 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhcm5pZS5lc3Bpbm96YUB1dGVjLmVkdS5wZSIsImF1ZGllbmNlIjoidW5kZXRlcm1pbmVkIiwiY3JlYXRlZCI6MTc5MzAyNTY4NjAzMSwiZXhwIjoxNzkzMDQwMDg2fQ.a99jVHJUmAgWGPJCICKQ0gvtaT41nQ5JRzD6Bsh_7RnKL9PXf_xq8DdKdz3i0Q90Ven8hUiVFY76-GsNNZMaOw';
-const DEFAULT_COOKIE = 'sessionId=s%3A2d_U_DB7q1dmoViIXXPdDJBvR4bd1d3S.7CbAMf8cxNi6WfsaBii%2FopfH72%2BbmrrCTUzxYrx4P5k';
+const DEFAULT_AUTH_TOKEN = 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhcm5pZS5lc3Bpbm96YUB1dGVjLmVkdS5wZSIsImF1ZGllbmNlIjoidW5kZXRlcm1pbmVkIiwiY3JlYXRlZCI6MTc5NDcxMTUzMTg4NCwiZXhwIjoxNzk0NzI1OTMxfQ.LqEkWRZ9p9Ze5_mbuGrgWGUm7KsnCLtCcWQqzxHL0dj0-g6jruieEGuQgXv6lRC8FiG4sMvJ1CpC3LJbCbYzOA';
+const DEFAULT_COOKIE = '_ga=GA1.1.1021582725.1785947268; _ga_JRHSMRCLBN=GS2.1.s1786982430$o3$g1$t1786982599$j39$l0$h1951572987; _ga_ZETLJNDYCS=GS2.1.s1793149972$o2$g1$t1793149972$j60$l0$h0; sessionId=s%3AVmNE1XcUP1AoTUVTwP8d9E5X44voQ6oR.uFApMIAAGhvXwgBSJl5DSgQh2sdXHBuAe48%2BgBLBFUs';
 
 interface RawAula {
   codAula: number;

@@ -5,8 +5,8 @@ import type { ClassroomInfo, ClassroomSession, RoomType } from '../src/types/cla
 import { parseLocationInfo, ALL_DAYS } from '../src/utils/classroomUtils';
 import { buildExcelLookup } from './enrichClassrooms';
 
-const DEFAULT_AUTH_TOKEN = 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhcm5pZS5lc3Bpbm96YUB1dGVjLmVkdS5wZSIsImF1ZGllbmNlIjoidW5kZXRlcm1pbmVkIiwiY3JlYXRlZCI6MTc5MzAzMzk5ODk1OSwiZXhwIjoxNzkzMDQ4Mzk4fQ.Heop2RgejAxeXESpqlKwdt27v93YeeEe0Bgg0UvMNtAem_cla37GLt-MKmi0whKb-1yJiwD3PTu33qiA4DWMrg';
-const DEFAULT_COOKIE = 'sessionId=s%3ABWcAJ-eo8xVPPtquh_MQwmrmYLhTINHK.JCum2cuO9v6XWp6XHYzv6WA6nH9aNX5EuxJQxqlsGIk';
+const DEFAULT_AUTH_TOKEN = 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhcm5pZS5lc3Bpbm96YUB1dGVjLmVkdS5wZSIsImF1ZGllbmNlIjoidW5kZXRlcm1pbmVkIiwiY3JlYXRlZCI6MTc5NDcxMTUzMTg4NCwiZXhwIjoxNzk0NzI1OTMxfQ.LqEkWRZ9p9Ze5_mbuGrgWGUm7KsnCLtCcWQqzxHL0dj0-g6jruieEGuQgXv6lRC8FiG4sMvJ1CpC3LJbCbYzOA';
+const DEFAULT_COOKIE = '_ga=GA1.1.1021582725.1785947268; _ga_JRHSMRCLBN=GS2.1.s1786982430$o3$g1$t1786982599$j39$l0$h1951572987; _ga_ZETLJNDYCS=GS2.1.s1793149972$o2$g1$t1793149972$j60$l0$h0; sessionId=s%3AVmNE1XcUP1AoTUVTwP8d9E5X44voQ6oR.uFApMIAAGhvXwgBSJl5DSgQh2sdXHBuAe48%2BgBLBFUs';
 
 interface RawAula {
   codAula: number;
@@ -267,56 +267,74 @@ export async function runSemesterScraper() {
   }
 
   // -------------------------------------------------------------
-  // ANALIZAR DISPONIBILIDAD ABSOLUTA VS RECURRENTE
+  // ANALIZAR RECURRENCIA Y CONSERVAR TODAS LAS FECHAS EXACTAS
   // -------------------------------------------------------------
-  console.log('🔍 Analizando recurrencia y disponibilidad absoluta por aula...');
+  console.log('🔍 Analizando recurrencia y fechas exactas por aula...');
+
+  const parseDateKey = (ddmmyyyy: string) => {
+    const [d, m, y] = ddmmyyyy.split('/');
+    return `${y || ''}${m || ''}${d || ''}`;
+  };
 
   const finalClassroomsList: ClassroomInfo[] = [];
+  let totalRecurringSessions = 0;
+  let totalSporadicSessions = 0;
 
-  for (const [code, entry] of roomResults.entries()) {
+  for (const [, entry] of roomResults.entries()) {
     const { classroom, allSemesterEvents } = entry;
 
-    // Group events by: day + startMinutes + endMinutes + courseCode
-    const occurrenceMap = new Map<string, { count: number; sample: SemesterEvent; dates: string[] }>();
+    // Group events by: day + startMinutes + endMinutes + courseCode + courseName
+    // Keeping courseName in the key ensures distinct events at the same hour on different dates are not merged.
+    const occurrenceMap = new Map<string, { sample: SemesterEvent; dateSet: Set<string> }>();
 
     for (const ev of allSemesterEvents) {
-      const key = `${ev.day}::${ev.startMinutes}::${ev.endMinutes}::${ev.courseCode}`;
+      const key = `${ev.day}::${ev.startMinutes}::${ev.endMinutes}::${ev.courseCode}::${ev.courseName}`;
       if (!occurrenceMap.has(key)) {
-        occurrenceMap.set(key, { count: 0, sample: ev, dates: [] });
+        occurrenceMap.set(key, { sample: ev, dateSet: new Set<string>() });
       }
       const record = occurrenceMap.get(key)!;
-      record.count++;
-      record.dates.push(ev.date);
+      record.dateSet.add(ev.date);
     }
 
-    // A class is considered RECURRENT if it meets >= 5 times across the semester (or is a regular course code)
-    for (const [key, record] of occurrenceMap.entries()) {
+    for (const [, record] of occurrenceMap.entries()) {
+      const uniqueDates = Array.from(record.dateSet).sort((a, b) =>
+        parseDateKey(a).localeCompare(parseDateKey(b))
+      );
+      if (uniqueDates.length === 0) continue;
+
       const isAcademicCourse = record.sample.courseCode !== 'RESERVA' && record.sample.courseCode !== 'ACTIVIDAD';
-      const isRecurrent = record.count >= 4 || (isAcademicCourse && record.count >= 2);
+      const isRecurring = uniqueDates.length >= 4 || (isAcademicCourse && uniqueDates.length >= 2);
 
-      if (isRecurrent) {
-        const cleanSession: ClassroomSession = {
-          courseCode: record.sample.courseCode,
-          courseName: record.sample.courseName,
-          sectionNumber: record.sample.sectionNumber,
-          sessionGroup: record.sample.sessionGroup,
-          day: record.sample.day,
-          startTime: record.sample.startTime,
-          endTime: record.sample.endTime,
-          startMinutes: record.sample.startMinutes,
-          endMinutes: record.sample.endMinutes,
-          professor: record.sample.professor,
-          email: record.sample.email,
-          vacancies: record.sample.vacancies,
-          enrolled: record.sample.enrolled
-        };
-        classroom.sessionsByDay[record.sample.day].push(cleanSession);
-      }
+      if (isRecurring) totalRecurringSessions++;
+      else totalSporadicSessions++;
+
+      const cleanSession: ClassroomSession = {
+        courseCode: record.sample.courseCode,
+        courseName: record.sample.courseName,
+        sectionNumber: record.sample.sectionNumber,
+        sessionGroup: record.sample.sessionGroup,
+        day: record.sample.day,
+        startTime: record.sample.startTime,
+        endTime: record.sample.endTime,
+        startMinutes: record.sample.startMinutes,
+        endMinutes: record.sample.endMinutes,
+        professor: record.sample.professor,
+        email: record.sample.email,
+        vacancies: record.sample.vacancies,
+        enrolled: record.sample.enrolled,
+        dates: uniqueDates,
+        occurrencesCount: uniqueDates.length,
+        isRecurring
+      };
+      classroom.sessionsByDay[record.sample.day].push(cleanSession);
     }
 
-    // Sort by startMinutes
+    // Sort by startMinutes, then chronologically by first date
     for (const day of ALL_DAYS) {
-      classroom.sessionsByDay[day].sort((a, b) => a.startMinutes - b.startMinutes);
+      classroom.sessionsByDay[day].sort((a, b) => {
+        if (a.startMinutes !== b.startMinutes) return a.startMinutes - b.startMinutes;
+        return parseDateKey(a.dates?.[0] || '').localeCompare(parseDateKey(b.dates?.[0] || ''));
+      });
     }
 
     finalClassroomsList.push(classroom);
@@ -338,6 +356,8 @@ export async function runSemesterScraper() {
     totalRooms: finalClassroomsList.length,
     totalSemesterRawEvents: totalRawEvents,
     totalConsolidatedWeeklySessions: totalRecurrentSessions,
+    totalRecurringSessions,
+    totalSporadicSessions,
     classrooms: finalClassroomsList
   };
 

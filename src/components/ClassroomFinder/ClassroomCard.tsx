@@ -188,7 +188,10 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
       {/* Mini Visual Timeline */}
       <div className="classroom-card-timeline-section">
         <div className="timeline-header-label">
-          <span>Ocupación de {filter.selectedDay}:</span>
+          <span>
+            Ocupación de {filter.selectedDay}
+            {filter.dateMode !== 'semester_template' && filter.selectedDate ? ` (${filter.selectedDate.slice(0, 5)})` : ''}:
+          </span>
           <span
             className={`occupancy-pill ${
               occupancyPercentage === 0

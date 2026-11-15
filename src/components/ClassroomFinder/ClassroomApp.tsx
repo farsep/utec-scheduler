@@ -5,6 +5,9 @@ import {
   extractClassroomsFromCourses,
   evaluateClassroom,
   getCurrentDayAndMinutes,
+  getDateForDayInSameWeek,
+  parseDateDDMMYYYY,
+  formatDateDDMMYYYY,
   ALL_DAYS,
   ROOM_TYPE_LABELS,
   resolveCanonicalRoom
@@ -63,7 +66,7 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // System real-time clock that ticks every second
-  const [realTime, setRealTime] = useState<{ day: DayOfWeek; minutes: number; timeStr: string }>(initialTime);
+  const [realTime, setRealTime] = useState<{ day: DayOfWeek; minutes: number; timeStr: string; dateStr: string }>(initialTime);
 
   // Live simulation mode
   const [isSimulatedTime, setIsSimulatedTime] = useState<boolean>(false);
@@ -73,6 +76,8 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
   const [filter, setFilter] = useState<ClassroomFilterState>({
     searchQuery: '',
     selectedDay: initialTime.day,
+    selectedDate: initialTime.dateStr,
+    dateMode: 'exact_date',
     mode: 'live_now',
     startTime: '10:00',
     endTime: '12:00',
@@ -174,7 +179,7 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
     const interval = setInterval(() => {
       const current = getCurrentDayAndMinutes();
       setRealTime(prev => {
-        if (prev.minutes === current.minutes && prev.day === current.day) {
+        if (prev.minutes === current.minutes && prev.day === current.day && prev.dateStr === current.dateStr) {
           return prev;
         }
         return current;
@@ -305,7 +310,27 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
   }, [classrooms]);
 
   const handleFilterChange = (updates: Partial<ClassroomFilterState>) => {
-    setFilter(prev => ({ ...prev, ...updates }));
+    setFilter(prev => {
+      const next: ClassroomFilterState = { ...prev, ...updates };
+      if (updates.selectedDay && !updates.selectedDate) {
+        next.selectedDate = getDateForDayInSameWeek(prev.selectedDate || realTime.dateStr, updates.selectedDay);
+      } else if (updates.selectedDate && !updates.selectedDay) {
+        const parsed = parseDateDDMMYYYY(updates.selectedDate);
+        if (parsed) {
+          const dayIdx = parsed.getDay();
+          if (dayIdx === 0) {
+            const monday = new Date(parsed);
+            monday.setDate(parsed.getDate() + 1);
+            next.selectedDate = formatDateDDMMYYYY(monday);
+            next.selectedDay = 'Lun';
+          } else {
+            const dayMap: Record<number, DayOfWeek> = { 1: 'Lun', 2: 'Mar', 3: 'Mie', 4: 'Jue', 5: 'Vie', 6: 'Sab' };
+            next.selectedDay = dayMap[dayIdx] || prev.selectedDay;
+          }
+        }
+      }
+      return next;
+    });
   };
 
   const handleResetFilters = () => {
@@ -315,6 +340,8 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
     setFilter({
       searchQuery: '',
       selectedDay: current.day,
+      selectedDate: current.dateStr,
+      dateMode: 'exact_date',
       mode: 'live_now',
       startTime: '10:00',
       endTime: '12:00',
@@ -420,7 +447,9 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
   }, [evaluatedClassrooms, filter.selectedFloor, filter.sortBy, matchesNonFloorFilters]);
 
   const totalAvailable = availableRoomsList.length;
-  const isToday = filter.selectedDay === realTime.day;
+  const isToday =
+    filter.selectedDay === realTime.day &&
+    (filter.dateMode === 'semester_template' || !filter.selectedDate || filter.selectedDate === realTime.dateStr);
 
   return (
     <div className="classroom-finder-root">
@@ -594,6 +623,7 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
           filter={filter}
           onChangeFilter={handleFilterChange}
           systemDay={realTime.day}
+          systemDateStr={realTime.dateStr}
           systemTimeStr={realTime.timeStr}
           isSimulatedTime={isSimulatedTime}
           activeLiveTimeStr={effectiveLiveTimeStr}
@@ -698,8 +728,8 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
                 </div>
                 <span className="section-subtitle">
                   {filter.mode === 'live_now'
-                    ? `Desocupadas en este momento (${effectiveLiveTimeStr}) en el día ${filter.selectedDay}`
-                    : `Totalmente libres de ${filter.startTime} a ${filter.endTime}`}
+                    ? `Desocupadas en este momento (${effectiveLiveTimeStr}) · ${filter.selectedDay}${filter.dateMode !== 'semester_template' && filter.selectedDate ? ` ${filter.selectedDate}` : ' (Semestre)'}`
+                    : `Totalmente libres de ${filter.startTime} a ${filter.endTime} · ${filter.selectedDay}${filter.dateMode !== 'semester_template' && filter.selectedDate ? ` ${filter.selectedDate}` : ' (Semestre)'}`}
                 </span>
               </div>
 
@@ -727,41 +757,47 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
               )}
 
               {/* Occupied Rooms Accordion / Toggle */}
-              {busyRoomsList.length > 0 && (
-                <div className="occupied-section-wrap">
-                  <button
-                    type="button"
-                    className="occupied-toggle-btn glass-card"
-                    onClick={() => setShowOccupiedRooms(!showOccupiedRooms)}
-                  >
-                    <div className="toggle-btn-left">
-                      <Clock size={18} className="text-muted" />
-                      <span>
-                        Ver Aulas Ocupadas en este horario ({busyRoomsList.length})
-                      </span>
-                    </div>
-                    <ChevronDown
-                      size={18}
-                      className={`toggle-chevron ${showOccupiedRooms ? 'open' : ''}`}
-                    />
-                  </button>
+              {busyRoomsList.length > 0 && (() => {
+                const isOccupiedExpanded =
+                  showOccupiedRooms ||
+                  filter.searchQuery.trim().length > 0 ||
+                  availableRoomsList.length === 0;
+                return (
+                  <div className="occupied-section-wrap">
+                    <button
+                      type="button"
+                      className="occupied-toggle-btn glass-card"
+                      onClick={() => setShowOccupiedRooms(!showOccupiedRooms)}
+                    >
+                      <div className="toggle-btn-left">
+                        <Clock size={18} className="text-muted" />
+                        <span>
+                          Ver Aulas Ocupadas en este horario ({busyRoomsList.length})
+                        </span>
+                      </div>
+                      <ChevronDown
+                        size={18}
+                        className={`toggle-chevron ${isOccupiedExpanded ? 'open' : ''}`}
+                      />
+                    </button>
 
-                  {showOccupiedRooms && (
-                    <div className="classroom-cards-grid classroom-cards-grid--occupied">
-                      {busyRoomsList.map(item => (
-                        <ClassroomCard
-                          key={item.classroom.id}
-                          availability={item}
-                          filter={filter}
-                          nowMinutes={effectiveLiveMinutes}
-                          isToday={isToday}
-                          onOpenDetail={handleOpenDetail}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                    {isOccupiedExpanded && (
+                      <div className="classroom-cards-grid classroom-cards-grid--occupied">
+                        {busyRoomsList.map(item => (
+                          <ClassroomCard
+                            key={item.classroom.id}
+                            availability={item}
+                            filter={filter}
+                            nowMinutes={effectiveLiveMinutes}
+                            isToday={isToday}
+                            onOpenDetail={handleOpenDetail}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )
         )}
@@ -786,6 +822,9 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
           classroom={selectedRoom}
           onClose={() => setSelectedRoom(null)}
           systemDay={filter.selectedDay}
+          selectedDate={filter.selectedDate || realTime.dateStr}
+          dateMode={filter.dateMode || 'exact_date'}
+          onChangeFilter={handleFilterChange}
         />
       )}
     </div>

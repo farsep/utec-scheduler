@@ -101,6 +101,7 @@ export const CANONICAL_ROOMS_DATA: CanonicalRoomResult[] = [
   { code: 'L210', displayName: 'Laboratorio 210', type: 'laboratorio', floor: 2 },
   { code: 'L211', displayName: 'Laboratorio 211', type: 'laboratorio', floor: 2 },
   { code: 'L212', displayName: 'Laboratorio 212', type: 'laboratorio', floor: 2 },
+  { code: 'L301', displayName: 'Laboratorio 301', type: 'laboratorio', floor: 3 },
   { code: 'L402', displayName: 'Laboratorio 402', type: 'laboratorio', floor: 4 },
   { code: 'L403', displayName: 'Laboratorio 403', type: 'laboratorio', floor: 4 },
   { code: 'L404', displayName: 'Laboratorio 404', type: 'laboratorio', floor: 4 },
@@ -208,6 +209,7 @@ export function resolveCanonicalRoom(
  */
 export function parseLocationInfo(rawLoc?: string): { code: string; displayName: string; type: RoomType; floor: number } | null {
   if (!rawLoc) return null;
+  if (/A701-A/i.test(rawLoc) || /-A\b/i.test(rawLoc.trim())) return null;
   let clean = rawLoc
     .replace(/UTEC[\s-]*/gi, '')
     .replace(/[\s-]*\bBA\b[\s-]*/gi, ' ')
@@ -435,25 +437,149 @@ export function calculateFreeBlocks(sessions: ClassroomSession[]): {
   return { freeBlocks, occupiedBlocks, totalFreeMinutes, totalOccupiedMinutes };
 }
 
+const MONTH_NAMES_SHORT_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+
+const JS_DAY_TO_DAY_OF_WEEK: Record<number, DayOfWeek> = {
+  1: 'Lun',
+  2: 'Mar',
+  3: 'Mie',
+  4: 'Jue',
+  5: 'Vie',
+  6: 'Sab'
+};
+
+export const SCRAPED_SEMESTER_START = '01/08/2026';
+export const SCRAPED_SEMESTER_END = '31/12/2026';
+
+export function formatDateDDMMYYYY(d: Date): string {
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+export function parseDateDDMMYYYY(dateStr?: string): Date | null {
+  if (!dateStr) return null;
+  const parts = dateStr.trim().split('/');
+  if (parts.length !== 3) return null;
+  const [dd, mm, yyyy] = parts.map(Number);
+  if (!dd || !mm || !yyyy || yyyy < 2000) return null;
+  const d = new Date(yyyy, mm - 1, dd);
+  if (d.getFullYear() !== yyyy || d.getMonth() !== mm - 1 || d.getDate() !== dd) return null;
+  return d;
+}
+
+function toComparableDateKey(dateStr: string): string {
+  const parts = dateStr.trim().split('/');
+  if (parts.length !== 3) return '';
+  return `${parts[2].padStart(4, '0')}${parts[1].padStart(2, '0')}${parts[0].padStart(2, '0')}`;
+}
+
+export function isDateInScrapedSemester(dateStr?: string): boolean {
+  if (!dateStr) return false;
+  const key = toComparableDateKey(dateStr);
+  if (!key) return false;
+  return key >= toComparableDateKey(SCRAPED_SEMESTER_START) && key <= toComparableDateKey(SCRAPED_SEMESTER_END);
+}
+
+export function ddmmyyyyToISO(dateStr?: string): string {
+  const d = parseDateDDMMYYYY(dateStr);
+  if (!d) return '';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+export function isoToDDMMYYYY(iso?: string): string {
+  if (!iso) return '';
+  const parts = iso.trim().split('-');
+  if (parts.length !== 3) return '';
+  const [yyyy, mm, dd] = parts;
+  const parsed = parseDateDDMMYYYY(`${dd}/${mm}/${yyyy}`);
+  return parsed ? formatDateDDMMYYYY(parsed) : '';
+}
+
+export function formatDateHumanShort(dateStr?: string): string {
+  const d = parseDateDDMMYYYY(dateStr);
+  if (!d) return dateStr || '';
+  return `${d.getDate()} ${MONTH_NAMES_SHORT_ES[d.getMonth()] || ''}`;
+}
+
+export function getWeekDatesMap(referenceDateStr?: string): Record<DayOfWeek, string> {
+  const parsed = parseDateDDMMYYYY(referenceDateStr) || new Date();
+  const dayIdx = parsed.getDay();
+  // On Sunday (0), advance to upcoming Monday to stay consistent with getCurrentDayAndMinutes fallback
+  const diffToMonday = dayIdx === 0 ? 1 : 1 - dayIdx;
+  const monday = new Date(parsed);
+  monday.setDate(parsed.getDate() + diffToMonday);
+
+  const map = {} as Record<DayOfWeek, string>;
+  ALL_DAYS.forEach((dayKey, offset) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + offset);
+    map[dayKey] = formatDateDDMMYYYY(d);
+  });
+  return map;
+}
+
+export function getDateForDayInSameWeek(referenceDateStr: string | undefined, day: DayOfWeek): string {
+  return getWeekDatesMap(referenceDateStr)[day];
+}
+
+export function shiftDateByDays(dateStr: string, deltaDays: number): { dateStr: string; day: DayOfWeek } {
+  const base = parseDateDDMMYYYY(dateStr) || new Date();
+  const next = new Date(base);
+  next.setDate(base.getDate() + deltaDays);
+  if (next.getDay() === 0) {
+    next.setDate(next.getDate() + (deltaDays < 0 ? -1 : 1));
+  }
+  const day = JS_DAY_TO_DAY_OF_WEEK[next.getDay()] || 'Lun';
+  return { dateStr: formatDateDDMMYYYY(next), day };
+}
+
 /**
- * Returns current local day in Peru (or browser) and current minutes from 00:00
+ * Returns sessions active for a classroom on a given day, optionally filtered by exact DD/MM/YYYY date
  */
-export function getCurrentDayAndMinutes(): { day: DayOfWeek; minutes: number; timeStr: string } {
+export function getSessionsForClassroomDay(
+  classroom: ClassroomInfo,
+  day: DayOfWeek,
+  options?: { selectedDate?: string; dateMode?: 'exact_date' | 'semester_template' }
+): ClassroomSession[] {
+  const raw = classroom.sessionsByDay[day] || [];
+  if (options?.dateMode === 'semester_template' || !options?.selectedDate) {
+    return raw.filter(s => s.isRecurring !== false);
+  }
+
+  const hasDateMeta = ALL_DAYS.some(d =>
+    (classroom.sessionsByDay[d] || []).some(s => Array.isArray(s.dates) && s.dates.length > 0)
+  );
+  if (!hasDateMeta || !isDateInScrapedSemester(options.selectedDate)) {
+    return raw.filter(s => s.isRecurring !== false);
+  }
+
+  return raw.filter(s =>
+    Array.isArray(s.dates) && s.dates.length > 0
+      ? s.dates.includes(options.selectedDate!)
+      : s.isRecurring !== false
+  );
+}
+
+/**
+ * Returns current local day in Peru (or browser), current minutes from 00:00, and formatted date
+ */
+export function getCurrentDayAndMinutes(): { day: DayOfWeek; minutes: number; timeStr: string; dateStr: string } {
   const now = new Date();
   const dayIndex = now.getDay(); // 0 is Sunday, 1 is Monday, ... 6 is Saturday
-  const dayMap: Record<number, DayOfWeek> = {
-    1: 'Lun',
-    2: 'Mar',
-    3: 'Mie',
-    4: 'Jue',
-    5: 'Vie',
-    6: 'Sab'
-  };
-  const day = dayMap[dayIndex] || 'Lun'; // Fallback to Monday on Sunday
+  const day = JS_DAY_TO_DAY_OF_WEEK[dayIndex] || 'Lun'; // Fallback to Monday on Sunday
   const minutes = now.getHours() * 60 + now.getMinutes();
   const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const effectiveDate = new Date(now);
+  if (dayIndex === 0) {
+    effectiveDate.setDate(now.getDate() + 1);
+  }
+  const dateStr = formatDateDDMMYYYY(effectiveDate);
 
-  return { day, minutes, timeStr };
+  return { day, minutes, timeStr, dateStr };
 }
 
 /**
@@ -464,7 +590,10 @@ export function evaluateClassroom(
   filter: ClassroomFilterState,
   nowMinutes: number
 ): ClassroomAvailability {
-  const sessions = classroom.sessionsByDay[filter.selectedDay] || [];
+  const sessions = getSessionsForClassroomDay(classroom, filter.selectedDay, {
+    selectedDate: filter.selectedDate,
+    dateMode: filter.dateMode
+  });
   const { freeBlocks, occupiedBlocks, totalFreeMinutes, totalOccupiedMinutes } = calculateFreeBlocks(sessions);
   const totalPossibleMinutes = UNIVERSITY_END_MINUTES - UNIVERSITY_START_MINUTES;
   const occupancyPercentage = Math.round((totalOccupiedMinutes / totalPossibleMinutes) * 100);

@@ -5225,6 +5225,459 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
   }
 }
 
+/* ============================================================================
+   AULAS EXACT DATE & CALENDAR SYSTEM (Grafton Swiss Concrete)
+   ============================================================================ */
+
+.date-mode-controller {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  background: #EAE7E1;
+  border: 1.5px solid #18181A;
+  border-radius: 0 !important;
+  box-sizing: border-box;
+}
+
+.date-mode-switch {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1.5px solid #18181A;
+  background: #F2F0EC;
+  border-radius: 0 !important;
+}
+
+.date-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border: none;
+  border-right: 1px solid #18181A;
+  background: transparent;
+  color: #18181A;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 0 !important;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.date-mode-btn:last-child {
+  border-right: none;
+}
+
+.date-mode-btn:hover:not(.is-active) {
+  background: #E0EBF5;
+  color: #005A78;
+}
+
+.date-mode-btn.is-active {
+  background: #00668C !important;
+  color: #FFFFFF !important;
+}
+
+.date-mode-pill-tag {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: #E0EBF5;
+  color: #005A78;
+  border: 1px solid #00668C;
+  border-radius: 0 !important;
+}
+
+.date-mode-btn.is-active .date-mode-pill-tag {
+  background: #DCEEE6;
+  color: #093B29;
+  border-color: #FFFFFF;
+}
+
+.date-week-nav {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-picker-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 8px;
+  background: #F2F0EC;
+  border: 1.5px solid #18181A;
+  border-radius: 0 !important;
+  box-sizing: border-box;
+}
+
+.date-picker-icon {
+  color: #00668C;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.date-picker-input {
+  border: none;
+  background: transparent;
+  color: #141416;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+  width: 122px;
+  min-width: 0;
+  padding: 0;
+}
+
+.date-today-jump-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 10px;
+  background: #DCEEE6;
+  color: #093B29;
+  border: 1.5px solid #0D7A4E;
+  border-radius: 0 !important;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px #18181A;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.date-today-jump-btn:hover {
+  background: #0D7A4E;
+  color: #FFFFFF;
+}
+
+.day-pill-btn.day-pill-btn--dated {
+  height: auto !important;
+  min-height: 36px !important;
+  padding: 5px 10px !important;
+  gap: 5px !important;
+}
+
+.day-pill-date {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.82;
+  line-height: 1.1;
+}
+
+.day-pill-btn.selected .day-pill-date {
+  opacity: 1;
+  color: #E0EBF5;
+}
+
+/* Modal Date & Week Stepper Toolbar */
+.modal-date-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #EAE7E1;
+  border-bottom: 1.5px solid #18181A;
+  box-sizing: border-box;
+}
+
+.modal-date-mode-switch {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1.5px solid #18181A;
+  background: #F2F0EC;
+  border-radius: 0 !important;
+}
+
+.modal-date-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: none;
+  border-right: 1px solid #18181A;
+  background: transparent;
+  color: #18181A;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 0 !important;
+  white-space: nowrap;
+}
+
+.modal-date-mode-btn:last-child {
+  border-right: none;
+}
+
+.modal-date-mode-btn:hover:not(.is-active) {
+  background: #E0EBF5;
+  color: #005A78;
+}
+
+.modal-date-mode-btn.is-active {
+  background: #00668C !important;
+  color: #FFFFFF !important;
+}
+
+.modal-week-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.modal-week-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 30px;
+  padding: 0 9px;
+  background: #F2F0EC;
+  color: #18181A;
+  border: 1.5px solid #18181A;
+  border-radius: 0 !important;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 1.5px 1.5px 0px #18181A;
+}
+
+.modal-week-btn:hover {
+  background: #DCD9D2;
+}
+
+.modal-week-today-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 9px;
+  background: #DCEEE6;
+  color: #093B29;
+  border: 1.5px solid #0D7A4E;
+  border-radius: 0 !important;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 1.5px 1.5px 0px #18181A;
+}
+
+.modal-week-today-btn:hover {
+  background: #0D7A4E;
+  color: #FFFFFF;
+}
+
+.modal-day-date-sub {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  opacity: 0.82;
+  line-height: 1.15;
+}
+
+.modal-day-tab.active .modal-day-date-sub {
+  opacity: 1;
+  color: #E0EBF5;
+}
+
+.agenda-sporadic-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  background: #F5E8D3;
+  color: #7C3D00;
+  border: 1px solid #B85D00;
+  border-radius: 0 !important;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.agenda-dates-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background: #E0EBF5;
+  color: #005A78;
+  border: 1px solid #00779E;
+  border-radius: 0 !important;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.inspector-dates-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px dashed #18181A;
+}
+
+.inspector-dates-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.inspector-date-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  background: #F2F0EC;
+  color: #18181A;
+  border: 1px solid #18181A;
+  border-radius: 0 !important;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.inspector-date-chip.is-current {
+  background: #0D7A4E;
+  color: #FFFFFF;
+  border-color: #18181A;
+}
+
+@media (max-width: 639px) {
+  .date-mode-controller {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .date-mode-switch {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .date-mode-btn {
+    justify-content: center;
+    padding: 7px 6px;
+    font-size: 10px;
+    gap: 4px;
+  }
+
+  .date-week-nav {
+    width: 100%;
+    justify-content: space-between;
+    gap: 4px;
+  }
+
+  .date-picker-box {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+    padding: 0 6px;
+  }
+
+  .date-picker-input {
+    width: 100%;
+    max-width: 120px;
+    font-size: 10.5px;
+  }
+
+  .date-today-jump-btn {
+    padding: 0 8px;
+    font-size: 10px;
+  }
+
+  .day-pill-btn.day-pill-btn--dated {
+    height: auto !important;
+    min-height: 48px !important;
+    padding: 4px 2px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    white-space: normal !important;
+    line-height: 1.1 !important;
+  }
+
+  .day-pill-btn.day-pill-btn--dated .day-pill-date {
+    font-size: 9px !important;
+  }
+
+  .day-pill-btn.day-pill-btn--dated .today-badge {
+    font-size: 8px !important;
+    padding: 0 3px !important;
+    line-height: 1.2 !important;
+  }
+
+  .modal-date-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .modal-date-mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .modal-date-mode-btn {
+    justify-content: center;
+    padding: 6px 4px;
+    font-size: 9.5px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .modal-week-stepper {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .modal-week-btn,
+  .modal-week-today-btn {
+    height: 28px;
+    font-size: 10px;
+  }
+
+  .modal-day-date-sub {
+    font-size: 8.5px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .classroom-results-container {
+    padding-bottom: 160px !important;
+  }
+}
+
 
 
 

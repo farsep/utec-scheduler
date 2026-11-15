@@ -44,7 +44,7 @@ Para ejecutar un scraping completo se necesitan dos valores extraídos desde las
 ## ✅ 3. Endpoints Scrapeables (Accesibles con Cuenta de Estudiante)
 
 ### 3.1. Catálogo General de Aulas Reservables
-Obtiene la lista completa de las **111 aulas, laboratorios, salas de estudio y auditorios** habilitados en el campus de Barranco (`codsede=2`).
+Obtiene la lista completa de las **112 aulas, laboratorios, salas de estudio y auditorios** habilitados en el campus de Barranco (`codsede=2`).
 
 * **Método y URL:**
   ```http
@@ -113,7 +113,7 @@ Permite obtener únicamente las aulas que pertenecen a un `codTipoAula` específ
   ```
 * **Parámetros Query:**
   * `codsede`: `2`
-  * `codtipoaula`: `0` (devuelve todas las 111 aulas) o el ID específico de la tabla anterior:
+  * `codtipoaula`: `0` (devuelve todas las 112 aulas) o el ID específico de la tabla anterior:
 
 | `codTipoAula` | Categoría | Cantidad | Aulas Incluidas (`nomAliasAula(codAula)`) |
 | :---: | :--- | :---: | :--- |
@@ -122,9 +122,9 @@ Permite obtener únicamente las aulas que pertenecen a un `codTipoAula` específ
 | **`1`** | Aulas Mixtas (Mesas) | 11 | `M301`, `M401`, `M601`–`M604`, `M801`–`M804`, `M1001` |
 | **`161`** | Aulas Posgrado | 4 | `A301(2993)`, `A302(2994)`, `A303(2995)`, `A304(2996)` |
 | **`81`** | Estudio de grabaciones | 1 | `S111(2833)` |
-| **`5`** | Ficticio | 1 | `A701-A(2814)` |
+| **`5`** | Ficticio | 1 | `A701-A(2814)` *(descartado — no existe físicamente)* |
 | **`2`** | Laboratorio de Cómputo | 0 | *(Vacío — reclasificados bajo tipo 3)* |
-| **`3`** | Laboratorio de especialidad | 48 | `L021`–`L022`, `L101`–`L108`, `L201`–`L212` (incl. `L203E`), `L402`–`L420`, `L501`–`L508`, `L601` |
+| **`3`** | Laboratorio de especialidad | 49 | `L021`–`L022`, `L101`–`L108`, `L201`–`L212` (incl. `L203E`), `L301(3059)`, `L402`–`L420`, `L501`–`L508`, `L601` |
 | **`61`** | Salas de estudio | 10 | `E801(2448)` al `E810(2457)` |
 | **`142`** | Losa Deportiva | 1 | `Futsal(2974)` |
 
@@ -185,29 +185,28 @@ Devuelve **todas las clases académicas, reservas de exámenes, mantenimientos y
 
 ---
 
-### 3.5. Buscador Directo de Bloques de Aulas Libres (`/classroom`)
-Endpoint del proxy Express que consulta los bloques horarios libres en una fecha específica filtrando por tipo de aula, duración del bloque (`intervalo`) y capacidad mínima.
+### 3.5. Buscador Directo de Bloques de Aulas Libres (`/classroom/`)
+Endpoint del proxy Express que consulta los bloques horarios libres de 1 hora en una fecha específica filtrando por tipo de aula, duración del bloque (`intervalo`) y capacidad mínima.
 
 * **Método y URL:**
   ```http
-  POST https://reserva-intranet.utec.edu.pe/classroom
+  POST https://reserva-intranet.utec.edu.pe/classroom/
   ```
 * **Headers:**
   * `Content-Type: application/json`
   * `X-Auth-Token: <JWT_TOKEN>`
   * `Cookie: sessionId=<SESSION_COOKIE>`
-* **Body JSON:**
+* **Body JSON (ejemplo validado el 19/11/2026 con `243` bloques para tipo `41` y `244` para tipo `0`):**
   ```json
   {
+    "capacidadMinima": null,
     "codAula": 0,
-    "codTipoAula": 41,
-    "fecha": "29/10/2026",
-    "horaInicio": "08:00",
-    "horaFin": "10:00",
-    "intervalo": 1,
-    "capacidadMinima": 0
+    "codTipoAula": "41",
+    "fecha": "19/11/2026",
+    "intervalo": "1"
   }
   ```
+  *(Nota: el endpoint `/classroom/` exige `fecha` en `DD/MM/YYYY` e `intervalo` en horas — acepta strings como `"1"` — y devuelve slots únicamente para aulas reservables habilitadas para autogestión estudiantil, principalmente `codTipoAula=41`.)*
 * **Respuesta (`200 OK`):**
   ```json
   {
@@ -218,10 +217,10 @@ Endpoint del proxy Express que consulta los bloques horarios libres en una fecha
         "codTipoAula": 41,
         "codAula": 3137,
         "nomAliasAula": "A1001",
-        "fecha": "29/10/2026",
+        "fecha": "19/11/2026",
         "dia": 4,
-        "horaInicio": "08:00",
-        "horaFin": "09:00"
+        "horaInicio": "07:00",
+        "horaFin": "08:00"
       }
     ]
   }
@@ -339,6 +338,16 @@ Devuelve las restricciones de negocio configuradas para cada tipo de ambiente (t
 
 ---
 
+### 3.10. Auditoría Completa de Rutas en `assets/app.js` y Permisos (`403` / `404`)
+Inspeccionando el bundle `GET https://reserva-intranet.utec.edu.pe/assets/app.js` (`1,565,581` bytes), se extrajeron **28 rutas funcionales**:
+`/aula`, `/calendarioaula/eventos/aula`, `/classroom`, `/core/filtromaestrotabladetalle`, `/core/opcion`, `/disponibilidad`, `/events`, `/filtro/aula/reservable`, `/filtro/aula/reservable/tipoaula`, `/filtro/tipoaula`, `/intervalodetalle`, `/local`, `/parametros`, `/planificacion`, `/reserva`, `/reserva/aulalibre`, `/reserva/aulalibreadmin`, `/reserva/calendarioaula`, `/reserva/consultar/admin`, `/reserva/consultar/me`, `/reserva/disponibilidad`, `/reserva/eliminar/admin`, `/reserva/eliminar/me`, `/reserva/registrar/admin`, `/reserva/registrar/me`, `/reserva/registro`, `/tipoaula`, `/tipoaulavalorparam/cargarvalores`.
+
+Resultado de pruebas directas con token de estudiante sobre endpoints administrativos/usuario:
+* **`403 Forbidden` (`AccessDeniedException`):** `GET /aula?codsede=2`, `GET /tipoaula?codsede=2`, `GET /planificacion`, `GET /parametros`, `POST /reserva/consultar/me`, `POST /reserva/consultar/admin`.
+* **`404 Not Found`:** `GET /filtro/sede`, `GET /usuario/me`, `GET /core/usuario`.
+
+---
+
 ## 🗺️ 4. Mapeo de `codAula` (ID en Requests) a Aulas Físicas en la Realidad
 
 Cuando el navegador o el scraper consulta los horarios en `POST https://reserva-intranet.utec.edu.pe/events/`, el request envía únicamente un identificador numérico interno (`codAula`, por ejemplo `1642` o `3121`), y la respuesta JSON **no incluye el nombre del aula**, solo el arreglo de eventos `[{ title, start, end }]`.
@@ -411,6 +420,7 @@ Los IDs `codAula` son secuencias numéricas (`AUTO_INCREMENT` / `SEQUENCE` en la
 | `2915` | `L210` | Laboratorio 210 | Piso 2 | `3` - Lab. de especialidad | ✅ Incluido (`laboratorio`) |
 | `3057` | `L211` | Laboratorio 211 | Piso 2 | `3` - Lab. de especialidad | ✅ Incluido (`laboratorio`) |
 | `3058` | `L212` | Laboratorio 212 | Piso 2 | `3` - Lab. de especialidad | ✅ Incluido (`laboratorio`) |
+| `3059` | `L301` | Laboratorio 301 | Piso 3 | `3` - Lab. de especialidad | ✅ Incluido (`laboratorio`) |
 | `2993` | `A301` | Aula 301 | Piso 3 | `161` - Aulas Posgrado | ✅ Incluido (`aula`) |
 | `2994` | `A302` | Aula 302 | Piso 3 | `161` - Aulas Posgrado | ✅ Incluido (`aula`) |
 | `2995` | `A303` | Aula 303 | Piso 3 | `161` - Aulas Posgrado | ✅ Incluido (`aula`) |
@@ -457,7 +467,7 @@ Los IDs `codAula` son secuencias numéricas (`AUTO_INCREMENT` / `SEQUENCE` en la
 | `1611` | `M603` | Mesas 603 | Piso 6 | `1` - Aulas Mixtas | ✅ Incluido (`mesas`) |
 | `1608` | `M604` | Mesas 604 | Piso 6 | `1` - Aulas Mixtas | ✅ Incluido (`mesas`) |
 | `1619` | `A701` | Aula 701 | Piso 7 | `41` - Aulas | ✅ Incluido (`aula`) |
-| `2814` | `A701-A` | Sub-aula ficticia 701-A | Piso 7 | `5` - Ficticio | 🚫 Excluido (`-A`) |
+| `2814` | `A701-A` | No existe físicamente (`Ficticio`) | Piso 7 | `5` - Ficticio | 🚫 Descartado — no existe físicamente |
 | `1625` | `A702` | Aula 702 | Piso 7 | `41` - Aulas | ✅ Incluido (`aula`) |
 | `1628` | `A703` | Aula 703 | Piso 7 | `41` - Aulas | ✅ Incluido (`aula`) |
 | `1621` | `A704` | Aula 704 | Piso 7 | `41` - Aulas | ✅ Incluido (`aula`) |
@@ -517,7 +527,7 @@ En este repositorio contamos con cuatro scripts automatizados que consumen estos
      --start="26/10/2026" \
      --end="31/10/2026"
    ```
-2. **[`scripts/scrapeSemesterAvailability.ts`](./scrapeSemesterAvailability.ts)** — Descarga los eventos de **las 16 semanas completas del semestre** (`01/08/2026` al `31/12/2026`) para todas las aulas válidas, filtra reservas esporádicas de un solo día y consolida los bloques semanales recurrentes en `public/data/classrooms_intranet.json` y `public/data/classrooms_semester_consolidated.json`:
+2. **[`scripts/scrapeSemesterAvailability.ts`](./scrapeSemesterAvailability.ts)** — Descarga los eventos de **las 16 semanas completas del semestre** (`01/08/2026` al `31/12/2026`) para todas las aulas válidas (`100` incluidas, `12` excluidas de `112` totales), conserva tanto bloques recurrentes (`isRecurring: true`) como reservas puntuales (`isRecurring: false`, `>= 1` fecha) agrupados por horario+curso con su arreglo ordenado de fechas exactas (`dates: string[]`, `occurrencesCount`) en `public/data/classrooms_intranet.json` y `public/data/classrooms_semester_consolidated.json` (`24,172` eventos brutos -> `3,918` sesiones consolidadas):
    ```bash
    UTEC_AUTH_TOKEN="TU_X_AUTH_TOKEN" \
    UTEC_SESSION_ID="sessionId=s%3ATU_SESSION_ID" \

@@ -315,6 +315,7 @@ export function mutuallyEnrichCoursesWithScrapedData(
       const daySessions = room.sessionsByDay?.[day] || [];
       for (const s of daySessions) {
         if (!s.courseCode || s.courseCode === 'RESERVA' || s.courseCode === 'ACTIVIDAD') continue;
+        if (s.isRecurring === false) continue;
         const cCode = s.courseCode.toUpperCase().trim();
         const secNorm = String(parseInt(s.sectionNumber, 10) || s.sectionNumber).trim();
         const roomDisplayName = room.displayName || room.code;

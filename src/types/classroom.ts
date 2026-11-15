@@ -16,6 +16,9 @@ export interface ClassroomSession {
   email: string;
   vacancies: number;
   enrolled: number;
+  dates?: string[];          // ["01/08/2026", ...] exact calendar dates from intranet
+  occurrencesCount?: number; // Number of dates this session occurs in the semester
+  isRecurring?: boolean;     // true for regular recurring classes/activities
 }
 
 export interface ClassroomInfo {
@@ -66,6 +69,8 @@ export interface ClassroomAvailability {
 export interface ClassroomFilterState {
   searchQuery: string;
   selectedDay: DayOfWeek;
+  selectedDate?: string; // "DD/MM/YYYY"
+  dateMode?: 'exact_date' | 'semester_template';
   mode: 'live_now' | 'custom_time';
   startTime: string; // "10:00"
   endTime: string;   // "12:00"

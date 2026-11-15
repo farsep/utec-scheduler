@@ -1,39 +1,64 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import type { ClassroomInfo, ClassroomSession } from '../../types/classroom';
+import type { ClassroomInfo, ClassroomSession, ClassroomFilterState } from '../../types/classroom';
 import type { DayOfWeek } from '../../types/schedule';
-import { ALL_DAYS, DAY_LABELS, ROOM_TYPE_LABELS, calculateFreeBlocks, formatDurationHuman } from '../../utils/classroomUtils';
+import {
+  ALL_DAYS,
+  DAY_LABELS,
+  ROOM_TYPE_LABELS,
+  calculateFreeBlocks,
+  formatDurationHuman,
+  getCurrentDayAndMinutes,
+  getWeekDatesMap,
+  shiftDateByDays,
+  getSessionsForClassroomDay,
+  formatDateHumanShort
+} from '../../utils/classroomUtils';
 import { formatRoomMonogram } from './ClassroomCard';
 import {
   X,
-  GraduationCap,
-  Laptop,
-  Users,
-  Building,
   Calendar,
   Clock,
   User,
   Mail,
-  BookOpen,
   Info,
-  CheckCircle2
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface ClassroomDetailModalProps {
   classroom: ClassroomInfo | null;
   onClose: () => void;
   systemDay?: DayOfWeek;
+  selectedDate?: string;
+  dateMode?: 'exact_date' | 'semester_template';
+  onChangeFilter?: (updates: Partial<ClassroomFilterState>) => void;
 }
 
 export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
   classroom,
   onClose,
-  systemDay = 'Lun'
+  systemDay = 'Lun',
+  selectedDate,
+  dateMode = 'exact_date',
+  onChangeFilter
 }) => {
   if (!classroom) return null;
 
+  const fallbackToday = getCurrentDayAndMinutes();
   const [activeTabDay, setActiveTabDay] = useState<DayOfWeek>(systemDay);
   const [selectedSession, setSelectedSession] = useState<ClassroomSession | null>(null);
+  const [modalDate, setModalDate] = useState<string>(selectedDate || fallbackToday.dateStr);
+  const [modalDateMode, setModalDateMode] = useState<'exact_date' | 'semester_template'>(dateMode);
+
+  useEffect(() => {
+    if (selectedDate) setModalDate(selectedDate);
+  }, [selectedDate]);
+
+  useEffect(() => {
+    setModalDateMode(dateMode);
+  }, [dateMode]);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -228,20 +253,67 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
   }, [onClose]);
 
   const typeMeta = ROOM_TYPE_LABELS[classroom.type] || ROOM_TYPE_LABELS.otro;
+  const weekDatesMap = getWeekDatesMap(modalDate);
+  const todayDateStr = fallbackToday.dateStr;
 
-  // Calculate weekly stats
+  const sessionsByDayForMode = ALL_DAYS.reduce((acc, day) => {
+    acc[day] = getSessionsForClassroomDay(classroom, day, {
+      selectedDate: weekDatesMap[day],
+      dateMode: modalDateMode
+    });
+    return acc;
+  }, {} as Record<DayOfWeek, ClassroomSession[]>);
+
+  // Calculate weekly stats using merged occupied intervals (prevents double counting any overlaps)
   let totalWeekSessions = 0;
   let totalOccupiedHours = 0;
   ALL_DAYS.forEach(day => {
-    const daySessions = classroom.sessionsByDay[day] || [];
+    const daySessions = sessionsByDayForMode[day] || [];
     totalWeekSessions += daySessions.length;
-    daySessions.forEach(s => {
-      totalOccupiedHours += (s.endMinutes - s.startMinutes) / 60;
-    });
+    const { totalOccupiedMinutes } = calculateFreeBlocks(daySessions);
+    totalOccupiedHours += totalOccupiedMinutes / 60;
   });
 
-  const activeDaySessions = classroom.sessionsByDay[activeTabDay] || [];
+  const activeDaySessions = sessionsByDayForMode[activeTabDay] || [];
   const { freeBlocks, occupiedBlocks, totalFreeMinutes } = calculateFreeBlocks(activeDaySessions);
+
+  const handleModalShiftWeek = (deltaDays: number) => {
+    triggerHaptic(6);
+    const baseDate = weekDatesMap[activeTabDay] || modalDate;
+    const shifted = shiftDateByDays(baseDate, deltaDays);
+    setModalDate(shifted.dateStr);
+    setModalDateMode('exact_date');
+    setSelectedSession(null);
+    onChangeFilter?.({
+      dateMode: 'exact_date',
+      selectedDate: shifted.dateStr,
+      selectedDay: activeTabDay
+    });
+  };
+
+  const handleModalSetDateMode = (nextMode: 'exact_date' | 'semester_template') => {
+    triggerHaptic(6);
+    setModalDateMode(nextMode);
+    setSelectedSession(null);
+    const activeDayDate = weekDatesMap[activeTabDay] || modalDate;
+    onChangeFilter?.({
+      dateMode: nextMode,
+      ...(nextMode === 'exact_date' ? { selectedDate: activeDayDate, selectedDay: activeTabDay } : {})
+    });
+  };
+
+  const handleModalJumpToday = () => {
+    triggerHaptic(6);
+    setModalDate(todayDateStr);
+    setModalDateMode('exact_date');
+    setActiveTabDay(fallbackToday.day);
+    setSelectedSession(null);
+    onChangeFilter?.({
+      dateMode: 'exact_date',
+      selectedDate: todayDateStr,
+      selectedDay: fallbackToday.day
+    });
+  };
 
   const modalContent = (
     <div
@@ -323,11 +395,64 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
           </div>
         </div>
 
+        {/* Modal Date Mode & Week Switcher Bar */}
+        <div className="modal-date-toolbar">
+          <div className="modal-date-mode-switch" role="group" aria-label="Modo de fechas del aula">
+            <button
+              type="button"
+              className={`modal-date-mode-btn ${modalDateMode === 'exact_date' ? 'is-active' : ''}`}
+              onClick={() => handleModalSetDateMode('exact_date')}
+            >
+              <Calendar size={12} />
+              <span>Fecha Exacta ({formatDateHumanShort(weekDatesMap[activeTabDay])})</span>
+            </button>
+            <button
+              type="button"
+              className={`modal-date-mode-btn ${modalDateMode === 'semester_template' ? 'is-active' : ''}`}
+              onClick={() => handleModalSetDateMode('semester_template')}
+            >
+              <span>Semestre General</span>
+            </button>
+          </div>
+
+          <div className="modal-week-stepper">
+            <button
+              type="button"
+              className="modal-week-btn"
+              onClick={() => handleModalShiftWeek(-7)}
+              title="Semana anterior (-7 días)"
+            >
+              <ChevronLeft size={13} />
+              <span>Sem.</span>
+            </button>
+            {modalDateMode === 'exact_date' && weekDatesMap[activeTabDay] !== todayDateStr && (
+              <button
+                type="button"
+                className="modal-week-today-btn"
+                onClick={handleModalJumpToday}
+                title={`Ir a hoy (${todayDateStr})`}
+              >
+                Hoy
+              </button>
+            )}
+            <button
+              type="button"
+              className="modal-week-btn"
+              onClick={() => handleModalShiftWeek(7)}
+              title="Semana siguiente (+7 días)"
+            >
+              <span>Sem.</span>
+              <ChevronRight size={13} />
+            </button>
+          </div>
+        </div>
+
         {/* Day Selector Tabs */}
         <div className="classroom-modal-day-tabs">
           {ALL_DAYS.map(day => {
-            const count = (classroom.sessionsByDay[day] || []).length;
+            const count = (sessionsByDayForMode[day] || []).length;
             const isSelected = activeTabDay === day;
+            const dayDateShort = weekDatesMap[day]?.slice(0, 5) || '';
             return (
               <button
                 key={day}
@@ -337,10 +462,18 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                   triggerHaptic(6);
                   setActiveTabDay(day);
                   setSelectedSession(null);
+                  if (modalDateMode === 'exact_date') {
+                    const dayDate = weekDatesMap[day];
+                    setModalDate(dayDate);
+                    onChangeFilter?.({ selectedDay: day, selectedDate: dayDate });
+                  }
                 }}
               >
                 <span className="modal-day-label-full">{DAY_LABELS[day]}</span>
                 <span className="modal-day-label-short">{day}</span>
+                {modalDateMode === 'exact_date' && dayDateShort && (
+                  <span className="modal-day-date-sub">{dayDateShort}</span>
+                )}
                 <span className="modal-day-count-badge">
                   <span className="count-full">{count} {count === 1 ? 'clase' : 'clases'}</span>
                   <span className="count-short">{count}</span>
@@ -352,10 +485,15 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
 
         {/* Selected Day Agenda View */}
         <div className={`classroom-day-agenda-container ${selectedSession ? 'has-inspector' : ''}`}>
-          <div key={activeTabDay} className="agenda-column-sessions">
+          <div key={`${activeTabDay}-${modalDateMode}-${weekDatesMap[activeTabDay]}`} className="agenda-column-sessions">
             <h4 className="agenda-column-title">
               <Calendar size={16} />
-              <span>Cronograma de {DAY_LABELS[activeTabDay]}</span>
+              <span>
+                Cronograma de {DAY_LABELS[activeTabDay]}
+                {modalDateMode === 'exact_date'
+                  ? ` · ${weekDatesMap[activeTabDay]}`
+                  : ' (Semestre General)'}
+              </span>
             </h4>
 
             {activeDaySessions.length === 0 ? (
@@ -364,7 +502,10 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                   <CheckCircle2 size={28} />
                 </div>
                 <h4>¡Aula totalmente desocupada este día!</h4>
-                <p>No hay clases registradas para el {DAY_LABELS[activeTabDay]} de 07:00 a 22:00.</p>
+                <p>
+                  No hay clases ni reservas registradas para el {DAY_LABELS[activeTabDay]}
+                  {modalDateMode === 'exact_date' ? ` ${weekDatesMap[activeTabDay]}` : ''} de 07:00 a 22:00.
+                </p>
               </div>
             ) : (
               <div className="agenda-timeline-list">
@@ -396,7 +537,10 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                     }
 
                     const session: ClassroomSession = ev.item;
-                    const isSelected = selectedSession?.courseCode === session.courseCode && selectedSession?.startTime === session.startTime;
+                    const isSelected =
+                      selectedSession?.courseCode === session.courseCode &&
+                      selectedSession?.courseName === session.courseName &&
+                      selectedSession?.startTime === session.startTime;
 
                     return (
                       <div
@@ -423,6 +567,11 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                               {session.courseCode}
                             </a>
                             <span className="agenda-session-group">{session.sessionGroup}</span>
+                            {session.isRecurring === false && (
+                              <span className="agenda-sporadic-badge" title="Reserva puntual en fecha específica">
+                                Puntual
+                              </span>
+                            )}
                             <span className="agenda-sec-num">Sec. {session.sectionNumber}</span>
                           </div>
                           <h5 className="agenda-course-name">
@@ -434,17 +583,32 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                               {session.courseName}
                             </a>
                           </h5>
-                          {session.professor && (
+                          {(session.professor || (session.dates && session.dates.length > 0)) && (
                             <div className="agenda-occ-meta">
-                              <a
-                                href={`/profesores?profesor=${encodeURIComponent(session.professor)}`}
-                                onClick={e => e.stopPropagation()}
-                                className="agenda-prof prof-entity-link"
-                                title={`Ver perfil de ${session.professor}`}
-                              >
-                                <User size={13} />
-                                <span>{session.professor}</span>
-                              </a>
+                              {session.professor && (
+                                <a
+                                  href={`/profesores?profesor=${encodeURIComponent(session.professor)}`}
+                                  onClick={e => e.stopPropagation()}
+                                  className="agenda-prof prof-entity-link"
+                                  title={`Ver perfil de ${session.professor}`}
+                                >
+                                  <User size={13} />
+                                  <span>{session.professor}</span>
+                                </a>
+                              )}
+                              {session.dates && session.dates.length > 0 && (
+                                <span
+                                  className="agenda-dates-tag"
+                                  title={`Fechas programadas en ciclo: ${session.dates.join(', ')}`}
+                                >
+                                  <Calendar size={12} />
+                                  <span>
+                                    {modalDateMode === 'exact_date'
+                                      ? `${weekDatesMap[activeTabDay]} · ${session.dates.length} ${session.dates.length === 1 ? 'fecha' : 'sem. en ciclo'}`
+                                      : `${session.dates.length} ${session.dates.length === 1 ? 'fecha' : 'fechas'}: ${session.dates.slice(0, 3).map(d => d.slice(0, 5)).join(', ')}${session.dates.length > 3 ? ` +${session.dates.length - 3}` : ''}`}
+                                  </span>
+                                </span>
+                              )}
                             </div>
                           )}
                         </div>
@@ -521,6 +685,33 @@ export const ClassroomDetailModal: React.FC<ClassroomDetailModalProps> = ({
                     <a href={`mailto:${selectedSession.email}`} className="email-link">
                       {selectedSession.email}
                     </a>
+                  </div>
+                )}
+
+                {selectedSession.dates && selectedSession.dates.length > 0 && (
+                  <div className="inspector-dates-block">
+                    <div className="inspector-detail-row">
+                      <Calendar size={15} />
+                      <span>
+                        Fechas en ciclo ({selectedSession.dates.length})
+                        {selectedSession.isRecurring === false ? ' · Puntual' : ' · Recurrente'}:
+                      </span>
+                    </div>
+                    <div className="inspector-dates-chips">
+                      {selectedSession.dates.slice(0, 8).map(d => (
+                        <span
+                          key={d}
+                          className={`inspector-date-chip ${modalDateMode === 'exact_date' && d === weekDatesMap[activeTabDay] ? 'is-current' : ''}`}
+                        >
+                          {d.slice(0, 5)}
+                        </span>
+                      ))}
+                      {selectedSession.dates.length > 8 && (
+                        <span className="inspector-date-chip" title={selectedSession.dates.join(', ')}>
+                          +{selectedSession.dates.length - 8}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
