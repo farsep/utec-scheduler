@@ -18,7 +18,7 @@ export const GraftonTopBar: React.FC<GraftonTopBarProps> = ({
   onOpenExportModal,
 }) => {
   return (
-    <header className="grafton-topbar">
+    <header className="grafton-topbar" data-active-module={activeTab}>
       {/* Left: Mobile Drawer Toggle (<1024px) + Brand */}
       <div className="grafton-topbar__brand-wrap">
         {activeTab === 'schedule' && (
@@ -50,6 +50,7 @@ export const GraftonTopBar: React.FC<GraftonTopBarProps> = ({
       <nav className="grafton-topbar__switcher no-scrollbar" aria-label="Vistas principales">
         <button
           type="button"
+          data-nav-module="schedule"
           className={`grafton-nav-btn ${activeTab === 'schedule' ? 'is-active' : ''}`}
           onClick={() => onSwitchTab('schedule')}
         >
@@ -58,6 +59,7 @@ export const GraftonTopBar: React.FC<GraftonTopBarProps> = ({
 
         <button
           type="button"
+          data-nav-module="malla"
           className={`grafton-nav-btn ${activeTab === 'malla' ? 'is-active' : ''}`}
           onClick={() => onSwitchTab('malla')}
         >
@@ -66,6 +68,7 @@ export const GraftonTopBar: React.FC<GraftonTopBarProps> = ({
 
         <button
           type="button"
+          data-nav-module="courses"
           className={`grafton-nav-btn ${activeTab === 'courses' ? 'is-active' : ''}`}
           onClick={() => onSwitchTab('courses')}
         >
@@ -74,6 +77,7 @@ export const GraftonTopBar: React.FC<GraftonTopBarProps> = ({
 
         <button
           type="button"
+          data-nav-module="mentors"
           className={`grafton-nav-btn ${activeTab === 'mentors' ? 'is-active' : ''}`}
           onClick={() => onSwitchTab('mentors')}
         >
@@ -82,6 +86,7 @@ export const GraftonTopBar: React.FC<GraftonTopBarProps> = ({
 
         <button
           type="button"
+          data-nav-module="classrooms"
           className={`grafton-nav-btn ${activeTab === 'classrooms' ? 'is-active' : ''}`}
           onClick={() => onSwitchTab('classrooms')}
         >
@@ -90,6 +95,7 @@ export const GraftonTopBar: React.FC<GraftonTopBarProps> = ({
 
         <button
           type="button"
+          data-nav-module="professors"
           className={`grafton-nav-btn ${activeTab === 'professors' ? 'is-active' : ''}`}
           onClick={() => onSwitchTab('professors')}
         >

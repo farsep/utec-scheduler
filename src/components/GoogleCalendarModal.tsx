@@ -219,8 +219,9 @@ export const GoogleCalendarModal: React.FC<GoogleCalendarModalProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            paddingBottom: '12px',
-            borderBottom: '1.5px solid #18181A'
+            padding: '12px 14px',
+            backgroundColor: '#DCD9D2',
+            borderBottom: '3px solid #00779E'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>

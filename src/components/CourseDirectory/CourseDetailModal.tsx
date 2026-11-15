@@ -345,7 +345,7 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
 
                   <button
                     type="button"
-                    className="btn btn-secondary visitor-action-btn"
+                    className="btn btn-secondary visitor-action-btn course-permission-btn"
                     onClick={() => setIsEmailModalOpen(true)}
                     title="Generar correo respetuoso para solicitar permiso al docente"
                   >

@@ -191,8 +191,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               alignItems: 'center',
               justifyContent: 'space-between',
               marginBottom: '14px',
-              paddingBottom: '12px',
-              borderBottom: '1.5px solid #18181A'
+              padding: '12px 14px',
+              backgroundColor: '#DCD9D2',
+              borderBottom: '3px solid #00779E'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -425,10 +426,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       padding: '8px 10px',
                       fontSize: '11px',
                       borderRadius: '0px',
-                      border: '1px solid #18181A',
-                      borderTop: icsColorMode === 'prefix' ? '3px solid #00779E' : '1px solid #C6C3BB',
-                      backgroundColor: icsColorMode === 'prefix' ? '#18181A' : '#F2F0EC',
-                      color: icsColorMode === 'prefix' ? '#F2F0EC' : '#4A4946',
+                      border: icsColorMode === 'prefix' ? '1.5px solid #18181A' : '1px solid #C6C3BB',
+                      borderLeft: icsColorMode === 'prefix' ? '4px solid #38BDF8' : '1px solid #C6C3BB',
+                      backgroundColor: icsColorMode === 'prefix' ? '#005A8C' : '#F2F0EC',
+                      color: icsColorMode === 'prefix' ? '#FFFFFF' : '#4A4946',
+                      boxShadow: icsColorMode === 'prefix' ? '2px 2px 0px #18181A' : 'none',
                       fontWeight: icsColorMode === 'prefix' ? 700 : 500,
                       fontFamily: 'JetBrains Mono, monospace',
                       cursor: 'pointer',
@@ -448,10 +450,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                       padding: '8px 10px',
                       fontSize: '11px',
                       borderRadius: '0px',
-                      border: '1px solid #18181A',
-                      borderTop: icsColorMode === 'course' ? '3px solid #00779E' : '1px solid #C6C3BB',
-                      backgroundColor: icsColorMode === 'course' ? '#18181A' : '#F2F0EC',
-                      color: icsColorMode === 'course' ? '#F2F0EC' : '#4A4946',
+                      border: icsColorMode === 'course' ? '1.5px solid #18181A' : '1px solid #C6C3BB',
+                      borderLeft: icsColorMode === 'course' ? '4px solid #38BDF8' : '1px solid #C6C3BB',
+                      backgroundColor: icsColorMode === 'course' ? '#005A8C' : '#F2F0EC',
+                      color: icsColorMode === 'course' ? '#FFFFFF' : '#4A4946',
+                      boxShadow: icsColorMode === 'course' ? '2px 2px 0px #18181A' : 'none',
                       fontWeight: icsColorMode === 'course' ? 700 : 500,
                       fontFamily: 'JetBrains Mono, monospace',
                       cursor: 'pointer',

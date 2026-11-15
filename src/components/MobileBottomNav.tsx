@@ -329,12 +329,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
   };
 
   const displayedActiveIndex = hoverIndex !== null ? hoverIndex : currentTabIndex;
+  const activeDockModule = CANONICAL_DOCK_ITEMS[displayedActiveIndex]?.id || 'schedule';
 
   return (
     <nav
       ref={dockRef}
       className="grafton-mobile-dock lg:hidden select-none"
       aria-label="Navegación principal móvil Grafton"
+      data-active-dock={activeDockModule}
       style={{
         '--dock-active-progress': displayedActiveIndex,
       } as React.CSSProperties}
@@ -369,6 +371,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onS
             <a
               key={item.id}
               href={item.href}
+              data-dock-module={item.id}
               className={`grafton-dock-item ${isActive ? 'is-active' : ''}`}
               title={item.title}
               aria-current={isActive ? 'page' : undefined}

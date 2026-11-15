@@ -1,14 +1,15 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Calendar, Clock, Coffee, Eye, Pin, Info, Filter, ShieldAlert, CheckCircle2, Search, ArrowLeft, Lock, Unlock, CheckSquare, Square, ChevronRight, Check, SlidersHorizontal } from 'lucide-react';
+import { X, Calendar, Clock, Coffee, Eye, Pin, Info, Filter, ShieldAlert, CheckCircle2, Search, ArrowLeft, Lock, Unlock, CheckSquare, Square, ChevronRight, Check, SlidersHorizontal, User } from 'lucide-react';
 import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
-import { formatLocation, getCourseColor, getCoursePrefix, minutesToTime, normalizeString, getCombinations, sessionToBitmask } from '../utils/scheduleUtils';
+import { formatLocation, getCourseColor, getCourseDepartmentPalette, getCoursePrefix, minutesToTime, normalizeString, getCombinations, sessionToBitmask } from '../utils/scheduleUtils';
 import { TimetableGrid } from './TimetableGrid';
 import { GlassTimePicker } from './GlassTimePicker';
 import { CustomSelect } from './common/CustomSelect';
 import { TimeBlockerGrid } from './TimeBlockerGrid';
 import { ErrorBoundary } from './ErrorBoundary';
+import { QuantumEngineVisualizer } from './QuantumEngineVisualizer';
 
 // Patch BigInt to be serializable by JSON.stringify
 // This prevents React DevTools from crashing the entire app when inspecting state that contains BigInts
@@ -16,6 +17,27 @@ if (typeof BigInt !== 'undefined' && !(BigInt.prototype as any).toJSON) {
   (BigInt.prototype as any).toJSON = function () {
     return this.toString() + 'n';
   };
+}
+
+function formatCompactSectionLabel(rawSecStr: string): { mainText: string; labSuffix: string | null; hasLab: boolean } {
+  const hasLab = /LABORATORIO|LAB/i.test(rawSecStr);
+  const compact = rawSecStr
+    .replace(/\(\s*LABORATORIO\s*(\d+)\s*\)/gi, '· LAB $1')
+    .replace(/\(\s*TEOR[ÍI]A\s*(\d+)\s*\)/gi, '· TEO $1')
+    .replace(/LABORATORIO\s*(\d+)/gi, 'LAB $1')
+    .replace(/TEOR[ÍI]A\s*(\d+)/gi, 'TEO $1')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const labMatch = compact.match(/^(.*?)\s*((?:·\s*)?LAB\s*\d+.*)$/i);
+  if (labMatch && labMatch[1]) {
+    return {
+      mainText: `Sec ${labMatch[1].trim()}`,
+      labSuffix: labMatch[2].trim().startsWith('·') ? labMatch[2].trim() : `· ${labMatch[2].trim()}`,
+      hasLab: true,
+    };
+  }
+  return { mainText: `Sec ${compact}`, labSuffix: null, hasLab };
 }
 
 interface ScheduleOptimizerModalProps {
@@ -68,9 +90,15 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   const [lunchDuration, setLunchDuration] = useState<number>(60);
   
   const [workerProgress, setWorkerProgress] = useState<{ evaluated: number, total: number, validFound: number } | null>(null);
+  const [mobileViewPane, setMobileViewPane] = useState<'config' | 'results'>('config');
+  const [evalPhase, setEvalPhase] = useState<'init' | 'searching' | 'complete'>('init');
   const workerRefs = useRef<Worker[]>([]);
   const workersReadyRef = useRef<boolean[]>([]);
   const lastInitHashRef = useRef<string>('');
+  const generationStartTimeRef = useRef<number>(0);
+  const totalCombinationsRef = useRef<number>(0);
+  const finishTimerRef = useRef<number | null>(null);
+  const isGeneratingRef = useRef<boolean>(false);
   
   // Advanced Constraints State
   const [pinnedSections, setPinnedSections] = useState<Record<string, string>>({});
@@ -122,10 +150,18 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   }, [isOpen, onClose]);
 
   const cancelGeneration = () => {
+    if (finishTimerRef.current !== null) {
+      window.clearTimeout(finishTimerRef.current);
+      finishTimerRef.current = null;
+    }
+    isGeneratingRef.current = false;
     workerRefs.current.forEach(w => w.terminate());
     workerRefs.current = [];
+    workersReadyRef.current = [];
+    lastInitHashRef.current = '';
     setIsGenerating(false);
     setWorkerProgress(null);
+    setEvalPhase('init');
   };
 
   const prevIsOpen = useRef(false);
@@ -133,28 +169,43 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   // Focus trap ref
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // When modal closes, reset preview and selection
+  // When modal opens/closes, sync initial selection only on open transition and cleanup workers/timers on close
   useEffect(() => {
     if (isOpen) {
+      const wasOpen = prevIsOpen.current;
       prevIsOpen.current = true;
-      setPreviewSchedule(null);
-      // Try to maintain user selection if possible, otherwise reset to all
-      if (initialSelectedCourseCodes.length > 0) {
-        setSelectedCourseCodes(initialSelectedCourseCodes);
+      if (!wasOpen) {
+        setPreviewSchedule(null);
+        setResults(null);
+        if (initialSelectedCourseCodes.length > 0) {
+          setSelectedCourseCodes(initialSelectedCourseCodes);
+        } else if (courses.length > 0) {
+          // Pre-select up to 4 courses when opening with an empty schedule so the generator is ready
+          const defaultCodes = courses.filter(c => c.sections.length > 0).slice(0, 4).map(c => c.code);
+          if (defaultCodes.length > 0) {
+            setSelectedCourseCodes(defaultCodes);
+          }
+        }
+        setMobileViewPane('config');
       }
     } else if (prevIsOpen.current) {
       prevIsOpen.current = false;
+      isGeneratingRef.current = false;
+      if (finishTimerRef.current !== null) {
+        window.clearTimeout(finishTimerRef.current);
+        finishTimerRef.current = null;
+      }
       // Terminate workers on close to save RAM
       workerRefs.current.forEach(w => w.terminate());
       workerRefs.current = [];
       workersReadyRef.current = [];
       lastInitHashRef.current = '';
     }
-  }, [isOpen, initialSelectedCourseCodes]);
+  }, [isOpen, initialSelectedCourseCodes, courses]);
 
   // Warm-up Effect
   useEffect(() => {
-    if (!isOpen || !isAdvancedMode) return;
+    if (!isOpen || !isAdvancedMode || isGenerating || isGeneratingRef.current) return;
 
     const timeToMinutes = (timeStr: string) => {
       const [h, m] = timeStr.split(':').map(Number);
@@ -193,6 +244,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     });
 
     const timer = setTimeout(() => {
+      if (isGeneratingRef.current) return;
       const numWorkers = navigator.hardwareConcurrency || 4;
       if (workerRefs.current.length === 0) {
         for (let i = 0; i < numWorkers; i++) {
@@ -268,7 +320,16 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
   }, []);
 
   const handleGenerate = () => {
+    if (finishTimerRef.current !== null) {
+      window.clearTimeout(finishTimerRef.current);
+      finishTimerRef.current = null;
+    }
+    generationStartTimeRef.current = performance.now();
+    totalCombinationsRef.current = 0;
+    isGeneratingRef.current = true;
+    setEvalPhase('init');
     setIsGenerating(true);
+    setMobileViewPane('results');
     setPreviewSchedule(null);
     setSavedOptionsRecord({});
     setWorkerProgress(null);
@@ -383,15 +444,25 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         }
       } else {
         chunkTasks = [{ prefix: selectedCourseCodes, startIdx: 0 }];
-        totalCombinations = 1;
+        totalCombinations = selectedCourseCodes.reduce((acc, code) => {
+          const c = courses.find(item => item.code === code);
+          return acc * Math.max(1, c ? c.sections.length : 1);
+        }, 1);
         neededFromPool = selectedCourseCodes.length;
       }
 
+      totalCombinationsRef.current = Math.max(1, totalCombinations);
       const numWorkers = navigator.hardwareConcurrency || 4;
       
       if (chunkTasks.length === 0) {
-        setResults([]);
-        setIsGenerating(false);
+        const elapsed = performance.now() - generationStartTimeRef.current;
+        finishTimerRef.current = window.setTimeout(() => {
+          isGeneratingRef.current = false;
+          setResults([]);
+          setIsGenerating(false);
+          setMobileViewPane('results');
+          finishTimerRef.current = null;
+        }, Math.max(0, 1000 - elapsed));
         return;
       }
 
@@ -420,8 +491,16 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         setWorkerProgress({ evaluated: globalEvaluated, total: globalTotal, validFound: globalValid });
       };
 
-      const currentHash = JSON.stringify({ poolBase, pinned, neededFromPool, options: currentOptions });
-      const needsInit = lastInitHashRef.current !== currentHash;
+      const currentHash = JSON.stringify({
+        poolBase,
+        pinned,
+        neededFromPool,
+        options: currentOptions,
+        pinnedSections,
+        blockedTimeMask: mergedBlockedTimeMask.map(b => b.toString()),
+        isConstraintStrict
+      });
+      const needsInit = lastInitHashRef.current !== currentHash || !workersReadyRef.current.every(Boolean);
       if (needsInit) {
         lastInitHashRef.current = currentHash;
         workersReadyRef.current.fill(false);
@@ -442,6 +521,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
             }
           } else if (msg.type === 'PROGRESS') {
             workersProgress[i] = { evaluated: msg.evaluated, total: msg.total, validFound: msg.validFound };
+            setEvalPhase('searching');
             updateGlobalProgress();
           } else if (msg.type === 'COMPLETE') {
             allResults[i] = msg.results;
@@ -451,12 +531,26 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
             if (completedWorkers === numWorkers && !hasError) {
               const mergedResults = allResults.flat();
               mergedResults.sort((a, b) => (b.score || 0) - (a.score || 0));
-              setResults(mergedResults.slice(0, 200));
-              setIsGenerating(false);
+              setEvalPhase('complete');
+              setWorkerProgress(prev => ({
+                evaluated: Math.max(prev?.evaluated ?? 0, totalCombinationsRef.current || 1),
+                total: Math.max(prev?.total ?? 0, totalCombinationsRef.current || 1),
+                validFound: mergedResults.length
+              }));
+              const elapsed = performance.now() - generationStartTimeRef.current;
+              const remainingDelay = Math.max(0, 1000 - elapsed);
+              finishTimerRef.current = window.setTimeout(() => {
+                isGeneratingRef.current = false;
+                setResults(mergedResults.slice(0, 200));
+                setIsGenerating(false);
+                setMobileViewPane('results');
+                finishTimerRef.current = null;
+              }, remainingDelay);
             }
           } else if (msg.type === 'ERROR') {
             if (!hasError) {
               hasError = true;
+              isGeneratingRef.current = false;
               alert(msg.message);
               setIsGenerating(false);
               // Only on error we reset the workers to ensure a clean state
@@ -616,7 +710,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
           if (d === undefined) return;
           const start = Math.max(0, Math.floor((s.startMinutes - 420) / 15));
           const end   = Math.max(0, Math.ceil ((s.endMinutes   - 420) / 15)) - 1;
-          if (start <= end) blocks.push({ dayIdx: d, startSlot: start, endSlot: end, color: course.color, title: course.code, subtitle: `🔒 ${pinnedSecName}`, density: 1, isParent: true });
+          if (start <= end) blocks.push({ dayIdx: d, startSlot: start, endSlot: end, color: course.color, title: course.code, subtitle: `[FIJO] ${pinnedSecName}`, density: 1, isParent: true });
         });
         for (let d = 0; d < 7; d++) protectedMask[d] |= m[d];
       } else {
@@ -700,19 +794,27 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       >
         
         {/* Header */}
-        <div className="modal-header" style={{ padding: '16px 20px', borderBottom: '1.5px solid #18181A', background: '#F2F0EC' }}>
+        <div
+          className="modal-header"
+          style={{
+            padding: '16px 20px',
+            borderBottom: '3px solid #00779E',
+            backgroundColor: '#DCD9D2',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
               width: '36px',
               height: '36px',
-              backgroundColor: '#DCD9D2',
+              backgroundColor: '#E0EBF5',
               border: '1.5px solid #18181A',
+              borderTop: '3px solid #00779E',
               borderRadius: '0px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              color: '#141416'
+              color: '#004D6B'
             }}>
               <SlidersHorizontal size={18} />
             </div>
@@ -745,10 +847,25 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
 
         <ErrorBoundary>
         {/* Content Body - Split View */}
-        <div className="optimizer-split-body">
+        <div
+          className={`optimizer-split-body ${
+            isGenerating || previewSchedule || (results !== null && mobileViewPane === 'results')
+              ? 'optimizer-mobile-pane-results'
+              : 'optimizer-mobile-pane-config'
+          }`}
+        >
           
           {/* Left Panel: Configuration */}
           <div className="optimizer-config-panel" data-has-results={Boolean(results || isGenerating)}>
+            {results && results.length > 0 && !isGenerating && (
+              <button
+                type="button"
+                className="optimizer-mobile-back-results-btn"
+                onClick={() => setMobileViewPane('results')}
+              >
+                Ver {Math.min(50, results.length)} Opciones Óptimas →
+              </button>
+            )}
             
             {/* Scrollable Configuration Area */}
             <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
@@ -1087,9 +1204,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <span style={{ 
-                                fontWeight: 600, 
-                                fontSize: '0.85rem',
-                                color: isSelected ? course.color : 'var(--accent-blue)',
+                                fontWeight: 700, 
+                                fontFamily: "'JetBrains Mono', monospace",
+                                fontSize: '0.82rem',
+                                color: '#141416',
                                 transition: 'color 0.2s ease'
                               }}>{course.code}</span>
                               {course.isEligible && (
@@ -1100,7 +1218,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                             </div>
                             <div style={{ 
                               fontSize: '0.75rem', 
-                              color: isSelected ? 'var(--text-primary)' : 'var(--text-muted)',
+                              color: isSelected ? '#141416' : 'var(--text-muted)',
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -1114,14 +1232,18 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                             <button 
                               onClick={(e) => { e.stopPropagation(); togglePin(course.code); }}
                               style={{
-                                background: 'transparent', border: 'none', cursor: 'pointer',
-                                opacity: pinnedCourseCodes.includes(course.code) ? 1 : 0.3,
-                                filter: pinnedCourseCodes.includes(course.code) ? 'none' : 'grayscale(100%)',
-                                fontSize: '1rem', display: 'flex', alignItems: 'center'
+                                background: pinnedCourseCodes.includes(course.code) ? '#DCD9D2' : 'transparent',
+                                border: pinnedCourseCodes.includes(course.code) ? '1px solid #18181A' : '1px solid transparent',
+                                padding: '3px 5px',
+                                cursor: 'pointer',
+                                opacity: pinnedCourseCodes.includes(course.code) ? 1 : 0.45,
+                                color: pinnedCourseCodes.includes(course.code) ? '#B85D00' : '#4A4946',
+                                display: 'flex',
+                                alignItems: 'center'
                               }}
                               title={pinnedCourseCodes.includes(course.code) ? "Desfijar curso" : "Fijar curso (el algoritmo intentará incluirlo)"}
                             >
-                              📌
+                              <Pin size={13} />
                             </button>
                           )}
                         </div>
@@ -1178,8 +1300,9 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                                         {sec.enrolled} / {sec.vacancies}
                                       </div>
                                     </div>
-                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                      👨‍🏫 {profs}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                      <User size={11} style={{ flexShrink: 0 }} />
+                                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{profs}</span>
                                     </div>
                                     <div style={{ display: 'flex', gap: '4px', marginTop: '4px', alignItems: 'center', justifyContent: 'space-between' }}>
                                       <div style={{ display: 'flex', gap: '4px' }}>
@@ -1198,11 +1321,11 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                                           background: isSectionBlocked ? '#DCEEE6' : '#F4E0E2', 
                                           border: isSectionBlocked ? '1px solid #0D7A4E' : '1px solid #A82032', 
                                           borderRadius: '0px', color: isSectionBlocked ? '#093B29' : '#520D17', fontSize: '0.65rem', padding: '3px 8px', 
-                                          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, transition: 'all 0.2s' 
+                                          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", transition: 'all 0.2s' 
                                         }}
                                         title={isSectionBlocked ? "Desbloquear el horario de esta sección en el calendario" : "Bloquear el horario de esta sección en el calendario"}
                                       >
-                                        {isSectionBlocked ? '✅ Desbloquear' : '🚫 Bloquear'}
+                                        {isSectionBlocked ? '✓ Desbloquear' : '✕ Bloquear'}
                                       </button>
                                     </div>
                                   </div>
@@ -1229,16 +1352,17 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Objetivos de Optimización (Selección Múltiple):</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {[
-                      { id: 'min_gaps', label: '⚡ Menos huecos' },
-                      { id: 'min_days', label: '📅 Menos días' },
-                      { id: 'min_day_gaps', label: '🚫 Sin días puente (huecos)' },
-                      { id: 'morning', label: '🌅 Mañanas' },
-                      { id: 'afternoon', label: '🌇 Tardes/Noches' }
+                      { id: 'min_gaps', label: 'Menos huecos' },
+                      { id: 'min_days', label: 'Menos días' },
+                      { id: 'min_day_gaps', label: 'Sin días puente (huecos)' },
+                      { id: 'morning', label: 'Mañanas' },
+                      { id: 'afternoon', label: 'Tardes/Noches' }
                     ].map(target => {
                       const isActive = options.targets.includes(target.id as any);
                       return (
                         <div
                           key={target.id}
+                          className={`pref-pill ${isActive ? 'active' : ''}`}
                           onClick={() => {
                             setOptions(prev => {
                               let newTargets = isActive
@@ -1257,17 +1381,12 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                               return { ...prev, targets: newTargets };
                             });
                           }}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', cursor: 'pointer',
-                            userSelect: 'none', padding: '6px 12px', borderRadius: '0px',
-                            background: isActive ? 'var(--accent-soft)' : 'var(--bg-elevated)',
-                            border: isActive ? '1px solid var(--accent-primary)' : '1px solid var(--border-hairline)',
-                            color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                            transition: 'all 0.2s ease'
-                          }}
                         >
-                          {isActive ? <CheckSquare size={14} color="var(--accent-primary)" /> : <Square size={14} color="var(--text-muted)" />}
-                          {target.label}
+                          <span
+                            className={`pref-pill-led ${isActive ? 'is-on' : 'is-off'}`}
+                            aria-hidden="true"
+                          />
+                          <span>{target.label}</span>
                         </div>
                       );
                     })}
@@ -1302,9 +1421,19 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                           key={day}
                           onClick={() => toggleExcludedDay(day)}
                           className={`filter-pill-btn ${(options.excludedDays || []).includes(day) ? 'active' : ''}`}
-                          style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            borderRadius: '0px',
+                            fontFamily: "'JetBrains Mono', monospace",
+                            fontWeight: 700,
+                            background: (options.excludedDays || []).includes(day) ? '#18181A' : '#FAF9F5',
+                            color: (options.excludedDays || []).includes(day) ? '#F2F0EC' : '#4A4946',
+                            border: (options.excludedDays || []).includes(day) ? '1px solid #18181A' : '1px solid #C6C3BB',
+                            borderLeft: (options.excludedDays || []).includes(day) ? '3px solid #A82032' : '1px solid #C6C3BB',
+                          }}
                         >
-                          {(options.excludedDays || []).includes(day) ? `🚫 Sin ${day}` : day}
+                          {(options.excludedDays || []).includes(day) ? `✕ Sin ${day}` : day}
                         </button>
                       ))}
                     </div>
@@ -1313,19 +1442,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
               </div>
             </div>
 
-            <div style={{ padding: '20px', borderTop: '1px solid var(--border-hairline)', marginTop: 'auto', flexShrink: 0, background: 'var(--bg-elevated)' }}>
+            <div style={{ padding: '16px 20px', borderTop: '1.5px solid #18181A', marginTop: 'auto', flexShrink: 0, background: '#EAE7E1' }}>
               {!isGenerating ? (
                 <button 
-                  className="btn btn-primary" 
-                  style={{ 
-                    width: '100%', padding: '12px', fontSize: '0.95rem', 
-                    background: (selectedCourseCodes.length === 0) ? 'var(--bg-canvas)' : 'var(--accent-primary)', 
-                    color: (selectedCourseCodes.length === 0) ? 'var(--text-muted)' : '#FFFFFF',
-                    border: '1px solid var(--border-hairline)',
-                    opacity: (selectedCourseCodes.length === 0) ? 0.6 : 1,
-                    cursor: (selectedCourseCodes.length === 0) ? 'not-allowed' : 'pointer',
-                    pointerEvents: (selectedCourseCodes.length === 0) ? 'none' : 'auto'
-                  }}
+                  className="optimizer-generate-btn" 
                   onClick={handleGenerate}
                   disabled={selectedCourseCodes.length === 0}
                 >
@@ -1334,17 +1454,13 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <button 
-                    className="btn btn-secondary" 
-                    style={{ 
-                      width: '100%', padding: '12px', fontSize: '0.95rem', 
-                      borderColor: 'var(--status-warn)', color: 'var(--status-warn)' 
-                    }}
+                    className="optimizer-cancel-btn" 
                     onClick={cancelGeneration}
                   >
                     Detener Búsqueda
                   </button>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                    Si cierras esta ventana, la búsqueda continuará en segundo plano.
+                  <p style={{ margin: 0, fontSize: '0.72rem', color: '#4A4946', textAlign: 'center', fontFamily: "'JetBrains Mono', monospace" }}>
+                    Solver activo · Ejecución en paralelo Web Worker.
                   </p>
                 </div>
               )}
@@ -1355,20 +1471,20 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
           <div className="optimizer-right-panel" data-has-results={Boolean(results || isGenerating)}>
             {/* PREVIEW VIEW */}
             {previewSchedule && (
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--bg-canvas)', zIndex: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Eye size={20} color="var(--accent-primary)" /> Vista Previa del Horario
+              <div style={{ position: 'absolute', inset: 0, padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px', background: '#FAF9F5', zIndex: 25, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', borderBottom: '1.5px solid #18181A', paddingBottom: '10px' }}>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontFamily: "'Space Grotesk', sans-serif", color: '#141416' }}>
+                    <Eye size={18} color="#00779E" /> Vista Previa del Horario
                   </h4>
                   <button 
-                    className="btn btn-secondary"
+                    type="button"
+                    className="optimizer-back-config-btn"
                     onClick={() => setPreviewSchedule(null)}
-                    style={{ fontSize: '0.85rem', padding: '6px 12px' }}
                   >
                     ← Volver a resultados
                   </button>
                 </div>
-                <div style={{ flex: 1, minHeight: '500px', background: 'var(--bg-surface)', borderRadius: '0px', border: '1px solid var(--border-hairline)', overflow: 'hidden' }}>
+                <div style={{ flex: 1, minHeight: 0, background: '#FAF9F5', borderRadius: '0px', border: '1.5px solid #18181A', overflow: 'auto' }}>
                   <TimetableGrid 
                     courses={courses}
                     selectedSections={previewSchedule}
@@ -1383,25 +1499,32 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
             )}
 
             {/* RESULTS VIEW */}
-            <div style={{ 
-              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
-              padding: '24px', overflowY: 'auto', 
-              visibility: previewSchedule ? 'hidden' : 'visible',
-              opacity: previewSchedule ? 0 : 1
-            }}>
-                {!results && !isGenerating && (
-                  (isAdvancedMode || showBlockerGrid) ? (
+            <div
+              className="optimizer-results-pane"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                visibility: previewSchedule ? 'hidden' : 'visible',
+                opacity: previewSchedule ? 0 : 1
+              }}
+            >
+              {!results && !isGenerating && (
+                <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px' }}>
+                  {(isAdvancedMode || showBlockerGrid) ? (
                     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
                         <div>
-                          <h4 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, color: 'var(--text-secondary)' }}>Calendario de Bloqueos</h4>
-                          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                          <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: '#141416' }}>Calendario de Bloqueos</h4>
+                          <p style={{ fontSize: '0.82rem', color: '#5A5852', margin: '4px 0 0 0' }}>
                             Haz clic y arrastra para bloquear horarios que deseas evitar.
                           </p>
                         </div>
                         {isConstraintStrict && (
-                          <span className="glass-pill" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.4)' }}>
-                            Modo Estricto Activo
+                          <span className="glass-pill" style={{ background: '#F4E0E2', color: '#A82032', borderColor: '#A82032', borderRadius: '0px', fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>
+                            MODO ESTRICTO ACTIVO
                           </span>
                         )}
                       </div>
@@ -1418,7 +1541,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#5A5852', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#5A5852', textAlign: 'center', padding: '16px' }}>
                       <div style={{
                         width: '48px',
                         height: '48px',
@@ -1434,228 +1557,232 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                         <Calendar size={24} />
                       </div>
                       <p style={{ fontSize: '1.1rem', fontWeight: 700, color: '#141416', fontFamily: 'var(--font-heading, Space Grotesk)', marginBottom: '6px' }}>Listo para Optimizar</p>
-                      <p style={{ fontSize: '0.88rem', maxWidth: '320px', lineHeight: 1.5, color: '#5A5852' }}>Selecciona tus cursos y preferencias en el panel izquierdo y presiona "Generar Horarios".</p>
+                      <p style={{ fontSize: '0.88rem', maxWidth: '320px', lineHeight: 1.5, color: '#5A5852' }}>Selecciona tus cursos y preferencias en el panel izquierdo y presiona &quot;Generar Horarios&quot;.</p>
                     </div>
-                  )
-                )}
-
-            {isGenerating && (
-              <div className="skeleton-grid-container">
-                {/* HUD Overlay */}
-                <div className="hud-overlay">
-                  <h4 className="hud-title">Evaluando Horarios...</h4>
-                  {workerProgress ? (
-                    <>
-                      <div className="hud-stats">
-                        {workerProgress.evaluated.toLocaleString()} / {workerProgress.total.toLocaleString()} combinaciones
-                        <br/>
-                        <span style={{ color: '#10b981' }}>{workerProgress.validFound.toLocaleString()} viables</span>
-                      </div>
-                      <div className="hud-progress-bar">
-                        <div 
-                          className="hud-progress-fill" 
-                          style={{ width: `${Math.min(100, (workerProgress.evaluated / Math.max(1, workerProgress.total)) * 100)}%` }}
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="hud-stats">Iniciando Motor Cuántico...</div>
                   )}
                 </div>
+              )}
 
-                {/* Tetris Blocks */}
-                {Array.from({ length: 15 }).map((_, i) => (
-                  <div 
-                    key={i} 
-                    className="tetris-block"
-                    style={{
-                      left: `calc(16px + ${(i % 7)} * (((100% - 80px) / 7) + 8px))`,
-                      top: `${Math.random() * 80}%`,
-                      height: `${40 + Math.random() * 80}px`,
-                      animationDelay: `${Math.random() * 2}s`,
-                      animationDuration: `${1.5 + Math.random() * 2}s`,
-                      backgroundColor: `rgba(255, 255, 255, ${0.02 + Math.random() * 0.04})`,
-                      borderColor: `rgba(255, 255, 255, ${0.08 + Math.random() * 0.1})`
+              {isGenerating && (
+                <div style={{ flex: 1, minHeight: 0, padding: '14px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <QuantumEngineVisualizer
+                    evalProgress={{
+                      evaluated: workerProgress?.evaluated ?? 0,
+                      validFound: workerProgress?.validFound ?? 0,
+                      elapsedMs: generationStartTimeRef.current
+                        ? performance.now() - generationStartTimeRef.current
+                        : 0,
+                      isComplete: evalPhase === 'complete',
+                      phase: evalPhase,
+                      totalCombinations: totalCombinationsRef.current || workerProgress?.total || undefined
                     }}
+                    selectedCourseCodes={selectedCourseCodes}
+                    pinnedCourses={pinnedCourseCodes}
                   />
-                ))}
+                </div>
+              )}
 
-                {/* Grid Skeleton */}
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={`row-${i}`} className="skeleton-row">
-                    {Array.from({ length: 7 }).map((_, j) => (
-                      <div key={`cell-${i}-${j}`} className="skeleton-cell" />
-                    ))}
+              {results && results.length === 0 && (
+                <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', color: '#4A4946', textAlign: 'center' }}>
+                  <div style={{ width: '44px', height: '44px', border: '1.5px solid #A82032', background: '#F4E0E2', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', color: '#A82032' }}>
+                    <X size={24} />
                   </div>
-                ))}
-              </div>
-            )}
+                  <p style={{ fontSize: '1.05rem', fontWeight: 700, color: '#A82032', margin: '0 0 6px 0' }}>No se encontraron combinaciones</p>
+                  <p style={{ fontSize: '0.86rem', maxWidth: '400px', lineHeight: 1.5, marginBottom: '20px', color: '#5A5852' }}>
+                    Es probable que haya cruces de horario inevitables entre los cursos seleccionados, o las restricciones (días libres/vacantes) son muy estrictas.
+                  </p>
+                  <button 
+                    className="optimizer-back-config-btn" 
+                    onClick={() => {
+                      setMobileViewPane('config');
+                      if (typeof window === 'undefined' || window.innerWidth >= 1024) {
+                        setResults(null);
+                      }
+                    }}
+                  >
+                    ← Volver a Configurar ({selectedCourseCodes.length})
+                  </button>
+                </div>
+              )}
 
-            {results && results.length === 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', textAlign: 'center' }}>
-                <X size={48} style={{ color: 'var(--accent-rose)', opacity: 0.5, marginBottom: '16px' }} />
-                <p style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--accent-rose)' }}>No se encontraron combinaciones</p>
-                <p style={{ fontSize: '0.9rem', maxWidth: '400px', lineHeight: 1.5, marginBottom: '24px' }}>
-                  Es probable que haya cruces de horario inevitables entre los cursos seleccionados, o las restricciones (días libres/vacantes) son muy estrictas.
-                </p>
-                <button 
-                  className="btn btn-primary" 
-                  onClick={() => setResults(null)}
-                  style={{ padding: '10px 24px' }}
-                >
-                  Volver a Configurar
-                </button>
-              </div>
-            )}
-
-            {results && results.length > 0 && (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <button 
-                      onClick={() => setResults(null)}
-                      style={{ 
-                        background: 'rgba(255,255,255,0.05)', 
-                        border: '1px solid rgba(255,255,255,0.1)', 
-                        borderRadius: '8px', 
-                        padding: '6px', 
-                        color: 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.2s'
+              {results && results.length > 0 && (
+                <>
+                  {/* Sticky Top Navigation Bar */}
+                  <div className="results-view-header">
+                    <button
+                      type="button"
+                      className="optimizer-back-config-btn"
+                      onClick={() => {
+                        setMobileViewPane('config');
+                        if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+                          setResults(null);
+                        }
                       }}
-                      onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                      onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                      title="Volver a Configurar"
                     >
-                      <ArrowLeft size={18} />
+                      ← Configurar Cursos y Filtros ({selectedCourseCodes.length})
                     </button>
-                    <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      Resultados <span className="glass-pill" style={{ color: 'var(--accent-primary)', borderColor: 'rgba(59, 130, 246, 0.4)' }}>{results.length} opciones</span>
-                    </h4>
+                    <span className="optimizer-optimal-count-badge">
+                      {Math.min(50, results.length)} OPCIONES ÓPTIMAS
+                    </span>
                   </div>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mostrando los mejores resultados ordenados</span>
-                </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {results.slice(0, 50).map((res, index) => (
-                    <div key={res.id} className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                            <h5 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>
-                              Opción {index + 1} {index === 0 && '🏆'}
-                            </h5>
-                            {res.metrics.totalGapMinutes === 0 && (
-                              <span className="glass-pill" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.4)', fontSize: '0.7rem' }}>
-                                ✨ 0h Huecos
-                              </span>
-                            )}
-                            {res.score !== undefined && options.targets.length > 0 && (
-                              <span className="glass-pill" style={{ background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-primary)', borderColor: 'rgba(59, 130, 246, 0.4)', fontSize: '0.7rem' }}>
-                                🎯 Score: {Math.round(res.score || 0)} pts
-                              </span>
-                            )}
-                            {savedOptionsRecord[res.id] && savedOptionsRecord[res.id].length > 0 && (
-                              <span className="glass-pill" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)', fontSize: '0.7rem' }}>
-                                📌 Guardado en {savedOptionsRecord[res.id].join(', ')}
-                              </span>
-                            )}
-                          </div>
-                          
-                          <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Clock size={13} color="var(--text-muted)" /> {res.metrics.gapHours}h huecos totales
-                            </span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Calendar size={13} color="var(--text-muted)" /> {res.metrics.activeDaysCount} días de clase
-                            </span>
-                            {res.metrics.lunchScore !== undefined && res.metrics.lunchScore > 0 && (
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <Coffee size={13} color="var(--text-muted)" /> {Math.round(res.metrics.lunchScore * 100)}% almuerzo
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                  {/* Scrollable 50 Result Cards Container */}
+                  <div className="optimizer-results-scroll overflow-y-auto">
+                    {results.slice(0, 50).map((res, index) => {
+                      const rankLabel =
+                        index === 0
+                          ? '#01 · ÓPTIMO'
+                          : index <= 2
+                          ? `#0${index + 1} · TOP`
+                          : `#${String(index + 1).padStart(2, '0')}`;
+                      const cardTierClass =
+                        index === 0 ? 'is-rank-first' : index <= 2 ? 'is-rank-top' : 'is-rank-std';
+                      const zoneAClass =
+                        index === 0
+                          ? 'grafton-result-zone-a--rank1'
+                          : index <= 2
+                          ? 'grafton-result-zone-a--top'
+                          : 'grafton-result-zone-a--std';
+                      const rankClass =
+                        index === 0
+                          ? 'rank-optimo grafton-rank-badge--optimo'
+                          : index <= 2
+                          ? 'rank-top grafton-rank-badge--top'
+                          : 'rank-std grafton-rank-badge--std';
+                      const gapsTierClass =
+                        (res.metrics.gapHours ?? 0) <= 2
+                          ? 'grafton-telemetry-pill--gaps-low'
+                          : 'grafton-telemetry-pill--gaps-high';
 
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button 
-                            className="btn btn-secondary" 
-                            style={{ padding: '6px 10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-                            onClick={() => setPreviewSchedule(res.selectedSections)}
-                          >
-                            <Eye size={14} /> Preview
-                          </button>
-                          <button 
-                            className="btn btn-secondary" 
-                            style={{ 
-                              padding: '6px 12px', 
-                              fontSize: '0.8rem',
-                              background: activeSaveId === res.id ? 'rgba(16, 185, 129, 0.15)' : undefined,
-                              color: activeSaveId === res.id ? '#10b981' : undefined,
-                              borderColor: activeSaveId === res.id ? '#10b981' : undefined
-                            }}
-                            onClick={() => {
-                              const newName = onCreateNewOption(res.selectedSections);
-                              setSavedOptionsRecord(prev => ({
-                                ...prev,
-                                [res.id]: [...(prev[res.id] || []), newName]
-                              }));
-                              setActiveSaveId(res.id);
-                              setLastSavedName(newName);
-                              setTimeout(() => {
-                                setActiveSaveId(null);
-                                setLastSavedName(null);
-                              }, 2500);
-                            }}
-                          >
-                            {activeSaveId === res.id ? `✅ Guardado en ${lastSavedName}` : 'Crear Nueva Pestaña'}
-                          </button>
-                          <button 
-                            className="btn btn-primary" 
-                            style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                            onClick={() => {
-                              onApplyToCurrent(res.selectedSections);
-                              onClose();
-                            }}
-                          >
-                            Aplicar
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Sections breakdown */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
-                        {Object.entries(res.selectedSections).map(([courseCode, secNum]) => {
-                          const course = courses.find(c => c.code === courseCode);
-                          const color = getCourseColor(courseCode);
-                          return (
-                            <div key={courseCode} style={{ 
-                              display: 'flex', alignItems: 'center', gap: '6px', 
-                              background: 'rgba(255,255,255,0.03)', padding: '4px 8px', 
-                              borderRadius: '6px', border: `1px solid ${color}44`,
-                              fontSize: '0.75rem'
-                            }}>
-                              <span style={{ color, fontWeight: 700 }}>{courseCode}</span>
-                              <span style={{ color: 'var(--text-muted)' }}>Sec {secNum}</span>
+                      return (
+                        <div
+                          key={res.id}
+                          className={`optimizer-swiss-card ${cardTierClass}`}
+                        >
+                          {/* ZONE A: Top Header & Telemetry Row */}
+                          <div className={`optimizer-card-zone-a ${zoneAClass}`}>
+                            <div className="optimizer-zone-a-left">
+                              <span className={`swiss-rank-badge ${rankClass}`}>{rankLabel}</span>
+                              <span className="swiss-option-title">Opción {index + 1}</span>
                             </div>
-                          );
-                        })}
+                            <div className="optimizer-zone-a-right">
+                              <span className="swiss-telemetry-pill pill-score grafton-telemetry-pill--score">
+                                SCORE: {Math.round(res.score || 0)} PTS
+                              </span>
+                              <span className={`swiss-telemetry-pill pill-gaps ${gapsTierClass}`}>
+                                {res.metrics.gapHours}H HUECOS
+                              </span>
+                              <span className="swiss-telemetry-pill pill-days grafton-telemetry-pill--days">
+                                {res.metrics.activeDaysCount} DÍAS
+                              </span>
+                              {savedOptionsRecord[res.id] && savedOptionsRecord[res.id].length > 0 && (
+                                <span className="swiss-telemetry-pill pill-saved">
+                                  TAB: {savedOptionsRecord[res.id].join(', ')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* ZONE B: Middle Course & Section Bicolor Chips Grid */}
+                          <div className="optimizer-card-zone-b">
+                            {Object.entries(res.selectedSections).map(([courseCode, secNum]) => {
+                              const { mainText, labSuffix } = formatCompactSectionLabel(secNum);
+                              const palette = getCourseDepartmentPalette(courseCode);
+
+                              return (
+                                <div
+                                  key={courseCode}
+                                  className="swiss-course-chip result-course-chip"
+                                  data-course-code={courseCode}
+                                >
+                                  <span
+                                    className="swiss-chip-code result-course-chip__code"
+                                    style={{
+                                      backgroundColor: palette.codeBg,
+                                      color: palette.codeText,
+                                      borderRightColor: '#18181A',
+                                    }}
+                                  >
+                                    {courseCode}
+                                  </span>
+                                  <span
+                                    className="swiss-chip-sec result-course-chip__sec"
+                                    style={{
+                                      backgroundColor: palette.secBg,
+                                      color: palette.secText,
+                                    }}
+                                  >
+                                    {mainText}
+                                    {labSuffix && (
+                                      <span className="result-course-chip__lab"> {labSuffix}</span>
+                                    )}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* ZONE C: Bottom Dedicated Action Bar */}
+                          <div className="optimizer-card-zone-c">
+                            <button
+                              type="button"
+                              className="swiss-action-btn btn-preview"
+                              onClick={() => setPreviewSchedule(res.selectedSections)}
+                            >
+                              <Eye size={12} />
+                              <span>Vista Previa</span>
+                            </button>
+                            <button
+                              type="button"
+                              className={`swiss-action-btn btn-new-tab ${
+                                activeSaveId === res.id ? 'is-saved' : ''
+                              }`}
+                              onClick={() => {
+                                const newName = onCreateNewOption(res.selectedSections);
+                                setSavedOptionsRecord(prev => ({
+                                  ...prev,
+                                  [res.id]: [...(prev[res.id] || []), newName]
+                                }));
+                                setActiveSaveId(res.id);
+                                setLastSavedName(newName);
+                                setTimeout(() => {
+                                  setActiveSaveId(null);
+                                  setLastSavedName(null);
+                                }, 2500);
+                              }}
+                            >
+                              {activeSaveId === res.id ? (
+                                <span>✓ {lastSavedName}</span>
+                              ) : (
+                                <>
+                                  <span className="sm-only-text">+ Pestaña</span>
+                                  <span className="lg-only-text">+ Nueva Pestaña</span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              className="swiss-action-btn btn-apply"
+                              onClick={() => {
+                                onApplyToCurrent(res.selectedSections);
+                                onClose();
+                              }}
+                            >
+                              ✓ Aplicar
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {results.length > 50 && (
+                      <div className="optimizer-more-footer">
+                        + {results.length - 50} COMBINACIONES ADICIONALES EVALUADAS (TOP 50 EN PANTALLA)
                       </div>
-                    </div>
-                  ))}
-                  
-                  {results.length > 50 && (
-                    <div style={{ textAlign: 'center', padding: '10px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      + {results.length - 50} opciones adicionales (mostrando las 50 mejores)
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -407,3 +407,62 @@ export function getCombinations<T>(array: T[], k: number): T[][] {
   helper(0, []);
   return results;
 }
+
+export interface CourseDepartmentPalette {
+  codeBg: string;
+  codeText: string;
+  secBg: string;
+  secText: string;
+  borderAccent: string;
+}
+
+const COMPUTING_DATA_PREFIXES = new Set(['CS', 'DS', 'SI', 'CB', 'CD', 'IS', 'CY']);
+const ENGINEERING_PREFIXES = new Set(['EL', 'ME', 'MT', 'CI', 'CV', 'IN', 'EN', 'IQ', 'AM', 'BI', 'QI']);
+const SCIENCES_MATH_PREFIXES = new Set(['MA', 'CC', 'FI', 'QU', 'EG']);
+
+/**
+ * Returns deterministic faculty-colored bicolor palette tokens for a course code
+ * under the Polychrome Grafton Swiss Architectural system.
+ */
+export function getCourseDepartmentPalette(courseCode: string): CourseDepartmentPalette {
+  const prefix = (courseCode || '').trim().toUpperCase().match(/^[A-Z]+/)?.[0] || '';
+
+  if (COMPUTING_DATA_PREFIXES.has(prefix)) {
+    return {
+      codeBg: '#005A8C',
+      codeText: '#FFFFFF',
+      secBg: '#F0F6FA',
+      secText: '#0A2E46',
+      borderAccent: '#005A8C',
+    };
+  }
+
+  if (ENGINEERING_PREFIXES.has(prefix)) {
+    return {
+      codeBg: '#B8332A',
+      codeText: '#FFFFFF',
+      secBg: '#FDF2F1',
+      secText: '#4A120E',
+      borderAccent: '#B8332A',
+    };
+  }
+
+  if (SCIENCES_MATH_PREFIXES.has(prefix)) {
+    return {
+      codeBg: '#B86200',
+      codeText: '#FFFFFF',
+      secBg: '#FDF6EC',
+      secText: '#4D2600',
+      borderAccent: '#B86200',
+    };
+  }
+
+  // Business, Management & Humanities (AD, BA, HH, GH, PI, PR, GI) and fallback
+  return {
+    codeBg: '#3D348B',
+    codeText: '#FFFFFF',
+    secBg: '#F3F2FA',
+    secText: '#1E194D',
+    borderAccent: '#3D348B',
+  };
+}

@@ -1140,16 +1140,18 @@
   align-items: center !important;
   gap: 6px !important;
   padding: 6px 12px !important;
-  background-color: #18181A !important;
-  color: #F2F0EC !important;
-  border: 1px solid #18181A !important;
+  background: #E0EBF5 !important;
+  background-color: #E0EBF5 !important;
+  color: #004D6B !important;
+  border: 1.5px solid #00668C !important;
+  border-left: 3px solid #00668C !important;
   border-radius: 0px !important;
   font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
   font-size: 11px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.04em !important;
-  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.16) !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.12) !important;
   transition: background-color 120ms ease, transform 120ms ease !important;
   cursor: pointer !important;
 }
@@ -1158,8 +1160,9 @@
 .prof-view-detail-btn:hover,
 .course-view-detail-btn:hover,
 .mentor-view-btn:hover {
-  background-color: #00779E !important;
-  border-color: #00779E !important;
+  background: #00668C !important;
+  background-color: #00668C !important;
+  border-color: #18181A !important;
   color: #FFFFFF !important;
   transform: translateY(-1px) !important;
 }
@@ -1180,11 +1183,13 @@
 .course-card:hover .course-view-detail-btn:not(:hover),
 .mentor-card:hover .btn-view-schedule:not(:hover),
 .mentor-card:hover .mentor-view-btn:not(:hover) {
-  background-color: #18181A !important;
-  border-color: #18181A !important;
-  color: #F2F0EC !important;
+  background: #E0EBF5 !important;
+  background-color: #E0EBF5 !important;
+  border: 1.5px solid #00668C !important;
+  border-left: 3px solid #00668C !important;
+  color: #004D6B !important;
   transform: none !important;
-  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.16) !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.12) !important;
 }
 
 .classroom-card:hover .btn-view-schedule:not(:hover) svg,
@@ -1243,17 +1248,36 @@
 }
 
 
-.prof-view-btn,
-.prof-email-copy-btn {
-  background: var(--bg-elevated) !important;
-  border: 1px solid var(--border-hairline) !important;
-  color: var(--text-primary) !important;
+.prof-view-btn {
+  background: #E0EBF5 !important;
+  background-color: #E0EBF5 !important;
+  border: 1.5px solid #00668C !important;
+  border-left: 3px solid #00668C !important;
+  color: #004D6B !important;
   border-radius: 0px !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
 }
 .prof-view-btn:hover {
-  background: var(--accent-primary) !important;
-  border-color: var(--accent-primary) !important;
+  background: #00668C !important;
+  background-color: #00668C !important;
+  border-color: #18181A !important;
+  color: #FFFFFF !important;
+}
+
+.prof-email-copy-btn {
+  background: #F5E8D3 !important;
+  background-color: #F5E8D3 !important;
+  border: 1.5px solid #B85D00 !important;
+  border-left: 3px solid #D97706 !important;
+  color: #6E3600 !important;
+  border-radius: 0px !important;
+  font-weight: 700 !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.12) !important;
+}
+.prof-email-copy-btn:hover {
+  background: #B85D00 !important;
+  background-color: #B85D00 !important;
+  border-color: #18181A !important;
   color: #FFFFFF !important;
 }
 
@@ -1473,25 +1497,26 @@
   align-items: center !important;
   gap: 6px !important;
   padding: 6px 12px !important;
-  background: #18181A !important;
-  background-color: #18181A !important;
-  border: 1px solid #18181A !important;
-  color: #F2F0EC !important;
+  background: #E0EBF5 !important;
+  background-color: #E0EBF5 !important;
+  border: 1.5px solid #00668C !important;
+  border-left: 3px solid #00668C !important;
+  color: #004D6B !important;
   border-radius: 0px !important;
   font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
   font-size: 11px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.04em !important;
-  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.16) !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.12) !important;
   cursor: pointer !important;
 }
 
 .course-view-detail-btn:hover,
 .btn-view-schedule:hover {
-  background: #00779E !important;
-  background-color: #00779E !important;
-  border-color: #00779E !important;
+  background: #00668C !important;
+  background-color: #00668C !important;
+  border-color: #18181A !important;
   color: #FFFFFF !important;
   transform: translateY(-1px) !important;
 }
@@ -1541,10 +1566,12 @@
 
 /* BUG 2: Course Detail Modal Header, Tabs, Body, Visitor Banner & Section Cards */
 .course-modal-header,
-.visitor-modal-header {
-  background: #EAE8E3 !important;
-  background-color: #EAE8E3 !important;
-  border-bottom: 1px solid #18181A !important;
+.visitor-modal-header,
+.classroom-modal-header,
+.prof-modal-header {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border-bottom: 3px solid #00779E !important;
   color: #141416 !important;
 }
 
@@ -1670,12 +1697,31 @@
   box-shadow: none !important;
 }
 
+.course-permission-btn {
+  border-radius: 0px !important;
+  background: #F5E8D3 !important;
+  background-color: #F5E8D3 !important;
+  color: #6E3600 !important;
+  border: 1.5px solid #B85D00 !important;
+  border-left: 3px solid #D97706 !important;
+  font-weight: 700 !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.12) !important;
+}
+.course-permission-btn:hover {
+  background: #B85D00 !important;
+  background-color: #B85D00 !important;
+  border-color: #18181A !important;
+  color: #FFFFFF !important;
+}
+
 .visitor-action-btn--primary,
 .visitor-btn--active {
-  background: #18181A !important;
-  background-color: #18181A !important;
-  border-color: #18181A !important;
-  color: #F2F0EC !important;
+  background: #00668C !important;
+  background-color: #00668C !important;
+  border: 1.5px solid #18181A !important;
+  border-top: 3px solid #38BDF8 !important;
+  color: #FFFFFF !important;
+  box-shadow: 2px 2px 0px #18181A !important;
 }
 
 /* ==========================================================================
@@ -1696,9 +1742,9 @@
 }
 
 .visitor-modal-header {
-  background: #EAE8E3 !important;
-  background-color: #EAE8E3 !important;
-  border-bottom: 1px solid #18181A !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border-bottom: 3px solid #00779E !important;
   padding: 12px 18px !important;
 }
 
@@ -1980,16 +2026,19 @@
 
 .visitor-copy-btn {
   border-radius: 0px !important;
-  background-color: #DCD9D2 !important;
-  border: 1.5px solid #18181A !important;
-  color: #141416 !important;
-  box-shadow: 2px 2px 0px #18181A !important;
+  background-color: #F5E8D3 !important;
+  border: 1.5px solid #B85D00 !important;
+  border-left: 3px solid #D97706 !important;
+  color: #6E3600 !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.12) !important;
   font-weight: 700 !important;
   font-family: 'JetBrains Mono', monospace !important;
 }
 
 .visitor-copy-btn:hover {
-  background-color: #C6C3BB !important;
+  background-color: #B85D00 !important;
+  border-color: #18181A !important;
+  color: #FFFFFF !important;
   transform: translate(-1px, -1px);
   box-shadow: 3px 3px 0px #18181A !important;
 }
@@ -2402,13 +2451,29 @@
   font-family: var(--font-mono) !important;
 }
 
-.prof-modal-email-link,
-.prof-modal-copy-btn {
-  background: #DCD9D2 !important;
-  background-color: #DCD9D2 !important;
-  border: 1px solid #18181A !important;
-  color: #141416 !important;
+.prof-modal-email-link {
+  background: #E0EBF5 !important;
+  background-color: #E0EBF5 !important;
+  border: 1.5px solid #00668C !important;
+  border-left: 3px solid #00668C !important;
+  color: #004D6B !important;
   border-radius: 0px !important;
+}
+
+.prof-modal-copy-btn {
+  background: #F5E8D3 !important;
+  background-color: #F5E8D3 !important;
+  border: 1.5px solid #B85D00 !important;
+  border-left: 3px solid #D97706 !important;
+  color: #6E3600 !important;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.12) !important;
+}
+.prof-modal-copy-btn:hover {
+  background: #B85D00 !important;
+  background-color: #B85D00 !important;
+  border-color: #18181A !important;
+  color: #FFFFFF !important;
 }
 
 .prof-modal-next-banner,
@@ -4312,9 +4377,9 @@ body,
 .gtp-apply-btn {
   width: 100% !important;
   height: 32px !important;
-  background-color: #18181A !important;
-  color: #F2F0EC !important;
-  border: 1px solid #18181A !important;
+  background-color: #0D7A4E !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid #18181A !important;
   border-radius: 0px !important;
   font-family: var(--font-mono, 'JetBrains Mono', monospace) !important;
   font-size: 11px !important;
@@ -4326,12 +4391,12 @@ body,
   justify-content: center !important;
   gap: 6px !important;
   margin-top: 4px !important;
-  box-shadow: 2px 2px 0px rgba(0, 119, 158, 0.9) !important;
+  box-shadow: 2px 2px 0px #18181A !important;
   transition: all 0.12s ease !important;
 }
 
 .gtp-apply-btn:hover {
-  background-color: #00779E !important;
+  background-color: #095939 !important;
   color: #FFFFFF !important;
 }
 
@@ -4571,15 +4636,36 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
   left: 0;
   width: 20%;
   height: 100%;
-  background-color: rgba(0, 119, 158, 0.11);
-  border-top: 3px solid #00779E; /* UTEC Technical Cyan active beam */
+  background-color: #E0EBF5;
+  border-top: 3px solid #00779E; /* UTEC Technical Cyan default active beam */
   border-left: 1px solid rgba(24, 24, 26, 0.14);
   border-right: 1px solid rgba(24, 24, 26, 0.14);
   transform: translate3d(calc(var(--dock-active-progress, 0) * 100%), 0, 0);
-  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease, border-color 180ms ease;
   will-change: transform;
   pointer-events: none;
   z-index: 1;
+}
+
+.grafton-mobile-dock[data-active-dock="schedule"] .grafton-dock-slider {
+  background-color: #E0EBF5 !important;
+  border-top: 3px solid #00779E !important;
+}
+
+.grafton-mobile-dock[data-active-dock="courses"] .grafton-dock-slider {
+  background-color: #F5E8D3 !important;
+  border-top: 3px solid #B85D00 !important;
+}
+
+.grafton-mobile-dock[data-active-dock="classrooms"] .grafton-dock-slider {
+  background-color: #DCEEE6 !important;
+  border-top: 3px solid #0D7A4E !important;
+}
+
+.grafton-mobile-dock[data-active-dock="professors"] .grafton-dock-slider,
+.grafton-mobile-dock[data-active-dock="mentors"] .grafton-dock-slider {
+  background-color: #F9E3E1 !important;
+  border-top: 3px solid #B8332A !important;
 }
 
 .grafton-dock-slider.is-dragging {
@@ -4640,6 +4726,40 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
 .grafton-dock-item.is-active .grafton-dock-icon {
   color: #00779E;
   transform: translateY(-1px);
+}
+
+.grafton-dock-item[data-dock-module="schedule"].is-active .grafton-dock-icon {
+  color: #00779E !important;
+}
+
+.grafton-dock-item[data-dock-module="schedule"].is-active .grafton-dock-label {
+  color: #004D6B !important;
+}
+
+.grafton-dock-item[data-dock-module="courses"].is-active .grafton-dock-icon {
+  color: #B85D00 !important;
+}
+
+.grafton-dock-item[data-dock-module="courses"].is-active .grafton-dock-label {
+  color: #6E3600 !important;
+}
+
+.grafton-dock-item[data-dock-module="classrooms"].is-active .grafton-dock-icon {
+  color: #0D7A4E !important;
+}
+
+.grafton-dock-item[data-dock-module="classrooms"].is-active .grafton-dock-label {
+  color: #094D31 !important;
+}
+
+.grafton-dock-item[data-dock-module="professors"].is-active .grafton-dock-icon,
+.grafton-dock-item[data-dock-module="mentors"].is-active .grafton-dock-icon {
+  color: #B8332A !important;
+}
+
+.grafton-dock-item[data-dock-module="professors"].is-active .grafton-dock-label,
+.grafton-dock-item[data-dock-module="mentors"].is-active .grafton-dock-label {
+  color: #6E1812 !important;
 }
 
 .grafton-dock-item.is-active .grafton-dock-icon svg {
@@ -4810,11 +4930,11 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
 }
 
 .grafton-gcal-connect-btn {
-  background-color: #18181A !important;
+  background-color: #00668C !important;
   background-image: none !important;
-  color: #F2F0EC !important;
+  color: #FFFFFF !important;
   border: 1.5px solid #18181A !important;
-  border-top: 2px solid #00779E !important;
+  border-top: 3px solid #38BDF8 !important;
   border-radius: 0px !important;
   padding: 8px 14px !important;
   font-family: 'JetBrains Mono', monospace !important;
@@ -4822,16 +4942,16 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.04em !important;
-  box-shadow: 2px 2px 0px #00779E !important;
+  box-shadow: 3px 3px 0px #18181A !important;
   cursor: pointer !important;
   flex-shrink: 0 !important;
   transition: all 120ms ease !important;
 }
 
 .grafton-gcal-connect-btn:hover:not(:disabled) {
-  background-color: #00779E !important;
+  background-color: #004D6B !important;
   color: #FFFFFF !important;
-  box-shadow: 2px 2px 0px #18181A !important;
+  box-shadow: 3px 3px 0px #18181A !important;
 }
 
 .grafton-gcal-mode-btn {
@@ -4848,10 +4968,11 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
 }
 
 .grafton-gcal-mode-btn.is-active {
-  background-color: #18181A !important;
-  color: #F2F0EC !important;
-  border: 1px solid #18181A !important;
-  border-top: 3px solid #00779E !important;
+  background-color: #005A8C !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid #18181A !important;
+  border-left: 4px solid #38BDF8 !important;
+  box-shadow: 2px 2px 0px #18181A !important;
   font-weight: 700 !important;
 }
 
@@ -4869,11 +4990,11 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
 
 .grafton-gcal-sync-btn {
   width: 100% !important;
-  background-color: #18181A !important;
+  background-color: #00668C !important;
   background-image: none !important;
-  color: #F2F0EC !important;
+  color: #FFFFFF !important;
   border: 1.5px solid #18181A !important;
-  border-top: 3px solid #00779E !important;
+  border-top: 3px solid #38BDF8 !important;
   border-radius: 0px !important;
   padding: 12px 18px !important;
   font-family: 'JetBrains Mono', monospace !important;
@@ -4881,7 +5002,7 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
-  box-shadow: 3px 3px 0px #00779E !important;
+  box-shadow: 3px 3px 0px #18181A !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -4891,7 +5012,7 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
 }
 
 .grafton-gcal-sync-btn:hover:not(:disabled) {
-  background-color: #00779E !important;
+  background-color: #004D6B !important;
   color: #FFFFFF !important;
   box-shadow: 3px 3px 0px #18181A !important;
   transform: translateY(-1px) !important;
