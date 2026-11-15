@@ -438,7 +438,14 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
                 {presencialSessions.map((session) => (
                   <div key={session.id} className="mentor-reservations-card">
                     <div className="reservations-card-header">
-                      <span className="res-course-tag" style={{ background: `${session.courseColor}22`, color: session.courseColor }}>
+                      <span
+                        className="res-course-tag"
+                        style={{
+                          background: '#18181A',
+                          color: '#F2F0EC',
+                          borderLeft: `3px solid ${session.courseColor || '#005A8C'}`
+                        }}
+                      >
                         {session.courseCode}
                       </span>
                       <span className="res-course-name">{session.courseName}</span>

@@ -68,7 +68,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="meta-label-full" style={{ color: 'var(--text-muted)' }}>Cursos:</span>
             <span className="meta-chip-val" style={{ color: 'var(--accent-primary)' }}>{coursesCount}</span>
             {eligibleCount > 0 && (
-              <span className="glass-pill" style={{ color: 'var(--accent-emerald)', borderColor: 'rgba(16, 185, 129, 0.4)' }}>
+              <span className="glass-pill" style={{ color: '#093B29', background: '#DCEEE6', borderColor: '#0D7A4E', borderRadius: '0px' }}>
                 {eligibleCount} Hab.
               </span>
             )}
@@ -82,7 +82,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="btn btn-secondary"
             onClick={onClearAllData}
             title="Borrar todos los datos cargados de archivos"
-            style={{ color: '#fca5a5', borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.1)' }}
+            style={{ color: '#7A1C15', borderColor: '#B8332A', background: '#F7E4E2', borderRadius: '0px' }}
           >
             <Trash2 size={15} />
             <span>Vaciar Datos</span>

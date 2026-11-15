@@ -58,7 +58,7 @@ export const ClassroomNavbar: React.FC<ClassroomNavbarProps> = ({
             <span className="meta-chip-label" style={{ color: 'var(--text-muted)' }}>Espacios:</span>
             <span className="meta-chip-val" style={{ color: 'var(--accent-primary)' }}>{totalRooms}</span>
             {availableRooms > 0 && (
-              <span className="glass-pill" style={{ color: 'var(--accent-emerald)', borderColor: 'rgba(16, 185, 129, 0.4)' }}>
+              <span className="glass-pill" style={{ color: '#093B29', background: '#DCEEE6', borderColor: '#0D7A4E', borderRadius: '0px' }}>
                 <span className="live-pill-txt-full">{availableRooms} Libres</span>
                 <span className="live-pill-txt-short">{availableRooms} libres</span>
                 <span className="live-pill-txt-mini">{availableRooms}L</span>

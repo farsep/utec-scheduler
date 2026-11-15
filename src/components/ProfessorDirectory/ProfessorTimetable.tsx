@@ -47,9 +47,15 @@ const AutoAdvanceCarousel: React.FC<AutoAdvanceCarouselProps> = ({
   const [scrollDistance, setScrollDistance] = React.useState(0);
 
   React.useEffect(() => {
+    let lastContainerWidth = -1;
     const checkOverflow = () => {
       if (containerRef.current && trackRef.current) {
-        const overflow = trackRef.current.scrollWidth - containerRef.current.clientWidth;
+        const clientW = containerRef.current.clientWidth;
+        if (lastContainerWidth !== -1 && Math.abs(clientW - lastContainerWidth) <= 2) {
+          return;
+        }
+        lastContainerWidth = clientW;
+        const overflow = trackRef.current.scrollWidth - clientW;
         if (overflow > 1) {
           setIsOverflowing(true);
           setScrollDistance(Math.ceil(overflow) + extraPadding);
@@ -61,19 +67,20 @@ const AutoAdvanceCarousel: React.FC<AutoAdvanceCarouselProps> = ({
     };
 
     checkOverflow();
-    window.addEventListener('resize', checkOverflow);
+    const onResize = () => {
+      lastContainerWidth = -1;
+      checkOverflow();
+    };
+    window.addEventListener('resize', onResize);
 
     let ro: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
       ro = new ResizeObserver(checkOverflow);
       ro.observe(containerRef.current);
-      if (trackRef.current) {
-        ro.observe(trackRef.current);
-      }
     }
 
     return () => {
-      window.removeEventListener('resize', checkOverflow);
+      window.removeEventListener('resize', onResize);
       ro?.disconnect();
     };
   }, [children, extraPadding]);

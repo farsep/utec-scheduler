@@ -64,7 +64,7 @@ export const MentorNavbar: React.FC<MentorNavbarProps> = ({
           {liveNowCount > 0 && (
             <span
               className="glass-pill live-pill-pulse"
-              style={{ color: 'var(--accent-emerald)', borderColor: 'rgba(16, 185, 129, 0.4)' }}
+              style={{ color: '#093B29', background: '#DCEEE6', borderColor: '#0D7A4E', borderRadius: '0px' }}
             >
               <span className="live-pulse-dot-inline" />
               <span className="live-pill-txt-full">{liveNowCount} En mentoría ahora</span>

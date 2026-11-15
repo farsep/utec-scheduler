@@ -419,9 +419,11 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                       <span
                         className="prof-inspector-badge"
                         style={{
-                          backgroundColor: `${selectedSession.courseColor}22`,
-                          color: selectedSession.courseColor,
-                          borderColor: `${selectedSession.courseColor}44`
+                          backgroundColor: '#18181A',
+                          color: '#F2F0EC',
+                          borderColor: '#18181A',
+                          borderLeft: `4px solid ${selectedSession.courseColor || '#005A8C'}`,
+                          borderRadius: '0px'
                         }}
                       >
                         {selectedSession.courseCode}

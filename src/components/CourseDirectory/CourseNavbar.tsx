@@ -64,9 +64,9 @@ export const CourseNavbar: React.FC<CourseNavbarProps> = ({
           {liveNowCount > 0 && (
             <span
               className="glass-pill live-pill-pulse"
-              style={{ color: 'var(--accent-purple)', borderColor: 'rgba(139, 92, 246, 0.4)' }}
+              style={{ color: '#1E194D', background: '#EAE8F4', borderColor: '#3D348B', borderRadius: '0px' }}
             >
-              <span className="live-pulse-dot-inline" style={{ background: 'var(--accent-purple)' }} />
+              <span className="live-pulse-dot-inline" style={{ background: '#3D348B' }} />
               <span className="live-pill-txt-full">{liveNowCount} En clase ahora</span>
               <span className="live-pill-txt-short">{liveNowCount} en vivo</span>
               <span className="live-pill-txt-mini">{liveNowCount}</span>

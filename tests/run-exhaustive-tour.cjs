@@ -356,7 +356,7 @@ async function runDesktopTour(browser) {
   // Test Day, Minimum Availability, Floor & Space-Type Switchers
   await safeClick(page, 'button:has-text("≥ 2h")', 750);
   await safeClick(page, 'button:has-text("Cualquiera")', 750);
-  await safeClick(page, 'button:has-text("Piso 1")', 950); // Shows Aula Magna, Futsal, L021, L022
+  await safeClick(page, 'button:has-text("Piso 1")', 950); // Shows Aula Magna, L021, L022
   await safeClick(page, 'button:has-text("Todos los Pisos")', 850);
   await safeClick(page, 'button:has-text("Laboratorios")', 800);
   await safeClick(page, 'button:has-text("Mesas")', 800);

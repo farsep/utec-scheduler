@@ -123,6 +123,11 @@ body::after {
   content: none !important;
 }
 
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
 a,
 button,
 input,
@@ -1573,14 +1578,16 @@ input[type="range"]::-webkit-slider-thumb {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 10px;
   padding: 1px 5px;
-  border-radius: 2px;
-  background: rgba(24, 24, 26, 0.08);
-  color: inherit;
+  border-radius: 0px;
+  background: #DCD9D2;
+  color: #18181A;
+  border: 1px solid #C6C3BB;
   font-weight: 700;
 }
 .timetable-day-segment-btn.is-active .timetable-day-hours-badge {
-  background: rgba(255, 255, 255, 0.22);
+  background: #2D323E;
   color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.28);
 }
 
 .timetable-reset-week-btn {

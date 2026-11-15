@@ -16,11 +16,11 @@ declare global {
   }
 }
 
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const COURSES_CACHE_KEY = `matriculab_courses_cache_${CACHE_VERSION}`;
 const PROFESSORS_CACHE_KEY = `matriculab_professors_cache_${CACHE_VERSION}`;
 const CLASSROOMS_CACHE_KEY = `matriculab_classrooms_cache_${CACHE_VERSION}`;
-const STATIC_ASSET_VER = '2026.2.5';
+const STATIC_ASSET_VER = '2026.2.6';
 
 // Purge legacy unversioned and previous version sessionStorage keys so clients immediately receive corrected classroom floors & dates
 if (typeof window !== 'undefined') {
@@ -34,6 +34,9 @@ if (typeof window !== 'undefined') {
     sessionStorage.removeItem('matriculab_courses_cache_v4');
     sessionStorage.removeItem('matriculab_professors_cache_v4');
     sessionStorage.removeItem('matriculab_classrooms_cache_v4');
+    sessionStorage.removeItem('matriculab_courses_cache_v5');
+    sessionStorage.removeItem('matriculab_professors_cache_v5');
+    sessionStorage.removeItem('matriculab_classrooms_cache_v5');
   } catch {}
 }
 
@@ -181,7 +184,11 @@ export async function getCoursesCatalog(): Promise<CourseExtendedInfo[]> {
     if (liveRes.ok) {
       const liveData = await liveRes.json();
       if (Array.isArray(liveData.classrooms) && liveData.classrooms.length > 0) {
-        coursesToUse = mutuallyEnrichCoursesWithScrapedData(parseResult.courses, liveData.classrooms);
+        const { isExcludedClassroom } = await import('./classroomUtils');
+        const activeRooms = liveData.classrooms.filter(
+          (c: any) => !isExcludedClassroom(c.id || c.code || c.displayName || c.rawLocation)
+        );
+        coursesToUse = mutuallyEnrichCoursesWithScrapedData(parseResult.courses, activeRooms);
       }
     }
   } catch {
@@ -322,14 +329,18 @@ export async function getClassroomsCatalog(): Promise<ClassroomInfo[]> {
     if (liveRes.ok) {
       const liveData = await liveRes.json();
       if (Array.isArray(liveData.classrooms) && liveData.classrooms.length > 0) {
-        inMemoryClassrooms = liveData.classrooms;
+        const { isExcludedClassroom } = await import('./classroomUtils');
+        const activeRooms = liveData.classrooms.filter(
+          (c: any) => !isExcludedClassroom(c.id || c.code || c.displayName || c.rawLocation)
+        );
+        inMemoryClassrooms = activeRooms;
         if (typeof window !== 'undefined') {
-          window.__MATRICULAB_CLASSROOMS__ = liveData.classrooms;
+          window.__MATRICULAB_CLASSROOMS__ = activeRooms;
           try {
-            sessionStorage.setItem(CLASSROOMS_CACHE_KEY, JSON.stringify(liveData.classrooms));
+            sessionStorage.setItem(CLASSROOMS_CACHE_KEY, JSON.stringify(activeRooms));
           } catch {}
         }
-        return liveData.classrooms;
+        return activeRooms;
       }
     }
   } catch {}

@@ -28,7 +28,7 @@ export const MentorStats: React.FC<MentorStatsProps> = ({
     <div className="mentor-stats-grid">
       {/* 1. Total Mentors */}
       <div className="prof-kpi-card glass-card">
-        <div className="kpi-icon-wrap" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6' }}>
+        <div className="kpi-icon-wrap" style={{ background: '#E0EBF5', color: '#005A8C' }}>
           <Award size={20} />
         </div>
         <div className="kpi-body">
@@ -39,7 +39,7 @@ export const MentorStats: React.FC<MentorStatsProps> = ({
 
       {/* 2. Total Courses */}
       <div className="prof-kpi-card glass-card">
-        <div className="kpi-icon-wrap" style={{ background: 'rgba(168, 85, 247, 0.15)', color: '#a855f7' }}>
+        <div className="kpi-icon-wrap" style={{ background: '#EAE8F4', color: '#3D348B' }}>
           <BookOpen size={20} />
         </div>
         <div className="kpi-body">
@@ -56,7 +56,7 @@ export const MentorStats: React.FC<MentorStatsProps> = ({
         tabIndex={0}
         title="Filtrar mentorías presenciales en campus UTEC"
       >
-        <div className="kpi-icon-wrap" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
+        <div className="kpi-icon-wrap" style={{ background: '#DCEEE6', color: '#094D31' }}>
           <Building2 size={20} />
         </div>
         <div className="kpi-body">
@@ -73,7 +73,7 @@ export const MentorStats: React.FC<MentorStatsProps> = ({
         tabIndex={0}
         title="Filtrar mentorías virtuales"
       >
-        <div className="kpi-icon-wrap" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#6366f1' }}>
+        <div className="kpi-icon-wrap" style={{ background: '#EAE8F4', color: '#3D348B' }}>
           <Video size={20} />
         </div>
         <div className="kpi-body">

@@ -129,14 +129,20 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
               {nextSession && (
                 <div className="info-sub">
                   Próxima clase:{' '}
-                  <a
-                    href={`/cursos?curso=${nextSession.courseCode}`}
-                    onClick={e => e.stopPropagation()}
-                    className="highlight-text course-entity-link"
-                    title={`Ver curso ${nextSession.courseCode}`}
-                  >
-                    {nextSession.courseCode} · {nextSession.courseName}
-                  </a>
+                  {/^[A-Z]{2,4}\d{3,4}/i.test((nextSession.courseCode || '').trim()) ? (
+                    <a
+                      href={`/cursos?curso=${nextSession.courseCode}`}
+                      onClick={e => e.stopPropagation()}
+                      className="highlight-text course-entity-link"
+                      title={`Ver curso ${nextSession.courseCode}`}
+                    >
+                      {nextSession.courseCode} · {nextSession.courseName}
+                    </a>
+                  ) : (
+                    <span className="highlight-text">
+                      {nextSession.courseCode} · {nextSession.courseName}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -151,14 +157,20 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
               {currentSession && (
                 <div className="info-sub">
                   Clase actual:{' '}
-                  <a
-                    href={`/cursos?curso=${currentSession.courseCode}`}
-                    onClick={e => e.stopPropagation()}
-                    className="highlight-text course-entity-link"
-                    title={`Ver curso ${currentSession.courseCode}`}
-                  >
-                    {currentSession.courseCode} · {currentSession.courseName}
-                  </a>
+                  {/^[A-Z]{2,4}\d{3,4}/i.test((currentSession.courseCode || '').trim()) ? (
+                    <a
+                      href={`/cursos?curso=${currentSession.courseCode}`}
+                      onClick={e => e.stopPropagation()}
+                      className="highlight-text course-entity-link"
+                      title={`Ver curso ${currentSession.courseCode}`}
+                    >
+                      {currentSession.courseCode} · {currentSession.courseName}
+                    </a>
+                  ) : (
+                    <span className="highlight-text">
+                      {currentSession.courseCode} · {currentSession.courseName}
+                    </span>
+                  )}
                 </div>
               )}
             </div>

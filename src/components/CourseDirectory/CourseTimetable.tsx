@@ -7,8 +7,7 @@ import {
   LayoutGrid,
   List,
   Radio,
-  ExternalLink,
-  Layers
+  ExternalLink
 } from 'lucide-react';
 import type { DayOfWeek } from '../../types/schedule';
 import type {
@@ -17,8 +16,7 @@ import type {
 } from '../../types/courseDirectory';
 import { ALL_DAYS, DAY_LABELS, resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { formatProfessorName } from '../../utils/professorUtils';
-import { CustomSelect, type SelectOption } from '../common/CustomSelect';
-import { DynamicSessionBadge } from '../common/DynamicSessionBadge';
+import { getCourseDepartmentPalette } from '../../utils/scheduleUtils';
 import {
   generateGoogleCalendarUrlForSession,
   getSectionColor
@@ -48,6 +46,15 @@ export interface PositionedSession {
 }
 
 /**
+ * Extracts clean base section token (e.g. "2 (TEORÍA 2)" -> "2").
+ */
+function extractBaseSectionCode(secNum: string): string {
+  const trimmed = secNum.trim();
+  const match = trimmed.match(/^([^\s(]+)/);
+  return match ? match[1] : trimmed;
+}
+
+/**
  * Formats verbose section names like "1 (TEORÍA 11)" -> "Sec. 1 • T11"
  */
 export function formatShortSectionLabel(secNum: string): string {
@@ -66,11 +73,91 @@ export function formatShortSectionLabel(secNum: string): string {
   return `Sec. ${baseSec} • ${shortInner}`;
 }
 
-function abbreviateSessionType(type: string): string {
-  if (/teor/i.test(type)) return 'TEO';
-  if (/lab/i.test(type)) return 'LAB';
-  if (/pr[aá]c/i.test(type)) return 'PRÁC';
-  return type.slice(0, 4).toUpperCase();
+/**
+ * Compact timetable block section code ("2" -> "S02", "10" -> "S10").
+ */
+function formatSectionTicketCode(secNum: string): string {
+  const base = extractBaseSectionCode(secNum);
+  if (/^\d+$/.test(base)) {
+    return `S${base.padStart(2, '0')}`;
+  }
+  return `S${base}`;
+}
+
+/**
+ * Pill label in top section filter strip ("2" -> "S2", "10" -> "S10").
+ */
+function formatSectionPillCode(secNum: string): string {
+  return `S${extractBaseSectionCode(secNum)}`;
+}
+
+/**
+ * Split architectural badge left compartment ("2" -> "SEC 02", "10" -> "SEC 10").
+ */
+function formatInspectorSecBadge(secNum: string): string {
+  const base = extractBaseSectionCode(secNum);
+  if (/^\d+$/.test(base)) {
+    return `SEC ${base.padStart(2, '0')}`;
+  }
+  return `SEC ${base}`;
+}
+
+/**
+ * Clean session group label for inspector/agenda without duplicate "(Teoría)" suffix.
+ */
+function formatCleanSessionTitle(sessionGroup?: string, sessionType?: string): string {
+  const grp = (sessionGroup || '').trim();
+  const typ = (sessionType || '').trim();
+  if (!grp) return (typ || 'SESIÓN').toUpperCase();
+  if (/teor|lab|pr[aá]c|taller|vir/i.test(grp)) {
+    return grp.toUpperCase();
+  }
+  return typ ? `${typ} ${grp}`.toUpperCase() : grp.toUpperCase();
+}
+
+/**
+ * Abbreviated group label for single-row 1h timetable blocks (e.g. "TEORÍA 8" -> "TEO 8").
+ */
+function formatCompactTypeGroup(sessionGroup?: string, sessionType?: string): string {
+  const clean = formatCleanSessionTitle(sessionGroup, sessionType);
+  return clean
+    .replace(/TEOR[IÍ]A/g, 'TEO')
+    .replace(/LABORATORIO/g, 'LAB')
+    .replace(/PR[AÁ]CTICA/g, 'PRÁC')
+    .replace(/TALLER/g, 'TAL');
+}
+
+/**
+ * Compact time range without truncation (e.g. "13:00","15:00" -> "13–15h").
+ */
+function formatCompactTimeRange(startTime: string, endTime: string): string {
+  const sh = startTime.slice(0, 2);
+  const sm = startTime.slice(3, 5);
+  const eh = endTime.slice(0, 2);
+  const em = endTime.slice(3, 5);
+  if (sm === '00' && em === '00') {
+    return `${sh}–${eh}h`;
+  }
+  return `${sh}:${sm}–${eh}:${em}`;
+}
+
+/**
+ * Short last-name label for narrow multi-column blocks (e.g. "Pino Matos, Jose" -> "J. Pino").
+ */
+function formatShortProfLastName(rawProf?: string): string | null {
+  if (!rawProf || /docente\s*utec/i.test(rawProf)) return null;
+  if (rawProf.includes(',')) {
+    const [lastPart, firstPart] = rawProf.split(',');
+    const firstSurname = lastPart.trim().split(/\s+/)[0] || '';
+    const firstInitial = firstPart?.trim()?.[0] || '';
+    return firstInitial ? `${firstInitial}. ${firstSurname}` : firstSurname;
+  }
+  const formatted = formatProfessorName(rawProf).displayName;
+  const parts = formatted.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}. ${parts[1]}`;
+  }
+  return formatted;
 }
 
 /**
@@ -328,10 +415,10 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
   const minMinutes = minHour * 60;
   const totalMinutes = totalHours * 60;
 
-  // Hourly time marks
+  // Hourly time marks (minHour..maxHour-1 cleanly label each hour row without straddling bottom border)
   const timeMarks = useMemo(() => {
     const marks: { hour: number; label: string; shortLabel: string; topPercent: number }[] = [];
-    for (let h = minHour; h <= maxHour; h++) {
+    for (let h = minHour; h < maxHour; h++) {
       marks.push({
         hour: h,
         label: `${String(h).padStart(2, '0')}:00`,
@@ -346,11 +433,16 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
   const showNowIndicator = nowMinutes >= minMinutes && nowMinutes <= minMinutes + totalMinutes;
   const nowTopPercent = ((nowMinutes - minMinutes) / totalMinutes) * 100;
 
-  // Adaptive row height so the full 07:00-21:00 grid fits 100% on screen without scrolling
+  // Adaptive row height: >= 34px per hour on desktop guarantees 1h blocks never clip or overflow vertically
   const slotHeightPerHour = isMobileViewport
-    ? (compactHours ? 42 : 27)
-    : (compactHours ? 46 : 31);
+    ? (compactHours ? 42 : 29)
+    : (compactHours ? 48 : 34);
   const gridHeight = Math.max(isMobileViewport ? 220 : 320, totalHours * slotHeightPerHour);
+
+  const facultyPalette = useMemo(
+    () => getCourseDepartmentPalette(course.code),
+    [course.code]
+  );
 
   // Positioned sessions per day
   const positionedByDay = useMemo<Record<DayOfWeek, PositionedSession[]>>(() => {
@@ -396,15 +488,15 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
         .map(d => {
           const cols = maxColsByDay[d];
           if (cols === 0) {
-            return isMobileViewport ? 'minmax(28px, 0.42fr)' : 'minmax(68px, 0.72fr)';
+            return isMobileViewport ? 'minmax(22px, 0.35fr)' : 'minmax(54px, 0.56fr)';
           }
           if (cols === 1) {
-            return isMobileViewport ? 'minmax(54px, 1.35fr)' : 'minmax(112px, 1.35fr)';
+            return isMobileViewport ? 'minmax(38px, 1.15fr)' : 'minmax(112px, 1.35fr)';
           }
           if (cols === 2) {
-            return isMobileViewport ? 'minmax(68px, 1.65fr)' : 'minmax(140px, 1.65fr)';
+            return isMobileViewport ? 'minmax(52px, 1.5fr)' : 'minmax(144px, 1.7fr)';
           }
-          return isMobileViewport ? 'minmax(78px, 1.9fr)' : 'minmax(168px, 1.95fr)';
+          return isMobileViewport ? 'minmax(68px, 2.0fr)' : 'minmax(192px, 2.25fr)';
         })
         .join(' ');
     }
@@ -419,20 +511,8 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
   }, [filterOnlyActiveDays, daysToRender, maxColsByDay, isMobileViewport, maxColsInAnyDay]);
 
   const isFullWeekElastic = !filterOnlyActiveDays && daysToRender.length === 6;
-
-  // Section dropdown options for quick filtering on mobile/tablet
-  const sectionSelectOptions = useMemo<SelectOption[]>(() => [
-    {
-      value: 'ALL',
-      label: `Todas las secciones (${course.totalSectionsCount})`
-    },
-    ...course.extendedSections.map(s => ({
-      value: s.sectionNumber,
-      label: formatShortSectionLabel(s.sectionNumber),
-      badge: `${s.sessions.length}h`,
-      badgeColor: getSectionColor(s.sectionNumber).border
-    }))
-  ], [course]);
+  const isZoomHorizontalScroll =
+    isMobileViewport && !isFullWeekElastic && daysToRender.length > 2;
 
   // Scroll day column into view when clicking day jump pill
   const handleScrollToDay = (day: DayOfWeek) => {
@@ -450,24 +530,24 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
     }
   }, [selectedSessionItem]);
 
+  // Keep inspector in sync if section filter excludes current selection
+  useEffect(() => {
+    if (
+      selectedSessionItem &&
+      selectedSectionNumber !== 'ALL' &&
+      selectedSessionItem.sectionNumber !== selectedSectionNumber &&
+      !(selectedSessionItem.mergedSections || []).includes(selectedSectionNumber)
+    ) {
+      setSelectedSessionItem(null);
+    }
+  }, [selectedSectionNumber, selectedSessionItem]);
+
   return (
     <div className="prof-timetable-wrap course-timetable-wrap">
-      {/* Compact Toolbar: Section Filter + Full Week / Zoom Toggle + View Switcher */}
+      {/* Compact Toolbar: Full Week / Zoom + Compact Hours + Matriz/Agenda + Section Filter Ribbon */}
       <div className="course-timetable-toolbar">
         <div className="course-timetable-top-bar">
           <div className="course-timetable-filters-left">
-            {course.extendedSections.length > 1 && (!isMobileViewport || course.extendedSections.length > 6) && (
-              <CustomSelect
-                value={selectedSectionNumber}
-                onChange={val => onSelectSectionNumber?.(val)}
-                options={sectionSelectOptions}
-                icon={<Layers size={13} />}
-                size="sm"
-                className="course-timetable-sec-dropdown"
-                ariaLabel="Filtrar sección en horario"
-              />
-            )}
-
             {viewMode === 'matriz' && activeDaysWithClasses.length < 6 && (
               <button
                 type="button"
@@ -520,39 +600,34 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
           </div>
         </div>
 
-        {/* Single-Line Horizontal Scrollable Section Pills (Never wraps into multiple vertical rows) */}
+        {/* Orthogonal Section Filter Strip: SECCIÓN: TODAS (10) | S1 | S2 | ... */}
         {course.extendedSections.length > 1 && (
-          <div className="course-sec-pills-strip" role="tablist" aria-label="Secciones del curso">
+          <div className="course-sec-pills-strip" role="tablist" aria-label="Filtrar sección del curso">
+            <span className="course-sec-strip-label">SECCIÓN:</span>
             <button
               type="button"
-              className={`prof-day-jump-pill ${selectedSectionNumber === 'ALL' ? 'prof-day-jump-pill--active' : ''}`}
+              role="tab"
+              aria-selected={selectedSectionNumber === 'ALL'}
+              className={`prof-day-jump-pill course-sec-filter-pill ${selectedSectionNumber === 'ALL' ? 'prof-day-jump-pill--active' : ''}`}
               onClick={() => onSelectSectionNumber?.('ALL')}
             >
-              <Layers size={12} />
-              <span>Todas ({course.totalSectionsCount})</span>
+              <span>TODAS ({course.totalSectionsCount})</span>
             </button>
 
             {course.extendedSections.map(sec => {
               const isSelected = selectedSectionNumber === sec.sectionNumber;
-              const palette = getSectionColor(sec.sectionNumber);
 
               return (
                 <button
                   key={sec.sectionNumber}
                   type="button"
-                  className={`prof-day-jump-pill ${isSelected ? 'prof-day-jump-pill--active' : ''}`}
+                  role="tab"
+                  aria-selected={isSelected}
+                  className={`prof-day-jump-pill course-sec-filter-pill ${isSelected ? 'prof-day-jump-pill--active' : ''}`}
                   onClick={() => onSelectSectionNumber?.(isSelected ? 'ALL' : sec.sectionNumber)}
-                  style={
-                    isSelected
-                      ? { backgroundColor: palette.border, borderColor: palette.border }
-                      : undefined
-                  }
+                  title={formatShortSectionLabel(sec.sectionNumber)}
                 >
-                  <span
-                    className="sec-dot-inline"
-                    style={{ backgroundColor: palette.border }}
-                  />
-                  <span>{formatShortSectionLabel(sec.sectionNumber)}</span>
+                  <span>{formatSectionPillCode(sec.sectionNumber)}</span>
                 </button>
               );
             })}
@@ -593,11 +668,14 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
               <span>Hora</span>
             </div>
             <div className="prof-timetable-time-axis" style={{ height: gridHeight }}>
-              {timeMarks.map(mark => (
+              {timeMarks.map((mark, idx) => (
                 <div
                   key={mark.hour}
                   className="prof-time-mark"
-                  style={{ top: `${mark.topPercent}%` }}
+                  style={{
+                    top: `${mark.topPercent}%`,
+                    transform: idx === 0 ? 'translateY(2px)' : 'translateY(-50%)'
+                  }}
                 >
                   <span className="time-mark-desktop">{mark.label}</span>
                   <span className="time-mark-mobile">{mark.shortLabel}</span>
@@ -607,13 +685,16 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
           </div>
 
           {/* Right Days Grid (100% full width on Desktop/Tablet & Mobile 6D Elastic Mode) */}
-          <div className="prof-timetable-days-scroll-wrapper" ref={daysScrollRef}>
+          <div
+            className={`prof-timetable-days-scroll-wrapper ${isZoomHorizontalScroll ? 'has-x-scroll' : ''}`}
+            ref={daysScrollRef}
+          >
             <div
               className="prof-timetable-days-content"
               data-cols={daysToRender.length}
               data-elastic={isFullWeekElastic ? 'true' : 'false'}
             >
-              {/* Header Row: Days */}
+              {/* Sticky Header Row: Days */}
               <div
                 className="prof-timetable-days-header-row"
                 style={{
@@ -624,6 +705,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                   const daySessions = sessionsByDay[day] || [];
                   const isToday = nowDay === day;
                   const isEmptyDay = daySessions.length === 0;
+                  const countText = daySessions.length > 0 ? `(${daySessions.length})` : '(—)';
 
                   return (
                     <div
@@ -637,20 +719,11 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                         }
                       }}
                     >
-                      <div className="prof-day-name-row">
-                        <span className="prof-day-abbr">{day}</span>
-                        <span className="prof-day-full">{DAY_LABELS[day]}</span>
-                      </div>
-                      <span
-                        className={`prof-day-badge ${isEmptyDay ? 'prof-day-badge--empty' : ''}`}
-                      >
-                        {daySessions.length > 0 ? (
-                          isMobileViewport && isFullWeekElastic
-                            ? `${daySessions.length}`
-                            : `${daySessions.length} ${daySessions.length === 1 ? 'clase' : 'clases'}`
-                        ) : (
-                          isMobileViewport && isFullWeekElastic ? '—' : 'Libre'
-                        )}
+                      <span className="prof-day-abbr">
+                        {day.toUpperCase()} <span className="course-day-count-inline">{daySessions.length > 0 ? `(${daySessions.length})` : ''}</span>
+                      </span>
+                      <span className="prof-day-full">
+                        {isEmptyDay ? day.toUpperCase() : DAY_LABELS[day].toUpperCase()} <span className="course-day-count-inline">{countText}</span>
                       </span>
                     </div>
                   );
@@ -708,74 +781,154 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                           nowMinutes < s.endMinutes;
 
                         const isSelected = selectedSessionItem?.id === item.id;
-                        const palette = getSectionColor(item.sectionNumber);
+                        const durationMinutes = Math.max(30, s.endMinutes - s.startMinutes);
+                        const isOneHourOrLess = durationMinutes <= 65;
+                        const isMidDuration = durationMinutes > 65 && durationMinutes < 110;
+                        const isSingleCol = totalCols === 1;
+                        const isLabSession = /lab/i.test(s.sessionType || s.sessionGroup || '');
+                        const isPracSession = /pr[aá]c/i.test(s.sessionType || s.sessionGroup || '');
+                        const typeStripeClass = isLabSession
+                          ? 'course-session-card--lab'
+                          : isPracSession
+                            ? 'course-session-card--prac'
+                            : 'course-session-card--teoria';
 
                         const mergedCount = item.mergedSections?.length || 1;
                         const overflowCount = item.overflowItems ? item.overflowItems.length - 1 : 0;
-                        const baseShortSec = mergedCount > 1
-                          ? `Sec. ${item.sectionNumber.split(' ')[0]} (${mergedCount} grp)`
-                          : formatShortSectionLabel(item.sectionNumber);
-
-                        const shortSecLabel =
-                          isMobileViewport && (isFullWeekElastic || totalCols >= 2)
-                            ? baseShortSec.replace(/^Sec\.\s*/, 'S').replace(/\s*•\s*/, '•')
-                            : baseShortSec;
-
-                        const shortProf = s.professor && !/docente\s*utec/i.test(s.professor)
-                          ? formatProfessorName(s.professor).displayName
-                          : null;
+                        const secCode = formatSectionTicketCode(item.sectionNumber);
+                        const secWithMerge = mergedCount > 1 ? `${secCode}+${mergedCount - 1}` : secCode;
+                        const compactType = formatCompactTypeGroup(s.sessionGroup, s.sessionType);
+                        const roomCodeLabel = s.roomDisplayName.replace(/^Aula\s+/i, 'A');
+                        const compactTime = formatCompactTimeRange(s.startTime, s.endTime);
+                        const shortLastProf = formatShortProfLastName(s.professor);
+                        const displayProf =
+                          s.professor && !/docente\s*utec/i.test(s.professor)
+                            ? formatProfessorName(s.professor).displayName
+                            : null;
 
                         return (
                           <div
                             key={item.id}
-                            className={`prof-session-card course-session-card ${isLiveNow ? 'prof-session-card--live' : ''} ${isSelected ? 'prof-session-card--selected' : ''} ${totalCols >= 2 || (isMobileViewport && isFullWeekElastic) ? 'course-session-card--compact' : ''}`}
+                            className={`prof-session-card course-session-card ${typeStripeClass} ${isLiveNow ? 'prof-session-card--live' : ''} ${isSelected ? 'prof-session-card--selected' : ''} ${!isSingleCol || (isMobileViewport && isFullWeekElastic) ? 'course-session-card--compact' : ''}`}
                             style={{
-                              top: `${top}%`,
-                              height: `${height}%`,
-                              left: `${left}%`,
-                              width: `${width}%`,
-                              borderLeftColor: palette.border,
-                              background: palette.bg
+                              top: `calc(${top}% + 1px)`,
+                              height: `calc(${height}% - 2px)`,
+                              left: `calc(${left}% + 1px)`,
+                              width: `calc(${width}% - 2px)`
                             }}
+                            title={`${formatInspectorSecBadge(item.sectionNumber)} · ${formatCleanSessionTitle(s.sessionGroup, s.sessionType)} · ${s.startTime}–${s.endTime} · ${s.roomDisplayName}`}
                             onClick={() => setSelectedSessionItem(isSelected ? null : item)}
                           >
-                            <div className="course-card-block-top">
-                              <span
-                                className="course-card-block-sec"
-                                style={{ color: palette.text }}
-                              >
-                                {shortSecLabel}
-                              </span>
-                              {overflowCount > 0 ? (
-                                <span className="course-card-overflow-badge">
-                                  +{overflowCount}
+                            {isMobileViewport && isFullWeekElastic ? (
+                              /* Ultra-clean Mobile 6D Grid: zero S... clipping or overlapping room pills */
+                              isOneHourOrLess && !isSingleCol ? (
+                                <span className="course-card-block-sec course-card-block-sec--tight">
+                                  {secCode}
                                 </span>
-                              ) : totalCols === 1 ? (
-                                <DynamicSessionBadge type={s.sessionType} sessionGroup={s.sessionGroup} />
-                              ) : null}
-                            </div>
-
-                            <div className="course-card-block-time">
-                              {isMobileViewport && totalCols >= 2
-                                ? `${s.startTime.slice(0, 2)}-${s.endTime.slice(0, 2)}h`
-                                : `${s.startTime} - ${s.endTime}`}
-                            </div>
-
-                            <div className="course-card-block-room">
-                              <MapPin size={9} />
-                              <span>{s.roomDisplayName.replace(/^Aula\s+/i, 'A')}</span>
-                            </div>
-
-                            {shortProf && (!isMobileViewport || totalCols === 1) && (
-                              <div className="course-card-block-prof">
-                                {shortProf}
+                              ) : isOneHourOrLess && isSingleCol ? (
+                                <div className="course-card-mobile-stack">
+                                  <span className="course-card-block-sec">{secWithMerge}</span>
+                                  <span className="course-card-mobile-sub">{roomCodeLabel}</span>
+                                </div>
+                              ) : !isSingleCol ? (
+                                <div className="course-card-mobile-stack">
+                                  <span className="course-card-block-sec course-card-block-sec--tight">
+                                    {secCode}
+                                  </span>
+                                  <span className="course-card-mobile-sub course-card-mobile-sub--tight">{roomCodeLabel}</span>
+                                </div>
+                              ) : (
+                                <div className="course-card-mobile-stack">
+                                  <span className="course-card-block-sec">{secWithMerge}</span>
+                                  <span className="course-card-mobile-sub">{compactTime}</span>
+                                  <span className="course-card-mobile-sub">{roomCodeLabel}</span>
+                                </div>
+                              )
+                            ) : isOneHourOrLess && isSingleCol ? (
+                              /* Case 1: <= 1h & single column -> single crisp horizontal row: Left SEC · TEO | Right ROOM */
+                              <div className="course-card-density-row">
+                                <span className="course-card-block-sec">
+                                  {isMobileViewport && isFullWeekElastic
+                                    ? secWithMerge
+                                    : `${secWithMerge} · ${compactType}`}
+                                </span>
+                                <span className="course-card-room-pill">
+                                  {roomCodeLabel}
+                                </span>
                               </div>
-                            )}
-
-                            {isLiveNow && (
-                              <span className="block-live-tag">
-                                <Radio size={9} className="live-spin" /> EN VIVO
-                              </span>
+                            ) : isOneHourOrLess && !isSingleCol ? (
+                              /* Case 2: <= 1h & colliding multi-col -> ultra-compact single row, zero vertical stacking */
+                              <div className="course-card-density-row course-card-density-row--tight">
+                                <span className="course-card-block-sec course-card-block-sec--tight">
+                                  {secCode}
+                                  {overflowCount > 0 ? `+${overflowCount}` : ''}
+                                </span>
+                                <span className="course-card-room-pill course-card-room-pill--tight">
+                                  {roomCodeLabel}
+                                </span>
+                              </div>
+                            ) : isMidDuration ? (
+                              /* 1.5h block: compact 2-row layout to guarantee zero vertical clipping */
+                              <>
+                                <div className="course-card-density-row course-card-density-row--tight">
+                                  <span className="course-card-block-sec">
+                                    {secWithMerge}
+                                    {overflowCount > 0 ? `+${overflowCount}` : ''}
+                                  </span>
+                                  <span className="course-card-block-time-inline">{compactTime}</span>
+                                </div>
+                                <div className="course-card-block-room">
+                                  <span>{roomCodeLabel}</span>
+                                </div>
+                              </>
+                            ) : !isSingleCol ? (
+                              /* Case 3: >= 2h & multi-col cluster -> Line 1 SEC + 13–15h | Line 2 Room | Line 3 surname */
+                              <>
+                                <div className="course-card-density-row course-card-density-row--tight">
+                                  <span className="course-card-block-sec course-card-block-sec--tight">
+                                    {secCode}
+                                    {overflowCount > 0 ? `+${overflowCount}` : ''}
+                                  </span>
+                                  <span className="course-card-block-time-inline">{compactTime}</span>
+                                </div>
+                                <div className="course-card-block-room">
+                                  <span>{roomCodeLabel}</span>
+                                </div>
+                                {shortLastProf && (
+                                  <div className="course-card-block-prof">
+                                    {shortLastProf}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              /* Case 4: >= 2h & single column -> rich orthogonal layout without truncation */
+                              <>
+                                <div className="course-card-density-row">
+                                  <span className="course-card-block-sec">
+                                    {isMobileViewport && isFullWeekElastic
+                                      ? secWithMerge
+                                      : `${secWithMerge} · ${compactType}`}
+                                  </span>
+                                  <span className="course-card-room-pill">
+                                    {roomCodeLabel}
+                                  </span>
+                                </div>
+                                <div className="course-card-block-time">
+                                  {isMobileViewport && isFullWeekElastic
+                                    ? compactTime
+                                    : `${s.startTime} – ${s.endTime}`}
+                                </div>
+                                {displayProf && !isMobileViewport && (
+                                  <div className="course-card-block-prof">
+                                    {displayProf}
+                                  </div>
+                                )}
+                                {isLiveNow && !isMobileViewport && (
+                                  <span className="block-live-tag">
+                                    <Radio size={9} className="live-spin" /> EN VIVO
+                                  </span>
+                                )}
+                              </>
                             )}
                           </div>
                         );
@@ -854,7 +1007,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                           {formatShortSectionLabel(item.sectionNumber)}
                         </span>
                         <span className="agenda-group-tag">
-                          {s.sessionGroup} ({s.sessionType})
+                          {formatCleanSessionTitle(s.sessionGroup, s.sessionType)}
                         </span>
                         <span
                           className={`session-modality-badge ${s.modality === 'Presencial' ? 'modality--presencial' : 'modality--virtual'}`}
@@ -926,131 +1079,144 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
         </div>
       )}
 
-      {/* Selected Session Inspector Drawer/Card */}
-      {selectedSessionItem && (
-        <div ref={inspectorRef} className="prof-session-inspector glass-card animate-fadeIn">
-          <div className="inspector-header">
-            <div className="inspector-title-group">
-              <span
-                className="inspector-sec-badge"
-                style={{
-                  backgroundColor: getSectionColor(selectedSessionItem.sectionNumber).bg,
-                  color: getSectionColor(selectedSessionItem.sectionNumber).text,
-                  borderColor: getSectionColor(selectedSessionItem.sectionNumber).border
-                }}
-              >
-                {formatShortSectionLabel(selectedSessionItem.sectionNumber)}
-              </span>
-              <h4 className="inspector-title">
-                {selectedSessionItem.session.sessionGroup} ({selectedSessionItem.session.sessionType})
-              </h4>
-            </div>
-            <button
-              type="button"
-              className="inspector-close-btn"
-              onClick={() => setSelectedSessionItem(null)}
-              title="Cerrar inspector"
-            >
-              ✕
-            </button>
-          </div>
+      {/* Selected Session Inspector Drawer/Card (4-Column / 3-Cell Orthogonal Swiss Architectural Sheet) */}
+      {selectedSessionItem && (() => {
+        const selSess = selectedSessionItem.session;
+        const canonicalRoom = resolveCanonicalRoom(selSess.roomCode || selSess.roomDisplayName);
+        const selGcalUrl = generateGoogleCalendarUrlForSession(
+          selSess,
+          course.name,
+          course.code,
+          selectedSessionItem.sectionNumber
+        );
+        const selIsLiveNow =
+          selSess.day === nowDay &&
+          nowMinutes >= selSess.startMinutes &&
+          nowMinutes < selSess.endMinutes;
+        const hasAssignedProf = Boolean(selSess.professor && !/docente\s*utec/i.test(selSess.professor));
 
-          {/* If this block has merged sections or overflow items, show quick chips */}
-          {selectedSessionItem.mergedSections && selectedSessionItem.mergedSections.length > 1 && (
-            <div className="inspector-merged-info">
-              <span>Clase compartida por {selectedSessionItem.mergedSections.length} sub-secciones:</span>
-              <div className="inspector-overflow-chips">
-                {selectedSessionItem.mergedSections.map(secNum => (
-                  <button
-                    key={secNum}
-                    type="button"
-                    className="inspector-overflow-chip"
-                    onClick={() => onSelectSectionNumber?.(secNum)}
+        return (
+          <div ref={inspectorRef} className="prof-session-inspector course-swiss-inspector animate-fadeIn">
+            {/* Top Header Row: Split Bicolor Badge + Actions */}
+            <div className="course-inspector-header">
+              <div className="course-inspector-header-left">
+                <div className="course-inspector-split-badge">
+                  <span
+                    className="inspector-sec-badge"
+                    style={{ borderLeftColor: facultyPalette.borderAccent }}
                   >
-                    {formatShortSectionLabel(secNum)}
-                  </button>
-                ))}
+                    {formatInspectorSecBadge(selectedSessionItem.sectionNumber)}
+                  </span>
+                  <span className="course-inspector-type-badge">
+                    {formatCleanSessionTitle(selSess.sessionGroup, selSess.sessionType)}
+                  </span>
+                </div>
+                {selIsLiveNow && (
+                  <span className="agenda-live-badge">
+                    <Radio size={10} className="live-spin" /> EN VIVO
+                  </span>
+                )}
+              </div>
+
+              <div className="course-inspector-header-actions">
+                <a
+                  href={selGcalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="course-inspector-gcal-btn"
+                  title="Agendar sesión en Google Calendar como oyente"
+                >
+                  <Calendar size={12} />
+                  <span>Agendar en Google Calendar</span>
+                </a>
+                <button
+                  type="button"
+                  className="inspector-close-btn"
+                  onClick={() => setSelectedSessionItem(null)}
+                  title="Cerrar inspector"
+                  aria-label="Cerrar inspector"
+                >
+                  ✕
+                </button>
               </div>
             </div>
-          )}
 
-          {selectedSessionItem.overflowItems && selectedSessionItem.overflowItems.length > 1 && (
-            <div className="inspector-merged-info">
-              <span>Secciones en este horario ({selectedSessionItem.overflowItems.length}):</span>
-              <div className="inspector-overflow-chips">
-                {selectedSessionItem.overflowItems.map(ov => (
-                  <button
-                    key={ov.id}
-                    type="button"
-                    className={`inspector-overflow-chip ${ov.id === selectedSessionItem.id ? 'active' : ''}`}
-                    onClick={() => setSelectedSessionItem({ ...ov, overflowItems: selectedSessionItem.overflowItems })}
-                  >
-                    {formatShortSectionLabel(ov.sectionNumber)}
-                  </button>
-                ))}
+            {/* If this block has merged sections or overflow items, show quick chips */}
+            {selectedSessionItem.mergedSections && selectedSessionItem.mergedSections.length > 1 && (
+              <div className="inspector-merged-info">
+                <span>Clase compartida por {selectedSessionItem.mergedSections.length} sub-secciones:</span>
+                <div className="inspector-overflow-chips">
+                  {selectedSessionItem.mergedSections.map(secNum => (
+                    <button
+                      key={secNum}
+                      type="button"
+                      className="inspector-overflow-chip"
+                      onClick={() => onSelectSectionNumber?.(secNum)}
+                    >
+                      {formatShortSectionLabel(secNum)}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="inspector-grid">
-            <div className="inspector-item">
-              <Clock size={14} className="text-accent" />
-              <span>
-                <strong>{DAY_LABELS[selectedSessionItem.session.day]}</strong> {selectedSessionItem.session.startTime} - {selectedSessionItem.session.endTime}
-              </span>
-            </div>
+            {selectedSessionItem.overflowItems && selectedSessionItem.overflowItems.length > 1 && (
+              <div className="inspector-merged-info">
+                <span>Secciones en este horario ({selectedSessionItem.overflowItems.length}):</span>
+                <div className="inspector-overflow-chips">
+                  {selectedSessionItem.overflowItems.map(ov => (
+                    <button
+                      key={ov.id}
+                      type="button"
+                      className={`inspector-overflow-chip ${ov.id === selectedSessionItem.id ? 'active' : ''}`}
+                      onClick={() => setSelectedSessionItem({ ...ov, overflowItems: selectedSessionItem.overflowItems })}
+                    >
+                      {formatShortSectionLabel(ov.sectionNumber)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-            <div className="inspector-item">
-              <MapPin size={14} className="text-emerald" />
-              <a
-                href={`/aulas?aula=${resolveCanonicalRoom(selectedSessionItem.session.roomCode || selectedSessionItem.session.roomDisplayName).code}`}
-                className="session-room-link room-entity-link"
-                title="Ver ocupación y disponibilidad en Aulas Libres"
-              >
-                {resolveCanonicalRoom(selectedSessionItem.session.roomCode || selectedSessionItem.session.roomDisplayName).displayName}
-                <ExternalLink size={11} />
-              </a>
-              {selectedSessionItem.session.floor > 1 && (
-                <span className="session-floor-tag">Piso {selectedSessionItem.session.floor}</span>
-              )}
-            </div>
+            {/* 3-Column Tabular Metadata Strip */}
+            <div className="course-inspector-meta-strip">
+              <div className="course-inspector-meta-cell">
+                <span className="course-inspector-meta-eyebrow">HORARIO</span>
+                <span className="course-inspector-meta-value">
+                  {DAY_LABELS[selSess.day]} · {selSess.startTime} – {selSess.endTime} ({selSess.durationHours}h)
+                </span>
+              </div>
 
-            <div className="inspector-item">
-              <GraduationCap size={14} className="text-purple" />
-              <span>
-                {selectedSessionItem.session.professor && !/docente\s*utec/i.test(selectedSessionItem.session.professor) ? (
+              <div className="course-inspector-meta-cell">
+                <span className="course-inspector-meta-eyebrow">ESPACIO ASIGNADO</span>
+                <a
+                  href={`/aulas?aula=${canonicalRoom.code}`}
+                  className="course-inspector-meta-value course-inspector-room-link"
+                  title="Ver ocupación y disponibilidad en Aulas Libres"
+                >
+                  {canonicalRoom.displayName}
+                  {selSess.floor > 1 ? ` · Piso ${selSess.floor}` : ''} ↗
+                </a>
+              </div>
+
+              <div className="course-inspector-meta-cell">
+                <span className="course-inspector-meta-eyebrow">DOCENTE TITULAR</span>
+                {hasAssignedProf ? (
                   <a
-                    href={`/profesores?profesor=${encodeURIComponent(selectedSessionItem.session.professor)}`}
-                    className="session-prof-link prof-entity-link"
+                    href={`/profesores?profesor=${encodeURIComponent(selSess.professor)}`}
+                    className="course-inspector-meta-value course-inspector-prof-link"
                     title="Ver perfil del docente"
                   >
-                    {formatProfessorName(selectedSessionItem.session.professor).displayName}
+                    {formatProfessorName(selSess.professor).displayName} ↗
                   </a>
                 ) : (
-                  'Docente UTEC'
+                  <span className="course-inspector-meta-value">Docente UTEC</span>
                 )}
-              </span>
+              </div>
             </div>
           </div>
-
-          <div className="inspector-actions">
-            <a
-              href={generateGoogleCalendarUrlForSession(
-                selectedSessionItem.session,
-                course.name,
-                course.code,
-                selectedSessionItem.sectionNumber
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-secondary btn-sm"
-            >
-              <Calendar size={13} />
-              <span>Agendar en Google Calendar</span>
-            </a>
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

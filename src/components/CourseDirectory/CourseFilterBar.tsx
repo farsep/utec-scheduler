@@ -88,8 +88,8 @@ export const CourseFilterBar: React.FC<CourseFilterBarProps> = ({
   // Modality options for CustomSelect
   const modalityOptions: SelectOption[] = [
     { value: 'ALL', label: 'Todas las modalidades' },
-    { value: 'Presencial', label: 'Presencial (Campus UTEC)', badge: 'Campus', badgeColor: '#10b981' },
-    { value: 'Sincronico', label: 'Sincrónico / Virtual', badge: 'Virtual', badgeColor: '#3b82f6' }
+    { value: 'Presencial', label: 'Presencial (Campus UTEC)', badge: 'Campus', badgeColor: '#0D7A4E' },
+    { value: 'Sincronico', label: 'Sincrónico / Virtual', badge: 'Virtual', badgeColor: '#005A8C' }
   ];
 
   // Sort options for CustomSelect (without vacancies)

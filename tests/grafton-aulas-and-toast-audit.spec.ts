@@ -10,7 +10,7 @@ test.describe('Grafton Swiss Aulas & Toast Audit', () => {
     }
   });
 
-  test('1. No Monogram Bleeding on /aulas (Aula Magna & Futsal)', async ({ page }) => {
+  test('1. No Monogram Bleeding on /aulas & No Excluded Spaces (Aula Magna)', async ({ page }) => {
     await page.goto('/aulas');
     await page.waitForLoadState('networkidle');
 
@@ -30,16 +30,8 @@ test.describe('Grafton Swiss Aulas & Toast Audit', () => {
       expect(metaText).not.toContain('AULAMAGNA');
     }
 
-    // Assert Futsal has monogram FUT
-    const futsalCard = page.locator('#room-card-FUTSAL');
-    if (await futsalCard.isVisible()) {
-      const futsalMonogram = futsalCard.locator('.classroom-code-monogram');
-      await expect(futsalMonogram).toContainText('FUT');
-      const isBleeding = await futsalMonogram.evaluate((el) => el.scrollWidth > el.clientWidth + 1);
-      expect(isBleeding).toBe(false);
-      const metaText = await futsalCard.locator('.classroom-card-meta').innerText();
-      expect(metaText).not.toContain('FUTSAL');
-    }
+    // Assert Futsal is completely excluded from UTEC space rendering
+    await expect(page.locator('#room-card-FUTSAL')).toHaveCount(0);
 
     // Assert all room monogram boxes on the page never overflow
     const monograms = page.locator('.classroom-type-icon.classroom-code-monogram');

@@ -2134,11 +2134,11 @@
 
 .course-session-pill .session-prof-link,
 .course-session-pill .session-prof-unassigned,
-.course-session-pill .session-floor-tag {
+.session-floor-tag {
   color: #4A4946 !important;
 }
 
-.course-session-pill .session-floor-tag {
+.session-floor-tag {
   background: #DCD9D2 !important;
   background-color: #DCD9D2 !important;
   border: 1px solid #C6C3BB !important;
@@ -2581,14 +2581,22 @@
 }
 
 @media (max-width: 639px) {
-  .prof-timetable-controls-bar {
+  .prof-timetable-controls-bar,
+  .course-timetable-top-bar {
     flex-direction: column !important;
     align-items: stretch !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+  }
+  .prof-day-jump-pills,
+  .course-timetable-filters-left {
+    width: 100% !important;
+    flex: none !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
     gap: 6px !important;
   }
   .prof-day-jump-pills {
-    width: 100% !important;
-    flex: none !important;
     justify-content: space-between !important;
   }
   .prof-view-mode-toggle {
@@ -2858,8 +2866,12 @@
 
 /* Tab 2: Cursos · Secciones in Professor Detail Modal */
 .prof-course-code-pill,
-.prof-course-code-link {
+.prof-course-code-link,
+.course-code-pill,
+a.course-code-pill,
+a.course-code-pill.course-entity-link {
   border-radius: 0px !important;
+  background: #18181A !important;
   background-color: #18181A !important;
   color: #F2F0EC !important;
   border: 1px solid #18181A !important;
@@ -2873,15 +2885,21 @@
 }
 
 .prof-course-code-pill:hover,
-.prof-course-code-link:hover {
+.prof-course-code-link:hover,
+.course-code-pill:hover,
+a.course-code-pill.course-entity-link:hover {
+  background: #00779E !important;
   background-color: #00779E !important;
   border-color: #18181A !important;
   color: #FFFFFF !important;
+  text-decoration: none !important;
 }
 
+.group-pill,
 .prof-course-hours-badge,
 .prof-section-hours-badge {
   border-radius: 0px !important;
+  background: #DCD9D2 !important;
   background-color: #DCD9D2 !important;
   color: #141416 !important;
   border: 1px solid #18181A !important;
@@ -4874,6 +4892,7 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
   height: 100%;
   position: relative;
   z-index: 2;
+  color: #5A5852;
   text-decoration: none;
   cursor: pointer;
   border-right: 1px solid rgba(198, 195, 187, 0.5);
@@ -6190,6 +6209,784 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
     display: inline;
   }
 }
+
+/* ==========================================================================
+   SUPREME COURSE TIMETABLE GRID, SECTION FILTER RIBBON, ARCHITECTURAL
+   SESSION INSPECTOR & GLOBAL LOW-CONTRAST BADGE HARMONIZATION
+   ========================================================================== */
+
+/* 1. Sticky Timetable Headers & Scroll Containment (Never Clip Header Row) */
+.course-modal-body--timetable {
+  padding: 0 16px 14px 16px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.course-timetable-toolbar {
+  margin-top: 10px !important;
+  background: #EAE7E1 !important;
+  background-color: #EAE7E1 !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  padding: 8px 10px !important;
+  gap: 7px !important;
+  box-shadow: none !important;
+}
+
+.course-sec-pills-strip {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding-top: 6px !important;
+  padding-bottom: 2px !important;
+  border-top: 1px solid #C6C3BB !important;
+}
+
+.course-sec-strip-label {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #4A4946 !important;
+  margin-right: 4px !important;
+  flex-shrink: 0 !important;
+}
+
+.course-sec-pills-strip .course-sec-filter-pill {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  padding: 3px 8px !important;
+  border-radius: 0px !important;
+  line-height: 1.25 !important;
+  transition: none !important;
+}
+
+.course-sec-pills-strip .course-sec-filter-pill:hover {
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+}
+
+.course-sec-pills-strip .course-sec-filter-pill.prof-day-jump-pill--active {
+  background: #18181A !important;
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+  border-color: #18181A !important;
+}
+
+.prof-timetable-container.course-timetable-container {
+  overflow: visible !important;
+  align-items: stretch !important;
+}
+
+.course-timetable-container .prof-timetable-days-scroll-wrapper:not(.has-x-scroll) {
+  overflow: visible !important;
+}
+
+.course-timetable-container .prof-timetable-time-corner {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 31 !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 4px 2px !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border-bottom: 2px solid #18181A !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  color: #141416 !important;
+}
+
+.course-timetable-container .prof-timetable-days-header-row {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 30 !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border-bottom: 2px solid #18181A !important;
+}
+
+.course-timetable-container .prof-timetable-day-col-header {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  padding: 4px !important;
+  border-right: 1px solid #C6C3BB !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+}
+
+.course-timetable-container .prof-timetable-day-col-header:last-child {
+  border-right: none !important;
+}
+
+.course-timetable-container .prof-timetable-day-col-header--today {
+  background: #CFD2CC !important;
+  background-color: #CFD2CC !important;
+}
+
+.course-timetable-container .prof-day-full,
+.course-timetable-container .prof-day-abbr {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  color: #141416 !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+}
+
+.course-timetable-container .course-day-count-inline {
+  color: #4A4946 !important;
+  font-weight: 700 !important;
+}
+
+/* 2. Course Timetable Session Blocks (Concrete Default vs High-Contrast Dark Selected) */
+.course-timetable-container .prof-session-card.course-session-card {
+  background: #EAE7E1 !important;
+  background-color: #EAE7E1 !important;
+  background-image: none !important;
+  border: 1px solid #18181A !important;
+  border-left: 3px solid #00668C !important;
+  color: #141416 !important;
+  border-radius: 0px !important;
+  padding: 2px 5px !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  gap: 1px !important;
+  z-index: 10 !important;
+  transition: background-color 120ms ease, box-shadow 120ms ease !important;
+}
+
+.course-timetable-container .prof-session-card.course-session-card.course-session-card--lab {
+  border-left: 3px solid #0D7A4E !important;
+}
+
+.course-timetable-container .prof-session-card.course-session-card.course-session-card--prac {
+  border-left: 3px solid #B85D00 !important;
+}
+
+.course-timetable-container .prof-session-card.course-session-card.course-session-card--compact {
+  padding: 2px 4px !important;
+}
+
+.course-timetable-container .prof-session-card.course-session-card * {
+  color: #141416 !important;
+  text-shadow: none !important;
+}
+
+.course-timetable-container .prof-session-card.course-session-card:hover {
+  transform: none !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  z-index: 25 !important;
+  box-shadow: 2px 2px 0px #18181A !important;
+}
+
+.course-timetable-container .prof-session-card.course-session-card.prof-session-card--selected {
+  background: #18181A !important;
+  background-color: #18181A !important;
+  border: 1.5px solid #18181A !important;
+  border-left: 4px solid #D97706 !important;
+  color: #F2F0EC !important;
+  box-shadow: 2px 2px 0px rgba(24, 24, 26, 0.25) !important;
+  z-index: 15 !important;
+}
+
+.course-timetable-container .prof-session-card.course-session-card.prof-session-card--selected * {
+  color: #F2F0EC !important;
+}
+
+.course-card-density-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.course-card-density-row--tight {
+  gap: 2px !important;
+}
+
+.course-timetable-container .course-card-block-sec {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  min-width: 0 !important;
+}
+
+.course-timetable-container .course-card-block-sec--tight {
+  font-size: 9px !important;
+  letter-spacing: -0.02em !important;
+  flex-shrink: 0 !important;
+}
+
+.course-card-room-pill {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  padding: 0 4px !important;
+  border-radius: 0px !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.course-card-room-pill--tight {
+  font-size: 8.5px !important;
+  padding: 0 3px !important;
+}
+
+.course-timetable-container .prof-session-card.prof-session-card--selected .course-card-room-pill {
+  background: #2C2C32 !important;
+  background-color: #2C2C32 !important;
+  border-color: #F2F0EC !important;
+  color: #F2F0EC !important;
+}
+
+.course-card-block-time-inline {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+  color: #4A4946 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  line-height: 1.15 !important;
+}
+
+.course-timetable-container .course-card-block-time {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  color: #3A3936 !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.course-timetable-container .course-card-block-room {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.course-timetable-container .course-card-block-prof {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 9.5px !important;
+  font-weight: 600 !important;
+  color: #4A4946 !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.course-timetable-container .prof-session-card.prof-session-card--selected .course-card-block-time-inline,
+.course-timetable-container .prof-session-card.prof-session-card--selected .course-card-block-time,
+.course-timetable-container .prof-session-card.prof-session-card--selected .course-card-block-prof,
+.course-timetable-container .prof-session-card.prof-session-card--selected .course-card-mobile-sub {
+  color: #DCD9D2 !important;
+}
+
+.course-card-mobile-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  gap: 0.5px !important;
+}
+
+.course-card-mobile-sub {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 8px !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+  color: #4A4946 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+@media (max-width: 700px) {
+  .course-timetable-container .prof-session-card.course-session-card {
+    padding: 1.5px 2px !important;
+  }
+
+  .course-timetable-container .prof-session-card.course-session-card.course-session-card--compact {
+    padding: 1px 0.5px !important;
+    border-left-width: 2px !important;
+  }
+
+  .course-timetable-container .course-card-block-sec {
+    font-size: 8.5px !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  .course-timetable-container .course-session-card--compact .course-card-block-sec {
+    font-size: 7.5px !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .course-timetable-container .course-session-card--compact .course-card-mobile-sub {
+    font-size: 7px !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .course-timetable-container .course-session-card--compact .course-card-mobile-sub--tight {
+    font-size: 6.5px !important;
+    letter-spacing: -0.05em !important;
+  }
+
+  .course-timetable-container .prof-now-line-pill {
+    display: none !important;
+  }
+}
+
+/* 3. Orthogonal Swiss Architectural Session Inspector (Zero Mint Green, 3-Cell Tabular Sheet) */
+.prof-session-inspector.course-swiss-inspector {
+  background: #EAE7E1 !important;
+  background-color: #EAE7E1 !important;
+  border: 1px solid #18181A !important;
+  border-top: 2px solid #18181A !important;
+  border-bottom: 1.5px solid #18181A !important;
+  border-radius: 0px !important;
+  padding: 12px 16px !important;
+  gap: 0 !important;
+  box-shadow: none !important;
+}
+
+.course-inspector-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.course-inspector-header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.course-inspector-split-badge {
+  display: inline-flex !important;
+  align-items: stretch !important;
+  border-radius: 0px !important;
+}
+
+.course-swiss-inspector .inspector-sec-badge {
+  background: #18181A !important;
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+  border-top: 1px solid #18181A !important;
+  border-right: 1px solid #18181A !important;
+  border-bottom: 1px solid #18181A !important;
+  border-left-width: 4px !important;
+  border-left-style: solid !important;
+  padding: 3px 8px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  border-radius: 0px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  letter-spacing: 0.03em !important;
+}
+
+.course-inspector-type-badge {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  color: #141416 !important;
+  border: 1px solid #18181A !important;
+  border-left: 0 !important;
+  padding: 3px 8px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  line-height: 1.25 !important;
+  border-radius: 0px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.course-inspector-header-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-left: auto !important;
+}
+
+.course-inspector-gcal-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  color: #141416 !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  padding: 4px 10px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  text-decoration: none !important;
+  box-shadow: 2px 2px 0px #18181A !important;
+  transition: background-color 120ms ease, color 120ms ease !important;
+}
+
+.course-inspector-gcal-btn:hover {
+  background: #18181A !important;
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+}
+
+.course-swiss-inspector .inspector-close-btn {
+  width: 24px !important;
+  height: 24px !important;
+  border: 1px solid #18181A !important;
+  background: #DCD9D2 !important;
+  background-color: #DCD9D2 !important;
+  color: #141416 !important;
+  border-radius: 0px !important;
+  font-weight: 700 !important;
+}
+
+.course-swiss-inspector .inspector-close-btn:hover {
+  background: #18181A !important;
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+}
+
+.course-swiss-inspector .inspector-merged-info {
+  margin-top: 8px !important;
+  background: #FAF9F5 !important;
+  background-color: #FAF9F5 !important;
+  border: 1px solid #C6C3BB !important;
+  border-radius: 0px !important;
+  color: #141416 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10.5px !important;
+  padding: 6px 10px !important;
+}
+
+.course-swiss-inspector .inspector-overflow-chip {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  color: #141416 !important;
+  border: 1px solid #18181A !important;
+  border-radius: 0px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  padding: 2px 8px !important;
+}
+
+.course-swiss-inspector .inspector-overflow-chip.active,
+.course-swiss-inspector .inspector-overflow-chip:hover {
+  background: #18181A !important;
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+}
+
+.course-inspector-meta-strip {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  border: 1px solid #18181A !important;
+  background: #FAF9F5 !important;
+  background-color: #FAF9F5 !important;
+  margin-top: 10px !important;
+  border-radius: 0px !important;
+}
+
+.course-inspector-meta-cell {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  padding: 8px 12px !important;
+  min-width: 0 !important;
+}
+
+.course-inspector-meta-cell + .course-inspector-meta-cell {
+  border-left: 1px solid #C6C3BB !important;
+}
+
+.course-inspector-meta-eyebrow {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #5A5852 !important;
+}
+
+.course-inspector-meta-value {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #141416 !important;
+  line-height: 1.3 !important;
+}
+
+.course-inspector-room-link {
+  color: #141416 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #00668C !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 2px !important;
+}
+
+.course-inspector-room-link:hover {
+  color: #00668C !important;
+}
+
+.course-inspector-prof-link {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  color: #141416 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #18181A !important;
+  text-decoration-thickness: 1.5px !important;
+  text-underline-offset: 2px !important;
+}
+
+.course-inspector-prof-link:hover {
+  color: #00668C !important;
+}
+
+@media (max-width: 639px) {
+  .course-modal-body--timetable {
+    padding: 0 10px 12px 10px !important;
+  }
+
+  .course-inspector-meta-strip {
+    grid-template-columns: 1fr !important;
+  }
+
+  .course-inspector-meta-cell + .course-inspector-meta-cell {
+    border-left: none !important;
+    border-top: 1px solid #C6C3BB !important;
+  }
+
+  .course-inspector-header-actions {
+    width: 100% !important;
+    justify-content: space-between !important;
+    margin-left: 0 !important;
+  }
+}
+
+/* 4. Global Low-Contrast / Pastel Badge Audit & Harmonization (>= 7:1 Contrast, 0px Corners) */
+.text-emerald {
+  color: #094D31 !important;
+}
+
+.text-purple {
+  color: #3D348B !important;
+}
+
+.text-amber {
+  color: #6E3600 !important;
+}
+
+.course-session-pill .session-room-link {
+  color: #141416 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #00668C !important;
+  text-decoration-thickness: 1.5px !important;
+  text-underline-offset: 2px !important;
+}
+
+.course-session-pill .session-room-link:hover {
+  color: #00668C !important;
+}
+
+.course-session-pill .session-prof-link {
+  color: #141416 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #18181A !important;
+}
+
+.course-session-pill .session-prof-link:hover {
+  color: #00668C !important;
+}
+
+.agenda-sec-tag,
+.prof-inspector-badge,
+.res-course-tag,
+.week-badge,
+.reservations-count-pill {
+  border-radius: 0px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+}
+
+.agenda-live-badge,
+.session-live-pulse-badge,
+.block-live-tag {
+  background: #DCEEE6 !important;
+  background-color: #DCEEE6 !important;
+  border: 1px solid #0D7A4E !important;
+  color: #093B29 !important;
+  border-radius: 0px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+}
+
+.agenda-gcal-btn {
+  background: #F2F0EC !important;
+  background-color: #F2F0EC !important;
+  border: 1px solid #18181A !important;
+  color: #141416 !important;
+  border-radius: 0px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+  box-shadow: 2px 2px 0px #18181A !important;
+}
+
+.agenda-gcal-btn:hover {
+  background: #18181A !important;
+  background-color: #18181A !important;
+  color: #F2F0EC !important;
+}
+
+.course-card-overflow-badge,
+.course-day-jump-count {
+  background: #F5E8D3 !important;
+  background-color: #F5E8D3 !important;
+  border: 1px solid #B85D00 !important;
+  color: #4D2600 !important;
+  border-radius: 0px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-weight: 700 !important;
+}
+
+.course-day-jump-chip--today {
+  background: #DCEEE6 !important;
+  background-color: #DCEEE6 !important;
+  border: 1px solid #0D7A4E !important;
+  color: #093B29 !important;
+}
+
+/* Mobile Course Timetable (< 700px): guarantee readable day widths in 3..6 day modes without overflowing container */
+@media (max-width: 700px) {
+  .course-timetable-container .prof-timetable-days-scroll-wrapper,
+  .course-timetable-container .prof-timetable-days-scroll-wrapper:not(.has-x-scroll) {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .course-timetable-container .prof-timetable-days-content[data-cols="3"] {
+    min-width: 440px !important;
+    width: max-content !important;
+  }
+
+  .course-timetable-container .prof-timetable-days-content[data-cols="4"] {
+    min-width: 580px !important;
+    width: max-content !important;
+  }
+
+  .course-timetable-container .prof-timetable-days-content[data-cols="5"] {
+    min-width: 720px !important;
+    width: max-content !important;
+  }
+
+  .course-timetable-container .prof-timetable-days-content[data-cols="6"] {
+    min-width: 860px !important;
+    width: max-content !important;
+  }
+}
+
+/* Tablet Course Timetable (701px - 960px): allow horizontal scroll so dense parallel sections never clip */
+@media (min-width: 701px) and (max-width: 960px) {
+  .course-timetable-container .prof-timetable-days-scroll-wrapper,
+  .course-timetable-container .prof-timetable-days-scroll-wrapper:not(.has-x-scroll) {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .course-timetable-container .prof-timetable-days-content[data-cols="4"] {
+    min-width: 680px !important;
+  }
+
+  .course-timetable-container .prof-timetable-days-content[data-cols="5"],
+  .course-timetable-container .prof-timetable-days-content[data-cols="6"] {
+    min-width: 860px !important;
+  }
+
+  .course-timetable-container .course-card-block-sec {
+    font-size: 8.5px !important;
+    letter-spacing: -0.02em !important;
+  }
+}
+
+/* Keep time corner and day headers locked together when wrapper scrolls horizontally on <= 960px */
+@media (max-width: 960px) {
+  .course-timetable-container .prof-timetable-time-corner,
+  .course-timetable-container .prof-timetable-days-header-row {
+    position: relative !important;
+    top: auto !important;
+  }
+}
+
+/* Mobile Dock & Scroll Focus Clearance (< 1024px) */
+@media (max-width: 1023px) {
+  .app-shell-tab-pane {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .course-card,
+  .course-view-detail-btn,
+  .classroom-card,
+  .professor-card,
+  .mentor-card {
+    scroll-margin-bottom: 145px;
+    scroll-margin-top: 88px;
+  }
+}
+
 
 
 

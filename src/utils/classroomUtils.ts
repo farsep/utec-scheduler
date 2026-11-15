@@ -80,7 +80,6 @@ export const CANONICAL_ROOMS_DATA: CanonicalRoomResult[] = [
   { code: 'A908', displayName: 'Aula 908', type: 'aula', floor: 9 },
   { code: 'AUDITORIO', displayName: 'Auditorio Principal', type: 'auditorio', floor: 1 },
   { code: 'AULAMAGNA', displayName: 'Aula Magna', type: 'auditorio', floor: 1 },
-  { code: 'FUTSAL', displayName: 'Futsal', type: 'otro', floor: 1 },
   { code: 'L021', displayName: 'Laboratorio 021', type: 'laboratorio', floor: 1 },
   { code: 'L022', displayName: 'Laboratorio 022', type: 'laboratorio', floor: 1 },
   { code: 'L101', displayName: 'Laboratorio 101', type: 'laboratorio', floor: 1 },
@@ -207,9 +206,21 @@ export function resolveCanonicalRoom(
 /**
  * Normalizes and extracts room code, type, floor and display name
  */
+export function isExcludedClassroom(rawLoc?: string): boolean {
+  if (!rawLoc) return false;
+  const trimmed = rawLoc.trim();
+  return (
+    /A701-A/i.test(trimmed) ||
+    /-A\b/i.test(trimmed) ||
+    /\bfutsal\b/i.test(trimmed) ||
+    /^E\d+/i.test(trimmed) ||
+    /^L203E?$/i.test(trimmed)
+  );
+}
+
 export function parseLocationInfo(rawLoc?: string): { code: string; displayName: string; type: RoomType; floor: number } | null {
   if (!rawLoc) return null;
-  if (/A701-A/i.test(rawLoc) || /-A\b/i.test(rawLoc.trim())) return null;
+  if (/A701-A/i.test(rawLoc) || /-A\b/i.test(rawLoc.trim()) || /futsal/i.test(rawLoc)) return null;
   let clean = rawLoc
     .replace(/UTEC[\s-]*/gi, '')
     .replace(/[\s-]*\bBA\b[\s-]*/gi, ' ')
@@ -229,7 +240,7 @@ export function parseLocationInfo(rawLoc?: string): { code: string; displayName:
     return { code: 'AULAMAGNA', displayName: 'Aula Magna', type: 'auditorio', floor: 1 };
   }
   if (/futsal/i.test(clean)) {
-    return { code: 'FUTSAL', displayName: 'Futsal', type: 'otro', floor: 1 };
+    return null;
   }
   if (/^S\s*111$/i.test(clean)) {
     return { code: 'S111', displayName: 'S111', type: 'otro', floor: 1 };

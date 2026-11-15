@@ -442,7 +442,9 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                           >
                             <div className="session-pill-top">
                               <span className="session-group-tag">
-                                {sess.sessionGroup} ({sess.sessionType})
+                                {/teor|lab|pr[aá]c|taller|vir/i.test(sess.sessionGroup || '')
+                                  ? sess.sessionGroup.toUpperCase()
+                                  : `${sess.sessionType} ${sess.sessionGroup || ''}`.trim().toUpperCase()}
                               </span>
                               <span
                                 className={`session-modality-badge ${sess.modality === 'Presencial' ? 'modality--presencial' : 'modality--virtual'}`}

@@ -190,10 +190,10 @@ async function runScraper() {
   console.log('📡 Consultando catálogo de espacios...');
   const rawCatalog = await fetchCatalog(config.token);
   
-  // Filter out E rooms (study rooms like E801-E810), rooms ending in -A (like A701-A), and L203E
+  // Filter out E rooms (study rooms like E801-E810), rooms ending in -A (like A701-A), L203E, and Futsal
   const isExcludedRoom = (name: string) => {
     const clean = name.trim().toUpperCase();
-    return clean.startsWith('E') || clean.endsWith('-A') || clean.endsWith('_A') || clean.startsWith('L203') || clean === 'L203E';
+    return clean.startsWith('E') || clean.endsWith('-A') || clean.endsWith('_A') || clean.startsWith('L203') || clean === 'L203E' || clean.includes('FUTSAL');
   };
 
   const catalog = rawCatalog.filter((item: RawAula) => !isExcludedRoom(item.nomAliasAula));

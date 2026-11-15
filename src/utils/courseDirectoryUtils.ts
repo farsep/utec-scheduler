@@ -977,16 +977,16 @@ X-WR-CALNAME:Cursos Visitante UTEC (${course.code})
 ${icsEvents}END:VCALENDAR`;
 }
 
-// Distinct vibrant section colors for timetables and badges
+// High-contrast Grafton Swiss Concrete section palettes (>= 9.5:1 contrast, zero mint pastels)
 export const SECTION_PALETTES = [
-  { bg: 'rgba(59, 130, 246, 0.22)', border: '#3b82f6', text: '#93c5fd', badge: 'rgba(59, 130, 246, 0.3)' },
-  { bg: 'rgba(16, 185, 129, 0.22)', border: '#10b981', text: '#6ee7b7', badge: 'rgba(16, 185, 129, 0.3)' },
-  { bg: 'rgba(139, 92, 246, 0.22)', border: '#8b5cf6', text: '#c4b5fd', badge: 'rgba(139, 92, 246, 0.3)' },
-  { bg: 'rgba(245, 158, 11, 0.22)', border: '#f59e0b', text: '#fde68a', badge: 'rgba(245, 158, 11, 0.3)' },
-  { bg: 'rgba(236, 72, 153, 0.22)', border: '#ec4899', text: '#fbcfe8', badge: 'rgba(236, 72, 153, 0.3)' },
-  { bg: 'rgba(6, 182, 212, 0.22)', border: '#06b6d4', text: '#a5f3fc', badge: 'rgba(6, 182, 212, 0.3)' },
-  { bg: 'rgba(249, 115, 22, 0.22)', border: '#f97316', text: '#fed7aa', badge: 'rgba(249, 115, 22, 0.3)' },
-  { bg: 'rgba(132, 204, 22, 0.22)', border: '#84cc16', text: '#d9f99d', badge: 'rgba(132, 204, 22, 0.3)' }
+  { bg: '#E0EBF5', border: '#005A8C', text: '#0A2E46', badge: '#005A8C' },
+  { bg: '#EAE8F4', border: '#3D348B', text: '#1E194D', badge: '#3D348B' },
+  { bg: '#F5E8D3', border: '#B85D00', text: '#4D2600', badge: '#B85D00' },
+  { bg: '#F7E4E2', border: '#B8332A', text: '#4A120E', badge: '#B8332A' },
+  { bg: '#DCEEE6', border: '#0D7A4E', text: '#093B29', badge: '#0D7A4E' },
+  { bg: '#E1EEF2', border: '#00668C', text: '#083344', badge: '#00668C' },
+  { bg: '#DCD9D2', border: '#18181A', text: '#141416', badge: '#18181A' },
+  { bg: '#EFE6EA', border: '#7A2E4D', text: '#3F1426', badge: '#7A2E4D' }
 ];
 
 export function getSectionColor(sectionNumber: string): typeof SECTION_PALETTES[0] {

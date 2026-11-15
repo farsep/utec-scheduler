@@ -528,13 +528,13 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
                   className="hero-chip"
                   style={{
                     marginBottom: 0,
-                    background: 'rgba(16, 185, 129, 0.15)',
-                    borderColor: 'rgba(16, 185, 129, 0.4)',
-                    color: '#34d399'
+                    background: '#DCEEE6',
+                    borderColor: '#0D7A4E',
+                    color: '#093B29'
                   }}
                   title={`Sincronizado con Intranet de Reservas UTEC (${dataSourceInfo.weekRange ? `Semana ${dataSourceInfo.weekRange.start} - ${dataSourceInfo.weekRange.end}` : ''})`}
                 >
-                  <BroadcastIcon className="w-3.5 h-3.5 shrink-0 inline text-[#10b981]" />
+                  <BroadcastIcon className="w-3.5 h-3.5 shrink-0 inline text-[#093B29]" />
                   <span>Intranet UTEC en Vivo ({dataSourceInfo.totalEvents?.toLocaleString() || 0} reservas)</span>
                 </div>
               )}
