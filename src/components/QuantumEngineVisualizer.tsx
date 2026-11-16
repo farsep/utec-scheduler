@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 export interface EvalProgressData {
   evaluated: number;
@@ -15,7 +15,7 @@ interface QuantumEngineVisualizerProps {
   pinnedCourses: string[];
 }
 
-const FALLBACK_COURSES = ['CS2013', 'CS2041', 'CS2023', 'CC1105', 'CI5314'];
+const FALLBACK_COURSES = ['CS2013', 'CS2041', 'CS2023', 'CC1105', 'CI5314', 'CC1143', 'ME2012', 'EL2013'];
 const DAYS = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
 const HOURS = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00'];
 
@@ -23,46 +23,205 @@ const CUBE_PALETTE = ['#00779E', '#0D7A4E', '#D97706', '#FAF9F5', '#18181A'];
 
 interface OscilloscopeSlot {
   id: string;
-  courseIndex: number;
-  dayCol: number; // 1..6 (for gridColumn = dayCol + 1)
-  rowStart: number; // 1..6
-  rowSpan: number;
-  baseState: 'test' | 'clash' | 'ok';
+  courseCode: string;
+  isPinned: boolean;
+  dayCol: number; // 1..6 (gridColumn = dayCol + 1)
+  rowStart: number; // 1..7
+  rowSpan: number; // 1..2
+  visualState: 'test' | 'clash' | 'ok';
 }
 
-const SLOT_LAYOUTS: OscilloscopeSlot[][] = [
-  [
-    { id: 'a1', courseIndex: 0, dayCol: 1, rowStart: 1, rowSpan: 2, baseState: 'ok' },
-    { id: 'a2', courseIndex: 1, dayCol: 2, rowStart: 2, rowSpan: 2, baseState: 'test' },
-    { id: 'a3', courseIndex: 2, dayCol: 3, rowStart: 1, rowSpan: 2, baseState: 'ok' },
-    { id: 'a4', courseIndex: 3, dayCol: 3, rowStart: 2, rowSpan: 2, baseState: 'clash' },
-    { id: 'a5', courseIndex: 4, dayCol: 4, rowStart: 4, rowSpan: 2, baseState: 'test' },
-    { id: 'a6', courseIndex: 0, dayCol: 5, rowStart: 3, rowSpan: 2, baseState: 'ok' },
-    { id: 'a7', courseIndex: 1, dayCol: 6, rowStart: 2, rowSpan: 2, baseState: 'test' },
-  ],
-  [
-    { id: 'b1', courseIndex: 0, dayCol: 1, rowStart: 2, rowSpan: 2, baseState: 'ok' },
-    { id: 'b2', courseIndex: 1, dayCol: 2, rowStart: 4, rowSpan: 2, baseState: 'ok' },
-    { id: 'b3', courseIndex: 2, dayCol: 3, rowStart: 2, rowSpan: 2, baseState: 'ok' },
-    { id: 'b4', courseIndex: 3, dayCol: 4, rowStart: 1, rowSpan: 2, baseState: 'test' },
-    { id: 'b5', courseIndex: 4, dayCol: 4, rowStart: 2, rowSpan: 2, baseState: 'clash' },
-    { id: 'b6', courseIndex: 0, dayCol: 5, rowStart: 5, rowSpan: 2, baseState: 'ok' },
-    { id: 'b7', courseIndex: 2, dayCol: 6, rowStart: 1, rowSpan: 2, baseState: 'test' },
-  ],
-  [
-    { id: 'c1', courseIndex: 0, dayCol: 1, rowStart: 1, rowSpan: 2, baseState: 'ok' },
-    { id: 'c2', courseIndex: 1, dayCol: 2, rowStart: 3, rowSpan: 2, baseState: 'ok' },
-    { id: 'c3', courseIndex: 2, dayCol: 3, rowStart: 4, rowSpan: 2, baseState: 'test' },
-    { id: 'c4', courseIndex: 3, dayCol: 4, rowStart: 3, rowSpan: 2, baseState: 'ok' },
-    { id: 'c5', courseIndex: 4, dayCol: 5, rowStart: 2, rowSpan: 2, baseState: 'ok' },
-    { id: 'c6', courseIndex: 1, dayCol: 5, rowStart: 3, rowSpan: 2, baseState: 'clash' },
-    { id: 'c7', courseIndex: 3, dayCol: 6, rowStart: 4, rowSpan: 2, baseState: 'ok' },
-  ],
-];
+interface CandidateFrame {
+  frameId: number;
+  slots: OscilloscopeSlot[];
+  cubeColors: number[];
+  bitmasks: Array<{ day: string; bits: string }>;
+  hasActiveClash: boolean;
+}
 
-function formatBitmaskByte(seed: number): string {
-  const val = (seed * 73 + 41) & 0xff;
-  return val.toString(2).padStart(8, '0');
+function randomInt(min: number, maxInclusive: number): number {
+  return Math.floor(Math.random() * (maxInclusive - min + 1)) + min;
+}
+
+function sampleCourseCodes(
+  poolCourses: string[],
+  pinnedCourses: string[],
+  count: number
+): string[] {
+  const source = poolCourses.length > 0 ? poolCourses : FALLBACK_COURSES;
+  const picked: string[] = [];
+  const used = new Set<string>();
+
+  // Include a random subset of pinned courses so anchored subjects remain represented
+  if (pinnedCourses.length > 0) {
+    const shuffledPinned = [...pinnedCourses].sort(() => Math.random() - 0.5);
+    const maxPinned = Math.min(shuffledPinned.length, Math.max(1, Math.floor(count / 2)));
+    for (let i = 0; i < maxPinned; i++) {
+      const code = shuffledPinned[i];
+      if (!used.has(code)) {
+        used.add(code);
+        picked.push(code);
+      }
+    }
+  }
+
+  // Pick remaining courses randomly from the full pool without repeating in the same frame
+  let guard = 0;
+  while (picked.length < count && guard < count * 6) {
+    guard++;
+    const candidate = source[Math.floor(Math.random() * source.length)];
+    if (!used.has(candidate) || used.size >= source.length) {
+      used.add(candidate);
+      picked.push(candidate);
+    }
+  }
+
+  return picked;
+}
+
+function generateRandomCubeColors(): number[] {
+  return Array.from({ length: 9 }, () => Math.floor(Math.random() * CUBE_PALETTE.length));
+}
+
+function generateRandomCandidateFrame(
+  frameId: number,
+  poolCourses: string[],
+  pinnedCourses: string[],
+  forceValid: boolean
+): CandidateFrame {
+  const slotCount = randomInt(5, 8);
+  const chosenCodes = sampleCourseCodes(poolCourses, pinnedCourses, slotCount);
+  const pinnedSet = new Set(pinnedCourses);
+
+  // 6 days x 7 time rows occupancy tracker
+  const occupied: boolean[][] = Array.from({ length: 6 }, () => Array(7).fill(false));
+  const shouldInjectClash = !forceValid && Math.random() < 0.55;
+  const baseTarget = shouldInjectClash ? Math.max(4, slotCount - 1) : slotCount;
+
+  const slots: OscilloscopeSlot[] = [];
+
+  for (let i = 0; i < baseTarget; i++) {
+    const courseCode = chosenCodes[i % chosenCodes.length];
+    let placed = false;
+
+    for (let attempt = 0; attempt < 24; attempt++) {
+      const dayIdx = Math.floor(Math.random() * 6);
+      const rowSpan = Math.random() < 0.72 ? 2 : 1;
+      const maxStart = 7 - rowSpan; // 0-indexed max start (0..5 for span 2, 0..6 for span 1)
+      const rowIdx = randomInt(0, maxStart);
+
+      let free = true;
+      for (let r = rowIdx; r < rowIdx + rowSpan; r++) {
+        if (occupied[dayIdx][r]) {
+          free = false;
+          break;
+        }
+      }
+
+      if (free) {
+        for (let r = rowIdx; r < rowIdx + rowSpan; r++) {
+          occupied[dayIdx][r] = true;
+        }
+        const visualState: 'ok' | 'test' =
+          forceValid ? 'ok' : Math.random() < 0.3 ? 'test' : 'ok';
+
+        slots.push({
+          id: `f${frameId}-s${i}`,
+          courseCode,
+          isPinned: pinnedSet.has(courseCode),
+          dayCol: dayIdx + 1,
+          rowStart: rowIdx + 1,
+          rowSpan,
+          visualState,
+        });
+        placed = true;
+        break;
+      }
+    }
+
+    if (!placed && slots.length < 4) {
+      // Fallback free single-row scan
+      for (let d = 0; d < 6 && !placed; d++) {
+        for (let r = 0; r < 7 && !placed; r++) {
+          if (!occupied[d][r]) {
+            occupied[d][r] = true;
+            slots.push({
+              id: `f${frameId}-s${i}`,
+              courseCode,
+              isPinned: pinnedSet.has(courseCode),
+              dayCol: d + 1,
+              rowStart: r + 1,
+              rowSpan: 1,
+              visualState: forceValid ? 'ok' : 'test',
+            });
+            placed = true;
+          }
+        }
+      }
+    }
+  }
+
+  // Optionally inject 1 (or occasionally 2) colliding branch blocks to showcase bitmask pruning
+  let hasActiveClash = false;
+  if (shouldInjectClash && slots.length > 0) {
+    const clashCount = Math.random() < 0.25 && chosenCodes.length > baseTarget + 1 ? 2 : 1;
+    const usedTargets = new Set<number>();
+
+    for (let c = 0; c < clashCount; c++) {
+      const targetIdx = Math.floor(Math.random() * slots.length);
+      if (usedTargets.has(targetIdx)) continue;
+      usedTargets.add(targetIdx);
+
+      const target = slots[targetIdx];
+      const clashCode = chosenCodes[(baseTarget + c) % chosenCodes.length];
+      // Offset by +1 row when possible so both colliding cards remain readable in the grid
+      const shift =
+        target.rowStart < 6 ? 1 : target.rowStart > 1 ? -1 : 0;
+      const clashRowStart = Math.max(1, Math.min(6, target.rowStart + shift));
+      const clashRowSpan = clashRowStart <= 6 ? 2 : 1;
+
+      const dayIdx = target.dayCol - 1;
+      for (let r = clashRowStart - 1; r < Math.min(7, clashRowStart - 1 + clashRowSpan); r++) {
+        occupied[dayIdx][r] = true;
+      }
+
+      slots.push({
+        id: `f${frameId}-clash${c}`,
+        courseCode: clashCode,
+        isPinned: pinnedSet.has(clashCode),
+        dayCol: target.dayCol,
+        rowStart: clashRowStart,
+        rowSpan: clashRowSpan,
+        visualState: 'clash',
+      });
+      hasActiveClash = true;
+    }
+  }
+
+  // Derive 8-bit daily bitmask registers directly from the occupied schedule rows
+  const bitmasks = DAYS.map((day, dIdx) => {
+    let mask = 0;
+    for (let r = 0; r < 7; r++) {
+      if (occupied[dIdx][r]) {
+        mask |= 1 << (7 - r);
+      }
+    }
+    if (hasActiveClash && slots.some((s) => s.dayCol === dIdx + 1 && s.visualState === 'clash')) {
+      mask |= 1;
+    }
+    return {
+      day,
+      bits: mask.toString(2).padStart(8, '0'),
+    };
+  });
+
+  return {
+    frameId,
+    slots,
+    cubeColors: generateRandomCubeColors(),
+    bitmasks,
+    hasActiveClash,
+  };
 }
 
 export const QuantumEngineVisualizer: React.FC<QuantumEngineVisualizerProps> = ({
@@ -70,23 +229,81 @@ export const QuantumEngineVisualizer: React.FC<QuantumEngineVisualizerProps> = (
   selectedCourseCodes,
   pinnedCourses,
 }) => {
-  const [tick, setTick] = useState(0);
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setTick((t) => t + 1);
-    }, 65);
-    return () => window.clearInterval(id);
-  }, []);
-
   const poolCourses = useMemo(() => {
     return selectedCourseCodes.length > 0 ? selectedCourseCodes : FALLBACK_COURSES;
   }, [selectedCourseCodes]);
 
+  const frameCounterRef = useRef(1);
+  const latestInputsRef = useRef({
+    poolCourses,
+    pinnedCourses,
+    isComplete: Boolean(evalProgress?.isComplete),
+  });
+  latestInputsRef.current = {
+    poolCourses,
+    pinnedCourses,
+    isComplete: Boolean(evalProgress?.isComplete),
+  };
+
+  const [animState, setAnimState] = useState<{
+    tick: number;
+    candidateFrame: CandidateFrame;
+  }>(() => ({
+    tick: 0,
+    candidateFrame: generateRandomCandidateFrame(
+      0,
+      poolCourses,
+      pinnedCourses,
+      Boolean(evalProgress?.isComplete)
+    ),
+  }));
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const { poolCourses: pool, pinnedCourses: pinned, isComplete } = latestInputsRef.current;
+      setAnimState((prev) => {
+        const nextTick = prev.tick + 1;
+        if (nextTick % 2 === 0) {
+          const nextFrameId = frameCounterRef.current++;
+          return {
+            tick: nextTick,
+            candidateFrame: generateRandomCandidateFrame(nextFrameId, pool, pinned, isComplete),
+          };
+        }
+        return {
+          tick: nextTick,
+          candidateFrame: {
+            ...prev.candidateFrame,
+            cubeColors: generateRandomCubeColors(),
+          },
+        };
+      });
+    }, 85);
+    return () => window.clearInterval(id);
+  }, []);
+
+  // Ensure completion immediately locks onto a clean clash-free candidate frame
+  useEffect(() => {
+    if (evalProgress?.isComplete) {
+      const nextFrameId = frameCounterRef.current++;
+      setAnimState((prev) => ({
+        ...prev,
+        candidateFrame: generateRandomCandidateFrame(
+          nextFrameId,
+          poolCourses,
+          pinnedCourses,
+          true
+        ),
+      }));
+    }
+  }, [evalProgress?.isComplete, poolCourses, pinnedCourses]);
+
+  const { tick, candidateFrame } = animState;
+
   // Smooth live telemetry metrics synced with real worker progress
   const realEvaluated = evalProgress?.evaluated ?? 0;
   const realValid = evalProgress?.validFound ?? 0;
-  const realElapsed = Math.max(evalProgress?.elapsedMs ?? 0, (tick + 1) * 65);
+  const realElapsed = Math.max(evalProgress?.elapsedMs ?? 0, (tick + 1) * 85);
   const totalPoolComb = evalProgress?.totalCombinations ?? Math.max(realEvaluated, 1480);
 
   const animatedEvaluated =
@@ -95,10 +312,6 @@ export const QuantumEngineVisualizer: React.FC<QuantumEngineVisualizerProps> = (
   const prunedCount = Math.max(0, animatedEvaluated - realValid);
   const validDisplay = realValid > 0 ? realValid : Math.min(50, Math.floor(tick * 3.4));
 
-  const layoutFrameIndex = Math.floor(tick / 2) % SLOT_LAYOUTS.length;
-  const activeSlots = SLOT_LAYOUTS[layoutFrameIndex];
-
-  const cubeTick = tick % 9;
   const phaseLabel = useMemo(() => {
     if (evalProgress?.isComplete) {
       return 'FASE: RANKING PARETO Y VALIDACIÓN FINAL';
@@ -119,14 +332,7 @@ export const QuantumEngineVisualizer: React.FC<QuantumEngineVisualizerProps> = (
     return Math.min(23, 5 + ((tick * 2) % 19));
   }, [evalProgress?.isComplete, realEvaluated, totalPoolComb, tick]);
 
-  const bitmasks = useMemo(() => {
-    return DAYS.map((day, idx) => ({
-      day,
-      bits: idx === 5 && tick % 3 === 0 ? '00000000' : formatBitmaskByte(tick + idx * 11),
-    }));
-  }, [tick]);
-
-  const hasActiveClash = activeSlots.some((s) => s.baseState === 'clash');
+  const { slots: activeSlots, cubeColors, bitmasks, hasActiveClash } = candidateFrame;
 
   return (
     <div className="quantum-visualizer-shell" data-testid="quantum-engine-visualizer">
@@ -134,16 +340,13 @@ export const QuantumEngineVisualizer: React.FC<QuantumEngineVisualizerProps> = (
       <div className="quantum-header-bar">
         <div className="quantum-header-left">
           <div className="quantum-cube-grid" aria-hidden="true">
-            {Array.from({ length: 9 }).map((_, idx) => {
-              const colorIdx = (idx + cubeTick + (idx % 2 === 0 ? tick : 0)) % CUBE_PALETTE.length;
-              return (
-                <span
-                  key={idx}
-                  className="quantum-cube-cell"
-                  style={{ backgroundColor: CUBE_PALETTE[colorIdx] }}
-                />
-              );
-            })}
+            {cubeColors.map((colorIdx, idx) => (
+              <span
+                key={idx}
+                className="quantum-cube-cell"
+                style={{ backgroundColor: CUBE_PALETTE[colorIdx] }}
+              />
+            ))}
           </div>
           <div className="quantum-title-stack">
             <div className="quantum-main-title">
@@ -215,34 +418,24 @@ export const QuantumEngineVisualizer: React.FC<QuantumEngineVisualizerProps> = (
           <div className="quantum-laser-scanline" aria-hidden="true" />
 
           {/* Candidate Permutation Course Blocks */}
-          {activeSlots.map((slot, sIdx) => {
-            const code = poolCourses[slot.courseIndex % poolCourses.length];
-            const isPinned = pinnedCourses.includes(code);
-            const stateCycle = (tick + sIdx) % 6;
-            const visualState =
-              slot.baseState === 'clash'
-                ? 'clash'
-                : stateCycle === 0
-                ? 'test'
-                : 'ok';
-
+          {activeSlots.map((slot) => {
             const tagText =
-              visualState === 'clash'
+              slot.visualState === 'clash'
                 ? '[CRUCE X]'
-                : visualState === 'test'
+                : slot.visualState === 'test'
                 ? '[TEST]'
                 : '[OK ✓]';
 
             return (
               <div
                 key={slot.id}
-                className={`quantum-block state-${visualState} ${isPinned ? 'is-pinned' : ''}`}
+                className={`quantum-block state-${slot.visualState} ${slot.isPinned ? 'is-pinned' : ''}`}
                 style={{
                   gridColumn: slot.dayCol + 1,
                   gridRow: `${slot.rowStart} / span ${slot.rowSpan}`,
                 }}
               >
-                <span className="quantum-block-code">{code}</span>
+                <span className="quantum-block-code">{slot.courseCode}</span>
                 <span className="quantum-block-tag">{tagText}</span>
               </div>
             );

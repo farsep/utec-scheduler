@@ -3919,6 +3919,7 @@ input[type="range"]:hover::-moz-range-thumb {
   color: #141416;
 }
 .quantum-block.state-clash {
+  z-index: 6;
   background: repeating-linear-gradient(
     45deg,
     #F4E0E2,
