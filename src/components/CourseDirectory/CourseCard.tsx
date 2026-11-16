@@ -1,8 +1,9 @@
-import React, { memo, useRef, useState } from 'react';
+import React, { memo, useMemo, useRef, useState } from 'react';
 import type { DayOfWeek } from '../../types/schedule';
 import type { CourseExtendedInfo } from '../../types/courseDirectory';
 import { ALL_DAYS, DAY_LABELS, resolveCanonicalRoom } from '../../utils/classroomUtils';
 import { evaluateCourseLiveStatus } from '../../utils/courseDirectoryUtils';
+import { buildSectionHierarchyGroups, resolveSectionHierarchy } from '../../utils/sectionHierarchy';
 import { getFacultyPolychrome } from '../../utils/scheduleUtils';
 import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
@@ -53,6 +54,24 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
 
   const monogram = getCourseMonogram(course.code);
   const facultyColors = getFacultyPolychrome(course.code || course.departmentLabel);
+  const sectionStructure = useMemo(
+    () => buildSectionHierarchyGroups(course.extendedSections),
+    [course.extendedSections]
+  );
+  const mainGroupCount = sectionStructure.groups.length;
+  const singleMainLabel = sectionStructure.groups[0]?.mainSection || '1';
+  const sectionsKpiLabel =
+    sectionStructure.kind === 'single-main-subsections'
+      ? `SUBSECS (S${singleMainLabel})`
+      : sectionStructure.kind === 'multi-main-subsections'
+        ? `SUBSECS (${mainGroupCount}S)`
+        : 'SECCIONES';
+  const sectionsKpiTitle =
+    sectionStructure.kind === 'single-main-subsections'
+      ? `Sección ${singleMainLabel} con ${course.totalSectionsCount} subsecciones`
+      : sectionStructure.kind === 'multi-main-subsections'
+        ? `${mainGroupCount} secciones principales con ${course.totalSectionsCount} subsecciones`
+        : 'Secciones aperturadas';
 
   const [swipeX, setSwipeX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
@@ -288,9 +307,9 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
           <span className="course-kpi-label">SEMANALES</span>
         </div>
 
-        <div className="course-kpi-item" title="Secciones aperturadas">
+        <div className="course-kpi-item" title={sectionsKpiTitle}>
           <span className="course-kpi-val">{course.totalSectionsCount}</span>
-          <span className="course-kpi-label">SECCIONES</span>
+          <span className="course-kpi-label">{sectionsKpiLabel}</span>
         </div>
 
         <div className="course-kpi-item" title="Docentes a cargo del curso">
@@ -326,28 +345,85 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
         </div>
       </div>
 
-      {/* Sections & Modalities Chips Preview */}
+      {/* Sections / Subsections & Modalities Chips Preview */}
       <div className="course-card-sections-row">
-        <span className="course-card-section-label">Secciones:</span>
+        <span className="course-card-section-label">
+          {sectionStructure.kind === 'single-main-subsections' ? 'Subsecciones:' : 'Secciones:'}
+        </span>
         <div className="course-sections-chips">
-          {course.extendedSections.slice(0, 3).map(sec => {
-            const modLabel = sec.modalities.length > 0 ? sec.modalities.join(', ') : 'Presencial';
-            const isPresencial = sec.modalities.includes('Presencial') || sec.modalities.length === 0;
+          {sectionStructure.kind === 'multi-main-subsections' ? (
+            <>
+              {sectionStructure.groups.slice(0, 3).map(group => {
+                const groupMods = Array.from(
+                  new Set(group.subsections.flatMap(s => s.modalities))
+                );
+                const modLabel = groupMods.length > 0 ? groupMods.join(', ') : 'Presencial';
+                const isPresencial = groupMods.includes('Presencial') || groupMods.length === 0;
+                const label = group.hasSubsections
+                  ? `Sec. ${group.mainSection} (${group.subsections.length} sub)`
+                  : `Sec. ${group.mainSection}`;
 
-            return (
-              <span
-                key={sec.sectionNumber}
-                className={`course-sec-tag ${isPresencial ? 'course-sec-tag--presencial' : 'course-sec-tag--virtual'}`}
-                title={`Sección ${sec.sectionNumber} (${modLabel}) - ${sec.totalWeeklyHours}h/sem`}
-              >
-                Sec. {sec.sectionNumber} {modLabel ? `• ${modLabel}` : ''}
-              </span>
-            );
-          })}
-          {course.extendedSections.length > 3 && (
-            <span className="course-sec-tag course-sec-tag--more">
-              +{course.extendedSections.length - 3} más
-            </span>
+                return (
+                  <span
+                    key={group.mainSection}
+                    className={`course-sec-tag ${isPresencial ? 'course-sec-tag--presencial' : 'course-sec-tag--virtual'}`}
+                    title={`${label} • ${modLabel}`}
+                  >
+                    {label} • {modLabel}
+                  </span>
+                );
+              })}
+              {sectionStructure.groups.length > 3 && (
+                <span className="course-sec-tag course-sec-tag--more">
+                  +{sectionStructure.groups.length - 3} más
+                </span>
+              )}
+            </>
+          ) : sectionStructure.kind === 'single-main-subsections' ? (
+            <>
+              {sectionStructure.groups[0].subsections.slice(0, 3).map(sec => {
+                const resolved = resolveSectionHierarchy(sec, true);
+                const modLabel = sec.modalities.length > 0 ? sec.modalities.join(', ') : 'Presencial';
+                const isPresencial = sec.modalities.includes('Presencial') || sec.modalities.length === 0;
+
+                return (
+                  <span
+                    key={sec.sectionNumber}
+                    className={`course-sec-tag ${isPresencial ? 'course-sec-tag--presencial' : 'course-sec-tag--virtual'}`}
+                    title={`${resolved.compactBadgeLabel} (${modLabel}) - ${sec.totalWeeklyHours}h/sem`}
+                  >
+                    S{resolved.mainSection} · {resolved.subsectionPillLabel} • {modLabel}
+                  </span>
+                );
+              })}
+              {sectionStructure.groups[0].subsections.length > 3 && (
+                <span className="course-sec-tag course-sec-tag--more">
+                  +{sectionStructure.groups[0].subsections.length - 3} más
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              {course.extendedSections.slice(0, 3).map(sec => {
+                const modLabel = sec.modalities.length > 0 ? sec.modalities.join(', ') : 'Presencial';
+                const isPresencial = sec.modalities.includes('Presencial') || sec.modalities.length === 0;
+
+                return (
+                  <span
+                    key={sec.sectionNumber}
+                    className={`course-sec-tag ${isPresencial ? 'course-sec-tag--presencial' : 'course-sec-tag--virtual'}`}
+                    title={`Sección ${sec.sectionNumber} (${modLabel}) - ${sec.totalWeeklyHours}h/sem`}
+                  >
+                    Sec. {sec.sectionNumber} {modLabel ? `• ${modLabel}` : ''}
+                  </span>
+                );
+              })}
+              {course.extendedSections.length > 3 && (
+                <span className="course-sec-tag course-sec-tag--more">
+                  +{course.extendedSections.length - 3} más
+                </span>
+              )}
+            </>
           )}
         </div>
       </div>

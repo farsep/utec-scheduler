@@ -21,6 +21,14 @@ import {
   generateGoogleCalendarUrlForSession,
   getSectionColor
 } from '../../utils/courseDirectoryUtils';
+import {
+  buildSectionHierarchyGroups,
+  resolveSectionHierarchy,
+  parseSectionHierarchy,
+  formatMergedSectionsDisplay,
+  matchesSectionFilter,
+  type ParsedSectionHierarchy
+} from '../../utils/sectionHierarchy';
 
 export interface CourseTimetableProps {
   course: CourseExtendedInfo;
@@ -294,11 +302,40 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Flatten all sessions across visible sections and merge identical shared lectures when viewing 'ALL'
+  const sectionStructure = useMemo(
+    () => buildSectionHierarchyGroups(course.extendedSections),
+    [course.extendedSections]
+  );
+
+  const resolvedSectionMap = useMemo(() => {
+    const map = new Map<string, ParsedSectionHierarchy>();
+    for (const group of sectionStructure.groups) {
+      for (const sec of group.subsections) {
+        map.set(sec.sectionNumber, resolveSectionHierarchy(sec, group.hasSubsections));
+      }
+    }
+    return map;
+  }, [sectionStructure]);
+
+  const activeMainGroup = useMemo(() => {
+    if (sectionStructure.kind !== 'multi-main-subsections') return null;
+    if (selectedSectionNumber.startsWith('MAIN:')) {
+      const targetMain = selectedSectionNumber.slice(5);
+      return sectionStructure.groups.find(g => g.mainSection === targetMain) || null;
+    }
+    if (selectedSectionNumber !== 'ALL') {
+      const targetMain = resolvedSectionMap.get(selectedSectionNumber)?.mainSection;
+      return sectionStructure.groups.find(g => g.mainSection === targetMain) || null;
+    }
+    return null;
+  }, [sectionStructure, selectedSectionNumber, resolvedSectionMap]);
+
+  // Flatten all sessions across visible sections and merge identical shared lectures when >1 section/subsection is shown
   const allSessionItems = useMemo<TimetableSessionItem[]>(() => {
-    const sectionsToInclude = selectedSectionNumber === 'ALL'
-      ? course.extendedSections
-      : course.extendedSections.filter(s => s.sectionNumber === selectedSectionNumber);
+    const sectionsToInclude =
+      selectedSectionNumber === 'ALL'
+        ? course.extendedSections
+        : course.extendedSections.filter(s => matchesSectionFilter(s.sectionNumber, selectedSectionNumber));
 
     const rawItems: TimetableSessionItem[] = [];
     sectionsToInclude.forEach(sec => {
@@ -313,11 +350,11 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
       });
     });
 
-    if (selectedSectionNumber !== 'ALL') {
+    if (sectionsToInclude.length <= 1) {
       return rawItems;
     }
 
-    // Deduplicate identical shared sessions (e.g. TEORÍA 1 shared by sub-sections 1.11-1.14)
+    // Deduplicate identical shared sessions (e.g. TEORÍA 1 shared by sub-sections 1.11-1.17)
     const mergedMap = new Map<string, TimetableSessionItem>();
     for (const item of rawItems) {
       const s = item.session;
@@ -535,8 +572,10 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
     if (
       selectedSessionItem &&
       selectedSectionNumber !== 'ALL' &&
-      selectedSessionItem.sectionNumber !== selectedSectionNumber &&
-      !(selectedSessionItem.mergedSections || []).includes(selectedSectionNumber)
+      !matchesSectionFilter(selectedSessionItem.sectionNumber, selectedSectionNumber) &&
+      !(selectedSessionItem.mergedSections || []).some(sec =>
+        matchesSectionFilter(sec, selectedSectionNumber)
+      )
     ) {
       setSelectedSessionItem(null);
     }
@@ -600,8 +639,8 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
           </div>
         </div>
 
-        {/* Orthogonal Section Filter Strip: SECCIÓN: TODAS (10) | S1 | S2 | ... */}
-        {course.extendedSections.length > 1 && (
+        {/* Orthogonal Section / Subsection Filter Strip */}
+        {course.extendedSections.length > 1 && sectionStructure.kind === 'flat' && (
           <div className="course-sec-pills-strip" role="tablist" aria-label="Filtrar sección del curso">
             <span className="course-sec-strip-label">SECCIÓN:</span>
             <button
@@ -631,6 +670,182 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {course.extendedSections.length > 1 && sectionStructure.kind === 'single-main-subsections' && (
+          <div
+            className="course-sec-pills-strip course-sec-pills-strip--sub"
+            role="tablist"
+            aria-label="Filtrar subsección del curso"
+          >
+            <span
+              className="course-sec-strip-label course-sec-strip-label--sub"
+              title={`Todas las subsecciones pertenecen a la Sección ${sectionStructure.groups[0].mainSection}`}
+            >
+              SEC. {sectionStructure.groups[0].mainSection} · SUBSECCIONES:
+            </span>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={selectedSectionNumber === 'ALL'}
+              className={`prof-day-jump-pill course-sec-filter-pill ${selectedSectionNumber === 'ALL' ? 'prof-day-jump-pill--active' : ''}`}
+              onClick={() => onSelectSectionNumber?.('ALL')}
+            >
+              <span>TODAS ({course.totalSectionsCount})</span>
+            </button>
+
+            {sectionStructure.groups[0].subsections.map(sec => {
+              const resolved = resolvedSectionMap.get(sec.sectionNumber);
+              const isSelected = selectedSectionNumber === sec.sectionNumber;
+
+              return (
+                <button
+                  key={sec.sectionNumber}
+                  type="button"
+                  role="tab"
+                  aria-selected={isSelected}
+                  className={`prof-day-jump-pill course-subsec-filter-pill ${isSelected ? 'prof-day-jump-pill--active' : ''}`}
+                  onClick={() => onSelectSectionNumber?.(isSelected ? 'ALL' : sec.sectionNumber)}
+                  title={`${resolved?.compactBadgeLabel || sec.sectionNumber} (comparte teoría de Sec. ${resolved?.mainSection || '1'})`}
+                >
+                  <span>{resolved?.subsectionPillLabel || sec.sectionNumber}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {course.extendedSections.length > 1 && sectionStructure.kind === 'multi-main-subsections' && (
+          <div className="course-sec-hierarchy-wrap">
+            {/* Nivel 1: Secciones Principales */}
+            <div className="course-sec-pills-strip" role="tablist" aria-label="Filtrar sección principal del curso">
+              <span className="course-sec-strip-label">SECCIONES:</span>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={selectedSectionNumber === 'ALL'}
+                className={`prof-day-jump-pill course-sec-filter-pill ${selectedSectionNumber === 'ALL' ? 'prof-day-jump-pill--active' : ''}`}
+                onClick={() => onSelectSectionNumber?.('ALL')}
+              >
+                <span>TODAS ({course.totalSectionsCount})</span>
+              </button>
+
+              {sectionStructure.groups.map(group => {
+                const mainFilterVal = group.hasSubsections
+                  ? `MAIN:${group.mainSection}`
+                  : group.subsections[0].sectionNumber;
+                const isMainSelected = group.hasSubsections
+                  ? selectedSectionNumber === mainFilterVal ||
+                    activeMainGroup?.mainSection === group.mainSection
+                  : selectedSectionNumber === mainFilterVal;
+
+                return (
+                  <button
+                    key={group.mainSection}
+                    type="button"
+                    role="tab"
+                    aria-selected={isMainSelected}
+                    className={`prof-day-jump-pill course-sec-filter-pill ${isMainSelected ? 'prof-day-jump-pill--active' : ''}`}
+                    onClick={() =>
+                      onSelectSectionNumber?.(
+                        selectedSectionNumber === mainFilterVal ? 'ALL' : mainFilterVal
+                      )
+                    }
+                    title={
+                      group.hasSubsections
+                        ? `Sección ${group.mainSection} (${group.subsections.length} subsecciones)`
+                        : `Sección ${group.mainSection}`
+                    }
+                  >
+                    <span>Sec. {group.mainSection}</span>
+                    {group.hasSubsections && (
+                      <span className="course-sec-sub-count">{group.subsections.length} sub</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Nivel 2: Subsecciones */}
+            {(!activeMainGroup || activeMainGroup.hasSubsections) && (
+              <div
+                className="course-sec-pills-strip course-sec-pills-strip--sub course-subsec-pills-strip"
+                role="tablist"
+                aria-label="Filtrar subsección del curso"
+              >
+                <span className="course-sec-strip-label course-sec-strip-label--sub">
+                  {activeMainGroup
+                    ? `SUBSECCIONES SEC. ${activeMainGroup.mainSection}:`
+                    : 'SUBSECCIONES:'}
+                </span>
+
+                {activeMainGroup ? (
+                  <>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={selectedSectionNumber === `MAIN:${activeMainGroup.mainSection}`}
+                      className={`prof-day-jump-pill course-subsec-filter-pill ${selectedSectionNumber === `MAIN:${activeMainGroup.mainSection}` ? 'prof-day-jump-pill--active' : ''}`}
+                      onClick={() => onSelectSectionNumber?.(`MAIN:${activeMainGroup.mainSection}`)}
+                    >
+                      <span>Todas S{activeMainGroup.mainSection} ({activeMainGroup.subsections.length})</span>
+                    </button>
+                    {activeMainGroup.subsections.map(subSec => {
+                      const resolved = resolvedSectionMap.get(subSec.sectionNumber);
+                      const isSubSelected = selectedSectionNumber === subSec.sectionNumber;
+
+                      return (
+                        <button
+                          key={subSec.sectionNumber}
+                          type="button"
+                          role="tab"
+                          aria-selected={isSubSelected}
+                          className={`prof-day-jump-pill course-subsec-filter-pill ${isSubSelected ? 'prof-day-jump-pill--active' : ''}`}
+                          onClick={() =>
+                            onSelectSectionNumber?.(
+                              isSubSelected ? `MAIN:${activeMainGroup.mainSection}` : subSec.sectionNumber
+                            )
+                          }
+                          title={resolved?.compactBadgeLabel || subSec.sectionNumber}
+                        >
+                          <span>{resolved?.subsectionPillLabel || subSec.sectionNumber}</span>
+                        </button>
+                      );
+                    })}
+                  </>
+                ) : (
+                  sectionStructure.groups
+                    .filter(g => g.hasSubsections)
+                    .map((group, gIdx) => (
+                      <React.Fragment key={group.mainSection}>
+                        {gIdx > 0 && <span className="course-subsec-group-sep" aria-hidden="true" />}
+                        <span className="course-subsec-group-tag">S{group.mainSection}:</span>
+                        {group.subsections.map(subSec => {
+                          const resolved = resolvedSectionMap.get(subSec.sectionNumber);
+                          const isSubSelected = selectedSectionNumber === subSec.sectionNumber;
+
+                          return (
+                            <button
+                              key={subSec.sectionNumber}
+                              type="button"
+                              role="tab"
+                              aria-selected={isSubSelected}
+                              className={`prof-day-jump-pill course-subsec-filter-pill ${isSubSelected ? 'prof-day-jump-pill--active' : ''}`}
+                              onClick={() =>
+                                onSelectSectionNumber?.(isSubSelected ? 'ALL' : subSec.sectionNumber)
+                              }
+                              title={resolved?.compactBadgeLabel || subSec.sectionNumber}
+                            >
+                              <span>{resolved?.subsectionPillLabel || subSec.sectionNumber}</span>
+                            </button>
+                          );
+                        })}
+                      </React.Fragment>
+                    ))
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -793,10 +1008,22 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                             ? 'course-session-card--prac'
                             : 'course-session-card--teoria';
 
-                        const mergedCount = item.mergedSections?.length || 1;
+                        const mergedList = item.mergedSections || [item.sectionNumber];
+                        const mergedCount = mergedList.length;
                         const overflowCount = item.overflowItems ? item.overflowItems.length - 1 : 0;
-                        const secCode = formatSectionTicketCode(item.sectionNumber);
-                        const secWithMerge = mergedCount > 1 ? `${secCode}+${mergedCount - 1}` : secCode;
+                        const baseResolved = resolvedSectionMap.get(item.sectionNumber);
+                        const perSessionResolved =
+                          baseResolved?.subsectionNum?.includes('/') &&
+                          s.sessionGroup &&
+                          s.sessionGroup.replace(/^TEOR[IÍ]A\s+/i, '').trim() !== baseResolved.mainSection
+                            ? parseSectionHierarchy(`${baseResolved.mainSection} (${s.sessionGroup})`)
+                            : baseResolved;
+                        const mergedDisplay =
+                          mergedCount > 1 ? formatMergedSectionsDisplay(mergedList) : null;
+                        const secCode = perSessionResolved
+                          ? perSessionResolved.compactTicketCode
+                          : formatSectionTicketCode(item.sectionNumber);
+                        const secWithMerge = mergedDisplay ? mergedDisplay.ticketCode : secCode;
                         const compactType = formatCompactTypeGroup(s.sessionGroup, s.sessionType);
                         const roomCodeLabel = s.roomDisplayName.replace(/^Aula\s+/i, 'A');
                         const compactTime = formatCompactTimeRange(s.startTime, s.endTime);
@@ -805,6 +1032,9 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                           s.professor && !/docente\s*utec/i.test(s.professor)
                             ? formatProfessorName(s.professor).displayName
                             : null;
+                        const titleSecLabel = mergedDisplay
+                          ? mergedDisplay.badgeLabel
+                          : (perSessionResolved?.compactBadgeLabel || formatInspectorSecBadge(item.sectionNumber));
 
                         return (
                           <div
@@ -816,7 +1046,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                               left: `calc(${left}% + 1px)`,
                               width: `calc(${width}% - 2px)`
                             }}
-                            title={`${formatInspectorSecBadge(item.sectionNumber)} · ${formatCleanSessionTitle(s.sessionGroup, s.sessionType)} · ${s.startTime}–${s.endTime} · ${s.roomDisplayName}`}
+                            title={`${titleSecLabel} · ${formatCleanSessionTitle(s.sessionGroup, s.sessionType)} · ${s.startTime}–${s.endTime} · ${s.roomDisplayName}`}
                             onClick={() => setSelectedSessionItem(isSelected ? null : item)}
                           >
                             {isMobileViewport && isFullWeekElastic ? (
@@ -988,6 +1218,12 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                   item.sectionNumber
                 );
 
+                const resolvedAgenda = resolvedSectionMap.get(item.sectionNumber);
+                const mergedAgenda =
+                  item.mergedSections && item.mergedSections.length > 1
+                    ? formatMergedSectionsDisplay(item.mergedSections)
+                    : null;
+
                 return (
                   <div
                     key={item.id}
@@ -1004,7 +1240,9 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                             borderColor: palette.border
                           }}
                         >
-                          {formatShortSectionLabel(item.sectionNumber)}
+                          {mergedAgenda
+                            ? mergedAgenda.badgeLabel
+                            : (resolvedAgenda?.compactBadgeLabel || formatShortSectionLabel(item.sectionNumber))}
                         </span>
                         <span className="agenda-group-tag">
                           {formatCleanSessionTitle(s.sessionGroup, s.sessionType)}
@@ -1094,6 +1332,15 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
           nowMinutes >= selSess.startMinutes &&
           nowMinutes < selSess.endMinutes;
         const hasAssignedProf = Boolean(selSess.professor && !/docente\s*utec/i.test(selSess.professor));
+        const resolvedSel = resolvedSectionMap.get(selectedSessionItem.sectionNumber);
+        const mergedSelList = selectedSessionItem.mergedSections || [];
+        const mergedSelDisplay =
+          mergedSelList.length > 1 ? formatMergedSectionsDisplay(mergedSelList) : null;
+        const inspectorLeftBadge = mergedSelDisplay
+          ? mergedSelDisplay.badgeCode
+          : resolvedSel?.hasSubsection
+            ? `${formatInspectorSecBadge(selectedSessionItem.sectionNumber)} · ${resolvedSel.subsectionPillLabel.toUpperCase()}`
+            : formatInspectorSecBadge(selectedSessionItem.sectionNumber);
 
         return (
           <div ref={inspectorRef} className="prof-session-inspector course-swiss-inspector animate-fadeIn">
@@ -1105,7 +1352,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                     className="inspector-sec-badge"
                     style={{ borderLeftColor: facultyPalette.borderAccent }}
                   >
-                    {formatInspectorSecBadge(selectedSessionItem.sectionNumber)}
+                    {inspectorLeftBadge}
                   </span>
                   <span className="course-inspector-type-badge">
                     {formatCleanSessionTitle(selSess.sessionGroup, selSess.sessionType)}
@@ -1142,38 +1389,48 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
             </div>
 
             {/* If this block has merged sections or overflow items, show quick chips */}
-            {selectedSessionItem.mergedSections && selectedSessionItem.mergedSections.length > 1 && (
+            {mergedSelList.length > 1 && mergedSelDisplay && (
               <div className="inspector-merged-info">
-                <span>Clase compartida por {selectedSessionItem.mergedSections.length} sub-secciones:</span>
+                <span>
+                  {mergedSelDisplay.isSingleMainGroup
+                    ? `Clase compartida por ${mergedSelList.length} subsecciones (Sec. ${mergedSelDisplay.mainSection}):`
+                    : `Clase compartida por ${mergedSelList.length} secciones:`}
+                </span>
                 <div className="inspector-overflow-chips">
-                  {selectedSessionItem.mergedSections.map(secNum => (
-                    <button
-                      key={secNum}
-                      type="button"
-                      className="inspector-overflow-chip"
-                      onClick={() => onSelectSectionNumber?.(secNum)}
-                    >
-                      {formatShortSectionLabel(secNum)}
-                    </button>
-                  ))}
+                  {mergedSelList.map(secNum => {
+                    const r = resolvedSectionMap.get(secNum);
+                    return (
+                      <button
+                        key={secNum}
+                        type="button"
+                        className="inspector-overflow-chip"
+                        onClick={() => onSelectSectionNumber?.(secNum)}
+                      >
+                        {r ? r.compactBadgeLabel : formatShortSectionLabel(secNum)}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             {selectedSessionItem.overflowItems && selectedSessionItem.overflowItems.length > 1 && (
               <div className="inspector-merged-info">
-                <span>Secciones en este horario ({selectedSessionItem.overflowItems.length}):</span>
+                <span>Secciones / subsecciones en este horario ({selectedSessionItem.overflowItems.length}):</span>
                 <div className="inspector-overflow-chips">
-                  {selectedSessionItem.overflowItems.map(ov => (
-                    <button
-                      key={ov.id}
-                      type="button"
-                      className={`inspector-overflow-chip ${ov.id === selectedSessionItem.id ? 'active' : ''}`}
-                      onClick={() => setSelectedSessionItem({ ...ov, overflowItems: selectedSessionItem.overflowItems })}
-                    >
-                      {formatShortSectionLabel(ov.sectionNumber)}
-                    </button>
-                  ))}
+                  {selectedSessionItem.overflowItems.map(ov => {
+                    const r = resolvedSectionMap.get(ov.sectionNumber);
+                    return (
+                      <button
+                        key={ov.id}
+                        type="button"
+                        className={`inspector-overflow-chip ${ov.id === selectedSessionItem.id ? 'active' : ''}`}
+                        onClick={() => setSelectedSessionItem({ ...ov, overflowItems: selectedSessionItem.overflowItems })}
+                      >
+                        {r ? r.compactBadgeLabel : formatShortSectionLabel(ov.sectionNumber)}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

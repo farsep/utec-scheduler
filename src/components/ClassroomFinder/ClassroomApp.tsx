@@ -532,10 +532,14 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
                     borderColor: '#0D7A4E',
                     color: '#093B29'
                   }}
-                  title={`Sincronizado con Intranet de Reservas UTEC (${dataSourceInfo.weekRange ? `Semana ${dataSourceInfo.weekRange.start} - ${dataSourceInfo.weekRange.end}` : ''})`}
+                  title={
+                    dataSourceInfo.weekRange
+                      ? `Sincronizado con Intranet de Reservas UTEC (Semana ${dataSourceInfo.weekRange.start} - ${dataSourceInfo.weekRange.end})`
+                      : 'Sincronizado con Intranet de Reservas UTEC'
+                  }
                 >
                   <BroadcastIcon className="w-3.5 h-3.5 shrink-0 inline text-[#093B29]" />
-                  <span>Intranet UTEC en Vivo ({dataSourceInfo.totalEvents?.toLocaleString() || 0} reservas)</span>
+                  <span>Intranet UTEC en Vivo</span>
                 </div>
               )}
             </div>

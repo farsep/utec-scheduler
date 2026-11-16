@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import type { DayOfWeek } from '../../types/schedule';
 import type { CourseExtendedInfo } from '../../types/courseDirectory';
@@ -8,6 +8,13 @@ import {
   generateIcsForVisitorSessions,
   generateGoogleCalendarUrlForSession
 } from '../../utils/courseDirectoryUtils';
+import {
+  buildSectionHierarchyGroups,
+  resolveSectionHierarchy,
+  extractSharedGroupSessions,
+  matchesSectionFilter,
+  type ParsedSectionHierarchy
+} from '../../utils/sectionHierarchy';
 import { VisitorEmailModal } from './VisitorEmailModal';
 import { CourseTimetable } from './CourseTimetable';
 import { CustomSelect } from '../common/CustomSelect';
@@ -55,9 +62,46 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
   const isClosing = useRef<boolean>(false);
   const rafId = useRef<number | null>(null);
 
-  const visibleSections = selectedSectionNumber === 'ALL'
-    ? course.extendedSections
-    : course.extendedSections.filter(s => s.sectionNumber === selectedSectionNumber);
+  const sectionStructure = useMemo(
+    () => buildSectionHierarchyGroups(course.extendedSections),
+    [course.extendedSections]
+  );
+
+  const resolvedSectionMap = useMemo(() => {
+    const map = new Map<string, ParsedSectionHierarchy>();
+    for (const group of sectionStructure.groups) {
+      for (const sec of group.subsections) {
+        map.set(sec.sectionNumber, resolveSectionHierarchy(sec, group.hasSubsections));
+      }
+    }
+    return map;
+  }, [sectionStructure]);
+
+  const sharedSessionKeysByMain = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const group of sectionStructure.groups) {
+      if (!group.hasSubsections) continue;
+      const shared = extractSharedGroupSessions(group.subsections);
+      map.set(
+        group.mainSection,
+        new Set(shared.map(s => `${s.day}|${s.startTime}|${s.endTime}|${s.sessionGroup}`))
+      );
+    }
+    return map;
+  }, [sectionStructure]);
+
+  const orderedSections = useMemo(
+    () => sectionStructure.groups.flatMap(g => g.subsections),
+    [sectionStructure]
+  );
+
+  const visibleSections = useMemo(
+    () =>
+      selectedSectionNumber === 'ALL'
+        ? orderedSections
+        : orderedSections.filter(s => matchesSectionFilter(s.sectionNumber, selectedSectionNumber)),
+    [orderedSections, selectedSectionNumber]
+  );
 
   // Smooth exit animation matching ProfessorDetailModal & ClassroomDetailModal
   const triggerClose = () => {
@@ -177,7 +221,9 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
 
   // Download ICS for visitor sessions
   const handleDownloadIcs = () => {
-    const icsContent = generateIcsForVisitorSessions(course, selectedSectionNumber);
+    const icsSectionArg =
+      selectedSectionNumber.startsWith('MAIN:') ? 'ALL' : selectedSectionNumber;
+    const icsContent = generateIcsForVisitorSessions(course, icsSectionArg);
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -189,20 +235,73 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const sectionSelectOptions = [
-    { value: 'ALL', label: `Todas las secciones (${course.totalSectionsCount})` },
-    ...course.extendedSections.map(sec => ({
-      value: sec.sectionNumber,
-      label: `Sección ${sec.sectionNumber}`,
-      badge: `${sec.totalWeeklyHours} h/sem`
-    }))
-  ];
+  const sectionSelectOptions = useMemo(() => {
+    if (sectionStructure.kind === 'flat') {
+      return [
+        { value: 'ALL', label: `Todas las secciones (${course.totalSectionsCount})` },
+        ...orderedSections.map(sec => ({
+          value: sec.sectionNumber,
+          label: `Sección ${sec.sectionNumber}`,
+          badge: `${sec.totalWeeklyHours} h/sem`
+        }))
+      ];
+    }
+
+    if (sectionStructure.kind === 'single-main-subsections') {
+      const mainSec = sectionStructure.groups[0]?.mainSection || '1';
+      return [
+        { value: 'ALL', label: `Todas las subsecciones · Sec. ${mainSec} (${course.totalSectionsCount})` },
+        ...orderedSections.map(sec => {
+          const r = resolvedSectionMap.get(sec.sectionNumber);
+          return {
+            value: sec.sectionNumber,
+            label: r ? `Sec. ${r.mainSection} · Subsec. ${r.subsectionPillLabel}` : `Sección ${sec.sectionNumber}`,
+            badge: `${sec.totalWeeklyHours} h/sem`
+          };
+        })
+      ];
+    }
+
+    const opts: Array<{ value: string; label: string; badge?: string }> = [
+      { value: 'ALL', label: `Todas las secciones (${course.totalSectionsCount})` }
+    ];
+    for (const group of sectionStructure.groups) {
+      if (group.hasSubsections) {
+        opts.push({
+          value: `MAIN:${group.mainSection}`,
+          label: `Sección ${group.mainSection} (todas)`,
+          badge: `${group.subsections.length} sub`
+        });
+        for (const sub of group.subsections) {
+          const r = resolvedSectionMap.get(sub.sectionNumber);
+          opts.push({
+            value: sub.sectionNumber,
+            label: r ? `↳ Sec. ${r.mainSection} · ${r.subsectionPillLabel}` : `Sección ${sub.sectionNumber}`,
+            badge: `${sub.totalWeeklyHours} h/sem`
+          });
+        }
+      } else {
+        const sec = group.subsections[0];
+        opts.push({
+          value: sec.sectionNumber,
+          label: `Sección ${group.mainSection}`,
+          badge: `${sec.totalWeeklyHours} h/sem`
+        });
+      }
+    }
+    return opts;
+  }, [sectionStructure, orderedSections, resolvedSectionMap, course.totalSectionsCount]);
 
   if (isEmailModalOpen) {
+    const resolvedEmailSection =
+      selectedSectionNumber === 'ALL' || selectedSectionNumber.startsWith('MAIN:')
+        ? visibleSections[0]?.sectionNumber || course.extendedSections[0]?.sectionNumber || '1'
+        : selectedSectionNumber;
+
     return (
       <VisitorEmailModal
         course={course}
-        selectedSectionNumber={selectedSectionNumber === 'ALL' ? course.extendedSections[0]?.sectionNumber || '1' : selectedSectionNumber}
+        selectedSectionNumber={resolvedEmailSection}
         onBack={() => setIsEmailModalOpen(false)}
         onClose={() => {
           setIsEmailModalOpen(false);
@@ -399,122 +498,154 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
 
               {/* Sections List */}
               <div className="course-sections-list">
-                {visibleSections.map(sec => (
-                  <div key={sec.sectionNumber} className="course-section-card glass-card">
-                    <div className="course-section-header">
-                      <div className="section-title-wrap">
-                        <h3 className="section-title">Sección {sec.sectionNumber}</h3>
-                        <span className="section-hours-badge">
-                          <Clock size={12} /> {sec.totalWeeklyHours} h/sem
-                        </span>
-                        {sec.daysTaught.length > 0 && (
-                          <span className="section-days-badge">
-                            <Calendar size={12} /> {sec.daysTaught.join(', ')}
+                {visibleSections.map(sec => {
+                  const resolved = resolvedSectionMap.get(sec.sectionNumber);
+                  const sharedKeys = resolved
+                    ? sharedSessionKeysByMain.get(resolved.mainSection)
+                    : undefined;
+
+                  return (
+                    <div key={sec.sectionNumber} className="course-section-card glass-card">
+                      <div className="course-section-header">
+                        <div className="section-title-wrap">
+                          <h3 className="section-title">
+                            Sección {resolved ? resolved.mainSection : sec.sectionNumber}
+                          </h3>
+                          {resolved?.hasSubsection && (
+                            <span
+                              className="section-sub-pill"
+                              title={`Subsección de la Sección ${resolved.mainSection}`}
+                            >
+                              Subsec. {resolved.subsectionPillLabel}
+                            </span>
+                          )}
+                          <span className="section-hours-badge">
+                            <Clock size={12} /> {sec.totalWeeklyHours} h/sem
                           </span>
-                        )}
+                          {sec.daysTaught.length > 0 && (
+                            <span className="section-days-badge">
+                              <Calendar size={12} /> {sec.daysTaught.join(', ')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Sessions in this section */}
+                      <div className="course-sessions-grid">
+                        {sec.sessions.map((sess, idx) => {
+                          const isLiveNow =
+                            sess.day === nowDay &&
+                            nowMinutes >= sess.startMinutes &&
+                            nowMinutes < sess.endMinutes;
+                          const isSharedSession = Boolean(
+                            sharedKeys?.has(
+                              `${sess.day}|${sess.startTime}|${sess.endTime}|${sess.sessionGroup}`
+                            )
+                          );
+
+                          const gcalUrl = generateGoogleCalendarUrlForSession(
+                            sess,
+                            course.name,
+                            course.code,
+                            sec.sectionNumber
+                          );
+
+                          const formattedProf =
+                            sess.professor && !/docente\s*utec/i.test(sess.professor)
+                              ? formatProfessorName(sess.professor).displayName
+                              : null;
+
+                          return (
+                            <div
+                              key={sess.id || idx}
+                              className={`course-session-pill glass-card ${isLiveNow ? 'course-session-pill--live' : ''}`}
+                            >
+                              <div className="session-pill-top">
+                                <span className="session-group-tag">
+                                  {/teor|lab|pr[aá]c|taller|vir/i.test(sess.sessionGroup || '')
+                                    ? sess.sessionGroup.toUpperCase()
+                                    : `${sess.sessionType} ${sess.sessionGroup || ''}`.trim().toUpperCase()}
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  {isSharedSession && resolved && (
+                                    <span
+                                      className="session-shared-pill"
+                                      title={`Sesión general compartida por todas las subsecciones de la Sección ${resolved.mainSection}`}
+                                    >
+                                      General S{resolved.mainSection}
+                                    </span>
+                                  )}
+                                  <span
+                                    className={`session-modality-badge ${sess.modality === 'Presencial' ? 'modality--presencial' : 'modality--virtual'}`}
+                                  >
+                                    {sess.modality}
+                                  </span>
+                                </div>
+                                {isLiveNow && (
+                                  <span className="session-live-pulse-badge">
+                                    <Radio size={11} className="live-spin" /> EN CLASE AHORA
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="session-pill-time-row">
+                                <Clock size={14} className="text-accent" />
+                                <span className="session-day-name">{DAY_LABELS[sess.day]}</span>
+                                <span className="session-hours">
+                                  {sess.startTime} - {sess.endTime}
+                                </span>
+                              </div>
+
+                              <div className="session-pill-location-row">
+                                <MapPin size={14} className="text-emerald" />
+                                <a
+                                  href={`/aulas?aula=${resolveCanonicalRoom(sess.roomCode || sess.roomDisplayName).code}`}
+                                  className="session-room-link room-entity-link"
+                                  title="Ver ocupación y disponibilidad de este aula en Aulas Libres"
+                                >
+                                  {resolveCanonicalRoom(sess.roomCode || sess.roomDisplayName).displayName}
+                                  <ExternalLink size={11} className="inline-ext-icon" />
+                                </a>
+                                {sess.floor > 1 && (
+                                  <span className="session-floor-tag">Piso {sess.floor}</span>
+                                )}
+                              </div>
+
+                              <div className="session-pill-prof-row">
+                                <GraduationCap size={14} className="text-purple" />
+                                {formattedProf ? (
+                                  <a
+                                    href={`/profesores?profesor=${encodeURIComponent(sess.professor)}`}
+                                    className="session-prof-link prof-entity-link"
+                                    title="Ver perfil del docente en el Directorio"
+                                  >
+                                    {formattedProf}
+                                  </a>
+                                ) : (
+                                  <span className="session-prof-unassigned">Docente UTEC</span>
+                                )}
+                              </div>
+
+                              {/* Quick Add to Google Calendar Action */}
+                              <div className="session-pill-actions">
+                                <a
+                                  href={gcalUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="session-gcal-link"
+                                  title="Agendar sesión como oyente en tu Google Calendar"
+                                >
+                                  <Calendar size={12} />
+                                  <span>Agregar a Google Calendar</span>
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-
-                    {/* Sessions in this section */}
-                    <div className="course-sessions-grid">
-                      {sec.sessions.map((sess, idx) => {
-                        const isLiveNow =
-                          sess.day === nowDay &&
-                          nowMinutes >= sess.startMinutes &&
-                          nowMinutes < sess.endMinutes;
-
-                        const gcalUrl = generateGoogleCalendarUrlForSession(
-                          sess,
-                          course.name,
-                          course.code,
-                          sec.sectionNumber
-                        );
-
-                        const formattedProf =
-                          sess.professor && !/docente\s*utec/i.test(sess.professor)
-                            ? formatProfessorName(sess.professor).displayName
-                            : null;
-
-                        return (
-                          <div
-                            key={sess.id || idx}
-                            className={`course-session-pill glass-card ${isLiveNow ? 'course-session-pill--live' : ''}`}
-                          >
-                            <div className="session-pill-top">
-                              <span className="session-group-tag">
-                                {/teor|lab|pr[aá]c|taller|vir/i.test(sess.sessionGroup || '')
-                                  ? sess.sessionGroup.toUpperCase()
-                                  : `${sess.sessionType} ${sess.sessionGroup || ''}`.trim().toUpperCase()}
-                              </span>
-                              <span
-                                className={`session-modality-badge ${sess.modality === 'Presencial' ? 'modality--presencial' : 'modality--virtual'}`}
-                              >
-                                {sess.modality}
-                              </span>
-                              {isLiveNow && (
-                                <span className="session-live-pulse-badge">
-                                  <Radio size={11} className="live-spin" /> EN CLASE AHORA
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="session-pill-time-row">
-                              <Clock size={14} className="text-accent" />
-                              <span className="session-day-name">{DAY_LABELS[sess.day]}</span>
-                              <span className="session-hours">
-                                {sess.startTime} - {sess.endTime}
-                              </span>
-                            </div>
-
-                            <div className="session-pill-location-row">
-                              <MapPin size={14} className="text-emerald" />
-                              <a
-                                href={`/aulas?aula=${resolveCanonicalRoom(sess.roomCode || sess.roomDisplayName).code}`}
-                                className="session-room-link room-entity-link"
-                                title="Ver ocupación y disponibilidad de este aula en Aulas Libres"
-                              >
-                                {resolveCanonicalRoom(sess.roomCode || sess.roomDisplayName).displayName}
-                                <ExternalLink size={11} className="inline-ext-icon" />
-                              </a>
-                              {sess.floor > 1 && (
-                                <span className="session-floor-tag">Piso {sess.floor}</span>
-                              )}
-                            </div>
-
-                            <div className="session-pill-prof-row">
-                              <GraduationCap size={14} className="text-purple" />
-                              {formattedProf ? (
-                                <a
-                                  href={`/profesores?profesor=${encodeURIComponent(sess.professor)}`}
-                                  className="session-prof-link prof-entity-link"
-                                  title="Ver perfil del docente en el Directorio"
-                                >
-                                  {formattedProf}
-                                </a>
-                              ) : (
-                                <span className="session-prof-unassigned">Docente UTEC</span>
-                              )}
-                            </div>
-
-                            {/* Quick Add to Google Calendar Action */}
-                            <div className="session-pill-actions">
-                              <a
-                                href={gcalUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="session-gcal-link"
-                                title="Agendar sesión como oyente en tu Google Calendar"
-                              >
-                                <Calendar size={12} />
-                                <span>Agregar a Google Calendar</span>
-                              </a>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ) : (

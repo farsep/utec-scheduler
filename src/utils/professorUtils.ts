@@ -11,7 +11,7 @@ import { parseSessionType, getCourseColor, normalizeString } from './scheduleUti
 
 export const DEPARTMENT_CONFIG: Record<string, { label: string; color: string }> = {
   CS: { label: 'Ciencia de la Computación', color: '#3b82f6' },
-  CC: { label: 'Computación y Sistemas', color: '#6366f1' },
+  CC: { label: 'Ciencias', color: '#6366f1' },
   DS: { label: 'Ciencia de Datos', color: '#8b5cf6' },
   PI: { label: 'Ingeniería Industrial', color: '#f59e0b' },
   ME: { label: 'Mecatrónica / Mecánica', color: '#06b6d4' },

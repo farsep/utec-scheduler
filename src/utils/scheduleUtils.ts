@@ -55,7 +55,7 @@ export function normalizeString(str: string): string {
 
 export const PREFIX_COLORS: Record<string, string> = {
   CS: '#2563eb', // Computer Science - Electric Blue
-  CC: '#0284c7', // Ciencias de la Computación - Vivid Cyan
+  CC: '#0284c7', // Departamento Académico de Ciencias - Vivid Cyan
   MA: '#7c3aed', // Matemáticas - Rich Purple
   HH: '#db2777', // Humanidades - Hot Pink
   GH: '#e11d48', // Gestión y Humanidades - Deep Rose

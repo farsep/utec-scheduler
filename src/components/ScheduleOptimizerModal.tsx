@@ -956,16 +956,41 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
 
                 {isAdvancedMode && (
                   <div style={{ padding: '12px', background: 'var(--bg-elevated)', borderRadius: '0px', marginBottom: '16px', border: '1px solid var(--border-hairline)' }}>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                      Cursos totales a llevar (incluyendo fijos): {maxCourses}
-                    </label>
-                    <input 
-                      type="range" 
-                      min="1" max="8" 
-                      value={maxCourses} 
-                      onChange={(e) => setMaxCourses(parseInt(e.target.value))}
-                      style={{ width: '100%', marginBottom: '12px' }}
-                    />
+                    <div className="optimizer-range-wrap">
+                      <div className="optimizer-range-header">
+                        <label htmlFor="optimizer-max-courses-range" className="optimizer-range-label">
+                          Cursos totales a llevar (incluyendo fijos):
+                        </label>
+                        <span className="optimizer-range-value-badge">{maxCourses}</span>
+                      </div>
+                      <input
+                        id="optimizer-max-courses-range"
+                        type="range"
+                        min="1"
+                        max="8"
+                        step="1"
+                        value={maxCourses}
+                        onChange={(e) => setMaxCourses(parseInt(e.target.value, 10))}
+                        className="optimizer-courses-range"
+                        style={{
+                          width: '100%',
+                          ['--range-progress' as string]: `${((maxCourses - 1) / 7) * 100}%`,
+                        }}
+                      />
+                      <div className="optimizer-range-ticks" role="group" aria-label="Seleccionar cantidad de cursos">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+                          <button
+                            key={n}
+                            type="button"
+                            className={`optimizer-range-tick ${maxCourses === n ? 'active' : ''}`}
+                            onClick={() => setMaxCourses(n)}
+                            aria-label={`${n} cursos`}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <div style={{ flex: 1 }}>

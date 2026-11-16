@@ -16,11 +16,11 @@ declare global {
   }
 }
 
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 const COURSES_CACHE_KEY = `matriculab_courses_cache_${CACHE_VERSION}`;
 const PROFESSORS_CACHE_KEY = `matriculab_professors_cache_${CACHE_VERSION}`;
 const CLASSROOMS_CACHE_KEY = `matriculab_classrooms_cache_${CACHE_VERSION}`;
-const STATIC_ASSET_VER = '2026.2.6';
+const STATIC_ASSET_VER = '2026.2.7';
 
 // Purge legacy unversioned and previous version sessionStorage keys so clients immediately receive corrected classroom floors & dates
 if (typeof window !== 'undefined') {
@@ -37,6 +37,9 @@ if (typeof window !== 'undefined') {
     sessionStorage.removeItem('matriculab_courses_cache_v5');
     sessionStorage.removeItem('matriculab_professors_cache_v5');
     sessionStorage.removeItem('matriculab_classrooms_cache_v5');
+    sessionStorage.removeItem('matriculab_courses_cache_v6');
+    sessionStorage.removeItem('matriculab_professors_cache_v6');
+    sessionStorage.removeItem('matriculab_classrooms_cache_v6');
   } catch {}
 }
 
