@@ -3342,6 +3342,69 @@ input[type="range"]:hover::-moz-range-thumb {
   background-color: #7A1624;
 }
 
+.optimizer-generating-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.optimizer-generating-viz-wrap {
+  flex: 1;
+  min-height: 0;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.optimizer-generating-footer {
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 1.5px solid #18181A;
+  background-color: #EAE7E1;
+  flex-shrink: 0;
+}
+@media (min-width: 1024px) {
+  .optimizer-generating-footer {
+    display: none;
+  }
+}
+@media (max-width: 639px) {
+  .optimizer-generating-viz-wrap {
+    padding: 8px;
+  }
+  .optimizer-generating-footer {
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+  .optimizer-generating-footer .optimizer-cancel-btn {
+    padding: 10px 12px;
+  }
+  .quantum-visualizer-shell {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .quantum-header-bar {
+    padding: 7px 9px;
+    gap: 6px;
+  }
+  .quantum-telemetry-grid {
+    gap: 5px;
+  }
+  .quantum-telemetry-cell {
+    padding: 4px 7px;
+  }
+  .quantum-tel-value {
+    font-size: 12.5px;
+  }
+  .quantum-oscilloscope-frame {
+    min-height: 168px;
+  }
+  .quantum-bitmask-strip {
+    padding: 5px 8px;
+    font-size: 8.5px;
+    gap: 4px;
+  }
+}
+
 /* Sticky Top Navigation Bar in Results View */
 .results-view-header {
   background-color: #EAE7E1;

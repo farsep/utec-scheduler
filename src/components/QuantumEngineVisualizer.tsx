@@ -1,4 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  getGraftonPigment,
+  getGraftonBlockBackground,
+  GRAFTON_PIGMENTS,
+} from '../utils/graftonPigments';
 
 export interface EvalProgressData {
   evaluated: number;
@@ -15,11 +20,11 @@ interface QuantumEngineVisualizerProps {
   pinnedCourses: string[];
 }
 
-const FALLBACK_COURSES = ['CS2013', 'CS2041', 'CS2023', 'CC1105', 'CI5314', 'CC1143', 'ME2012', 'EL2013'];
+const FALLBACK_COURSES = ['CS2013', 'CS2023', 'CC1105', 'CS2041', 'CC1104', 'CS2031', 'CS5352', 'CC1103'];
 const DAYS = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
 const HOURS = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00'];
 
-const CUBE_PALETTE = ['#00779E', '#0D7A4E', '#D97706', '#FAF9F5', '#18181A'];
+const NEUTRAL_CUBE_CELLS = ['#FAF9F5', '#18181A'] as const;
 
 interface OscilloscopeSlot {
   id: string;
@@ -34,7 +39,7 @@ interface OscilloscopeSlot {
 interface CandidateFrame {
   frameId: number;
   slots: OscilloscopeSlot[];
-  cubeColors: number[];
+  cubeColors: string[];
   bitmasks: Array<{ day: string; bits: string }>;
   hasActiveClash: boolean;
 }
@@ -79,8 +84,12 @@ function sampleCourseCodes(
   return picked;
 }
 
-function generateRandomCubeColors(): number[] {
-  return Array.from({ length: 9 }, () => Math.floor(Math.random() * CUBE_PALETTE.length));
+function generateRandomCubeColors(slots?: OscilloscopeSlot[]): string[] {
+  const slotBars = slots && slots.length > 0
+    ? slots.map((s) => getGraftonPigment(s.courseCode).bar)
+    : GRAFTON_PIGMENTS.slice(0, 6).map((p) => p.bar);
+  const palette = [...slotBars, ...NEUTRAL_CUBE_CELLS];
+  return Array.from({ length: 9 }, () => palette[Math.floor(Math.random() * palette.length)]);
 }
 
 function generateRandomCandidateFrame(
@@ -218,7 +227,7 @@ function generateRandomCandidateFrame(
   return {
     frameId,
     slots,
-    cubeColors: generateRandomCubeColors(),
+    cubeColors: generateRandomCubeColors(slots),
     bitmasks,
     hasActiveClash,
   };
@@ -274,7 +283,7 @@ export const QuantumEngineVisualizer: React.FC<QuantumEngineVisualizerProps> = (
           tick: nextTick,
           candidateFrame: {
             ...prev.candidateFrame,
-            cubeColors: generateRandomCubeColors(),
+            cubeColors: generateRandomCubeColors(prev.candidateFrame.slots),
           },
         };
       });
@@ -340,11 +349,11 @@ export const QuantumEngineVisualizer: React.FC<QuantumEngineVisualizerProps> = (
       <div className="quantum-header-bar">
         <div className="quantum-header-left">
           <div className="quantum-cube-grid" aria-hidden="true">
-            {cubeColors.map((colorIdx, idx) => (
+            {cubeColors.map((cellColor, idx) => (
               <span
                 key={idx}
                 className="quantum-cube-cell"
-                style={{ backgroundColor: CUBE_PALETTE[colorIdx] }}
+                style={{ backgroundColor: cellColor }}
               />
             ))}
           </div>
@@ -419,12 +428,18 @@ export const QuantumEngineVisualizer: React.FC<QuantumEngineVisualizerProps> = (
 
           {/* Candidate Permutation Course Blocks */}
           {activeSlots.map((slot) => {
-            const tagText =
-              slot.visualState === 'clash'
-                ? '[CRUCE X]'
-                : slot.visualState === 'test'
-                ? '[TEST]'
-                : '[OK ✓]';
+            const pigment = getGraftonPigment(slot.courseCode);
+            const isClash = slot.visualState === 'clash';
+            const isTest = slot.visualState === 'test';
+            const tagText = isClash
+              ? '[CRUCE X]'
+              : isTest
+              ? '[TEST]'
+              : '[OK ✓]';
+
+            const borderLine = isClash
+              ? '1.5px solid #A82032'
+              : `1.5px ${isTest ? 'dashed' : 'solid'} ${pigment.border}`;
 
             return (
               <div
@@ -433,10 +448,23 @@ export const QuantumEngineVisualizer: React.FC<QuantumEngineVisualizerProps> = (
                 style={{
                   gridColumn: slot.dayCol + 1,
                   gridRow: `${slot.rowStart} / span ${slot.rowSpan}`,
+                  background: isClash
+                    ? 'repeating-linear-gradient(45deg, #F4E0E2, #F4E0E2 4px, #E8C5C9 4px, #E8C5C9 8px)'
+                    : getGraftonBlockBackground(pigment, isTest),
+                  borderRight: borderLine,
+                  borderBottom: borderLine,
+                  borderTop: slot.isPinned ? '2.5px solid #B85D00' : borderLine,
+                  borderLeft: `3.5px solid ${pigment.bar}`,
+                  color: isClash ? '#520D17' : pigment.text,
                 }}
               >
                 <span className="quantum-block-code">{slot.courseCode}</span>
-                <span className="quantum-block-tag">{tagText}</span>
+                <span
+                  className="quantum-block-tag"
+                  style={{ color: isClash ? '#A82032' : pigment.subtext }}
+                >
+                  {tagText}
+                </span>
               </div>
             );
           })}

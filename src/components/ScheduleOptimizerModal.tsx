@@ -4,6 +4,7 @@ import { X, Calendar, Clock, Coffee, Eye, Pin, Info, Filter, ShieldAlert, CheckC
 import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
 import { formatLocation, getCourseColor, getCourseDepartmentPalette, getCoursePrefix, minutesToTime, normalizeString, getCombinations, sessionToBitmask } from '../utils/scheduleUtils';
+import { getGraftonPigment } from '../utils/graftonPigments';
 import { TimetableGrid } from './TimetableGrid';
 import { GlassTimePicker } from './GlassTimePicker';
 import { CustomSelect } from './common/CustomSelect';
@@ -163,6 +164,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     setIsGenerating(false);
     setWorkerProgress(null);
     setEvalPhase('init');
+    setMobileViewPane('config');
   };
 
   const prevIsOpen = useRef(false);
@@ -1125,7 +1127,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                 {selectedCourseCodes.length > 0 && !isAdvancedMode && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px', padding: '8px', background: 'var(--bg-elevated)', borderRadius: '0px', border: '1px solid var(--border-hairline)', maxHeight: '100px', overflowY: 'auto' }}>
                     {selectedCourseCodes.map(code => {
-                      const courseColor = getCourseColor(code);
+                      const courseColor = getGraftonPigment(code).bar;
                       return (
                         <div 
                           key={code}
@@ -1654,21 +1656,32 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
               )}
 
               {isGenerating && (
-                <div style={{ flex: 1, minHeight: 0, padding: '14px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                  <QuantumEngineVisualizer
-                    evalProgress={{
-                      evaluated: workerProgress?.evaluated ?? 0,
-                      validFound: workerProgress?.validFound ?? 0,
-                      elapsedMs: generationStartTimeRef.current
-                        ? performance.now() - generationStartTimeRef.current
-                        : 0,
-                      isComplete: evalPhase === 'complete',
-                      phase: evalPhase,
-                      totalCombinations: totalCombinationsRef.current || workerProgress?.total || undefined
-                    }}
-                    selectedCourseCodes={selectedCourseCodes}
-                    pinnedCourses={pinnedCourseCodes}
-                  />
+                <div className="optimizer-generating-shell">
+                  <div className="optimizer-generating-viz-wrap">
+                    <QuantumEngineVisualizer
+                      evalProgress={{
+                        evaluated: workerProgress?.evaluated ?? 0,
+                        validFound: workerProgress?.validFound ?? 0,
+                        elapsedMs: generationStartTimeRef.current
+                          ? performance.now() - generationStartTimeRef.current
+                          : 0,
+                        isComplete: evalPhase === 'complete',
+                        phase: evalPhase,
+                        totalCombinations: totalCombinationsRef.current || workerProgress?.total || undefined
+                      }}
+                      selectedCourseCodes={selectedCourseCodes}
+                      pinnedCourses={pinnedCourseCodes}
+                    />
+                  </div>
+                  <div className="optimizer-generating-footer">
+                    <button
+                      type="button"
+                      className="optimizer-cancel-btn"
+                      onClick={cancelGeneration}
+                    >
+                      Detener Búsqueda
+                    </button>
+                  </div>
                 </div>
               )}
 
