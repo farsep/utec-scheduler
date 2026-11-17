@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Calendar, Clock, Coffee, Eye, Pin, Info, Filter, ShieldAlert, CheckCircle2, Search, ArrowLeft, Lock, Unlock, CheckSquare, Square, ChevronRight, Check, SlidersHorizontal, User } from 'lucide-react';
-import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek } from '../types/schedule';
+import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek, WorkerTask, Section } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
 import { formatLocation, getCourseColor, getCourseDepartmentPalette, getCoursePrefix, minutesToTime, normalizeString, getCombinations, sessionToBitmask } from '../utils/scheduleUtils';
 import { getGraftonPigment } from '../utils/graftonPigments';
@@ -39,6 +39,89 @@ function formatCompactSectionLabel(rawSecStr: string): { mainText: string; labSu
     };
   }
   return { mainText: `Sec ${compact}`, labSuffix: null, hasLab };
+}
+
+function getFilteredCourseSections(
+  course: Course,
+  options: OptimizerOptions,
+  pinnedSections: Record<string, string>,
+  blockedTimeMask: bigint[],
+  isConstraintStrict: boolean
+): Section[] {
+  let valid = course.sections;
+
+  const pinnedSec = pinnedSections[course.code];
+  if (pinnedSec) {
+    // Keep sections homochronous with the pinned section when matching worker deduplication
+    const target = valid.find((s) => s.sectionNumber === pinnedSec);
+    if (!target) return [];
+    const targetHash = target.sessions
+      .map((s) => `${s.day}-${s.startTime}-${s.endTime}`)
+      .sort()
+      .join('|');
+    valid = valid.filter(
+      (s) =>
+        s.sessions
+          .map((sess) => `${sess.day}-${sess.startTime}-${sess.endTime}`)
+          .sort()
+          .join('|') === targetHash
+    );
+  }
+
+  if (options.onlyWithVacancies) {
+    valid = valid.filter((sec) => sec.vacancies > sec.enrolled);
+  }
+
+  if (options.excludedDays && options.excludedDays.length > 0) {
+    const excluded = new Set(options.excludedDays);
+    valid = valid.filter((sec) => !sec.sessions.some((sess) => excluded.has(sess.day)));
+  }
+
+  if (options.isAdvancedMode) {
+    if (options.minTimeMinutes !== undefined) {
+      const minM = options.minTimeMinutes;
+      valid = valid.filter((sec) => !sec.sessions.some((sess) => sess.startMinutes < minM));
+    }
+    if (options.maxTimeMinutes !== undefined) {
+      const maxM = options.maxTimeMinutes;
+      valid = valid.filter((sec) => !sec.sessions.some((sess) => sess.endMinutes > maxM));
+    }
+  }
+
+  if (isConstraintStrict && blockedTimeMask.some((m) => m !== 0n)) {
+    let fullBlocked = 0n;
+    for (let d = 0; d < 7; d++) {
+      fullBlocked |= (blockedTimeMask[d] & 0x0fffffffffffffffn) << BigInt(d * 60);
+    }
+    valid = valid.filter((sec) => (sessionToBitmask(sec.sessions) & fullBlocked) === 0n);
+  }
+
+  return valid;
+}
+
+function getHomochronousRepresentatives(sections: Section[]): string[] {
+  const seen = new Set<string>();
+  const reps: string[] = [];
+  for (const sec of sections) {
+    const hash = sec.sessions
+      .map((s) => `${s.day}-${s.startTime}-${s.endTime}`)
+      .sort()
+      .join('|');
+    if (!seen.has(hash)) {
+      seen.add(hash);
+      reps.push(sec.sectionNumber);
+    }
+  }
+  return reps;
+}
+
+function nCr(n: number, r: number): number {
+  if (r < 0 || r > n) return 0;
+  let count = 1;
+  for (let i = 1; i <= r; i++) {
+    count = (count * (n - i + 1)) / i;
+  }
+  return count;
 }
 
 interface ScheduleOptimizerModalProps {
@@ -206,9 +289,9 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
     }
   }, [isOpen, initialSelectedCourseCodes, courses]);
 
-  // Warm-up Effect
+  // Warm-up Effect (works for both Normal & Advanced modes)
   useEffect(() => {
-    if (!isOpen || !isAdvancedMode || isGenerating || isGeneratingRef.current) return;
+    if (!isOpen || selectedCourseCodes.length === 0 || isGenerating || isGeneratingRef.current) return;
 
     const timeToMinutes = (timeStr: string) => {
       const [h, m] = timeStr.split(':').map(Number);
@@ -230,11 +313,11 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       }
     };
 
-    const pinned = pinnedCourseCodes || [];
+    const pinned = isAdvancedMode ? (pinnedCourseCodes || []) : selectedCourseCodes;
     const targetCourses = maxCourses || 5;
-    const neededFromPool = targetCourses - pinned.length;
-    const pool = selectedCourseCodes.filter(c => !pinned.includes(c));
-    const poolBase = neededFromPool <= 0 ? [] : pool;
+    const neededFromPool = isAdvancedMode ? (targetCourses - pinned.length) : 0;
+    const pool = isAdvancedMode ? selectedCourseCodes.filter(c => !pinned.includes(c)) : [];
+    const poolBase = (!isAdvancedMode || neededFromPool <= 0) ? [] : pool;
 
     const currentHash = JSON.stringify({ 
       poolBase, 
@@ -359,12 +442,15 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
         }
       };
 
-      // Lazy Generation Setup
-      let chunkTasks: {prefix: string[], startIdx: number}[] = [];
+      // Lazy Generation Setup (Balanced multi-core task sharding for both modes)
+      const numWorkers = navigator.hardwareConcurrency || 4;
+      let chunkTasks: WorkerTask[] = [];
       let totalCombinations = 0;
       let poolBase: string[] = [];
       let neededFromPool = 0;
       let pinned: string[] = [];
+      const courseByCode = new Map(courses.map(c => [c.code, c]));
+
       if (isAdvancedMode) {
         pinned = pinnedCourseCodes || [];
         const targetCourses = maxCourses || 5;
@@ -378,29 +464,54 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
           const pool = selectedCourseCodes.filter(c => !pinned.includes(c));
           if (pool.length < neededFromPool) {
             alert('No hay suficientes cursos habilitados para alcanzar la cantidad deseada.');
+            isGeneratingRef.current = false;
             setIsGenerating(false);
             return;
           }
 
-          // Build lightweight static conflict graph to prune chunkTasks
+          // Precompute deduplicated bitmasks once per course (O(N*S) instead of O(N^3))
+          const poolBitmasks = new Map<string, bigint[]>();
+          for (const code of pool) {
+            const c = courseByCode.get(code);
+            if (!c) {
+              poolBitmasks.set(code, []);
+              continue;
+            }
+            const validSecs = getFilteredCourseSections(
+              c,
+              currentOptions,
+              pinnedSections,
+              mergedBlockedTimeMask,
+              isConstraintStrict
+            );
+            const seenHashes = new Set<string>();
+            const masks: bigint[] = [];
+            for (const s of validSecs) {
+              const hash = s.sessions.map(sess => `${sess.day}-${sess.startTime}-${sess.endTime}`).sort().join('|');
+              if (!seenHashes.has(hash)) {
+                seenHashes.add(hash);
+                masks.push(sessionToBitmask(s.sessions));
+              }
+            }
+            poolBitmasks.set(code, masks);
+          }
+
+          // Build static conflict graph in O(N^2) using precomputed bitmasks
           const courseConflicts = new Map<string, Set<string>>();
           for (let i = 0; i < pool.length; i++) {
+            const m1 = poolBitmasks.get(pool[i]) || [];
+            if (m1.length === 0) continue;
             for (let j = i + 1; j < pool.length; j++) {
-              const c1 = courses.find(c => c.code === pool[i]);
-              const c2 = courses.find(c => c.code === pool[j]);
-              if (!c1 || !c2) continue;
-              
+              const m2 = poolBitmasks.get(pool[j]) || [];
+              if (m2.length === 0) continue;
               let possible = false;
-              for (const s1 of c1.sections) {
-                const b1 = sessionToBitmask(s1.sessions);
-                for (const s2 of c2.sections) {
-                  const b2 = sessionToBitmask(s2.sessions);
-                  if ((b1 & b2) === 0n) {
+              for (let a = 0; a < m1.length && !possible; a++) {
+                for (let b = 0; b < m2.length; b++) {
+                  if ((m1[a] & m2[b]) === 0n) {
                     possible = true;
                     break;
                   }
                 }
-                if (possible) break;
               }
               if (!possible) {
                 if (!courseConflicts.has(pool[i])) courseConflicts.set(pool[i], new Set());
@@ -411,51 +522,161 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
             }
           }
 
-          let count = 1;
-          for (let i = 1; i <= neededFromPool; i++) {
-            count = (count * (pool.length - i + 1)) / i;
-          }
-          totalCombinations = count;
+          totalCombinations = nCr(pool.length, neededFromPool);
+          const baseNodesBudget = Math.max(1, Math.floor(nCr(100, neededFromPool) / Math.max(1, pool.length)));
 
-          const depth = 1; // Limit prefix chunks to depth 1 (O(N) chunks) instead of O(N^2)
-          function generateTasks(currentCombo: string[], startIdx: number) {
-            if (currentCombo.length === depth || currentCombo.length === neededFromPool) {
-              chunkTasks.push({ prefix: [...currentCombo], startIdx });
-              return;
+          // Start at depth 1 and sub-split the heaviest prefixes dynamically for balanced multi-core load
+          const hasConflictWithPrefix = (candidate: string, prefix: string[]) => {
+            const conflicts = courseConflicts.get(candidate);
+            if (!conflicts) return false;
+            for (const existing of prefix) {
+              if (conflicts.has(existing)) return true;
             }
-            for (let i = startIdx; i < pool.length; i++) {
-              const candidate = pool[i];
-              let conflict = false;
-              const conflicts = courseConflicts.get(candidate);
-              if (conflicts) {
-                for (const existing of currentCombo) {
-                  if (conflicts.has(existing)) {
-                    conflict = true;
-                    break;
-                  }
-                }
+            return false;
+          };
+
+          for (let i = 0; i <= pool.length - neededFromPool; i++) {
+            const code = pool[i];
+            if ((poolBitmasks.get(code)?.length || 0) === 0) continue;
+            chunkTasks.push({
+              prefix: [code],
+              startIdx: i + 1,
+              maxNodesLimit: baseNodesBudget,
+              estimatedCombos: nCr(pool.length - (i + 1), neededFromPool - 1),
+            });
+          }
+
+          const targetMinTasks = Math.max(numWorkers * 6, 48);
+          const targetMaxTasks = Math.max(numWorkers * 24, 384);
+          if (neededFromPool >= 2 && chunkTasks.length > 0 && chunkTasks.length < targetMaxTasks) {
+            // Sub-split largest tasks first (lowest startIdx => largest remaining subtree)
+            let cursor = 0;
+            while (
+              chunkTasks.length < targetMinTasks ||
+              (pool.length > 30 && cursor < numWorkers * 2 && chunkTasks.length < targetMaxTasks)
+            ) {
+              const idxToSplit = chunkTasks.findIndex(
+                (t) =>
+                  t.prefix.length < neededFromPool &&
+                  pool.length - t.startIdx >= neededFromPool - t.prefix.length &&
+                  (t.estimatedCombos ?? 0) > 1
+              );
+              if (idxToSplit === -1 || idxToSplit >= chunkTasks.length) break;
+
+              const parent = chunkTasks[idxToSplit];
+              const children: WorkerTask[] = [];
+              const remNeededAfterChild = neededFromPool - (parent.prefix.length + 1);
+              for (let j = parent.startIdx; j <= pool.length - (remNeededAfterChild + 1); j++) {
+                const cand = pool[j];
+                if ((poolBitmasks.get(cand)?.length || 0) === 0) continue;
+                if (hasConflictWithPrefix(cand, parent.prefix)) continue;
+                children.push({
+                  prefix: [...parent.prefix, cand],
+                  startIdx: j + 1,
+                  estimatedCombos: nCr(pool.length - (j + 1), remNeededAfterChild),
+                });
               }
-              if (conflict) continue;
 
-              currentCombo.push(candidate);
-              generateTasks(currentCombo, i + 1);
-              currentCombo.pop();
+              if (children.length > 0) {
+                const perChildBudget = Math.max(
+                  1000,
+                  Math.ceil((parent.maxNodesLimit || baseNodesBudget) / children.length)
+                );
+                for (const ch of children) {
+                  ch.maxNodesLimit = perChildBudget;
+                }
+                if (chunkTasks.length - 1 + children.length > targetMaxTasks) break;
+                chunkTasks.splice(idxToSplit, 1, ...children);
+              } else {
+                chunkTasks.splice(idxToSplit, 1);
+              }
+              cursor++;
             }
           }
-          generateTasks([], 0);
           poolBase = pool;
         }
       } else {
-        chunkTasks = [{ prefix: selectedCourseCodes, startIdx: 0 }];
-        totalCombinations = selectedCourseCodes.reduce((acc, code) => {
-          const c = courses.find(item => item.code === code);
-          return acc * Math.max(1, c ? c.sections.length : 1);
-        }, 1);
-        neededFromPool = selectedCourseCodes.length;
+        // Normal Mode: take ALL selectedCourseCodes, deduplicate homochronous sections,
+        // and shard across ALL workers by splitting high-cardinality courses' unique sections
+        pinned = [...selectedCourseCodes];
+        poolBase = [];
+        neededFromPool = 0;
+
+        let validCourseFound = selectedCourseCodes.length > 0;
+        const courseRepLists: Array<{ code: string; reps: string[]; rawCount: number }> = [];
+        totalCombinations = 1;
+
+        for (const code of selectedCourseCodes) {
+          const c = courseByCode.get(code);
+          if (!c) {
+            validCourseFound = false;
+            break;
+          }
+          const validSecs = getFilteredCourseSections(
+            c,
+            currentOptions,
+            pinnedSections,
+            mergedBlockedTimeMask,
+            isConstraintStrict
+          );
+          if (validSecs.length === 0) {
+            validCourseFound = false;
+            break;
+          }
+          const reps = getHomochronousRepresentatives(validSecs);
+          totalCombinations *= validSecs.length;
+          courseRepLists.push({ code, reps, rawCount: validSecs.length });
+        }
+
+        if (!validCourseFound) {
+          chunkTasks = [];
+        } else {
+          // Pick unpinned courses with most unique homochronous sections to shard across cores
+          const splittable = courseRepLists
+            .filter((item) => !pinnedSections[item.code] && item.reps.length >= 2)
+            .sort((a, b) => b.reps.length - a.reps.length);
+
+          const totalUniqueCombos = courseRepLists.reduce((acc, item) => acc * item.reps.length, 1);
+
+          if (splittable.length === 0) {
+            chunkTasks = [{ prefix: [], startIdx: 0, estimatedCombos: Math.max(1, totalUniqueCombos) }];
+          } else {
+            const targetTasks = Math.max(numWorkers * 3, 24);
+            let assignments: Array<Record<string, string[]>> = [{}];
+
+            for (const item of splittable) {
+              if (assignments.length >= targetTasks) break;
+              const nextAssignments: Array<Record<string, string[]>> = [];
+              for (const base of assignments) {
+                for (const rep of item.reps) {
+                  nextAssignments.push({ ...base, [item.code]: [rep] });
+                }
+              }
+              assignments = nextAssignments;
+            }
+
+            // If still too many assignments (> targetTasks * 2), batch evenly per task
+            if (assignments.length > targetTasks * 2 && splittable.length === 1) {
+              const only = splittable[0];
+              const batchSize = Math.ceil(only.reps.length / targetTasks);
+              assignments = [];
+              for (let i = 0; i < only.reps.length; i += batchSize) {
+                assignments.push({ [only.code]: only.reps.slice(i, i + batchSize) });
+              }
+            }
+
+            const weightPerTask = Math.max(1, Math.round(totalUniqueCombos / assignments.length));
+            chunkTasks = assignments.map((sectionFilters) => ({
+              prefix: [],
+              startIdx: 0,
+              sectionFilters,
+              estimatedCombos: weightPerTask,
+            }));
+          }
+        }
       }
 
       totalCombinationsRef.current = Math.max(1, totalCombinations);
-      const numWorkers = navigator.hardwareConcurrency || 4;
       
       if (chunkTasks.length === 0) {
         const elapsed = performance.now() - generationStartTimeRef.current;
@@ -465,7 +686,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
           setIsGenerating(false);
           setMobileViewPane('results');
           finishTimerRef.current = null;
-        }, Math.max(0, 1000 - elapsed));
+        }, Math.max(0, 300 - elapsed));
         return;
       }
 
@@ -541,7 +762,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                 validFound: mergedResults.length
               }));
               const elapsed = performance.now() - generationStartTimeRef.current;
-              const remainingDelay = Math.max(0, 1000 - elapsed);
+              const remainingDelay = Math.max(0, 300 - elapsed);
               finishTimerRef.current = window.setTimeout(() => {
                 isGeneratingRef.current = false;
                 setResults(mergedResults.slice(0, 200));

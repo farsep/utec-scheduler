@@ -28,8 +28,9 @@ pages:
     - npm install -g "$PNPM_SPEC"
     - pnpm --version
   script:
-    # Build WASM first
+    # Run Rust unit tests and build WASM first
     - cd wasm-engine
+    - cargo test --lib
     - wasm-pack build --target web
     - cd ..
     # Install dependencies, typecheck, and build Astro app

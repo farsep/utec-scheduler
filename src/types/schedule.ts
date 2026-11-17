@@ -110,10 +110,18 @@ export interface OptimizerOptions {
   };
 }
 
+export type WorkerTask = {
+  prefix: string[];
+  startIdx: number;
+  maxNodesLimit?: number;
+  sectionFilters?: Record<string, string[]>;
+  estimatedCombos?: number;
+};
+
 // Web Worker Types
 export type WorkerMessage = 
   | { type: 'INIT'; courses: Course[]; poolBase: string[]; pinned: string[]; neededFromPool: number; options: OptimizerOptions; pinnedSections?: Record<string, string>; blockedTimeMask?: bigint[]; isConstraintStrict?: boolean; }
-  | { type: 'TASK'; task: {prefix: string[], startIdx: number} }
+  | { type: 'TASK'; task: WorkerTask }
   | { type: 'FINISH' }
   | { type: 'READY' }
   | { type: 'PROGRESS'; evaluated: number; total: number; validFound: number }

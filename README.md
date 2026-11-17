@@ -40,7 +40,7 @@ La interfaz adopta una estética arquitectónica inspirada en la materialidad de
   * **Ingenierías (`PI`, `IN`, `ME`, `MT`, `EL`, `CI`, `IQ`, `BI`, `AM`, `EN`):** Terracota / Bermellón (`#B8332A` / `#FDF2F1`)
   * **Departamento Académico de Ciencias (`CC`, `MA`, `FI`, `QU`, `EG`):** Ocre Arquitectónico (`#B86200` / `#FDF6EC`)
   * **Negocios, Administración y Humanidades (`AD`, `BA`, `GI`, `HH`, `GH`):** Índigo Pizarra (`#3D348B` / `#F3F2FA`)
-* **Pigmentos de Horario (`GRAFTON_PIGMENTS`):** Paleta mate de 8 pigmentos con trama diagonal sutil (`cobalt`, `emerald`, `ochre`, `violet`, `crimson`, `cyan`, `olive`, `slate`) para distinguir visualmente cada curso en el tablero semanal y al exportar.
+* **Pigmentos de Horario (`GRAFTON_PIGMENTS`):** Paleta mate de 8 pigmentos por código completo de curso (`cobalt`, `emerald`, `ochre`, `violet`, `crimson`, `cyan`, `olive`, `slate`) con trama diagonal para laboratorios, compartida coherentemente entre la grilla semanal (`TimetableGrid.tsx`), barra lateral de cursos, tarjetas, exportación PNG y las combinaciones del motor cuántico (`QuantumEngineVisualizer.tsx`), asegurando máxima variedad visual incluso entre cursos del mismo prefijo (`CS`/`CC`).
 * **Micro-Tickets Suizos Móviles (`< 640px`):** En vista semanal estrecha (`Semana`), cada bloque muestra exclusivamente **código (`CS2023`)**, **sesión (`LAB 11` / `TEO 1`)** y **aula canónica corta (`A708`, `M803`, `MAG`, `VIR`)**; tocar cualquier bloque despliega la barra inspectora inferior (`mobile-course-inspector-strip`) con el detalle completo y opción rápida de quitar o inspeccionar.
 
 ---
@@ -49,7 +49,7 @@ La interfaz adopta una estética arquitectónica inspirada en la materialidad de
 
 ### 1. 📅 Armador y Optimizador de Horarios (`/`)
 * **Grilla Semanal de Alta Densidad (`TimetableGrid.tsx`):** Vista completa de lunes a sábado (`07:00` – `22:00`), resaltado instantáneo de cruces (`ConflictBanner.tsx`), previsualización *hover* desde la barra lateral (`CourseSidebar.tsx`) y conmutación entre vista semanal y vista por día.
-* **Armador de Semestre (Modo Avanzado) (`ScheduleOptimizerModal.tsx`):** Selector de **cursos totales a llevar (`1`–`8`)** con slider multiplataforma compatible con WebKit y Firefox (`::-moz-range-track`, `::-moz-range-progress`, `::-moz-range-thumb`), relleno de progreso y ticks numéricos clicables, además de ventana horaria (`Hora Inicio` / `Hora Fin`), almuerzo garantizado y calendario de bloqueos táctil.
+* **Armador de Semestre (Modo Avanzado y Modo Normal) (`ScheduleOptimizerModal.tsx`):** Selector de **cursos totales a llevar (`1`–`8`)** con slider multiplataforma compatible con WebKit y Firefox (`::-moz-range-track`, `::-moz-range-progress`, `::-moz-range-thumb`), relleno de progreso y ticks numéricos clicables, además de ventana horaria (`Hora Inicio` / `Hora Fin`), almuerzo garantizado (`lunchConfig` en camelCase), secciones fijadas (`pinnedSections`), calendario de bloqueos táctil (*Modo Estricto* o flexible) y botón **Detener Búsqueda** accesible en **móvil, tablet y escritorio**.
 * **Ficha Estudiantil Colapsable en Móvil (`StudentBanner.tsx`):** Resume los metadatos del alumno en una franja compacta de 1 línea en `< 768px` expandible bajo demanda para maximizar el área vertical útil del horario.
 * **Pestañas Multi-Escenario (`MultiScheduleTabs.tsx`):** Crea, renombra, duplica y compara múltiples propuestas en paralelo (`Opción 1 · Mañanas compactas`, `Opción 2 · Tardes libres`, etc.).
 * **Bloqueador de Tiempo (`TimeBlockerGrid.tsx`):** Pinta franjas no disponibles mediante arrastre de mouse o deslizando un dedo en pantallas táctiles; el optimizador las respeta como restricciones duras o flexibles (*Modo Estricto*).
@@ -86,8 +86,8 @@ La interfaz adopta una estética arquitectónica inspirada en la materialidad de
 ## 🎞️ Animaciones e Interfaz Dinámica
 
 ### Animaciones de Combinaciones en el Motor Cuántico (`QuantumEngineVisualizer.tsx`)
-Mientras los Web Workers y Rust WebAssembly evalúan el espacio de búsqueda, el visualizador proyecta un tablero osciloscopio vivo con **estados combinatorios aleatorios ilimitados**:
-* **Generador Procedural Aleatorio (`generateRandomCandidateFrame`):** En lugar de rotar entre plantillas estáticas, cada ciclo (`~170 ms` / 2 ticks de `85 ms`) muestrea aleatoriamente entre **5 y 8 cursos** de todo el pool seleccionado (priorizando los cursos fijados con marcador `is-pinned`) y los distribuye en días (`LUN`–`SÁB`) y bloques horarios (`07:00`–`19:00`) aleatorios sin repetir códigos en la misma rama.
+Mientras los Web Workers y Rust WebAssembly evalúan el espacio de búsqueda, el visualizador proyecta un tablero osciloscopio vivo con **estados combinatorios aleatorios ilimitados** y coherencia visual con la grilla manual:
+* **Generador Procedural Aleatorio y Paleta de 8 Pigmentos (`generateRandomCandidateFrame`):** Cada ciclo (`~170 ms` / 2 ticks de `85 ms`) muestrea aleatoriamente entre **5 y 8 cursos** del pool seleccionado (priorizando los cursos fijados) y colorea cada bloque por su código completo con `getGraftonPigment(courseCode)` (idéntico al tablero semanal). Al completar los workers, garantiza un mínimo ágil de `300 ms` de exposición visual antes de mostrar las tarjetas óptimas, con **Detener Búsqueda** disponible en móvil, tablet y desktop (`worker.terminate()`).
 * **Simulación Viva de Ramas Válidas y Podadas:** Alterna de manera aleatoria entre candidatos sin colisión (`[OK ✓]` / `[TEST]` → `BITMASK AND == 0x0000 · VÁLIDO`) y ramas con cruces superpuestos (`[CRUCE X]` con `z-index` prioritario y trama diagonal carmesí → `PODA BITMASK · RAMA DESCARTADA`). Al completarse la búsqueda (`isComplete`), bloquea de inmediato una rama óptima libre de cruces.
 * **Bitmasks 64-Bit y Cubo 3×3 Sincronizados:** Los registros binarios inferiores (`[LUN: ...] .. [SÁB: ...]`) reflejan las filas ocupadas y colisiones del estado actual generado, acompañados por el barrido horizontal del láser (`swissScanSweep`), un cubo permutador 3×3 aleatorio cada `85 ms` y una barra de progreso de 24 segmentos.
 
@@ -117,39 +117,42 @@ MatrícuLAB 2.0 combina **navegación SPA instantánea (`0ms`)** con un sistema 
 
 ## 🧠 Arquitectura y Motor de Optimización (`QuantumEngine`)
 
-El optimizador (`ScheduleOptimizerModal.tsx`) resuelve el Problema de Satisfacción de Restricciones (**CSP**) combinando Web Workers paralelos con código nativo compilado a **WebAssembly**:
+El optimizador (`ScheduleOptimizerModal.tsx`) resuelve el Problema de Satisfacción de Restricciones (**CSP**) combinando Web Workers paralelos con código nativo compilado a **WebAssembly síncrono de máximo rendimiento** (~`114 KB` compilado con `opt-level = 3`, `lto = true`, `codegen-units = 1` y `panic = "abort"`):
 
 ```mermaid
 flowchart TD
-    A["Usuario define Cursos, Preferencias y Bloqueos"] --> B["Hilo Principal (React)"]
-    B --> C["Cálculo combinatorio C(n, k) y partición"]
-    C --> D["Map-Reduce hacia Web Workers"]
+    A["Usuario define Cursos, Preferencias y Bloqueos"] --> B["Hilo Principal (React + Bitmasks Precalculados)"]
+    B --> C["Modo Avanzado: Subdivisión adaptativa / Modo Normal: Partición homócrona disjunta"]
+    C --> D["Cola Work-Stealing hacia Web Workers"]
 
     subgraph Swarm ["Enjambre Web Worker (navigator.hardwareConcurrency)"]
-        W1["Worker 1 (Rust WASM / u64 Bitmasks)"]
-        W2["Worker 2 (Rust WASM / u64 Bitmasks)"]
-        WN["Worker N (Rust WASM / u64 Bitmasks)"]
+        W1["Worker 1 (Rust WASM Síncrono · Bitwise Intrinsics)"]
+        W2["Worker 2 (Rust WASM Síncrono · Bitwise Intrinsics)"]
+        WN["Worker N (Rust WASM Síncrono · Bitwise Intrinsics)"]
     end
 
     D --> W1
     D --> W2
     D --> WN
 
-    W1 -->|CSP + MRV Pruning + Bitwise AND| R1["Top Resultados locales"]
-    W2 -->|CSP + MRV Pruning + Bitwise AND| R2["Top Resultados locales"]
-    WN -->|CSP + MRV Pruning + Bitwise AND| RN["Top Resultados locales"]
+    W1 -->|CSP + MRV Pruning + Top-200 Cutoff| R1["Top Resultados locales"]
+    W2 -->|CSP + MRV Pruning + Top-200 Cutoff| R2["Top Resultados locales"]
+    WN -->|CSP + MRV Pruning + Top-200 Cutoff| RN["Top Resultados locales"]
 
     R1 --> RED["Reducer en Hilo Principal"]
     R2 --> RED
     RN --> RED
 
-    RED --> E["Fase 2: Normalización e Interpolación"]
-    E --> F["Ranking Top 50 con % de Afinidad"]
+    RED --> F["Ranking Top 50 con % de Afinidad"]
 ```
 
-1. **Podado MRV y Bitmasks en $O(1)$:** Las sesiones semanales y bloqueos personales se codifican en máscaras de bits de `64 bits` (`u64` en Rust / `BigInt` en TypeScript), detectando colisiones con una sola operación lógica `AND` antes de descender por cada rama del árbol CSP.
-2. **Enjambre Web Worker + Rust (`wasm-engine/src/lib.rs`):** Divide la bolsa combinatoria entre múltiples trabajadores en paralelo sin pausas de *Garbage Collection* y transmite progreso en vivo a `QuantumEngineVisualizer.tsx`.
-3. **Sistema de Puntuación Dual:** Evalúa huecos libres, días de asistencia, penalización de días puente, preferencia de turno (mañana/tarde) y ventana garantizada de almuerzo, devolviendo los **50 mejores resultados** normalizados de `0%` a `100%`.
+1. **Ejecución WASM 100% Síncrona sin *Timer Clamping* (`sleep(0)` eliminado):** Cada Web Worker corre `compute_chunk` de manera totalmente síncrona sin depender de `gloo-timers` ni `setTimeout(0)`, evitando pausas del navegador y logrando saturación continua de CPU en todos los hilos activos. El progreso se reporta de forma no bloqueante cada `~80 ms` (`SearchState::tick_progress`) y la cancelación es inmediata mediante `worker.terminate()`.
+2. **Pre-cálculo en `INIT`, Índices Enteros y Zero-Allocation (`wasm-engine/src/lib.rs`):** En `INIT`, `QuantumEngine::from_raw` prefiltra secciones fijadas (`pinnedSections`) y bloqueos estrictos (`blockedTimeMask`), precalcula la matriz plana de conflictos $O(N^2)$ y la máscara de almuerzo una sola vez, y asigna índices enteros (`usize`) para hacer DFS *in-place* sin búsquedas lineales de texto ni clonación de vectores en heap.
+3. **Evaluación Hardware Bitwise e Interrupción Temprana Top-200:** Los bloques de `60 slots/día` (`u64`) calculan huecos, turno mañana/tarde, ventana de almuerzo (`free &= free >> 1`) y días puente mediante instrucciones nativas (`trailing_zeros`, `leading_zeros`, `count_ones`). Las hojas por debajo del `cutoff_200` se descartan antes de asignar métricas o `HashMap`s.
+4. **Paralelismo Total en Modo Avanzado y Modo Normal:**
+   * *Modo Avanzado:* Precomputa bitmasks una vez ($O(N \cdot S)$) en el hilo principal y subdivide dinámicamente las ramas más pesadas entre los workers (*work-stealing*).
+   * *Modo Normal:* Reparte los grupos homócronos únicos de las asignaturas seleccionadas en filtros disjuntos (`sectionFilters`) entre todos los workers disponibles (con *warm-up* previo activo en ambos modos).
+5. **Sistema de Puntuación Dual:** Evalúa huecos libres, días de asistencia, penalización de días puente, preferencia de turno (mañana/tarde), ventana de almuerzo (`lunchConfig` en camelCase) y penalización blanda de bloqueos, devolviendo los **50 mejores resultados** normalizados de `0%` a `100%`.
 
 ---
 
@@ -287,9 +290,10 @@ Matricula/
    cd utec-scheduler
    ```
 
-2. **Compilar el motor Rust a WebAssembly *(opcional si ya existe `wasm-engine/pkg`)*:**
+2. **Probar y compilar el motor Rust a WebAssembly *(opcional si ya existe `wasm-engine/pkg`)*:**
    ```bash
    cd wasm-engine
+   cargo test --lib
    wasm-pack build --target web
    cd ..
    ```
@@ -316,21 +320,21 @@ Matricula/
 
 ## 🔄 Pipeline de CI/CD (GitLab Pages)
 
-El despliegue continuo definido en [`.gitlab-ci.yml`](.gitlab-ci.yml) compila el motor WebAssembly y publica la aplicación estática en **GitLab Pages** al actualizar la rama `main`:
+El despliegue continuo definido en [`.gitlab-ci.yml`](.gitlab-ci.yml) valida los tests de Rust, compila el motor WebAssembly y publica la aplicación estática en **GitLab Pages** al actualizar la rama `main`:
 
 ```mermaid
 flowchart LR
-    A["Push a main"] --> B["Contenedor node:24-bookworm"]
+    A["Push a main"] --> B["Contenedor node:26-bookworm (GIT_LFS_SKIP_SMUDGE=1)"]
     B --> C["Caché .pnpm-store"]
-    C --> D["Rustup + wasm-pack + pnpm@12.18.0"]
-    D --> E["wasm-pack build --target web"]
+    C --> D["Rustup + wasm-pack + npm install -g pnpm@12.21.0"]
+    D --> E["cargo test --lib & wasm-pack build --target web"]
     E --> F["pnpm run check & pnpm run build"]
     F --> G["Publicación en GitLab Pages (public/)"]
 ```
 
-1. **Entorno Base:** Imagen `node:24-bookworm` con caché de `.pnpm-store`.
-2. **Compilación WASM:** Instala Rustup y `wasm-pack` para compilar `wasm-engine/` hacia `--target web`.
-3. **Verificación y Build:** Ejecuta `pnpm run check` (`astro sync && tsc --noEmit --runExternalCode`) y `pnpm run build` hacia `dist/`, publicándolo como artefacto de Pages en `public/`.
+1. **Entorno Base y LFS:** Imagen `node:26-bookworm` con `GIT_LFS_SKIP_SMUDGE: "1"` (evita descargar los `.mp4` de auditoría/tours innecesarios para el build) y caché de `.pnpm-store` indexado por `pnpm-lock.yaml`.
+2. **Toolchain WASM + `pnpm`:** Instala Rustup y `wasm-pack`, e instala dinámicamente la versión exacta de `pnpm` declarada en `"packageManager"` de [`package.json`](package.json) (`pnpm@12.21.0`) mediante `npm install -g` (ya que Node 26 no incluye Corepack).
+3. **Tests, WASM y Build:** Ejecuta `cargo test --lib` y `wasm-pack build --target web` en `wasm-engine/`, luego `pnpm install --frozen-lockfile --store-dir .pnpm-store`, `pnpm run check` (`astro sync && tsc --noEmit --runExternalCode`) y `pnpm run build` hacia `dist/`, publicándolo como artefacto de Pages en `public/`.
 
 ---
 
