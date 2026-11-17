@@ -1,6 +1,6 @@
 # GitLab CI/CD Pipeline for Astro + pnpm GitLab Pages Deployment
 
-image: node:24-bookworm
+image: node:26-bookworm
 
 variables:
   # Tour/audit .mp4 recordings are tracked in Git LFS and not used to build the site.
