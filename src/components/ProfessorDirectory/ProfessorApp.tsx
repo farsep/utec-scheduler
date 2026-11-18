@@ -432,7 +432,7 @@ export const ProfessorApp: React.FC<ProfessorAppProps> = ({ hideTopNavbar = fals
           onClick={scrollToTop}
           title="Subir a filtros y búsqueda"
         >
-          <span className="floating-top-arrow" style={{ color: '#00779E', fontWeight: 700 }}>↑</span>
+          <ArrowUp size={13} strokeWidth={2.5} className="floating-top-arrow" aria-hidden="true" />
           <span>Búsqueda</span>
         </button>
       )}

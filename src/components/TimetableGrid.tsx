@@ -6,7 +6,7 @@ import {
   getGraftonBlockBackground,
 } from '../utils/graftonPigments';
 import type { Course, DayOfWeek, Conflict } from '../types/schedule';
-import { X, AlertTriangle } from 'lucide-react';
+import { X, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { DynamicSessionBadge } from './common/DynamicSessionBadge';
 
 interface TimetableGridProps {
@@ -380,7 +380,10 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
               onClick={() => setMobileDayFilter('ALL')}
               title="Restablecer vista a toda la semana"
             >
-              ← Volver a vista semanal
+              <span className="swiss-btn-inline">
+                <ArrowLeft size={13} strokeWidth={2.4} className="swiss-arrow-left" aria-hidden="true" />
+                <span>Volver a vista semanal</span>
+              </span>
             </button>
           )}
         </div>
@@ -500,7 +503,7 @@ export const TimetableGrid: React.FC<TimetableGridProps> = React.memo(
                   cursor: 'pointer',
                 }}
               >
-                ✕
+                <X size={13} strokeWidth={2.5} aria-hidden="true" />
               </button>
             </div>
           </div>

@@ -703,7 +703,13 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
                               title={`${item.classroom.displayName} — Clic para ver horario semanal`}
                             >
                               <span className="campus-room-chip__code">
-                                {isFree ? '●' : '○'} {item.classroom.code}
+                                <span className="swiss-btn-inline">
+                                  <span
+                                    className={`swiss-status-dot ${isFree ? 'swiss-status-dot--ok' : 'swiss-status-dot--hollow'}`}
+                                    aria-hidden="true"
+                                  />
+                                  <span>{item.classroom.code}</span>
+                                </span>
                               </span>
                               <span className="campus-room-chip__state">
                                 {isFree ? `Libre · Piso ${item.classroom.floor}` : 'En clase'}
@@ -823,7 +829,7 @@ export const ClassroomApp: React.FC<ClassroomAppProps> = ({ hideTopNavbar = fals
           onClick={scrollToTop}
           title="Subir a filtros y selección de pisos"
         >
-          <span className="floating-top-arrow" style={{ color: '#00779E', fontWeight: 700 }}>↑</span>
+          <ArrowUp size={13} strokeWidth={2.5} className="floating-top-arrow" aria-hidden="true" />
           <span>Filtros y Pisos</span>
         </button>
       )}

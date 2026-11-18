@@ -94,10 +94,10 @@ export const CourseFilterBar: React.FC<CourseFilterBarProps> = ({
 
   // Sort options for CustomSelect (without vacancies)
   const sortOptions: SelectOption[] = [
-    { value: 'code_asc', label: 'Código: A → Z' },
-    { value: 'code_desc', label: 'Código: Z → A' },
-    { value: 'name_asc', label: 'Nombre: A → Z' },
-    { value: 'name_desc', label: 'Nombre: Z → A' },
+    { value: 'code_asc', label: 'Código: A - Z' },
+    { value: 'code_desc', label: 'Código: Z - A' },
+    { value: 'name_asc', label: 'Nombre: A - Z' },
+    { value: 'name_desc', label: 'Nombre: Z - A' },
     { value: 'sections_desc', label: 'Más secciones ofertadas' },
     { value: 'hours_desc', label: 'Más horas semanales' }
   ];

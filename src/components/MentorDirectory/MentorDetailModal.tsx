@@ -228,7 +228,10 @@ export const MentorDetailModal: React.FC<MentorDetailModalProps> = ({
                 </span>
                 {liveStatus.isMentoringNow && (
                   <span className="prof-live-badge live-pulse-pill">
-                    ● EN VIVO AHORA
+                    <span className="swiss-btn-inline">
+                      <span className="swiss-status-dot swiss-status-dot--pulse" aria-hidden="true" />
+                      <span>EN VIVO AHORA</span>
+                    </span>
                   </span>
                 )}
               </div>

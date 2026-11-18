@@ -14,6 +14,7 @@ import {
 import type { Course, Section, Session, FilterState } from '../types/schedule';
 import { normalizeString, formatLocation } from '../utils/scheduleUtils';
 import { getGraftonPigment } from '../utils/graftonPigments';
+import { SwissTooltip } from './common/SwissTooltip';
 
 interface CourseSidebarProps {
   courses: Course[];
@@ -401,26 +402,40 @@ export const CourseSidebar: React.FC<CourseSidebarProps> = ({
 
         {/* Filter Pills */}
         <div className="filter-pills">
-          <button
-            type="button"
-            className={`filter-pill-btn ${filterState.onlySelected ? 'active' : ''}`}
-            onClick={() => setFilterState(prev => ({ ...prev, onlySelected: !prev.onlySelected }))}
-          >
-            {filterState.onlySelected
-              ? `✓ En horario (${selectedCount})`
-              : `En horario ${selectedCount > 0 ? `(${selectedCount})` : ''}`}
-          </button>
-
-          {hasEligibleFilter && (
+          <SwissTooltip content="Filtra la lista para mostrar únicamente los cursos que ya añadiste a tu horario" placement="top">
             <button
               type="button"
-              className={`filter-pill-btn ${filterState.onlyEligible ? 'active' : ''}`}
-              onClick={() =>
-                setFilterState(prev => ({ ...prev, onlyEligible: !prev.onlyEligible }))
-              }
+              className={`filter-pill-btn ${filterState.onlySelected ? 'active' : ''}`}
+              onClick={() => setFilterState(prev => ({ ...prev, onlySelected: !prev.onlySelected }))}
             >
-              {filterState.onlyEligible ? '✓ Habilitados PDF' : 'Habilitados PDF'}
+              {filterState.onlySelected
+                ? (
+                  <span className="swiss-btn-inline">
+                    <Check size={12} strokeWidth={2.5} className="swiss-check-draw" aria-hidden="true" />
+                    <span>{`En horario (${selectedCount})`}</span>
+                  </span>
+                )
+                : `En horario ${selectedCount > 0 ? `(${selectedCount})` : ''}`}
             </button>
+          </SwissTooltip>
+
+          {hasEligibleFilter && (
+            <SwissTooltip content="Muestra solo los cursos que puedes llevar según tu avance curricular (PDF)" placement="top">
+              <button
+                type="button"
+                className={`filter-pill-btn ${filterState.onlyEligible ? 'active' : ''}`}
+                onClick={() =>
+                  setFilterState(prev => ({ ...prev, onlyEligible: !prev.onlyEligible }))
+                }
+              >
+                {filterState.onlyEligible ? (
+                  <span className="swiss-btn-inline">
+                    <Check size={12} strokeWidth={2.5} className="swiss-check-draw" aria-hidden="true" />
+                    <span>Habilitados PDF</span>
+                  </span>
+                ) : 'Habilitados PDF'}
+              </button>
+            </SwissTooltip>
           )}
 
           {hasCourseTypeData && (

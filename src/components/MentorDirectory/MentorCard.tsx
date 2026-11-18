@@ -234,7 +234,10 @@ export const MentorCard: React.FC<MentorCardProps> = ({
                     Cruza {clashingBlock.courseCode}
                   </span>
                 ) : (
-                  <span className="clash-pill clash-pill--ok">● Libre</span>
+                  <span className="clash-pill clash-pill--ok swiss-btn-inline">
+                    <span className="swiss-status-dot" aria-hidden="true" />
+                    <span>Libre</span>
+                  </span>
                 )}
               </div>
             </div>

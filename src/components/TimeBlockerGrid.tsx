@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Clock } from 'lucide-react';
+import { SwissLockIcon } from './common/SwissLockIcon';
+import { SwissTooltip } from './common/SwissTooltip';
 
 interface TimeBlockerGridProps {
   blockedMask: bigint[];
@@ -11,6 +13,7 @@ interface TimeBlockerGridProps {
     color: string; title: string; subtitle: string;
     density?: number;
     isParent?: boolean;
+    isLocked?: boolean;
   }[];
   pinnedMask?: bigint[];
   courseViabilityMasks?: Record<string, bigint[][]>;
@@ -328,27 +331,46 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
                 const h = ((b.endSlot - b.startSlot + 1) / 4) * 40;
                 const density  = b.density  ?? 0.5;
                 const isParent = b.isParent ?? (density >= 0.75);
-                const isLocked = b.subtitle?.startsWith('🔒');
-                const bw  = isLocked ? '2px'  : isParent ? '1.5px' : '1px';
-                const op  = isLocked ? 1      : isParent ? 0.9     : 0.7;
+                const isLocked = Boolean(b.isLocked || b.subtitle?.startsWith('[FIJO]'));
+                const cleanSubtitle = b.subtitle?.replace(/^\[FIJO\]\s*/, '') ?? '';
+                const bw  = isLocked ? '1.5px' : isParent ? '1.5px' : '1px';
+                const op  = isLocked ? 1       : isParent ? 0.9     : 0.7;
                 return (
-                  <div key={`pinned-${i}`} style={{
-                    position: 'absolute',
-                    left: `calc(${(b.dayIdx * 100) / 6}% + 2px)`,
-                    width: `calc(${100 / 6}% - 4px)`,
-                    top: `${(b.startSlot / 4) * 40}px`,
-                    height: `${h}px`,
-                    background: '#E0EBF5',
-                    border: `${bw} dashed #006699`,
-                    borderLeft: '3px solid #006699',
-                    borderRadius: '0px',
-                    boxSizing: 'border-box',
-                    zIndex: 4,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    gap: '1px', overflow: 'hidden', opacity: op,
-                  }}>
-                    {h > 24 && <span style={{ fontSize: '0.62rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#0A2E46', textAlign: 'center' }}>{b.title}</span>}
-                    {h > 44 && <span style={{ fontSize: '0.55rem', fontFamily: 'var(--font-mono)', color: '#005A78', textAlign: 'center' }}>{b.subtitle}</span>}
+                  <div
+                    key={`pinned-${b.title}-${b.dayIdx}-${b.startSlot}-${isLocked ? 'locked' : 'ghost'}-${i}`}
+                    className={isLocked ? 'tbg-pinned-block tbg-pinned-block--locked' : 'tbg-pinned-block'}
+                    style={{
+                      position: 'absolute',
+                      left: `calc(${(b.dayIdx * 100) / 6}% + 2px)`,
+                      width: `calc(${100 / 6}% - 4px)`,
+                      top: `${(b.startSlot / 4) * 40}px`,
+                      height: `${h}px`,
+                      background: isLocked ? '#D6E6F2' : '#E0EBF5',
+                      border: isLocked ? `${bw} solid #006699` : `${bw} dashed #006699`,
+                      borderLeft: isLocked ? '4px solid #006699' : '3px solid #006699',
+                      borderRadius: '0px',
+                      boxSizing: 'border-box',
+                      zIndex: isLocked ? 5 : 4,
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      gap: '2px', overflow: 'hidden', opacity: op,
+                    }}
+                  >
+                    {h > 24 && (
+                      <span className="tbg-pinned-title">
+                        {isLocked && (
+                          <SwissLockIcon
+                            locked={true}
+                            size={11}
+                            animateOnMount={true}
+                            className="tbg-pinned-lock-icon"
+                          />
+                        )}
+                        <span>{b.title}</span>
+                      </span>
+                    )}
+                    {h > 44 && cleanSubtitle && (
+                      <span className="tbg-pinned-sub">{cleanSubtitle}</span>
+                    )}
                   </div>
                 );
               })}
@@ -388,6 +410,7 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
                     {/* ↑ Top resize handle */}
                     <div
                       className="tbg-resize-handle"
+                      title="Arrastra hacia arriba o abajo para ajustar la hora de inicio"
                       onMouseDown={(e) => {
                         e.stopPropagation(); e.preventDefault();
                         setDrag({ kind: 'resize-top', dayIdx: block.dayIdx, origStart: block.startSlot, origEnd: block.endSlot, currentSlot: block.startSlot });
@@ -404,54 +427,62 @@ export const TimeBlockerGrid: React.FC<TimeBlockerGridProps> = ({
                     />
 
                     {/* Block body — click to delete */}
-                    <div
-                      className="tbg-block-body"
-                      onMouseDown={(e) => {
-                        e.stopPropagation(); e.preventDefault();
-                        deleteBlock(block);
-                      }}
-                      onTouchStart={(e) => {
-                        if (e.touches.length !== 1) return;
-                        e.stopPropagation();
-                        deleteBlock(block);
-                      }}
-                      style={{
-                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer',
-                        flexDirection: 'column', gap: '2px',
-                        padding: '2px 4px',
-                      }}
+                    <SwissTooltip
+                      title={`Franja bloqueada (${DAYS[block.dayIdx]})`}
+                      content={`${fmt(startMins)} – ${fmt(endMins)}\nHaz clic en el centro para eliminar este bloqueo.\nArrastra los bordes superior o inferior para redimensionar.`}
+                      placement="top"
+                      style={{ flex: 1, display: 'flex', minHeight: 0, width: '100%' }}
                     >
-                      <span
+                      <div
+                        className="tbg-block-body"
+                        onMouseDown={(e) => {
+                          e.stopPropagation(); e.preventDefault();
+                          deleteBlock(block);
+                        }}
+                        onTouchStart={(e) => {
+                          if (e.touches.length !== 1) return;
+                          e.stopPropagation();
+                          deleteBlock(block);
+                        }}
                         style={{
-                          fontFamily: 'var(--font-mono)',
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          color: '#520D17',
-                          lineHeight: 1.1,
-                          textAlign: 'center',
+                          flex: 1, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer',
+                          flexDirection: 'column', gap: '2px',
+                          padding: '2px 4px',
                         }}
                       >
-                        BLOQUEADO
-                      </span>
-                      {h >= 38 && (
                         <span
                           style={{
                             fontFamily: 'var(--font-mono)',
-                            fontSize: '10px',
-                            fontWeight: 600,
-                            color: '#751523',
-                            lineHeight: 1,
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            color: '#520D17',
+                            lineHeight: 1.1,
+                            textAlign: 'center',
                           }}
                         >
-                          {fmt(startMins)}–{fmt(endMins)}
+                          BLOQUEADO
                         </span>
-                      )}
-                    </div>
+                        {h >= 38 && (
+                          <span
+                            style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '10px',
+                              fontWeight: 600,
+                              color: '#751523',
+                              lineHeight: 1,
+                            }}
+                          >
+                            {fmt(startMins)}–{fmt(endMins)}
+                          </span>
+                        )}
+                      </div>
+                    </SwissTooltip>
 
                     {/* ↓ Bottom resize handle */}
                     <div
                       className="tbg-resize-handle"
+                      title="Arrastra hacia arriba o abajo para ajustar la hora de fin"
                       onMouseDown={(e) => {
                         e.stopPropagation(); e.preventDefault();
                         setDrag({ kind: 'resize-bot', dayIdx: block.dayIdx, origStart: block.startSlot, origEnd: block.endSlot, currentSlot: block.endSlot });

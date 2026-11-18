@@ -435,7 +435,7 @@ export const QuantumEngineVisualizer: React.FC<QuantumEngineVisualizerProps> = (
               ? '[CRUCE X]'
               : isTest
               ? '[TEST]'
-              : '[OK ✓]';
+              : '[OK]';
 
             const borderLine = isClash
               ? '1.5px solid #A82032'

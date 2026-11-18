@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, FileSpreadsheet, FileText, Upload, CheckCircle2, Download, AlertCircle, Trash2, Loader2, Code2 } from 'lucide-react';
+import { X, FileSpreadsheet, FileText, Upload, CheckCircle2, Check, Download, AlertCircle, Trash2, Loader2, Code2 } from 'lucide-react';
 import { parseExcelFile } from '../utils/excelParser';
 import { parsePDFFile, type PDFParseResult } from '../utils/pdfParser';
 import { getClassroomsCatalog } from '../utils/masterDataLoader';
@@ -523,7 +523,10 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                     textTransform: 'uppercase'
                   }}
                 >
-                  ✓ EXCEL CARGADO
+                  <span className="swiss-btn-inline">
+                    <Check size={12} strokeWidth={2.6} className="swiss-check-draw" aria-hidden="true" />
+                    <span>EXCEL CARGADO</span>
+                  </span>
                 </span>
                 {excelLoadedName && (
                   <div
@@ -655,7 +658,10 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                     textTransform: 'uppercase'
                   }}
                 >
-                  ✓ PDF CARGADO
+                  <span className="swiss-btn-inline">
+                    <Check size={12} strokeWidth={2.6} className="swiss-check-draw" aria-hidden="true" />
+                    <span>PDF CARGADO</span>
+                  </span>
                 </span>
                 {pdfLoadedName && (
                   <div
@@ -790,7 +796,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                 whiteSpace: 'nowrap'
               }}
             >
-              <Upload size={14} /> ↑ Subir .json
+              <Upload size={14} /> Subir .json
               <input type="file" accept=".json,application/json" onChange={handleJsonFileUpload} style={{ display: 'none' }} />
             </label>
           </div>

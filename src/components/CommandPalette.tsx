@@ -11,6 +11,9 @@ import {
   Upload,
   Star,
   ArrowRight,
+  ArrowUp,
+  ArrowDown,
+  CornerDownLeft,
   X,
 } from 'lucide-react';
 import type { CourseExtendedInfo } from '../types/courseDirectory';
@@ -196,7 +199,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         category: 'ACTIONS',
         code: 'OYENTE',
         title: 'Modo Oyente (Ver cursos guardados en Catálogo)',
-        subtitle: 'Ir a /cursos y filtrar tus cursos marcados como oyente ★',
+        subtitle: 'Ir a /cursos y filtrar tus cursos marcados como oyente',
         badge: 'ACCIÓN',
         accentColor: '#B85D00',
         searchKey: 'modo oyente star visitante filtrar cursos',
@@ -508,7 +511,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
         {/* Footer Hints */}
         <div className="grafton-cmdk-footer">
-          <span>↑↓ NAVEGAR · ↵ EJECUTAR / ABRIR</span>
+          <span className="swiss-btn-inline">
+            <ArrowUp size={11} strokeWidth={2.4} aria-hidden="true" />
+            <ArrowDown size={11} strokeWidth={2.4} aria-hidden="true" />
+            <span>NAVEGAR ·</span>
+            <CornerDownLeft size={11} strokeWidth={2.4} aria-hidden="true" />
+            <span>EJECUTAR / ABRIR</span>
+          </span>
           <span className="grafton-cmdk-footer-shortcut">⌘K / CTRL+K PALETA GRAFTON</span>
         </div>
       </div>

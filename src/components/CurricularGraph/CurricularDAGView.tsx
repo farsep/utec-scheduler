@@ -7,7 +7,7 @@ import {
   type CurricularCourseNode,
   type FacultyId,
 } from '../../data/utecCurriculaData';
-import { GitBranch, BookOpen, CheckCircle2, ArrowRight, ArrowLeft, Plus, Maximize2 } from 'lucide-react';
+import { GitBranch, BookOpen, CheckCircle2, ArrowRight, ArrowLeft, ArrowUp, ChevronUp, Plus, Maximize2 } from 'lucide-react';
 
 interface CurricularDAGViewProps {
   scheduledCourseCodes?: Set<string>;
@@ -444,7 +444,8 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
               title="Explorar el catálogo completo de 420 cursos con secciones, horarios y oyentes"
             >
               <BookOpen size={14} />
-              <span>Catálogo Ofertado 2026-2 (420 Cursos) →</span>
+              <span>Catálogo Ofertado 2026-2 (420 Cursos)</span>
+              <ArrowRight size={13} strokeWidth={2.4} className="swiss-arrow-right" aria-hidden="true" />
             </a>
           </div>
 
@@ -570,7 +571,17 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                   cursor: 'pointer',
                 }}
               >
-                {mobileInspectorExpanded ? '▴ Ocultar' : '↑ Ver Ruta'}
+                {mobileInspectorExpanded ? (
+                  <span className="swiss-btn-inline">
+                    <ChevronUp size={13} strokeWidth={2.4} aria-hidden="true" />
+                    <span>Ocultar</span>
+                  </span>
+                ) : (
+                  <span className="swiss-btn-inline">
+                    <ArrowUp size={13} strokeWidth={2.4} aria-hidden="true" />
+                    <span>Ver Ruta</span>
+                  </span>
+                )}
               </button>
 
               <div className="dag-inspector-actions flex items-center gap-2 flex-wrap">
@@ -617,7 +628,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                         className="dag-pill dag-pill--prereq"
                         onClick={() => setSelectedCourseCode(prereqCode)}
                       >
-                        ● {getCourseFullLabel(prereqCode, activeCareer)}
+                        <span className="swiss-dag-dot" aria-hidden="true" />{getCourseFullLabel(prereqCode, activeCareer)}
                       </button>
                     ))
                   )}
@@ -642,7 +653,7 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                         className="dag-pill dag-pill--unlock"
                         onClick={() => setSelectedCourseCode(unlockCode)}
                       >
-                        ● {getCourseFullLabel(unlockCode, activeCareer)}
+                        <span className="swiss-dag-dot" aria-hidden="true" />{getCourseFullLabel(unlockCode, activeCareer)}
                       </button>
                     ))
                   )}
@@ -934,7 +945,12 @@ export const CurricularDAGView: React.FC<CurricularDAGViewProps> = ({
                                   )}
                                 </span>
                                 <span className="dag-node-unlock-count">
-                                  {unlocks.length > 0 ? `→ ${unlocks.length}` : ''}
+                                  {unlocks.length > 0 ? (
+                                    <span className="swiss-btn-inline">
+                                      <ArrowRight size={11} strokeWidth={2.4} aria-hidden="true" />
+                                      <span>{unlocks.length}</span>
+                                    </span>
+                                  ) : ''}
                                 </span>
                               </div>
                             </button>

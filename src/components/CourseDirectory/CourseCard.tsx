@@ -15,7 +15,8 @@ import {
   Radio,
   Layers,
   GraduationCap,
-  Laptop
+  Laptop,
+  ArrowRight
 } from 'lucide-react';
 
 interface CourseCardProps {
@@ -162,14 +163,20 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
         style={{ opacity: swipeX > 6 ? Math.min(1, swipeX / 68) : 0 }}
         aria-hidden="true"
       >
-        ★ OYENTE
+        <span className="swiss-btn-inline">
+          <Star size={11} fill="currentColor" strokeWidth={2} className="swiss-star-active" aria-hidden="true" />
+          <span>OYENTE</span>
+        </span>
       </div>
       <div
         className="course-swipe-tray-right md:hidden absolute inset-y-0 right-0 w-32 flex items-center justify-end px-4 bg-[#E0EBF5] border-l-2 border-[#00668C] text-[#004D6B] font-mono text-[10px] font-bold uppercase tracking-wider select-none pointer-events-none"
         style={{ opacity: swipeX < -6 ? Math.min(1, Math.abs(swipeX) / 68) : 0 }}
         aria-hidden="true"
       >
-        HORARIO →
+        <span className="swiss-btn-inline">
+          <span>HORARIO</span>
+          <ArrowRight size={11} strokeWidth={2.4} className="swiss-arrow-right" aria-hidden="true" />
+        </span>
       </div>
 
       <article

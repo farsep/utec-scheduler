@@ -512,7 +512,7 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
           onClick={scrollToTop}
           title="Subir a filtros y búsqueda"
         >
-          <span className="floating-top-arrow" style={{ color: '#00779E', fontWeight: 700 }}>↑</span>
+          <ArrowUp size={13} strokeWidth={2.5} className="floating-top-arrow" aria-hidden="true" />
           <span>Búsqueda</span>
         </button>
       )}
@@ -546,7 +546,7 @@ export const CourseApp: React.FC<CourseAppProps> = ({ hideTopNavbar = false }) =
           </div>
           <div className="grafton-toast-text-wrap">
             <span className="grafton-toast-eyebrow">
-              {toastInfo.type === 'added' ? '★ MODO OYENTE · GUARDADO' : '☆ MODO OYENTE · ELIMINADO'}
+              {toastInfo.type === 'added' ? 'MODO OYENTE · GUARDADO' : 'MODO OYENTE · ELIMINADO'}
             </span>
             <span className="grafton-toast-title">
               [{toastInfo.code}] {toastInfo.name}

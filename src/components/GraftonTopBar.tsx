@@ -30,7 +30,7 @@ export const GraftonTopBar: React.FC<GraftonTopBarProps> = ({
             aria-label="Abrir panel de Cursos"
           >
             <Menu size={15} />
-            <span>☰ Cursos</span>
+            <span>Cursos</span>
           </button>
         )}
 

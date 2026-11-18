@@ -7,7 +7,9 @@ import {
   LayoutGrid,
   List,
   Radio,
-  ExternalLink
+  ExternalLink,
+  ArrowUpRight,
+  X
 } from 'lucide-react';
 import type { DayOfWeek } from '../../types/schedule';
 import type {
@@ -1383,7 +1385,7 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                   title="Cerrar inspector"
                   aria-label="Cerrar inspector"
                 >
-                  ✕
+                  <X size={13} strokeWidth={2.5} aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -1452,7 +1454,8 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                   title="Ver ocupación y disponibilidad en Aulas Libres"
                 >
                   {canonicalRoom.displayName}
-                  {selSess.floor > 1 ? ` · Piso ${selSess.floor}` : ''} ↗
+                  {selSess.floor > 1 ? ` · Piso ${selSess.floor}` : ''}
+                  <ArrowUpRight size={13} strokeWidth={2.4} className="inline-link-arrow" aria-hidden="true" />
                 </a>
               </div>
 
@@ -1464,7 +1467,8 @@ export const CourseTimetable: React.FC<CourseTimetableProps> = ({
                     className="course-inspector-meta-value course-inspector-prof-link"
                     title="Ver perfil del docente"
                   >
-                    {formatProfessorName(selSess.professor).displayName} ↗
+                    {formatProfessorName(selSess.professor).displayName}
+                    <ArrowUpRight size={13} strokeWidth={2.4} className="inline-link-arrow" aria-hidden="true" />
                   </a>
                 ) : (
                   <span className="course-inspector-meta-value">Docente UTEC</span>

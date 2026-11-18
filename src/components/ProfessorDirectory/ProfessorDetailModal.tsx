@@ -246,7 +246,10 @@ export const ProfessorDetailModal: React.FC<ProfessorDetailModalProps> = ({
                 <span className="prof-dept-badge">{professor.departmentLabel}</span>
                 {isTeachingNow && (
                   <span className="prof-live-badge">
-                    ● EN CLASE AHORA
+                    <span className="swiss-btn-inline">
+                      <span className="swiss-status-dot swiss-status-dot--pulse" aria-hidden="true" />
+                      <span>EN CLASE AHORA</span>
+                    </span>
                   </span>
                 )}
               </div>

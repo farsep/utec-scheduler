@@ -26,7 +26,7 @@ function escapeCSVCell(val: string | number | undefined | null): string {
 const ALARM_SEGMENTS = [
   { value: 0, label: 'Sin alarma' },
   { value: 10, label: '10 min' },
-  { value: 15, label: '15 min ★' },
+  { value: 15, label: '15 min (Recomendado)' },
   { value: 30, label: '30 min' },
   { value: 60, label: '1 hora' }
 ];

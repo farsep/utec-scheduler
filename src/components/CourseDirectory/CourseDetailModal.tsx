@@ -276,7 +276,7 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
           const r = resolvedSectionMap.get(sub.sectionNumber);
           opts.push({
             value: sub.sectionNumber,
-            label: r ? `↳ Sec. ${r.mainSection} · ${r.subsectionPillLabel}` : `Sección ${sub.sectionNumber}`,
+            label: r ? `Sec. ${r.mainSection} · ${r.subsectionPillLabel}` : `Sección ${sub.sectionNumber}`,
             badge: `${sub.totalWeeklyHours} h/sem`
           });
         }

@@ -121,9 +121,9 @@ export const MentorFilterBar: React.FC<MentorFilterBarProps> = ({
           value={filter.sortBy}
           onChange={(val) => onFilterChange({ sortBy: val as MentorSortOption })}
           options={[
-            { value: 'name_asc', label: 'Nombre: A → Z' },
-            { value: 'name_desc', label: 'Nombre: Z → A' },
-            { value: 'course_asc', label: 'Curso: A → Z' },
+            { value: 'name_asc', label: 'Nombre: A - Z' },
+            { value: 'name_desc', label: 'Nombre: Z - A' },
+            { value: 'course_asc', label: 'Curso: A - Z' },
             { value: 'day_asc', label: 'Día de la semana' },
             { value: 'time_asc', label: 'Horario más temprano' }
           ]}

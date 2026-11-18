@@ -111,8 +111,8 @@ export const ProfessorFilterBar: React.FC<ProfessorFilterBarProps> = ({
           value={filter.sortBy}
           onChange={(val) => onFilterChange({ sortBy: val as ProfessorSortOption })}
           options={[
-            { value: 'name_asc', label: 'Nombre: A → Z' },
-            { value: 'name_desc', label: 'Nombre: Z → A' },
+            { value: 'name_asc', label: 'Nombre: A - Z' },
+            { value: 'name_desc', label: 'Nombre: Z - A' },
             { value: 'hours_desc', label: 'Más horas semanales' },
             { value: 'courses_desc', label: 'Más cursos a cargo' },
             { value: 'sessions_desc', label: 'Más sesiones semanales' },

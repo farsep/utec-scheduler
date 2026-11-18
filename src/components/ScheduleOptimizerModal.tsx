@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Calendar, Clock, Coffee, Eye, Pin, Info, Filter, ShieldAlert, CheckCircle2, Search, ArrowLeft, Lock, Unlock, CheckSquare, Square, ChevronRight, Check, SlidersHorizontal, User } from 'lucide-react';
+import { X, Calendar, Clock, Coffee, Eye, Pin, Info, Filter, ShieldAlert, CheckCircle2, Search, ArrowLeft, ArrowRight, CheckSquare, Square, ChevronRight, Check, SlidersHorizontal, User } from 'lucide-react';
+import { SwissLockIcon } from './common/SwissLockIcon';
+import { SwissTooltip, SwissInfoTip } from './common/SwissTooltip';
 import type { Course, OptimizerOptions, GeneratedScheduleResult, DayOfWeek, WorkerTask, Section } from '../types/schedule';
 import { generateOptimalSchedules } from '../utils/scheduleOptimizer';
 import { formatLocation, getCourseColor, getCourseDepartmentPalette, getCoursePrefix, minutesToTime, normalizeString, getCombinations, sessionToBitmask } from '../utils/scheduleUtils';
@@ -884,6 +886,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
       color: string; title: string; subtitle: string;
       density: number; // fraction of sections sharing this slot (0-1)
       isParent: boolean; // shared by most/all sections
+      isLocked?: boolean;
     };
 
     const blocks: GhostBlock[] = [];
@@ -934,7 +937,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
           if (d === undefined) return;
           const start = Math.max(0, Math.floor((s.startMinutes - 420) / 15));
           const end   = Math.max(0, Math.ceil ((s.endMinutes   - 420) / 15)) - 1;
-          if (start <= end) blocks.push({ dayIdx: d, startSlot: start, endSlot: end, color: course.color, title: course.code, subtitle: `[FIJO] ${pinnedSecName}`, density: 1, isParent: true });
+          if (start <= end) blocks.push({ dayIdx: d, startSlot: start, endSlot: end, color: course.color, title: course.code, subtitle: `Sec. ${pinnedSecName}`, density: 1, isParent: true, isLocked: true });
         });
         for (let d = 0; d < 7; d++) protectedMask[d] |= m[d];
       } else {
@@ -1134,7 +1137,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                 className="optimizer-mobile-back-results-btn"
                 onClick={() => setMobileViewPane('results')}
               >
-                Ver {Math.min(50, results.length)} Opciones Óptimas →
+                <span className="swiss-btn-inline">
+                  <span>Ver {Math.min(50, results.length)} Opciones Óptimas</span>
+                  <ArrowRight size={13} strokeWidth={2.4} className="swiss-arrow-right" aria-hidden="true" />
+                </span>
               </button>
             )}
             
@@ -1160,8 +1166,14 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: isAdvancedMode ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
-                      Armador de Semestre (Modo Avanzado)
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 700, color: isAdvancedMode ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
+                      <span>Armador de Semestre (Modo Avanzado)</span>
+                      <SwissInfoTip
+                        title="Modo Normal vs. Avanzado"
+                        content={'Normal: combina obligatoriamente todos los cursos marcados.\nAvanzado: selecciona automáticamente los mejores N cursos de tu pool respetando cursos fijados y bloqueos.'}
+                        placement="right"
+                        ariaLabel="Explicación de Modo Avanzado"
+                      />
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>El algoritmo elegirá los cursos por ti</div>
                   </div>
@@ -1237,8 +1249,14 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', cursor: 'pointer' }}
                         onClick={() => setIsLunchEnabled(!isLunchEnabled)}
                       >
-                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                          Garantizar Hora de Almuerzo
+                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <span>Garantizar Hora de Almuerzo</span>
+                          <SwissInfoTip
+                            title="Ventana de Almuerzo"
+                            content="Prioriza combinaciones que dejen al menos una franja libre continua de la duración elegida dentro del rango horario."
+                            placement="right"
+                            ariaLabel="Explicación de hora de almuerzo"
+                          />
                         </label>
                         <div style={{ 
                           width: '36px', height: '20px', background: isLunchEnabled ? 'var(--accent-primary)' : 'var(--border-hairline)',
@@ -1301,8 +1319,14 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                       onClick={() => setShowBlockerGrid(!showBlockerGrid)}
                       style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
                     >
-                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', margin: 0 }}>
-                        Calendario de Bloqueos (Restricciones Temporales)
+                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', margin: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <span>Calendario de Bloqueos (Restricciones Temporales)</span>
+                        <SwissInfoTip
+                          title="Calendario de Bloqueos"
+                          content={'Despliega la grilla derecha para pintar horas prohibidas o ver tus secciones fijadas (azul sólido) y bloqueadas (rojo rayado).'}
+                          placement="right"
+                          ariaLabel="Explicación de Calendario de Bloqueos"
+                        />
                       </label>
                     </div>
                     <div 
@@ -1323,7 +1347,15 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   {(showBlockerGrid || isAdvancedMode) && (
                     <>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border-hairline)' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Modo Estricto:</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <span>Modo Estricto:</span>
+                          <SwissInfoTip
+                            title="Modo Estricto vs. Flexible"
+                            content={'Estricto: descarta por completo horarios que pisen un bloque rojo.\nFlexible: mantiene esas opciones pero las penaliza (-100 pts por cada 15 min bloqueados).'}
+                            placement="right"
+                            ariaLabel="Explicación de Modo Estricto"
+                          />
+                        </span>
                         <div 
                           onClick={() => setIsConstraintStrict(!isConstraintStrict)}
                           style={{ 
@@ -1428,41 +1460,47 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   marginBottom: '12px',
                   border: '1px solid var(--border-hairline)',
                 }}>
-                  <button 
-                    style={{ flex: 1, padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '0px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-                    onMouseOver={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-                    onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                    onClick={() => {
-                      const visibleCodes = filteredCourses.map(c => c.code);
-                      setSelectedCourseCodes(prev => Array.from(new Set([...prev, ...visibleCodes])));
-                    }}
-                  >
-                    <CheckSquare size={12} /> Seleccionar
-                  </button>
-                  {hasEligibleFilter && (
+                  <SwissTooltip content="Agrega todos los cursos visibles al conjunto de búsqueda" placement="top" style={{ flex: 1 }}>
                     <button 
-                      style={{ flex: 1, padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '0px', transition: 'all 0.2s', borderLeft: '1px solid var(--border-hairline)', borderRight: '1px solid var(--border-hairline)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                      style={{ flex: 1, width: '100%', padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '0px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                       onMouseOver={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
                       onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                       onClick={() => {
-                        const eligibleCodes = courses.filter(c => c.isEligible).map(c => c.code);
-                        setSelectedCourseCodes(eligibleCodes);
+                        const visibleCodes = filteredCourses.map(c => c.code);
+                        setSelectedCourseCodes(prev => Array.from(new Set([...prev, ...visibleCodes])));
                       }}
                     >
-                      <Filter size={12} /> Habilitados
+                      <CheckSquare size={12} /> Seleccionar
                     </button>
+                  </SwissTooltip>
+                  {hasEligibleFilter && (
+                    <SwissTooltip content="Selecciona únicamente los cursos habilitados según tu ficha académica PDF" placement="top" style={{ flex: 1 }}>
+                      <button 
+                        style={{ flex: 1, width: '100%', padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '0px', transition: 'all 0.2s', borderLeft: '1px solid var(--border-hairline)', borderRight: '1px solid var(--border-hairline)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                        onMouseOver={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                        onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                        onClick={() => {
+                          const eligibleCodes = courses.filter(c => c.isEligible).map(c => c.code);
+                          setSelectedCourseCodes(eligibleCodes);
+                        }}
+                      >
+                        <Filter size={12} /> Habilitados
+                      </button>
+                    </SwissTooltip>
                   )}
-                  <button 
-                    style={{ flex: 1, padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '0px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
-                    onMouseOver={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-                    onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                    onClick={() => {
-                      const visibleCodes = new Set(filteredCourses.map(c => c.code));
-                      setSelectedCourseCodes(prev => prev.filter(code => !visibleCodes.has(code)));
-                    }}
-                  >
-                    <Square size={12} /> Limpiar
-                  </button>
+                  <SwissTooltip content="Quita de la selección todos los cursos visibles actualmente" placement="top" style={{ flex: 1 }}>
+                    <button 
+                      style={{ flex: 1, width: '100%', padding: '6px', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '0px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                      onMouseOver={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                      onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                      onClick={() => {
+                        const visibleCodes = new Set(filteredCourses.map(c => c.code));
+                        setSelectedCourseCodes(prev => prev.filter(code => !visibleCodes.has(code)));
+                      }}
+                    >
+                      <Square size={12} /> Limpiar
+                    </button>
+                  </SwissTooltip>
                 </div>
 
                 {hasEligibleFilter && (
@@ -1525,27 +1563,46 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                           </div>
                           
                           {isAdvancedMode && isSelected && (
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); togglePin(course.code); }}
-                              style={{
-                                background: pinnedCourseCodes.includes(course.code) ? '#DCD9D2' : 'transparent',
-                                border: pinnedCourseCodes.includes(course.code) ? '1px solid #18181A' : '1px solid transparent',
-                                padding: '3px 5px',
-                                cursor: 'pointer',
-                                opacity: pinnedCourseCodes.includes(course.code) ? 1 : 0.45,
-                                color: pinnedCourseCodes.includes(course.code) ? '#B85D00' : '#4A4946',
-                                display: 'flex',
-                                alignItems: 'center'
-                              }}
-                              title={pinnedCourseCodes.includes(course.code) ? "Desfijar curso" : "Fijar curso (el algoritmo intentará incluirlo)"}
+                            <SwissTooltip
+                              title={pinnedCourseCodes.includes(course.code) ? 'Curso fijado (obligatorio)' : 'Fijar curso (Chincheta)'}
+                              content={
+                                pinnedCourseCodes.includes(course.code)
+                                  ? 'Este curso aparecerá en todos los horarios y te permite fijar o bloquear secciones abajo. Clic para liberarlo al pool.'
+                                  : 'Obliga a incluir este curso en todos los horarios generados en Modo Avanzado y abre las opciones por sección.'
+                              }
+                              placement="left"
                             >
-                              <Pin size={13} />
-                            </button>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); togglePin(course.code); }}
+                                style={{
+                                  background: pinnedCourseCodes.includes(course.code) ? '#DCD9D2' : 'transparent',
+                                  border: pinnedCourseCodes.includes(course.code) ? '1px solid #18181A' : '1px solid transparent',
+                                  padding: '3px 5px',
+                                  cursor: 'pointer',
+                                  opacity: pinnedCourseCodes.includes(course.code) ? 1 : 0.45,
+                                  color: pinnedCourseCodes.includes(course.code) ? '#B85D00' : '#4A4946',
+                                  display: 'flex',
+                                  alignItems: 'center'
+                                }}
+                                aria-label={pinnedCourseCodes.includes(course.code) ? 'Desfijar curso' : 'Fijar curso obligatorio'}
+                              >
+                                <Pin size={13} />
+                              </button>
+                            </SwissTooltip>
                           )}
                         </div>
                         {isAdvancedMode && isSelected && pinnedCourseCodes.includes(course.code) && (
                           <div style={{ padding: '4px 8px 8px 32px', background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-hairline)' }}>
-                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Fijar sección específica (Opcional):</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span>Fijar sección específica (Opcional):</span>
+                              <SwissInfoTip
+                                title="Candado vs. Botón Bloquear"
+                                content={'• Candado (clic en la tarjeta): fuerza al algoritmo a usar esa sección exacta.\n• × Bloquear: evita las horas de esa sección en TODO tu horario (Calendario de Bloqueos).'}
+                                placement="right"
+                                ariaLabel="Diferencia entre candado y botón bloquear"
+                              />
+                            </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '8px' }}>
                               {course.sections.map(sec => {
                                 const secName = sec.sectionNumber;
@@ -1581,20 +1638,38 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                                     }}
                                   >
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, fontSize: '0.8rem' }}>
-                                        {isPinned ? <Lock size={12} color="var(--accent-primary)" /> : <Unlock size={12} color="var(--text-muted)" />}
-                                        Sección {secName}
-                                      </div>
-                                      <div style={{ 
-                                        fontSize: '0.7rem', 
-                                        padding: '2px 6px', 
-                                        borderRadius: '0px', 
-                                        background: full ? '#F4E0E2' : '#DCEEE6',
-                                        color: full ? '#520D17' : '#093B29',
-                                        fontWeight: 600
-                                      }}>
-                                        {sec.enrolled} / {sec.vacancies}
-                                      </div>
+                                      <SwissTooltip
+                                        title={isPinned ? 'Candado cerrado (sección fijada)' : 'Candado de sección'}
+                                        content={
+                                          isPinned
+                                            ? `Fuerza al generador a incluir obligatoriamente la Sección ${secName} (y sus equivalentes del mismo horario). Haz clic en la tarjeta para quitar el candado.`
+                                            : `Haz clic en esta tarjeta para fijar obligatoriamente la Sección ${secName} en todos tus horarios generados.`
+                                        }
+                                        placement="top"
+                                      >
+                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 600, fontSize: '0.8rem' }}>
+                                          <span style={{ display: 'inline-flex', alignItems: 'center', color: isPinned ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
+                                            <SwissLockIcon locked={isPinned} size={13} />
+                                          </span>
+                                          <span>Sección {secName}</span>
+                                        </div>
+                                      </SwissTooltip>
+                                      <SwissTooltip
+                                        title="Vacantes disponibles"
+                                        content={`${sec.enrolled} matriculados de ${sec.vacancies} vacantes (${Math.max(0, sec.vacancies - sec.enrolled)} libres).`}
+                                        placement="left"
+                                      >
+                                        <div style={{ 
+                                          fontSize: '0.7rem', 
+                                          padding: '2px 6px', 
+                                          borderRadius: '0px', 
+                                          background: full ? '#F4E0E2' : '#DCEEE6',
+                                          color: full ? '#520D17' : '#093B29',
+                                          fontWeight: 600
+                                        }}>
+                                          {sec.enrolled} / {sec.vacancies}
+                                        </div>
+                                      </SwissTooltip>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                       <User size={11} style={{ flexShrink: 0 }} />
@@ -1608,21 +1683,44 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                                           </span>
                                         ))}
                                       </div>
-                                      <button 
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleBlockSection(course.code, secName);
-                                        }}
-                                        style={{ 
-                                          background: isSectionBlocked ? '#DCEEE6' : '#F4E0E2', 
-                                          border: isSectionBlocked ? '1px solid #0D7A4E' : '1px solid #A82032', 
-                                          borderRadius: '0px', color: isSectionBlocked ? '#093B29' : '#520D17', fontSize: '0.65rem', padding: '3px 8px', 
-                                          cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", transition: 'all 0.2s' 
-                                        }}
-                                        title={isSectionBlocked ? "Desbloquear el horario de esta sección en el calendario" : "Bloquear el horario de esta sección en el calendario"}
+                                      <SwissTooltip
+                                        title={isSectionBlocked ? 'Horario desbloqueable' : 'Bloquear franja horaria'}
+                                        content={
+                                          isSectionBlocked
+                                            ? `Las horas de la Sección ${secName} están marcadas como bloqueadas en el Calendario de Bloqueos. Haz clic para quitarlas.`
+                                            : `Marca las horas de la Sección ${secName} en rojo en el Calendario de Bloqueos para evitar cualquier clase (de cualquier curso) en ese horario.`
+                                        }
+                                        placement="left"
                                       >
-                                        {isSectionBlocked ? '✓ Desbloquear' : '✕ Bloquear'}
-                                      </button>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleBlockSection(course.code, secName);
+                                          }}
+                                          style={{ 
+                                            background: isSectionBlocked ? '#DCEEE6' : '#F4E0E2', 
+                                            border: isSectionBlocked ? '1px solid #0D7A4E' : '1px solid #A82032', 
+                                            borderRadius: '0px', color: isSectionBlocked ? '#093B29' : '#520D17', fontSize: '0.65rem', padding: '3px 8px', 
+                                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", transition: 'all 0.2s' 
+                                          }}
+                                          aria-label={isSectionBlocked ? 'Desbloquear el horario de esta sección en el calendario' : 'Bloquear el horario de esta sección en el calendario'}
+                                        >
+                                          <span className="swiss-btn-inline">
+                                            {isSectionBlocked ? (
+                                              <>
+                                                <Check size={12} strokeWidth={2.5} aria-hidden="true" />
+                                                <span>Desbloquear</span>
+                                              </>
+                                            ) : (
+                                              <>
+                                                <X size={12} strokeWidth={2.5} aria-hidden="true" />
+                                                <span>Bloquear</span>
+                                              </>
+                                            )}
+                                          </span>
+                                        </button>
+                                      </SwissTooltip>
                                     </div>
                                   </div>
                                 );
@@ -1648,42 +1746,43 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                   <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Objetivos de Optimización (Selección Múltiple):</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {[
-                      { id: 'min_gaps', label: 'Menos huecos' },
-                      { id: 'min_days', label: 'Menos días' },
-                      { id: 'min_day_gaps', label: 'Sin días puente (huecos)' },
-                      { id: 'morning', label: 'Mañanas' },
-                      { id: 'afternoon', label: 'Tardes/Noches' }
+                      { id: 'min_gaps', label: 'Menos huecos', tip: 'Minimiza los tiempos muertos entre clases dentro del mismo día.' },
+                      { id: 'min_days', label: 'Menos días', tip: 'Concentra tus clases en la menor cantidad de días a la semana.' },
+                      { id: 'min_day_gaps', label: 'Sin días puente (huecos)', tip: 'Evita días libres aislados en medio de tu semana de asistencia.' },
+                      { id: 'morning', label: 'Mañanas', tip: 'Favorece sesiones tempranas (excluyente con Tardes/Noches).' },
+                      { id: 'afternoon', label: 'Tardes/Noches', tip: 'Favorece sesiones de tarde y noche (excluyente con Mañanas).' }
                     ].map(target => {
                       const isActive = options.targets.includes(target.id as any);
                       return (
-                        <div
-                          key={target.id}
-                          className={`pref-pill ${isActive ? 'active' : ''}`}
-                          onClick={() => {
-                            setOptions(prev => {
-                              let newTargets = isActive
-                                ? prev.targets.filter(t => t !== target.id)
-                                : [...prev.targets, target.id as any];
-                              
-                              // Mutually exclusive constraints
-                              if (!isActive) {
-                                if (target.id === 'morning') {
-                                  newTargets = newTargets.filter(t => t !== 'afternoon');
-                                } else if (target.id === 'afternoon') {
-                                  newTargets = newTargets.filter(t => t !== 'morning');
+                        <SwissTooltip key={target.id} content={target.tip} placement="top">
+                          <div
+                            className={`pref-pill ${isActive ? 'active' : ''}`}
+                            onClick={() => {
+                              setOptions(prev => {
+                                let newTargets = isActive
+                                  ? prev.targets.filter(t => t !== target.id)
+                                  : [...prev.targets, target.id as any];
+                                
+                                // Mutually exclusive constraints
+                                if (!isActive) {
+                                  if (target.id === 'morning') {
+                                    newTargets = newTargets.filter(t => t !== 'afternoon');
+                                  } else if (target.id === 'afternoon') {
+                                    newTargets = newTargets.filter(t => t !== 'morning');
+                                  }
                                 }
-                              }
-                              
-                              return { ...prev, targets: newTargets };
-                            });
-                          }}
-                        >
-                          <span
-                            className={`pref-pill-led ${isActive ? 'is-on' : 'is-off'}`}
-                            aria-hidden="true"
-                          />
-                          <span>{target.label}</span>
-                        </div>
+                                
+                                return { ...prev, targets: newTargets };
+                              });
+                            }}
+                          >
+                            <span
+                              className={`pref-pill-led ${isActive ? 'is-on' : 'is-off'}`}
+                              aria-hidden="true"
+                            />
+                            <span>{target.label}</span>
+                          </div>
+                        </SwissTooltip>
                       );
                     })}
                   </div>
@@ -1692,45 +1791,62 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                 {/* Filters */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Filtros y Restricciones:</label>
-                  <div 
-                    onClick={() => setOptions({ ...options, onlyWithVacancies: !options.onlyWithVacancies })}
-                    style={{ 
-                      display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', cursor: 'pointer',
-                      background: options.onlyWithVacancies ? 'var(--accent-soft)' : 'transparent',
-                      border: options.onlyWithVacancies ? '1px solid var(--accent-primary)' : '1px solid transparent',
-                      padding: '6px 10px', borderRadius: '0px', transition: 'all 0.2s ease',
-                      marginLeft: '-10px', // slightly offset to align text with other labels
-                      userSelect: 'none' // Prevent text selection on double click
-                    }}
-                  >
-                    {options.onlyWithVacancies ? <CheckSquare size={16} color="var(--accent-primary)" /> : <Square size={16} color="var(--text-muted)" />}
-                    <span style={{ color: options.onlyWithVacancies ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-                      Solo secciones con vacantes disponibles
-                    </span>
-                  </div>
+                  <SwissTooltip block content="Descarta antes de combinar cualquier sección con matriculados mayores o iguales a sus vacantes." placement="top">
+                    <div 
+                      onClick={() => setOptions({ ...options, onlyWithVacancies: !options.onlyWithVacancies })}
+                      style={{ 
+                        display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', cursor: 'pointer',
+                        background: options.onlyWithVacancies ? 'var(--accent-soft)' : 'transparent',
+                        border: options.onlyWithVacancies ? '1px solid var(--accent-primary)' : '1px solid transparent',
+                        padding: '6px 10px', borderRadius: '0px', transition: 'all 0.2s ease',
+                        marginLeft: '-10px', // slightly offset to align text with other labels
+                        userSelect: 'none' // Prevent text selection on double click
+                      }}
+                    >
+                      {options.onlyWithVacancies ? <CheckSquare size={16} color="var(--accent-primary)" /> : <Square size={16} color="var(--text-muted)" />}
+                      <span style={{ color: options.onlyWithVacancies ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                        Solo secciones con vacantes disponibles
+                      </span>
+                    </div>
+                  </SwissTooltip>
                   
                   <div style={{ marginTop: '8px' }}>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>Días que deseas libres:</span>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                       {(['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'] as DayOfWeek[]).map(day => (
-                        <button
+                        <SwissTooltip
                           key={day}
-                          onClick={() => toggleExcludedDay(day)}
-                          className={`filter-pill-btn ${(options.excludedDays || []).includes(day) ? 'active' : ''}`}
-                          style={{
-                            padding: '4px 10px',
-                            fontSize: '0.75rem',
-                            borderRadius: '0px',
-                            fontFamily: "'JetBrains Mono', monospace",
-                            fontWeight: 700,
-                            background: (options.excludedDays || []).includes(day) ? '#18181A' : '#FAF9F5',
-                            color: (options.excludedDays || []).includes(day) ? '#F2F0EC' : '#4A4946',
-                            border: (options.excludedDays || []).includes(day) ? '1px solid #18181A' : '1px solid #C6C3BB',
-                            borderLeft: (options.excludedDays || []).includes(day) ? '3px solid #A82032' : '1px solid #C6C3BB',
-                          }}
+                          content={
+                            (options.excludedDays || []).includes(day)
+                              ? `Permitir nuevamente secciones que tengan clases el ${day}`
+                              : `Exigir ${day} completamente libre (descarta secciones con clases este día)`
+                          }
+                          placement="top"
                         >
-                          {(options.excludedDays || []).includes(day) ? `✕ Sin ${day}` : day}
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => toggleExcludedDay(day)}
+                            className={`filter-pill-btn ${(options.excludedDays || []).includes(day) ? 'active' : ''}`}
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              borderRadius: '0px',
+                              fontFamily: "'JetBrains Mono', monospace",
+                              fontWeight: 700,
+                              background: (options.excludedDays || []).includes(day) ? '#18181A' : '#FAF9F5',
+                              color: (options.excludedDays || []).includes(day) ? '#F2F0EC' : '#4A4946',
+                              border: (options.excludedDays || []).includes(day) ? '1px solid #18181A' : '1px solid #C6C3BB',
+                              borderLeft: (options.excludedDays || []).includes(day) ? '3px solid #A82032' : '1px solid #C6C3BB',
+                            }}
+                          >
+                            {(options.excludedDays || []).includes(day) ? (
+                              <span className="swiss-btn-inline">
+                                <X size={11} strokeWidth={2.5} aria-hidden="true" />
+                                <span>{`Sin ${day}`}</span>
+                              </span>
+                            ) : day}
+                          </button>
+                        </SwissTooltip>
                       ))}
                     </div>
                   </div>
@@ -1784,7 +1900,12 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                           fontWeight: 700,
                         }}
                       >
-                        #{previewIndex + 1} / {Math.min(50, results.length)} · ← K / J →
+                        <span className="swiss-btn-inline">
+                          <span>{`#${previewIndex + 1} / ${Math.min(50, results.length)} ·`}</span>
+                          <ArrowLeft size={11} strokeWidth={2.4} aria-hidden="true" />
+                          <span>K / J</span>
+                          <ArrowRight size={11} strokeWidth={2.4} aria-hidden="true" />
+                        </span>
                       </span>
                     )}
                   </h4>
@@ -1793,7 +1914,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                     className="optimizer-back-config-btn"
                     onClick={() => setPreviewSchedule(null)}
                   >
-                    ← Volver a resultados
+                    <span className="swiss-btn-inline">
+                      <ArrowLeft size={13} strokeWidth={2.4} className="swiss-arrow-left" aria-hidden="true" />
+                      <span>Volver a resultados</span>
+                    </span>
                   </button>
                 </div>
                 <div style={{ flex: 1, minHeight: 0, background: '#FAF9F5', borderRadius: '0px', border: '1.5px solid #18181A', overflow: 'auto' }}>
@@ -1828,7 +1952,7 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                 <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px' }}>
                   {(isAdvancedMode || showBlockerGrid) ? (
                     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                         <div>
                           <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: '#141416' }}>Calendario de Bloqueos</h4>
                           <p style={{ fontSize: '0.82rem', color: '#5A5852', margin: '4px 0 0 0' }}>
@@ -1840,6 +1964,21 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                             MODO ESTRICTO ACTIVO
                           </span>
                         )}
+                      </div>
+                      <div className="tbg-legend-bar" aria-label="Leyenda del calendario de bloqueos">
+                        <span className="tbg-legend-item">
+                          <span className="tbg-legend-swatch tbg-legend-swatch--locked" aria-hidden="true" />
+                          <SwissLockIcon locked={true} size={11} className="tbg-pinned-lock-icon" />
+                          <span>Sección fijada (candado)</span>
+                        </span>
+                        <span className="tbg-legend-item">
+                          <span className="tbg-legend-swatch tbg-legend-swatch--blocked" aria-hidden="true" />
+                          <span>Horario bloqueado</span>
+                        </span>
+                        <span className="tbg-legend-item">
+                          <span className="tbg-legend-swatch tbg-legend-swatch--ghost" aria-hidden="true" />
+                          <span>Curso fijo (secciones posibles)</span>
+                        </span>
                       </div>
                       <div style={{ flex: 1, minHeight: 0 }}>
                         <TimeBlockerGrid 
@@ -1924,7 +2063,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                       }
                     }}
                   >
-                    ← Volver a Configurar ({selectedCourseCodes.length})
+                    <span className="swiss-btn-inline">
+                      <ArrowLeft size={13} strokeWidth={2.4} className="swiss-arrow-left" aria-hidden="true" />
+                      <span>Volver a Configurar ({selectedCourseCodes.length})</span>
+                    </span>
                   </button>
                 </div>
               )}
@@ -1943,7 +2085,10 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                         }
                       }}
                     >
-                      ← Configurar Cursos y Filtros ({selectedCourseCodes.length})
+                      <span className="swiss-btn-inline">
+                        <ArrowLeft size={13} strokeWidth={2.4} className="swiss-arrow-left" aria-hidden="true" />
+                        <span>Configurar Cursos y Filtros ({selectedCourseCodes.length})</span>
+                      </span>
                     </button>
                     <span className="optimizer-optimal-count-badge">
                       {Math.min(50, results.length)} OPCIONES ÓPTIMAS
@@ -2055,55 +2200,70 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
 
                           {/* ZONE C: Bottom Dedicated Action Bar */}
                           <div className="optimizer-card-zone-c">
-                            <button
-                              type="button"
-                              className="swiss-action-btn btn-preview"
-                              onClick={() => {
-                                setPreviewIndex(index);
-                                setPreviewSchedule(res.selectedSections);
-                              }}
-                            >
-                              <Eye size={12} />
-                              <span>Vista Previa</span>
-                            </button>
-                            <button
-                              type="button"
-                              className={`swiss-action-btn btn-new-tab ${
-                                activeSaveId === res.id ? 'is-saved' : ''
-                              }`}
-                              onClick={() => {
-                                const newName = onCreateNewOption(res.selectedSections);
-                                setSavedOptionsRecord(prev => ({
-                                  ...prev,
-                                  [res.id]: [...(prev[res.id] || []), newName]
-                                }));
-                                setActiveSaveId(res.id);
-                                setLastSavedName(newName);
-                                setTimeout(() => {
-                                  setActiveSaveId(null);
-                                  setLastSavedName(null);
-                                }, 2500);
-                              }}
-                            >
-                              {activeSaveId === res.id ? (
-                                <span>✓ {lastSavedName}</span>
-                              ) : (
-                                <>
-                                  <span className="sm-only-text">+ Pestaña</span>
-                                  <span className="lg-only-text">+ Nueva Pestaña</span>
-                                </>
-                              )}
-                            </button>
-                            <button
-                              type="button"
-                              className="swiss-action-btn btn-apply"
-                              onClick={() => {
-                                onApplyToCurrent(res.selectedSections);
-                                onClose();
-                              }}
-                            >
-                              ✓ Aplicar
-                            </button>
+                            <SwissTooltip content="Previsualiza este horario en el calendario antes de aplicarlo" placement="top" style={{ flex: 1 }}>
+                              <button
+                                type="button"
+                                className="swiss-action-btn btn-preview"
+                                style={{ width: '100%' }}
+                                onClick={() => {
+                                  setPreviewIndex(index);
+                                  setPreviewSchedule(res.selectedSections);
+                                }}
+                              >
+                                <Eye size={12} />
+                                <span>Vista Previa</span>
+                              </button>
+                            </SwissTooltip>
+                            <SwissTooltip content="Guarda esta combinación en una nueva pestaña sin borrar tu horario actual" placement="top" style={{ flex: 1 }}>
+                              <button
+                                type="button"
+                                className={`swiss-action-btn btn-new-tab ${
+                                  activeSaveId === res.id ? 'is-saved' : ''
+                                }`}
+                                style={{ width: '100%' }}
+                                onClick={() => {
+                                  const newName = onCreateNewOption(res.selectedSections);
+                                  setSavedOptionsRecord(prev => ({
+                                    ...prev,
+                                    [res.id]: [...(prev[res.id] || []), newName]
+                                  }));
+                                  setActiveSaveId(res.id);
+                                  setLastSavedName(newName);
+                                  setTimeout(() => {
+                                    setActiveSaveId(null);
+                                    setLastSavedName(null);
+                                  }, 2500);
+                                }}
+                              >
+                                {activeSaveId === res.id ? (
+                                  <span className="swiss-btn-inline">
+                                    <Check size={12} strokeWidth={2.6} aria-hidden="true" />
+                                    <span>{lastSavedName}</span>
+                                  </span>
+                                ) : (
+                                  <>
+                                    <span className="sm-only-text">+ Pestaña</span>
+                                    <span className="lg-only-text">+ Nueva Pestaña</span>
+                                  </>
+                                )}
+                              </button>
+                            </SwissTooltip>
+                            <SwissTooltip content="Reemplaza la pestaña actual con esta combinación de secciones" placement="top" style={{ flex: 1 }}>
+                              <button
+                                type="button"
+                                className="swiss-action-btn btn-apply"
+                                style={{ width: '100%' }}
+                                onClick={() => {
+                                  onApplyToCurrent(res.selectedSections);
+                                  onClose();
+                                }}
+                              >
+                                <span className="swiss-btn-inline">
+                                  <Check size={12} strokeWidth={2.6} className="swiss-check-draw" aria-hidden="true" />
+                                  <span>Aplicar</span>
+                                </span>
+                              </button>
+                            </SwissTooltip>
                           </div>
                         </div>
                       );

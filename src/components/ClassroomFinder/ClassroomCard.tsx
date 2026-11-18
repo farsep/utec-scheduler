@@ -80,11 +80,17 @@ export const ClassroomCard: React.FC<ClassroomCardProps> = React.memo(({
           {isLiveMode ? (
             liveStatus === 'free_now' ? (
               <span className="room-status-badge room-status-badge--free">
-                <span>● Libre Ahora</span>
+                <span className="swiss-btn-inline">
+                  <span className="swiss-status-dot swiss-status-dot--pulse" aria-hidden="true" />
+                  <span>Libre Ahora</span>
+                </span>
               </span>
             ) : liveStatus === 'occupied_now' ? (
               <span className="room-status-badge room-status-badge--occupied">
-                <span>■ En Clase</span>
+                <span className="swiss-btn-inline">
+                  <span className="swiss-status-square" aria-hidden="true" />
+                  <span>En Clase</span>
+                </span>
               </span>
             ) : (
               <span className="room-status-badge room-status-badge--closed">

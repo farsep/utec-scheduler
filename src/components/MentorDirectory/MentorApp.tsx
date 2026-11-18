@@ -18,6 +18,7 @@ import {
   Radio,
   Building2,
   CheckCircle2,
+  Check,
 } from 'lucide-react';
 
 interface MentorAppProps {
@@ -259,7 +260,7 @@ export const MentorApp: React.FC<MentorAppProps> = ({
 
             <p className="hero-subtitle">
               Detección automática de cruces contra tu horario activo: identifica al instante qué
-              sesiones de mentoría están <strong>● Libres</strong> en tu semana y cuáles se cruzan
+              sesiones de mentoría están <strong className="swiss-btn-inline"><span className="swiss-status-dot swiss-status-dot--ok" aria-hidden="true" /><span>Libres</span></strong> en tu semana y cuáles se cruzan
               con tus asignaturas seleccionadas.
             </p>
           </div>
@@ -379,7 +380,12 @@ export const MentorApp: React.FC<MentorAppProps> = ({
             onClick={() => setOnlyCompatibleSchedule(prev => !prev)}
           >
             {onlyCompatibleSchedule
-              ? `✓ Mostrando solo compatibles con tu horario (${compatibleMentorsCount})`
+              ? (
+                <span className="swiss-btn-inline">
+                  <Check size={13} strokeWidth={2.5} className="swiss-check-draw" aria-hidden="true" />
+                  <span>{`Mostrando solo compatibles con tu horario (${compatibleMentorsCount})`}</span>
+                </span>
+              )
               : `Filtrar compatibles con tu horario (${compatibleMentorsCount} de ${mentors.length})`}
           </button>
           <span className="mentor-compat-note">
@@ -443,7 +449,7 @@ export const MentorApp: React.FC<MentorAppProps> = ({
           title="Subir a filtros y búsqueda"
           aria-label="Subir a filtros y búsqueda"
         >
-          <span className="floating-top-arrow" style={{ color: '#00779E', fontWeight: 700 }}>↑</span>
+          <ArrowUp size={13} strokeWidth={2.5} className="floating-top-arrow" aria-hidden="true" />
           <span>Búsqueda</span>
         </button>
       )}

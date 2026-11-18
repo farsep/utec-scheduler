@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, GraduationCap, Award, Calendar, Clock } from 'lucide-react';
+import { User, GraduationCap, Award, Calendar, Clock, ChevronUp, ChevronDown } from 'lucide-react';
 import type { MetadataInfo } from '../types/schedule';
 
 interface StudentBannerProps {
@@ -67,7 +67,17 @@ export const StudentBanner: React.FC<StudentBannerProps> = ({ metadata }) => {
             cursor: 'pointer',
           }}
         >
-          {mobileExpanded ? '▴ Ficha' : '▾ Ficha'}
+          {mobileExpanded ? (
+            <span className="swiss-btn-inline">
+              <ChevronUp size={13} strokeWidth={2.4} aria-hidden="true" />
+              <span>Ficha</span>
+            </span>
+          ) : (
+            <span className="swiss-btn-inline">
+              <ChevronDown size={13} strokeWidth={2.4} aria-hidden="true" />
+              <span>Ficha</span>
+            </span>
+          )}
         </button>
       </div>
 

@@ -7108,6 +7108,403 @@ body:has(.modal-overlay, .classroom-modal-overlay, .prof-modal-overlay, .mentor-
   }
 }
 
+/* ==========================================================================
+   CRISP VECTOR & CSS SWISS SYMBOLOGY (ZERO IOS EMOJI FALLBACK)
+   ========================================================================== */
+
+.inline-link-arrow {
+  display: inline-block;
+  vertical-align: -2px;
+  margin-left: 4px;
+  flex-shrink: 0;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+a:hover .inline-link-arrow,
+a:focus-visible .inline-link-arrow {
+  transform: translate(2px, -2px);
+}
+
+.swiss-arrow-right,
+.swiss-arrow-left,
+.swiss-arrow-up {
+  flex-shrink: 0;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+a:hover .swiss-arrow-right,
+button:hover .swiss-arrow-right {
+  transform: translateX(2.5px);
+}
+
+a:hover .swiss-arrow-left,
+button:hover .swiss-arrow-left {
+  transform: translateX(-2.5px);
+}
+
+.mobile-floating-top-btn:hover .floating-top-arrow,
+button:hover .swiss-arrow-up {
+  transform: translateY(-2px);
+}
+
+.swiss-btn-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.swiss-status-dot {
+  position: relative;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background-color: currentColor;
+  flex-shrink: 0;
+}
+
+.swiss-status-dot--ok {
+  background-color: #0D7A4E;
+}
+
+.swiss-status-dot--hollow {
+  background-color: transparent;
+  border: 1.5px solid #6E6D66;
+}
+
+.swiss-status-dot--live {
+  background-color: #E02424;
+  animation: swissLivePulse 1.6s ease-in-out infinite;
+}
+
+.swiss-status-dot--pulse::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+  pointer-events: none;
+  animation: swissSonarRing 2.1s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+}
+
+.swiss-status-square {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 0px;
+  background-color: currentColor;
+  flex-shrink: 0;
+}
+
+.swiss-status-square--busy {
+  background-color: #C25E00;
+}
+
+.swiss-dag-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: currentColor;
+  margin-right: 6px;
+  flex-shrink: 0;
+  vertical-align: 1px;
+}
+
+/* Crisp SVG check stroke draw-in & star feedback */
+.swiss-check-draw {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 0;
+  animation: swissCheckStroke 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.swiss-star-active {
+  animation: swissPopIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Architectural Swiss Padlock SVG + TimeBlockerGrid Locked Section */
+.swiss-lock-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.swiss-lock-shackle {
+  transform-origin: 11px 7.5px;
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.swiss-lock-body {
+  transition: fill-opacity 180ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.swiss-lock-icon--unlocked .swiss-lock-shackle {
+  transform: rotate(16deg) translateY(-0.6px);
+}
+
+.swiss-lock-icon--locked .swiss-lock-shackle {
+  transform: rotate(0deg) translateY(0);
+  animation: swissLockShackleClose 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.swiss-lock-icon--locked .swiss-lock-body {
+  animation: swissLockBodySettle 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.swiss-lock-icon--snap .swiss-lock-shackle {
+  animation: swissLockShackleClose 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tbg-pinned-block--locked {
+  animation: swissPinnedLockIn 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tbg-pinned-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 0.62rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #0A2E46;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.tbg-pinned-lock-icon {
+  color: #006699;
+}
+
+.tbg-pinned-sub {
+  font-size: 0.54rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: #005A78;
+  line-height: 1.1;
+  text-align: center;
+}
+
+@keyframes swissLockShackleClose {
+  0% {
+    transform: rotate(18deg) translateY(-1.2px);
+  }
+  65% {
+    transform: rotate(-2deg) translateY(0.4px);
+  }
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+}
+
+@keyframes swissLockBodySettle {
+  0%, 55% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(0.9px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes swissPinnedLockIn {
+  0% {
+    box-shadow: 0 0 0 2px rgba(0, 102, 153, 0.25);
+    transform: scale(0.985);
+  }
+  100% {
+    box-shadow: none;
+    transform: scale(1);
+  }
+}
+
+@keyframes swissSonarRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes swissCheckStroke {
+  0% {
+    stroke-dashoffset: 24;
+    transform: scale(0.85);
+  }
+  100% {
+    stroke-dashoffset: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes swissPopIn {
+  0% {
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes swissLivePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inline-link-arrow,
+  .swiss-arrow-right,
+  .swiss-arrow-left,
+  .swiss-arrow-up,
+  .swiss-lock-shackle,
+  .swiss-lock-body {
+    transition: none !important;
+  }
+  .swiss-status-dot--live,
+  .swiss-status-dot--pulse::after,
+  .swiss-check-draw,
+  .swiss-star-active,
+  .swiss-lock-icon--locked .swiss-lock-shackle,
+  .swiss-lock-icon--locked .swiss-lock-body,
+  .tbg-pinned-block--locked {
+    animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   GRAFTON SWISS TOOLTIP & INFO BADGES (PORTAL RENDERED, CLIPPING-FREE)
+   ========================================================================== */
+
+.swiss-tooltip-anchor {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+}
+
+.swiss-tooltip-anchor--block {
+  display: block;
+  width: 100%;
+}
+
+.swiss-tooltip-portal {
+  position: fixed;
+  z-index: 25000;
+  pointer-events: none;
+  background-color: #141416;
+  color: #F2F0EC;
+  border: 1.5px solid #18181A;
+  border-left: 3px solid #00779E;
+  border-radius: 0px;
+  padding: 7px 10px;
+  box-shadow: 3px 3px 0px rgba(24, 24, 26, 0.28);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 11.5px;
+  line-height: 1.42;
+  white-space: pre-line;
+  animation: swissTooltipIn 130ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.swiss-tooltip-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #7AD1EC;
+  margin-bottom: 3px;
+}
+
+.swiss-tooltip-body {
+  color: #F2F0EC;
+  font-weight: 450;
+}
+
+.swiss-info-tip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-radius: 0px;
+  border: 1px solid #8A877F;
+  background-color: #FAF9F5;
+  color: #4A4946;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.swiss-info-tip-btn:hover,
+.swiss-info-tip-btn:focus-visible,
+.swiss-info-tip-btn.is-active {
+  background-color: #18181A;
+  border-color: #18181A;
+  color: #F2F0EC;
+}
+
+.tbg-legend-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: #4A4946;
+}
+
+.tbg-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tbg-legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 0px;
+  flex-shrink: 0;
+}
+
+.tbg-legend-swatch--locked {
+  background: #D6E6F2;
+  border: 1px solid #006699;
+  border-left: 3px solid #006699;
+}
+
+.tbg-legend-swatch--blocked {
+  background: repeating-linear-gradient(-45deg, #F4E0E2, #F4E0E2 3px, #EBD0D3 3px, #EBD0D3 6px);
+  border: 1px solid #A82032;
+  border-left: 3px solid #A82032;
+}
+
+.tbg-legend-swatch--ghost {
+  background: #E0EBF5;
+  border: 1px dashed #006699;
+  border-left: 3px solid #006699;
+}
+
+@keyframes swissTooltipIn {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 
 
