@@ -25,6 +25,7 @@ import {
   Trash2,
   Database,
 } from 'lucide-react';
+import { SwissTooltip } from './common/SwissTooltip';
 
 interface ScheduleAppProps {
   hideInternalNavbar?: boolean;
@@ -599,63 +600,80 @@ export const ScheduleApp: React.FC<ScheduleAppProps> = ({
               </div>
 
               <div className="timetable-actions">
-                {conflicts.length === 0 ? (
-                  <span className="schedule-status-chip schedule-status-chip--ok">
-                    <span className="status-dot-inline status-dot-inline--ok" />
-                    Sin cruces
-                  </span>
-                ) : (
-                  <span className="schedule-status-chip schedule-status-chip--warn">
-                    <AlertCircle size={13} />
-                    {conflicts.length} {conflicts.length === 1 ? 'cruce' : 'cruces'}
-                  </span>
-                )}
-
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-compact"
-                  onClick={() => setIsOptimizerOpen(true)}
-                  title="Generador combinatorio automático de horarios sin cruces"
+                <SwissTooltip
+                  content={
+                    conflicts.length === 0
+                      ? 'Todas las secciones seleccionadas actualmente son compatibles sin solapamiento horario'
+                      : `Hay ${conflicts.length} ${conflicts.length === 1 ? 'cruce horario detectado' : 'cruces horarios detectados'} entre tus cursos elegidos`
+                  }
+                  placement="bottom"
                 >
-                  <SlidersHorizontal size={14} />
-                  <span>Auto-Generar</span>
-                </button>
+                  {conflicts.length === 0 ? (
+                    <span className="schedule-status-chip schedule-status-chip--ok">
+                      <span className="status-dot-inline status-dot-inline--ok" />
+                      Sin cruces
+                    </span>
+                  ) : (
+                    <span className="schedule-status-chip schedule-status-chip--warn">
+                      <AlertCircle size={13} />
+                      {conflicts.length} {conflicts.length === 1 ? 'cruce' : 'cruces'}
+                    </span>
+                  )}
+                </SwissTooltip>
 
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-compact timetable-import-btn"
-                  onClick={() => setIsUploadOpen(true)}
-                  title="Importar oferta académica (PDF o Excel)"
+                <SwissTooltip
+                  title="Generador Automático (Rust WASM)"
+                  content={'Calcula automáticamente combinaciones sin cruces en Modo Normal o Avanzado, fijando cursos/secciones con candado, bloqueando horas libres y priorizando almuerzo.'}
+                  placement="bottom"
                 >
-                  <Upload size={13} />
-                  <span>Importar</span>
-                </button>
+                  <button
+                    type="button"
+                    className="btn btn-compact timetable-autogenerate-btn"
+                    onClick={() => setIsOptimizerOpen(true)}
+                  >
+                    <SlidersHorizontal size={13} strokeWidth={2.2} aria-hidden="true" />
+                    <span>Auto-Generar</span>
+                  </button>
+                </SwissTooltip>
 
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-compact"
-                  onClick={() => {
-                    setOptions(
-                      options.map(o =>
-                        o.id === activeOptionId ? { ...o, selectedSections: {} } : o
-                      )
-                    );
-                  }}
-                  title="Restablecer selecciones en esta opción"
-                >
-                  <RotateCcw size={13} />
-                  <span>Restablecer</span>
-                </button>
+                <SwissTooltip content="Importar archivo Excel (Consulta_Horario) o PDF de Carga Hábil" placement="bottom">
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-compact timetable-import-btn"
+                    onClick={() => setIsUploadOpen(true)}
+                  >
+                    <Upload size={13} />
+                    <span>Importar</span>
+                  </button>
+                </SwissTooltip>
 
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-compact"
-                  onClick={handleClearAllData}
-                  title="Vaciar oferta cargada"
-                >
-                  <Trash2 size={13} />
-                  <span className="hide-on-mobile">Vaciar</span>
-                </button>
+                <SwissTooltip content="Limpia únicamente las secciones seleccionadas en la pestaña activa" placement="bottom">
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-compact"
+                    onClick={() => {
+                      setOptions(
+                        options.map(o =>
+                          o.id === activeOptionId ? { ...o, selectedSections: {} } : o
+                        )
+                      );
+                    }}
+                  >
+                    <RotateCcw size={13} />
+                    <span>Restablecer</span>
+                  </button>
+                </SwissTooltip>
+
+                <SwissTooltip content="Elimina tus archivos locales cargados y restaura la oferta de ejemplo" placement="bottom">
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-compact"
+                    onClick={handleClearAllData}
+                  >
+                    <Trash2 size={13} />
+                    <span className="hide-on-mobile">Vaciar</span>
+                  </button>
+                </SwissTooltip>
               </div>
             </div>
 

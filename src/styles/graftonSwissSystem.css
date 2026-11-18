@@ -7428,19 +7428,28 @@ button:hover .swiss-arrow-up {
 }
 
 .swiss-info-tip-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   padding: 0;
+  margin: 0;
   border-radius: 0px;
   border: 1px solid #8A877F;
   background-color: #FAF9F5;
   color: #4A4946;
   cursor: pointer;
   flex-shrink: 0;
+  vertical-align: middle;
   transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.swiss-info-tip-btn::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
 }
 
 .swiss-info-tip-btn:hover,
@@ -7449,6 +7458,93 @@ button:hover .swiss-arrow-up {
   background-color: #18181A;
   border-color: #18181A;
   color: #F2F0EC;
+}
+
+/* Unified Option A: Optimizer Toggle Row Alignment (1-3 line labels, mobile/tablet/desktop) */
+.optimizer-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.optimizer-toggle-text {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.optimizer-toggle-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.optimizer-switch-track {
+  width: 36px;
+  height: 20px;
+  border-radius: 0px;
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+  background-color: var(--border-hairline);
+  transition: background-color 200ms ease;
+}
+
+.optimizer-switch-track.is-on {
+  background-color: var(--accent-primary);
+}
+
+.optimizer-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: #FFFFFF;
+  border-radius: 0px;
+  transition: left 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.optimizer-switch-track.is-on .optimizer-switch-thumb {
+  left: 18px;
+}
+
+/* Highlighted Auto-Generar CTA above Manual Timetable Grid */
+.btn.btn-compact.timetable-autogenerate-btn {
+  background-color: #00668C !important;
+  border: 1.5px solid #18181A !important;
+  border-top: 2.5px solid #38BDF8 !important;
+  border-radius: 0px !important;
+  color: #FFFFFF !important;
+  font-family: 'Space Grotesk', 'Inter', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+  box-shadow: 2px 2px 0px #18181A !important;
+  padding: 5px 11px !important;
+  transition: background-color 150ms ease, transform 130ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 130ms ease !important;
+}
+
+.btn.btn-compact.timetable-autogenerate-btn:hover {
+  background-color: #004D6B !important;
+  color: #FFFFFF !important;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #18181A !important;
+}
+
+.btn.btn-compact.timetable-autogenerate-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #18181A !important;
+}
+
+.btn.btn-compact.timetable-autogenerate-btn svg {
+  color: #FFFFFF !important;
+  flex-shrink: 0;
 }
 
 .tbg-legend-bar {
@@ -7496,8 +7592,8 @@ button:hover .swiss-arrow-up {
 
 @keyframes swissTooltipIn {
   0% {
-    opacity: 0;
-    transform: translateY(2px);
+    opacity: 0.96;
+    transform: translateY(3px);
   }
   100% {
     opacity: 1;

@@ -126,6 +126,65 @@ function nCr(n: number, r: number): number {
   return count;
 }
 
+interface OptimizerToggleRowProps {
+  title: string;
+  subtitle?: string;
+  checked: boolean;
+  onToggle: () => void;
+  infoTitle: string;
+  infoContent: React.ReactNode;
+  infoAriaLabel: string;
+  titleStyle?: React.CSSProperties;
+  testId?: string;
+}
+
+/**
+ * Reusable Grafton Swiss toggle row with right-aligned [i] badge and switch
+ * locked to the same horizontal centerline across single/multi-line labels.
+ */
+const OptimizerToggleRow: React.FC<OptimizerToggleRowProps> = ({
+  title,
+  subtitle,
+  checked,
+  onToggle,
+  infoTitle,
+  infoContent,
+  infoAriaLabel,
+  titleStyle,
+  testId,
+}) => (
+  <div className="optimizer-toggle-row" onClick={onToggle} style={{ cursor: 'pointer', userSelect: 'none' }}>
+    <div className="optimizer-toggle-text">
+      <div style={titleStyle}>{title}</div>
+      {subtitle && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{subtitle}</div>}
+    </div>
+    <div className="optimizer-toggle-actions">
+      <SwissInfoTip
+        title={infoTitle}
+        content={infoContent}
+        placement="bottom"
+        ariaLabel={infoAriaLabel}
+      />
+      <div
+        data-testid={testId}
+        role="switch"
+        aria-checked={checked}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggle();
+          }
+        }}
+        className={`optimizer-switch-track ${checked ? 'is-on' : ''}`}
+      >
+        <div className="optimizer-switch-thumb" />
+      </div>
+    </div>
+  </div>
+);
+
 interface ScheduleOptimizerModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -1156,37 +1215,27 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                 </div>
 
                 <div 
-                  onClick={() => setIsAdvancedMode(!isAdvancedMode)}
                   style={{ 
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
                     padding: '10px 12px', background: isAdvancedMode ? 'var(--accent-soft)' : 'var(--bg-elevated)', 
-                    borderRadius: '0px', cursor: 'pointer', marginBottom: '16px',
+                    borderRadius: '0px', marginBottom: '16px',
                     border: isAdvancedMode ? '1px solid var(--accent-primary)' : '1px solid var(--border-hairline)',
                     transition: 'all 0.2s'
                   }}
                 >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 700, color: isAdvancedMode ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
-                      <span>Armador de Semestre (Modo Avanzado)</span>
-                      <SwissInfoTip
-                        title="Modo Normal vs. Avanzado"
-                        content={'Normal: combina obligatoriamente todos los cursos marcados.\nAvanzado: selecciona automáticamente los mejores N cursos de tu pool respetando cursos fijados y bloqueos.'}
-                        placement="right"
-                        ariaLabel="Explicación de Modo Avanzado"
-                      />
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>El algoritmo elegirá los cursos por ti</div>
-                  </div>
-                  <div style={{ 
-                    width: '36px', height: '20px', background: isAdvancedMode ? 'var(--accent-primary)' : 'var(--border-hairline)',
-                    borderRadius: '0px', position: 'relative', transition: 'all 0.3s'
-                  }}>
-                    <div style={{
-                      position: 'absolute', top: '2px', left: isAdvancedMode ? '18px' : '2px',
-                      width: '16px', height: '16px', background: 'white', borderRadius: '0px',
-                      transition: 'all 0.3s'
-                    }} />
-                  </div>
+                  <OptimizerToggleRow
+                    title="Armador de Semestre (Modo Avanzado)"
+                    subtitle="El algoritmo elegirá los cursos por ti"
+                    checked={isAdvancedMode}
+                    onToggle={() => setIsAdvancedMode(!isAdvancedMode)}
+                    infoTitle="Modo Normal vs. Avanzado"
+                    infoContent={'Normal: combina obligatoriamente todos los cursos marcados.\nAvanzado: selecciona automáticamente los mejores N cursos de tu pool respetando cursos fijados y bloqueos.'}
+                    infoAriaLabel="Explicación de Modo Avanzado"
+                    titleStyle={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: isAdvancedMode ? 'var(--accent-primary)' : 'var(--text-primary)',
+                    }}
+                  />
                 </div>
 
                 {isAdvancedMode && (
@@ -1245,29 +1294,16 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                     </div>
                     
                     <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-hairline)' }}>
-                      <div 
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', cursor: 'pointer' }}
-                        onClick={() => setIsLunchEnabled(!isLunchEnabled)}
-                      >
-                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <span>Garantizar Hora de Almuerzo</span>
-                          <SwissInfoTip
-                            title="Ventana de Almuerzo"
-                            content="Prioriza combinaciones que dejen al menos una franja libre continua de la duración elegida dentro del rango horario."
-                            placement="right"
-                            ariaLabel="Explicación de hora de almuerzo"
-                          />
-                        </label>
-                        <div style={{ 
-                          width: '36px', height: '20px', background: isLunchEnabled ? 'var(--accent-primary)' : 'var(--border-hairline)',
-                          borderRadius: '0px', position: 'relative', transition: 'all 0.3s', flexShrink: 0
-                        }}>
-                          <div style={{
-                            position: 'absolute', top: '2px', left: isLunchEnabled ? '18px' : '2px',
-                            width: '16px', height: '16px', background: 'white', borderRadius: '0px',
-                            transition: 'all 0.3s'
-                          }} />
-                        </div>
+                      <div style={{ marginBottom: '12px' }}>
+                        <OptimizerToggleRow
+                          title="Garantizar Hora de Almuerzo"
+                          checked={isLunchEnabled}
+                          onToggle={() => setIsLunchEnabled(!isLunchEnabled)}
+                          infoTitle="Ventana de Almuerzo"
+                          infoContent="Prioriza combinaciones que dejen al menos una franja libre continua de la duración elegida dentro del rango horario."
+                          infoAriaLabel="Explicación de hora de almuerzo"
+                          titleStyle={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}
+                        />
                       </div>
                       
                       {isLunchEnabled && (
@@ -1314,60 +1350,31 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
 
                 {/* Calendario de Bloqueos (Restricciones Temporales) Toggle Block */}
                 <div style={{ padding: '12px', background: 'var(--bg-elevated)', borderRadius: '0px', marginBottom: '16px', border: '1px solid var(--border-hairline)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: (showBlockerGrid || isAdvancedMode) ? '10px' : '0px' }}>
-                    <div 
-                      onClick={() => setShowBlockerGrid(!showBlockerGrid)}
-                      style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}
-                    >
-                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer', margin: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        <span>Calendario de Bloqueos (Restricciones Temporales)</span>
-                        <SwissInfoTip
-                          title="Calendario de Bloqueos"
-                          content={'Despliega la grilla derecha para pintar horas prohibidas o ver tus secciones fijadas (azul sólido) y bloqueadas (rojo rayado).'}
-                          placement="right"
-                          ariaLabel="Explicación de Calendario de Bloqueos"
-                        />
-                      </label>
-                    </div>
-                    <div 
-                      data-testid="toggle-blocker-grid"
-                      onClick={() => setShowBlockerGrid(!showBlockerGrid)}
-                      style={{ 
-                        width: '36px', height: '20px', background: (showBlockerGrid || isAdvancedMode) ? 'var(--accent-primary)' : 'var(--border-hairline)',
-                        borderRadius: '0px', position: 'relative', transition: 'all 0.3s', cursor: 'pointer', flexShrink: 0
-                      }}>
-                      <div style={{
-                        position: 'absolute', top: '2px', left: (showBlockerGrid || isAdvancedMode) ? '18px' : '2px',
-                        width: '16px', height: '16px', background: 'white', borderRadius: '0px',
-                        transition: 'all 0.3s'
-                      }} />
-                    </div>
+                  <div style={{ marginBottom: (showBlockerGrid || isAdvancedMode) ? '10px' : '0px' }}>
+                    <OptimizerToggleRow
+                      title="Calendario de Bloqueos (Restricciones Temporales)"
+                      checked={showBlockerGrid || isAdvancedMode}
+                      onToggle={() => setShowBlockerGrid(!showBlockerGrid)}
+                      infoTitle="Calendario de Bloqueos"
+                      infoContent={'Despliega la grilla derecha para pintar horas prohibidas o ver tus secciones fijadas (azul sólido) y bloqueadas (rojo rayado).'}
+                      infoAriaLabel="Explicación de Calendario de Bloqueos"
+                      titleStyle={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}
+                      testId="toggle-blocker-grid"
+                    />
                   </div>
 
                   {(showBlockerGrid || isAdvancedMode) && (
                     <>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border-hairline)' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <span>Modo Estricto:</span>
-                          <SwissInfoTip
-                            title="Modo Estricto vs. Flexible"
-                            content={'Estricto: descarta por completo horarios que pisen un bloque rojo.\nFlexible: mantiene esas opciones pero las penaliza (-100 pts por cada 15 min bloqueados).'}
-                            placement="right"
-                            ariaLabel="Explicación de Modo Estricto"
-                          />
-                        </span>
-                        <div 
-                          onClick={() => setIsConstraintStrict(!isConstraintStrict)}
-                          style={{ 
-                            width: '36px', height: '20px', background: isConstraintStrict ? 'var(--accent-primary)' : 'var(--border-hairline)',
-                            borderRadius: '0px', position: 'relative', transition: 'all 0.3s', cursor: 'pointer', flexShrink: 0
-                          }}>
-                          <div style={{
-                            position: 'absolute', top: '2px', left: isConstraintStrict ? '18px' : '2px',
-                            width: '16px', height: '16px', background: 'white', borderRadius: '0px',
-                            transition: 'all 0.3s'
-                          }} />
-                        </div>
+                      <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border-hairline)' }}>
+                        <OptimizerToggleRow
+                          title="Modo Estricto:"
+                          checked={isConstraintStrict}
+                          onToggle={() => setIsConstraintStrict(!isConstraintStrict)}
+                          infoTitle="Modo Estricto vs. Flexible"
+                          infoContent={'Estricto: descarta por completo horarios que pisen un bloque rojo.\nFlexible: mantiene esas opciones pero las penaliza (-100 pts por cada 15 min bloqueados).'}
+                          infoAriaLabel="Explicación de Modo Estricto"
+                          titleStyle={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}
+                        />
                       </div>
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '8px 0 0 0', lineHeight: 1.35 }}>
                         {isConstraintStrict ? 'Modo Estricto: Se descartan los cruces rojos.' : 'Modo Flexible: Se penalizan los cruces rojos.'} Configura los bloqueos en el gran panel derecho.
@@ -1594,12 +1601,12 @@ export const ScheduleOptimizerModal: React.FC<ScheduleOptimizerModalProps> = ({
                         </div>
                         {isAdvancedMode && isSelected && pinnedCourseCodes.includes(course.code) && (
                           <div style={{ padding: '4px 8px 8px 32px', background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-hairline)' }}>
-                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                               <span>Fijar sección específica (Opcional):</span>
                               <SwissInfoTip
                                 title="Candado vs. Botón Bloquear"
                                 content={'• Candado (clic en la tarjeta): fuerza al algoritmo a usar esa sección exacta.\n• × Bloquear: evita las horas de esa sección en TODO tu horario (Calendario de Bloqueos).'}
-                                placement="right"
+                                placement="bottom"
                                 ariaLabel="Diferencia entre candado y botón bloquear"
                               />
                             </div>

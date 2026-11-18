@@ -5,6 +5,7 @@ import { ALL_DAYS, DAY_LABELS, resolveCanonicalRoom } from '../../utils/classroo
 import { evaluateCourseLiveStatus } from '../../utils/courseDirectoryUtils';
 import { buildSectionHierarchyGroups, resolveSectionHierarchy } from '../../utils/sectionHierarchy';
 import { getFacultyPolychrome } from '../../utils/scheduleUtils';
+import { SwissTooltip } from '../common/SwissTooltip';
 import { BroadcastIcon } from '../common/BroadcastIcon';
 import {
   BookOpen,
@@ -241,15 +242,19 @@ export const CourseCard: React.FC<CourseCardProps> = memo(({
         </div>
 
         {/* Quick Visitor Bookmark Star Button */}
-        <button
-          type="button"
-          className={`course-card-bookmark-btn ${isVisitor ? 'course-card-bookmark-btn--active' : ''}`}
-          onClick={e => onToggleVisitor(course, e)}
-          title={isVisitor ? 'Quitar de mis cursos de oyente' : 'Guardar en mis cursos de oyente'}
-          aria-label={isVisitor ? 'Quitar de oyente' : 'Marcar como oyente'}
+        <SwissTooltip
+          content={isVisitor ? 'Quitar de tu lista de cursos de oyente' : 'Guardar en tu lista de oyente para generar solicitud por correo'}
+          placement="left"
         >
-          <Star size={16} className={isVisitor ? 'star-filled-gold' : ''} />
-        </button>
+          <button
+            type="button"
+            className={`course-card-bookmark-btn ${isVisitor ? 'course-card-bookmark-btn--active' : ''}`}
+            onClick={e => onToggleVisitor(course, e)}
+            aria-label={isVisitor ? 'Quitar de oyente' : 'Marcar como oyente'}
+          >
+            <Star size={16} className={isVisitor ? 'star-filled-gold' : ''} />
+          </button>
+        </SwissTooltip>
       </div>
 
       {/* Live Status Banner or Next Class Indicator */}

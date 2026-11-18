@@ -29,7 +29,7 @@ function computeTooltipCoords(
 ): TooltipCoords {
   const anchor = anchorEl.getBoundingClientRect();
   const tip = tipEl.getBoundingClientRect();
-  const gap = 8;
+  const gap = 10;
   const pad = 8;
   const vw = window.innerWidth;
   const vh = window.innerHeight;

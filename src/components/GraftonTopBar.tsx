@@ -1,6 +1,7 @@
 import React from 'react';
 import { Menu, Download, Upload, Search } from 'lucide-react';
 import type { TabKey } from './AppShell';
+import { SwissTooltip } from './common/SwissTooltip';
 
 interface GraftonTopBarProps {
   activeTab: TabKey;
@@ -102,38 +103,42 @@ export const GraftonTopBar: React.FC<GraftonTopBarProps> = ({
           Docentes
         </button>
 
-        <button
-          type="button"
-          className="grafton-nav-btn grafton-nav-btn--import"
-          onClick={onOpenUploadModal}
-        >
-          <Upload size={13} />
-          <span>Importar Oferta</span>
-        </button>
+        <SwissTooltip content="Subir tu Excel de Consulta_Horario o PDF de Carga Hábil" placement="bottom">
+          <button
+            type="button"
+            className="grafton-nav-btn grafton-nav-btn--import"
+            onClick={onOpenUploadModal}
+          >
+            <Upload size={13} />
+            <span>Importar Oferta</span>
+          </button>
+        </SwissTooltip>
       </nav>
 
       {/* Right: Universal Command Palette Trigger & Export Button */}
       <div className="grafton-topbar__actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <button
-          type="button"
-          data-testid="cmdk-trigger-btn"
-          onClick={() => window.dispatchEvent(new CustomEvent('matriculab:open-cmdk'))}
-          title="Abrir Paleta de Comandos Universal (⌘K / Ctrl+K)"
-          className="grafton-cmdk-trigger"
-        >
-          <Search size={13} className="grafton-cmdk-trigger__icon" />
-          <span className="grafton-cmdk-trigger__label">⌘K Buscar</span>
-        </button>
+        <SwissTooltip content="Abrir buscador global de cursos, docentes, aulas y acciones (⌘K / Ctrl+K)" placement="bottom">
+          <button
+            type="button"
+            data-testid="cmdk-trigger-btn"
+            onClick={() => window.dispatchEvent(new CustomEvent('matriculab:open-cmdk'))}
+            className="grafton-cmdk-trigger"
+          >
+            <Search size={13} className="grafton-cmdk-trigger__icon" />
+            <span className="grafton-cmdk-trigger__label">⌘K Buscar</span>
+          </button>
+        </SwissTooltip>
 
-        <button
-          type="button"
-          className="grafton-export-btn"
-          onClick={onOpenExportModal}
-          title="Exportar horario actual (.ics, PNG o Google Calendar)"
-        >
-          <Download size={14} />
-          <span>Exportar</span>
-        </button>
+        <SwissTooltip content="Exportar tu horario actual en imagen PNG, calendario .ics o Google Calendar" placement="bottom">
+          <button
+            type="button"
+            className="grafton-export-btn"
+            onClick={onOpenExportModal}
+          >
+            <Download size={14} />
+            <span>Exportar</span>
+          </button>
+        </SwissTooltip>
       </div>
     </header>
   );

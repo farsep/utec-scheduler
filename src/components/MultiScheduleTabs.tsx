@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Copy } from 'lucide-react';
 import type { ScheduleOption } from '../types/schedule';
+import { SwissTooltip } from './common/SwissTooltip';
 
 interface MultiScheduleTabsProps {
   options: ScheduleOption[];
@@ -79,36 +80,39 @@ export const MultiScheduleTabs: React.FC<MultiScheduleTabsProps> = ({
       </div>
 
       <div className="option-tab-controls">
-        <button
-          type="button"
-          className="add-tab-btn"
-          onClick={onAddOption}
-          title="Crear nueva alternativa de horario"
-          aria-label="Nueva opción de horario"
-        >
-          <Plus size={14} />
-        </button>
-
-        <button
-          type="button"
-          className="add-tab-btn"
-          onClick={() => onDuplicateOption(activeOptionId)}
-          title="Duplicar la opción actual"
-          aria-label="Duplicar opción actual"
-        >
-          <Copy size={13} />
-        </button>
-
-        {options.length > 1 && (
+        <SwissTooltip content="Crear una nueva pestaña de horario en blanco para comparar alternativas" placement="bottom">
           <button
             type="button"
             className="add-tab-btn"
-            onClick={() => onDeleteOption(activeOptionId)}
-            title="Eliminar la opción actual"
-            aria-label="Eliminar opción actual"
+            onClick={onAddOption}
+            aria-label="Nueva opción de horario"
           >
-            <Trash2 size={13} />
+            <Plus size={14} />
           </button>
+        </SwissTooltip>
+
+        <SwissTooltip content="Duplicar la pestaña actual conservando sus secciones elegidas" placement="bottom">
+          <button
+            type="button"
+            className="add-tab-btn"
+            onClick={() => onDuplicateOption(activeOptionId)}
+            aria-label="Duplicar opción actual"
+          >
+            <Copy size={13} />
+          </button>
+        </SwissTooltip>
+
+        {options.length > 1 && (
+          <SwissTooltip content="Eliminar la pestaña de horario activa" placement="bottom">
+            <button
+              type="button"
+              className="add-tab-btn"
+              onClick={() => onDeleteOption(activeOptionId)}
+              aria-label="Eliminar opción actual"
+            >
+              <Trash2 size={13} />
+            </button>
+          </SwissTooltip>
         )}
       </div>
     </div>
